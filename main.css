@@ -2,9 +2,23 @@ body
 {
     background-image:url('back.png');
     background-position: top;
+    background-color: black;
+    
 }
 .maintitle
 {
     text-align: center;
     color: rgb(255, 255, 255);
+         
+}
+.ltitle
+{
+    font-size: 15px;
+    font-family:'Times New Roman', Times, serif;
+    
+}
+.link1{
+    font-size: 18px;
+    font-family:'黑体';
+    mask-image:url('button.png');
 }
