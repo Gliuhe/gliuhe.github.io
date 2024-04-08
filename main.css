@@ -20,5 +20,5 @@ body
 .link1{
     font-size: 18px;
     font-family:'黑体';
-    mask-image:url('button.png');
+    background: url('button.png');
 }
