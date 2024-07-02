@@ -220,6 +220,14 @@ body {
   border-bottom-right-radius:5px;
   border-bottom-left-radius:5px;
 }
+.active{
+  background-color:#ffffff;
+  color:#0a0a0a;
+}
+.header-inner{
+  background-color:#ffffff;
+}
+
 #nav-1-2{
   padding-top:30px;
   padding-right:0px;
