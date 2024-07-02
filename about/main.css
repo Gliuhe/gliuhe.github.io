@@ -18,6 +18,12 @@ body {
 #i18o4{
   height:156px;
   en:1;
+  width:66%;
+}
+#ir49v{
+  height:1px;
+  background-color:#c1c1c1;
+  opacity:0.5;
 }
 #icf4r{
   margin:0px 6px 0px 0px;
@@ -219,6 +225,9 @@ body{
 .c8254{
   width:300.2px;
   en:1;
+  text-decoration:none;
+  border:0px solid;
+  vertical-align:baseline;
 }
 .c10064{
   margin:0px 1309px -45px 91px;
@@ -268,6 +277,14 @@ body{
 .c19441{
   opacity:0.5;
   font-weight:200;
+}
+.c20489{
+  color:black;
+  float:right;
+  overflow:auto;
+  width:197px;
+  height:197px;
+  margin:-50px 232px 0px 0px;
 }
 @media (max-width: 768px){
   .htmlpage-cell{
