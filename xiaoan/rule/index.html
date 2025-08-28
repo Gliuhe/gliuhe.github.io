@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级兑换券乐园 - 修复版</title>
+    <style>
+        /* 所有样式保持不变 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 1000px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 3px solid #ffd166;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .header h1 {
+            color: #ff6b6b;
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+        }
+        
+        .header::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
+            border-radius: 2px;
+        }
+        
+        h2 {
+            color: #06d6a0;
+            margin: 20px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #ffd166;
+            font-size: 1.8rem;
+        }
+        
+        .btn {
+            background: #06d6a0;
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 8px;
+            box-shadow: 0 6px 12px rgba(6, 214, 160, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .btn:hover {
+            background: #05c191;
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
+        }
+        
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(30deg);
+            transition: all 0.5s;
+        }
+        
+        .btn:hover::after {
+            transform: rotate(30deg) translate(10%, 10%);
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+            box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.4);
+        }
+        
+        .btn-warning {
+            background: #ffd166;
+            box-shadow: 0 6px 12px rgba(255, 209, 102, 0.3);
+            color: #333;
+        }
+        
+        .btn-warning:hover {
+            background: #ffc745;
+            box-shadow: 0 8px 16px rgba(255, 209, 102, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .form-group {
+            margin: 18px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: #06d6a0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border: 3px solid #ffd166;
+            position: relative;
+        }
+        
+        .modal-content::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px solid #06d6a0;
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+        
+        .rules-container {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 25px 0;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid #ffd166;
+        }
+        
+        .rule-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #06d6a0;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .rule-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .rule-title {
+            font-size: 1.4rem;
+            color: #118ab2;
+            font-weight: bold;
+        }
+        
+        .rule-reward {
+            background: #ffd166;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .rule-content {
+            line-height: 1.6;
+            color: #555;
+            font-size: 1.1rem;
+        }
+        
+        .rule-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .rule-actions .btn {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        
+        .status-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 25px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status-success {
+            background: #06d6a0;
+        }
+        
+        .status-error {
+            background: #ff6b6b;
+        }
+        
+        .status-warning {
+            background: #ffd166;
+            color: #333;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            border-bottom: 3px solid #ffd166;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+            font-size: 1.2rem;
+            position: relative;
+            transition: all 0.3s;
+            margin: 0 5px;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .nav-tab.active {
+            color: #118ab2;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #06d6a0;
+            border-radius: 2px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .admin-entry {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border: 2px solid #ffd166;
+            z-index: 10;
+        }
+        
+        .admin-entry:hover {
+            transform: rotate(90deg) scale(1.1);
+            background: #ffd166;
+        }
+        
+        .admin-entry span {
+            font-size: 1.5rem;
+        }
+        
+        .complete-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .complete-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            animation: confetti-fall 1.5s ease-in-out forwards;
+        }
+        
+        .success-message {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            position: relative;
+            z-index: 10;
+            transform: scale(0.8);
+            opacity: 0;
+            animation: popup 0.5s 0.5s forwards;
+        }
+        
+        .success-message h2 {
+            color: #06d6a0;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .success-message p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .today-summary {
+            background: #ffd166;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #ffb703;
+        }
+        
+        .today-summary span {
+            color: #ff6b6b;
+            font-size: 1.5rem;
+            margin: 0 5px;
+        }
+        
+        .timer-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 15px;
+            background: rgba(255, 107, 107, 0.1);
+            color: #ff6b6b;
+        }
+        
+        .timer-warning {
+            background: rgba(255, 209, 102, 0.3);
+            color: #e67e22;
+        }
+        
+        .timer-critical {
+            background: rgba(255, 107, 107, 0.3);
+            color: #e74c3c;
+            animation: pulse 0.5s infinite;
+        }
+        
+        .task-status {
+            margin-top: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .status-pending {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        
+        .status-in-progress {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+        }
+        
+        .status-completed {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .status-timeout {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes popup {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                text-align: center;
+                padding: 12px 8px;
+                font-size: 1rem;
+                margin: 3px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 90%;
+                margin: 8px 0;
+            }
+            
+            .rule-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .rule-reward {
+                margin-top: 10px;
+            }
+            
+            .admin-entry {
+                top: 10px;
+                right: 10px;
+                width: 35px;
+                height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>超级兑换券乐园</h1>
+    </div>
+    
+    <div class="container">
+        <!-- 管理入口 (右上角) -->
+        <div class="admin-entry" id="adminEntry" title="规则管理">
+            <span>⚙️</span>
+        </div>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('rules')">📜 奖励规则</div>
+        </div>
+        
+        <!-- 奖励规则展示 -->
+        <div id="rules" class="tab-content active">
+            <h2>获取奖励规则</h2>
+            
+            <!-- 今日获得兑换券统计 -->
+            <div class="today-summary">
+                今日共获得 <span id="todayAmount">0</span> 超级兑换券
+            </div>
+            
+            <p>完成以下任务可以获得超级兑换券！</p>
+            
+            <div class="rules-container" id="rulesList">
+                <!-- 规则将通过JavaScript动态添加 -->
+            </div>
+        </div>
+        
+        <!-- 规则管理 -->
+        <div id="management" class="tab-content">
+            <h2>规则管理</h2>
+            <button class="btn pulse" onclick="openAddRuleModal()">➕ 添加新规则</button>
+            
+            <div class="rules-container" id="manageRulesList">
+                <!-- 管理规则列表将通过JavaScript动态添加 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框部分 -->
+    <!-- 添加规则模态框 -->
+    <div class="modal" id="addRuleModal">
+        <div class="modal-content">
+            <h2>添加新规则</h2>
+            <div class="form-group">
+                <label for="ruleTitle">规则标题</label>
+                <input type="text" id="ruleTitle" placeholder="例如：完成作业">
+            </div>
+            <div class="form-group">
+                <label for="ruleReward">奖励数量</label>
+                <input type="number" id="ruleReward" min="1" placeholder="请输入奖励数量">
+            </div>
+            <div class="form-group">
+                <label for="ruleTimeLimit">倒计时（分钟）</label>
+                <input type="number" id="ruleTimeLimit" min="1" placeholder="完成任务的时间限制">
+            </div>
+            <div class="form-group">
+                <label for="ruleContent">规则内容</label>
+                <textarea id="ruleContent" placeholder="请输入规则详细内容"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="addRulePassword">密码</label>
+                <input type="password" id="addRulePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="addRule()">添加规则</button>
+            <button class="btn btn-danger" onclick="closeAddRuleModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 编辑规则模态框 -->
+    <div class="modal" id="editRuleModal">
+        <div class="modal-content">
+            <h2>编辑规则</h2>
+            <input type="hidden" id="editRuleId">
+            <div class="form-group">
+                <label for="editRuleTitle">规则标题</label>
+                <input type="text" id="editRuleTitle" placeholder="例如：完成作业">
+            </div>
+            <div class="form-group">
+                <label for="editRuleReward">奖励数量</label>
+                <input type="number" id="editRuleReward" min="1" placeholder="请输入奖励数量">
+            </div>
+            <div class="form-group">
+                <label for="editRuleTimeLimit">倒计时（分钟）</label>
+                <input type="number" id="editRuleTimeLimit" min="1" placeholder="完成任务的时间限制">
+            </div>
+            <div class="form-group">
+                <label for="editRuleContent">规则内容</label>
+                <textarea id="editRuleContent" placeholder="请输入规则详细内容"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="editRulePassword">密码</label>
+                <input type="password" id="editRulePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="updateRule()">更新规则</button>
+            <button class="btn btn-danger" onclick="closeEditRuleModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 删除规则模态框 -->
+    <div class="modal" id="deleteRuleModal">
+        <div class="modal-content">
+            <h2>删除规则</h2>
+            <input type="hidden" id="deleteRuleId">
+            <p id="deleteRuleText">确定要删除规则吗？此操作不可恢复。</p>
+            <div class="form-group">
+                <label for="deleteRulePassword">密码</label>
+                <input type="password" id="deleteRulePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-danger" onclick="confirmDeleteRule()">确认删除</button>
+            <button class="btn" onclick="closeDeleteRuleModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 完成规则模态框 -->
+    <div class="modal" id="completeRuleModal">
+        <div class="modal-content">
+            <h2>完成任务</h2>
+            <input type="hidden" id="completeRuleId">
+            <p id="completeRuleText">请确认已完成任务，并输入密码</p>
+            <div class="form-group">
+                <label for="completeRulePassword">密码</label>
+                <input type="password" id="completeRulePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="confirmCompleteRule()">确认完成</button>
+            <button class="btn btn-danger" onclick="closeCompleteRuleModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 完成动画 -->
+    <div class="complete-animation" id="completeAnimation">
+        <div class="success-message">
+            <h2>任务完成！</h2>
+            <p>恭喜你获得了 <span id="rewardAmount">0</span> 超级兑换券！</p>
+            <button class="btn" onclick="closeCompleteAnimation()">确定</button>
+        </div>
+    </div>
+    
+    <!-- 状态通知 -->
+    <div class="status-notification" id="statusNotification"></div>
+
+    <script>
+        // 常量定义
+        const DEFAULT_PASSWORD = "1234";
+        
+        // 默认规则
+        const defaultRules = [
+            {
+                id: 1,
+                title: "完成家庭作业",
+                reward: 10,
+                timeLimit: 60, // 60分钟
+                content: "每天按时完成所有家庭作业，字迹工整，正确率高。完成后请家长检查并签字确认。"
+            },
+            {
+                id: 2,
+                title: "整理房间",
+                reward: 5,
+                timeLimit: 30, // 30分钟
+                content: "保持房间整洁，书桌整齐，床铺整理好，玩具归位。每天睡前完成整理工作。"
+            },
+            {
+                id: 3,
+                title: "阅读30分钟",
+                reward: 8,
+                timeLimit: 45, // 45分钟
+                content: "每天阅读课外书籍至少30分钟，并记录阅读心得或与家长分享阅读内容。"
+            }
+        ];
+        
+        // 初始化数据
+        function initializeData() {
+            if (!localStorage.getItem('rules')) {
+                localStorage.setItem('rules', JSON.stringify(defaultRules));
+            }
+            
+            if (!localStorage.getItem('password')) {
+                localStorage.setItem('password', DEFAULT_PASSWORD);
+            }
+            
+            if (!localStorage.getItem('currency')) {
+                localStorage.setItem('currency', '100');
+            }
+            
+            if (!localStorage.getItem('history')) {
+                localStorage.setItem('history', JSON.stringify([]));
+            }
+            
+            if (!localStorage.getItem('activeTasks')) {
+                localStorage.setItem('activeTasks', JSON.stringify({}));
+            }
+        }
+        
+        // 显示状态通知
+        function showStatus(message, type = "success") {
+            const notification = document.getElementById('statusNotification');
+            notification.textContent = message;
+            notification.className = `status-notification status-${type}`;
+            notification.style.opacity = "1";
+            notification.style.transform = "translateY(0)";
+            
+            setTimeout(() => {
+                notification.style.opacity = "0";
+                notification.style.transform = "translateY(-20px)";
+            }, 3000);
+        }
+        
+        // 更新界面显示
+        function updateUI() {
+            // 更新规则列表
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const rulesList = document.getElementById('rulesList');
+            rulesList.innerHTML = '';
+            
+            // 获取活动任务
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            
+            rules.forEach(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                const ruleElement = document.createElement('div');
+                ruleElement.className = 'rule-item';
+                
+                let actionButton = '';
+                let timerDisplay = '';
+                let statusDisplay = '';
+                
+                if (taskStatus.status === 'in-progress') {
+                    // 任务进行中
+                    const startTime = new Date(taskStatus.startTime);
+                    const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
+                    const remaining = (rule.timeLimit * 60) - elapsed;
+                    
+                    let minutes = Math.floor(remaining / 60);
+                    let seconds = remaining % 60;
+                    
+                    // 格式化时间显示
+                    minutes = minutes < 10 ? '0' + minutes : minutes;
+                    seconds = seconds < 10 ? '0' + seconds : seconds;
+                    
+                    // 根据剩余时间设置样式
+                    let timerClass = 'timer-display';
+                    if (remaining < 60) {
+                        timerClass += ' timer-critical';
+                    } else if (remaining < rule.timeLimit * 30) {
+                        timerClass += ' timer-warning';
+                    }
+                    
+                    timerDisplay = `<div class="${timerClass}">剩余时间: ${minutes}:${seconds}</div>`;
+                    actionButton = `<button class="btn btn-warning" onclick="openCompleteRuleModal(${rule.id})">✅ 完成任务</button>`;
+                    statusDisplay = `<div class="task-status status-in-progress">任务进行中</div>`;
+                } else if (taskStatus.status === 'completed') {
+                    // 任务已完成
+                    actionButton = `<button class="btn" disabled>✅ 已完成</button>`;
+                    statusDisplay = `<div class="task-status status-completed">任务已完成</div>`;
+                } else if (taskStatus.status === 'timeout') {
+                    // 任务超时
+                    actionButton = `<button class="btn btn-warning" onclick="openCompleteRuleModal(${rule.id})">✅ 完成任务（奖励减半）</button>`;
+                    statusDisplay = `<div class="task-status status-timeout">任务已超时</div>`;
+                } else {
+                    // 任务未开始
+                    actionButton = `<button class="btn" onclick="startTask(${rule.id})">🏁 接受任务</button>`;
+                }
+                
+                ruleElement.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-title">${rule.title}</div>
+                        <div class="rule-reward">奖励: ${rule.reward} 超级兑换券</div>
+                    </div>
+                    <div class="rule-content">${rule.content}</div>
+                    ${timerDisplay}
+                    ${statusDisplay}
+                    <div class="rule-actions">
+                        ${actionButton}
+                    </div>
+                `;
+                rulesList.appendChild(ruleElement);
+            });
+            
+            // 更新管理规则列表
+            const manageRulesList = document.getElementById('manageRulesList');
+            manageRulesList.innerHTML = '';
+            
+            rules.forEach(rule => {
+                const ruleElement = document.createElement('div');
+                ruleElement.className = 'rule-item';
+                ruleElement.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-title">${rule.title}</div>
+                        <div class="rule-reward">奖励: ${rule.reward} 超级兑换券</div>
+                    </div>
+                    <div class="rule-content">${rule.content}</div>
+                    <div class="rule-content">倒计时: ${rule.timeLimit} 分钟</div>
+                    <div class="rule-actions">
+                        <button class="btn" onclick="openEditRuleModal(${rule.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="openDeleteRuleModal(${rule.id}, '${rule.title}')">删除</button>
+                    </div>
+                `;
+                manageRulesList.appendChild(ruleElement);
+            });
+            
+            // 更新今日获得统计
+            updateTodaySummary();
+        }
+        
+        // 更新今日获得统计
+        function updateTodaySummary() {
+            const history = JSON.parse(localStorage.getItem('history'));
+            const today = new Date().toDateString();
+            let todayTotal = 0;
+            
+            history.forEach(record => {
+                const recordDate = new Date(record.date).toDateString();
+                if (recordDate === today && record.amount > 0) {
+                    todayTotal += record.amount;
+                }
+            });
+            
+            document.getElementById('todayAmount').textContent = todayTotal;
+        }
+        
+        // 切换标签页
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 取消所有标签的激活状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 激活选中的标签
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                if (tab.getAttribute('onclick').includes(tabId)) {
+                    tab.classList.add('active');
+                }
+            });
+        }
+        
+        // 打开添加规则模态框
+        function openAddRuleModal() {
+            document.getElementById('addRuleModal').style.display = 'flex';
+            document.getElementById('ruleTitle').value = '';
+            document.getElementById('ruleReward').value = '';
+            document.getElementById('ruleTimeLimit').value = '';
+            document.getElementById('ruleContent').value = '';
+            document.getElementById('addRulePassword').value = '';
+        }
+        
+        // 关闭添加规则模态框
+        function closeAddRuleModal() {
+            document.getElementById('addRuleModal').style.display = 'none';
+        }
+        
+        // 打开编辑规则模态框
+        function openEditRuleModal(ruleId) {
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const rule = rules.find(r => r.id === ruleId);
+            
+            if (rule) {
+                document.getElementById('editRuleId').value = rule.id;
+                document.getElementById('editRuleTitle').value = rule.title;
+                document.getElementById('editRuleReward').value = rule.reward;
+                document.getElementById('editRuleTimeLimit').value = rule.timeLimit;
+                document.getElementById('editRuleContent').value = rule.content;
+                document.getElementById('editRulePassword').value = '';
+                
+                document.getElementById('editRuleModal').style.display = 'flex';
+            }
+        }
+        
+        // 关闭编辑规则模态框
+        function closeEditRuleModal() {
+            document.getElementById('editRuleModal').style.display = 'none';
+        }
+        
+        // 打开删除规则模态框
+        function openDeleteRuleModal(ruleId, ruleTitle) {
+            document.getElementById('deleteRuleId').value = ruleId;
+            document.getElementById('deleteRuleText').textContent = `确定要删除规则"${ruleTitle}"吗？此操作不可恢复。`;
+            document.getElementById('deleteRulePassword').value = '';
+            
+            document.getElementById('deleteRuleModal').style.display = 'flex';
+        }
+        
+        // 关闭删除规则模态框
+        function closeDeleteRuleModal() {
+            document.getElementById('deleteRuleModal').style.display = 'none';
+        }
+        
+        // 打开完成规则模态框
+        function openCompleteRuleModal(ruleId) {
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const rule = rules.find(r => r.id === ruleId);
+            
+            if (!rule) return;
+            
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            const task = activeTasks[ruleId];
+            
+            let displayReward = rule.reward;
+            let statusText = '';
+            
+            // 修复问题：超时后显示减半的奖励
+            if (task && task.status === 'timeout') {
+                displayReward = Math.floor(rule.reward / 2);
+                statusText = '（超时奖励减半）';
+            }
+            
+            document.getElementById('completeRuleId').value = rule.id;
+            document.getElementById('completeRuleText').textContent = 
+                `请确认已完成任务"${rule.title}"，完成后将获得${displayReward}超级兑换券${statusText}。`;
+            document.getElementById('completeRulePassword').value = '';
+            
+            document.getElementById('completeRuleModal').style.display = 'flex';
+        }
+        
+        // 关闭完成
