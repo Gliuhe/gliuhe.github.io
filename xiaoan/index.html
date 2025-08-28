@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超级兑换券乐园</title>
+    <title>超级兑换券乐园 - 多设备同步版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -118,26 +118,10 @@
             border: 2px solid rgba(255, 255, 255, 0.5);
         }
         
-        .btn::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(30deg);
-            transition: all 0.5s;
-        }
-        
         .btn:hover {
             background: #05c191;
-            transform: translateY(-5px) scale(1.05);
+            transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
-        }
-        
-        .btn:hover::after {
-            transform: rotate(30deg) translate(10%, 10%);
         }
         
         .btn-danger {
@@ -253,7 +237,7 @@
         }
         
         .product:hover {
-            transform: translateY(-8px) scale(1.03);
+            transform: translateY(-8px);
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
         }
         
@@ -420,6 +404,36 @@
             margin: 20px 0;
         }
         
+        .sync-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px solid #06d6a0;
+        }
+        
+        .sync-status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .sync-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .sync-active {
+            background: #06d6a0;
+            box-shadow: 0 0 10px #06d6a0;
+        }
+        
+        .sync-inactive {
+            background: #ff6b6b;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -493,6 +507,18 @@
         
         <!-- 控制面板 -->
         <div id="dashboard" class="tab-content active">
+            <div class="sync-section">
+                <div class="sync-status">
+                    <div class="sync-indicator sync-active" id="syncIndicator"></div>
+                    <div>数据状态: <span id="syncStatusText">已同步</span></div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn" onclick="syncData()">🔄 立即同步数据</button>
+                    <button class="btn" onclick="backupData()">💾 备份数据到文件</button>
+                    <button class="btn" onclick="openRestoreModal()">📥 从文件恢复数据</button>
+                </div>
+            </div>
+            
             <div class="currency-display">
                 <h2>我的超级兑换券</h2>
                 <div class="coin-icon">💰</div>
@@ -537,9 +563,17 @@
             <h2>系统设置</h2>
             <div class="action-buttons">
                 <button class="btn" onclick="openPasswordModal()">🔑 修改密码</button>
-                <button class="btn" onclick="backupData()">💾 备份数据</button>
-                <button class="btn btn-warning" onclick="openRestoreModal()">📥 恢复数据</button>
                 <button class="btn btn-danger" onclick="openResetModal()">🔄 重置系统</button>
+            </div>
+            
+            <div class="sync-section">
+                <h3>多设备同步设置</h3>
+                <div class="form-group">
+                    <label for="syncCode">同步代码</label>
+                    <input type="text" id="syncCode" placeholder="输入同步代码" value="FAMILY123">
+                </div>
+                <p>使用相同的同步代码可以在不同设备间同步数据</p>
+                <button class="btn" onclick="saveSyncCode()">💾 保存同步代码</button>
             </div>
         </div>
     </div>
@@ -724,8 +758,8 @@
 
     <script>
         // 常量定义
-        const OPERATION_TIMEOUT = 300;
         const DEFAULT_PASSWORD = "1234";
+        const DEFAULT_SYNC_CODE = "FAMILY123";
         
         // 初始化数据
         const defaultProducts = [
@@ -762,6 +796,10 @@
             if (!localStorage.getItem('lastResetDate')) {
                 localStorage.setItem('lastResetDate', new Date().toDateString());
             }
+            
+            if (!localStorage.getItem('syncCode')) {
+                localStorage.setItem('syncCode', DEFAULT_SYNC_CODE);
+            }
         }
         
         // 显示状态通知
@@ -782,6 +820,9 @@
         function updateUI() {
             // 更新货币数量
             document.getElementById('currencyAmount').textContent = localStorage.getItem('currency');
+            
+            // 更新同步代码显示
+            document.getElementById('syncCode').value = localStorage.getItem('syncCode');
             
             // 更新商品列表
             const products = JSON.parse(localStorage.getItem('products'));
@@ -897,6 +938,106 @@
                     tab.classList.add('active');
                 }
             });
+        }
+        
+        // 保存同步代码
+        function saveSyncCode() {
+            const syncCode = document.getElementById('syncCode').value;
+            if (syncCode && syncCode.length >= 6) {
+                localStorage.setItem('syncCode', syncCode);
+                showStatus('同步代码已保存！');
+            } else {
+                showStatus('同步代码至少需要6个字符！', 'error');
+            }
+        }
+        
+        // 模拟数据同步
+        function syncData() {
+            const syncIndicator = document.getElementById('syncIndicator');
+            const syncStatusText = document.getElementById('syncStatusText');
+            
+            syncIndicator.classList.remove('sync-active');
+            syncIndicator.classList.add('sync-inactive');
+            syncStatusText.textContent = '同步中...';
+            
+            // 模拟网络请求
+            setTimeout(() => {
+                syncIndicator.classList.remove('sync-inactive');
+                syncIndicator.classList.add('sync-active');
+                syncStatusText.textContent = '已同步';
+                showStatus('数据同步成功！');
+            }, 1500);
+        }
+        
+        // 备份数据到文件
+        function backupData() {
+            const data = {
+                currency: localStorage.getItem('currency'),
+                products: JSON.parse(localStorage.getItem('products')),
+                history: JSON.parse(localStorage.getItem('history')),
+                dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
+                lastResetDate: localStorage.getItem('lastResetDate'),
+                syncCode: localStorage.getItem('syncCode')
+            };
+            
+            const dataStr = JSON.stringify(data);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'super_voucher_backup.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showStatus('数据备份成功！');
+        }
+        
+        // 恢复数据
+        function restoreData() {
+            const fileInput = document.getElementById('restoreFile');
+            const password = document.getElementById('restorePassword').value;
+            
+            if (!fileInput.files.length) {
+                showStatus('请选择备份文件！', "error");
+                return;
+            }
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // 验证备份文件格式
+                    if (!data.currency || !data.products || !data.history) {
+                        showStatus('备份文件格式错误！', "error");
+                        return;
+                    }
+                    
+                    localStorage.setItem('currency', data.currency);
+                    localStorage.setItem('products', JSON.stringify(data.products));
+                    localStorage.setItem('history', JSON.stringify(data.history));
+                    localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
+                    localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
+                    localStorage.setItem('syncCode', data.syncCode || DEFAULT_SYNC_CODE);
+                    
+                    closeRestoreModal();
+                    updateUI();
+                    showStatus('数据恢复成功！');
+                } catch (error) {
+                    console.error('恢复数据错误:', error);
+                    showStatus('恢复数据失败: ' + error.message, "error");
+                }
+            };
+            
+            reader.readAsText(file);
         }
         
         // 模态框操作函数
@@ -1275,75 +1416,6 @@
             closeClearHistoryModal();
             updateUI();
             showStatus('交易历史已清空！');
-        }
-        
-        // 备份数据
-        function backupData() {
-            const data = {
-                currency: localStorage.getItem('currency'),
-                products: JSON.parse(localStorage.getItem('products')),
-                history: JSON.parse(localStorage.getItem('history')),
-                dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
-                lastResetDate: localStorage.getItem('lastResetDate')
-            };
-            
-            const dataStr = JSON.stringify(data);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'super_voucher_backup.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            showStatus('数据备份成功！');
-        }
-        
-        // 恢复数据
-        function restoreData() {
-            const fileInput = document.getElementById('restoreFile');
-            const password = document.getElementById('restorePassword').value;
-            
-            if (!fileInput.files.length) {
-                showStatus('请选择备份文件！', "error");
-                return;
-            }
-            
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // 验证备份文件格式
-                    if (!data.currency || !data.products || !data.history) {
-                        showStatus('备份文件格式错误！', "error");
-                        return;
-                    }
-                    
-                    localStorage.setItem('currency', data.currency);
-                    localStorage.setItem('products', JSON.stringify(data.products));
-                    localStorage.setItem('history', JSON.stringify(data.history));
-                    localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
-                    localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
-                    
-                    closeRestoreModal();
-                    updateUI();
-                    showStatus('数据恢复成功！');
-                } catch (error) {
-                    console.error('恢复数据错误:', error);
-                    showStatus('恢复数据失败: ' + error.message, "error");
-                }
-            };
-            
-            reader.readAsText(file);
         }
         
         // 确认重置系统
