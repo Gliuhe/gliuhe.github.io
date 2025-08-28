@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级兑换券平台</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .app-container {
+            width: 90%;
+            max-width: 1024px;
+            height: 90vh;
+            max-height: 768px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background: #4ecdc4;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .currency-display {
+            background: #f7f7f7;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .currency-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 5px 0;
+        }
+        
+        .app-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            color: #4ecdc4;
+            margin: 15px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #f7f7f7;
+        }
+        
+        .btn {
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            background: #3db9b1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+        
+        .btn-success {
+            background: #2ecc71;
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        
+        .nav-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            margin: 5px 0;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-btn.active {
+            background: #4ecdc4;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: #4ecdc4;
+            outline: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .product-card {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 180px;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-name {
+            color: #4ecdc4;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
+        .product-price {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+        
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .positive {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .exchange-item {
+            background-color: #f0f7ff;
+        }
+        
+        .add-item {
+            background-color: #e6f7e9;
+        }
+        
+        .subtract-item {
+            background-color: #fff0f0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .admin-only {
+            border-left: 4px solid #ff6b6b;
+            padding-left: 10px;
+            margin: 15px 0;
+        }
+        
+        .backup-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: #f7f7f7;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            width: 30%;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .status-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .success-notify {
+            background-color: #2ecc71;
+        }
+        
+        .error-notify {
+            background-color: #e74c3c;
+        }
+        
+        .processing-notify {
+            background-color: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                width: 95%;
+                height: 95vh;
+            }
+            
+            .app-body {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                padding: 10px;
+                flex-direction: row;
+                overflow-x: auto;
+            }
+            
+            .nav-btn {
+                text-align: center;
+                padding: 8px 12px;
+                margin: 0 5px;
+                white-space: nowrap;
+            }
+            
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .stat-box {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <div class="app-title">超级兑换券管理系统</div>
+            <div id="currentDate"></div>
+        </div>
+        
+        <div class="currency-display">
+            <div>当前超级兑换券</div>
+            <div class="currency-amount" id="currencyAmount">0</div>
+        </div>
+        
+        <div class="app-body">
+            <div class="sidebar">
+                <button class="nav-btn active" data-tab="dashboard">控制面板</button>
+                <button class="nav-btn" data-tab="products">商品兑换</button>
+                <button class="nav-btn" data-tab="history">交易历史</button>
+                <button class="nav-btn" data-tab="manage-products">商品管理</button>
+                <button class="nav-btn" data-tab="settings">系统设置</button>
+            </div>
+            
+            <div class="main-content">
+                <!-- 控制面板 -->
+                <div id="dashboard" class="tab-content active">
+                    <h2 class="section-title">控制面板</h2>
+                    <div class="stats-container">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalCurrency">0</div>
+                            <div class="stat-label">总超级兑换券</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalTransactions">0</div>
+                            <div class="stat-label">总交易次数</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalProducts">0</div>
+                            <div class="stat-label">商品数量</div>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button class="btn" id="addBtn" onclick="openAddModal()">增加兑换券</button>
+                        <button class="btn btn-danger" id="subtractBtn" onclick="openSubtractModal()">减少兑换券</button>
+                    </div>
+                    
+                    <div class="admin-only">
+                        <h3>管理员操作</h3>
+                        <button class="btn" onclick="openPasswordModal()">修改密码</button>
+                        <button class="btn btn-success" onclick="openProductModal()">添加商品</button>
+                    </div>
+                </div>
+                
+                <!-- 商品兑换 -->
+                <div id="products" class="tab-content">
+                    <h2 class="section-title">可兑换商品</h2>
+                    <div class="products-grid" id="productsList">
+                        <!-- 商品将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                
+                <!-- 交易历史 -->
+                <div id="history" class="tab-content">
+                    <h2 class="section-title">交易历史</h2>
+                    <div class="history-list" id="historyList">
+                        <!-- 历史记录将通过JavaScript动态添加 -->
+                    </div>
+                </div>
+                
+                <!-- 商品管理 -->
+                <div id="manage-products" class="tab-content">
+                    <h2 class="section-title">商品管理</h2>
+                    <div class="admin-only">
+                        <p>在此管理所有可兑换商品，需要管理员密码。</p>
+                        <div id="manageProductsList">
+                            <!-- 商品管理列表将通过JavaScript动态添加 -->
+                        </div>
+                        <button class="btn btn-success" onclick="openProductModal()">添加新商品</button>
+                    </div>
+                </div>
+                
+                <!-- 系统设置 -->
+                <div id="settings" class="tab-content">
+                    <h2 class="section-title">系统设置</h2>
+                    <div class="admin-only">
+                        <div class="backup-section">
+                            <h3>数据备份与恢复</h3>
+                            <p>备份所有系统数据到本地文件，或从备份文件恢复数据。</p>
+                            <button class="btn" id="backupBtn" onclick="backupData()">备份数据</button>
+                            <button class="btn btn-success" id="restoreBtn" onclick="restoreData()">恢复数据</button>
+                            <input type="file" id="restoreFile" accept=".json" style="display: none;">
+                        </div>
+                        
+                        <div class="backup-section">
+                            <h3>重置系统</h3>
+                            <p>警告：此操作将清除所有数据并恢复默认设置！</p>
+                            <button class="btn btn-danger" id="resetBtn" onclick="resetSystem()">重置系统</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 状态通知 -->
+    <div class="status-notification" id="statusNotification"></div>
+    
+    <!-- 增加货币模态框 -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <h2>增加超级兑换券</h2>
+            <div class="form-group">
+                <label for="addAmount">增加数量</label>
+                <input type="number" id="addAmount" min="1" placeholder="请输入增加数量">
+            </div>
+            <div class="form-group">
+                <label for="addReason">原因</label>
+                <input type="text" id="addReason" placeholder="例如：完成作业">
+            </div>
+            <div class="form-group">
+                <label for="addPassword">密码</label>
+                <input type="password" id="addPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" id="confirmAddBtn" onclick="addCurrency()">确认增加</button>
+            <button class="btn btn-danger" onclick="closeAddModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 减少货币模态框 -->
+    <div class="modal" id="subtractModal">
+        <div class="modal-content">
+            <h2>减少超级兑换券</h2>
+            <div class="form-group">
+                <label for="subtractAmount">减少数量</label>
+                <input type="number" id="subtractAmount" min="1" placeholder="请输入减少数量">
+            </div>
+            <div class="form-group">
+                <label for="subtractReason">原因</label>
+                <input type="text" id="subtractReason" placeholder="例如：兑换玩具">
+            </div>
+            <div class="form-group">
+                <label for="subtractPassword">密码</label>
+                <input type="password" id="subtractPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" id="confirmSubtractBtn" onclick="subtractCurrency()">确认减少</button>
+            <button class="btn btn-danger" onclick="closeSubtractModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 修改密码模态框 -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <h2>修改密码</h2>
+            <div class="form-group">
+                <label for="currentPassword">当前密码</label>
+                <input type="password" id="currentPassword" placeholder="请输入当前密码">
+            </div>
+            <div class="form-group">
+                <label for="newPassword">新密码</label>
+                <input type="password" id="newPassword" placeholder="请输入新密码">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">确认新密码</label>
+                <input type="password" id="confirmPassword" placeholder="请再次输入新密码">
+            </div>
+            <button class="btn" id="changePwBtn" onclick="changePassword()">确认修改</button>
+            <button class="btn btn-danger" onclick="closePasswordModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 商品管理模态框 -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <h2 id="productModalTitle">添加商品</h2>
+            <div class="form-group">
+                <label for="productName">商品名称</label>
+                <input type="text" id="productName" placeholder="请输入商品名称">
+            </div>
+            <div class="form-group">
+                <label for="productPrice">价格</label>
+                <input type="number" id="productPrice" min="1" placeholder="请输入价格">
+            </div>
+            <div class="form-group">
+                <label for="productDescription">商品描述 (可选)</label>
+                <textarea id="productDescription" placeholder="请输入商品描述"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="productPassword">密码</label>
+                <input type="password" id="productPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" id="saveProductBtn" onclick="saveProduct()">保存</button>
+            <button class="btn btn-danger" onclick="closeProductModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 删除确认模态框 -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h2>删除商品</h2>
+            <p id="deleteProductName">确定要删除这个商品吗？此操作不可恢复。</p>
+            <div class="form-group">
+                <label for="deletePassword">密码</label>
+                <input type="password" id="deletePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">确认删除</button>
+            <button class="btn" onclick="closeDeleteModal()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 常量定义
+        const OPERATION_TIMEOUT = 300; // 操作超时时间（毫秒）
+        
+        // 初始化数据
+        const defaultProducts = [
+            { id: 1, name: "玩具小车", price: 20, description: "炫酷的遥控小车" },
+            { id: 2, name: "乐高套装", price: 50, description: "创意拼搭乐高玩具" },
+            { id: 3, name: "卡通贴纸", price: 5, description: "多种卡通角色贴纸" },
+            { id: 4, name: "图画书", price: 15, description: "有趣的儿童图画书" },
+            { id: 5, name: "遥控飞机", price: 100, description: "高科技遥控飞机" },
+            { id: 6, name: "一小时游戏时间", price: 10, description: "额外的一小时电子游戏时间" }
+        ];
+        
+        // 当前状态
+        let currentEditProductId = null;
+        let currentDeleteProductId = null;
+        let isProcessing = false;
+        
+        // 初始化数据函数
+        function initializeData() {
+            if (!localStorage.getItem('currency')) {
+                localStorage.setItem('currency', '100');
+            }
+            
+            if (!localStorage.getItem('password')) {
+                localStorage.setItem('password', '1234'); // 默认密码
+            }
+            
+            if (!localStorage.getItem('products')) {
+                localStorage.setItem('products', JSON.stringify(defaultProducts));
+            }
+            
+            if (!localStorage.getItem('history')) {
+                // 添加一些初始历史记录
+                const initialHistory = [
+                    {
+                        date: new Date(Date.now() - 86400000).toISOString(),
+                        amount: 50,
+                        reason: "初始奖励",
+                        type: "add"
+                    },
+                    {
+                        date: new Date(Date.now() - 43200000).toISOString(),
+                        amount: -20,
+                        reason: "兑换玩具小车",
+                        type: "exchange"
+                    }
+                ];
+                localStorage.setItem('history', JSON.stringify(initialHistory));
+            }
+        }
+        
+        // 显示状态通知
+        function showStatus(message, type) {
+            const notification = document.getElementById('statusNotification');
+            notification.textContent = message;
+            notification.className = `status-notification ${type}-notify`;
+            notification.style.opacity = 1;
+            
+            setTimeout(() => {
+                notification.style.opacity = 0;
+            }, 3000);
+        }
+        
+        // 更新界面显示（优化版）
+        function updateUI() {
+            // 显示加载状态
+            document.querySelectorAll('button').forEach(btn => {
+                btn.disabled = true;
+            });
+            showStatus("正在更新界面...", "processing");
+            
+            try {
+                // 更新货币数量
+                document.getElementById('currencyAmount').textContent = localStorage.getItem('currency');
+                document.getElementById('totalCurrency').textContent = localStorage.getItem('currency');
+                
+                // 更新商品列表
+                const products = JSON.parse(localStorage.getItem('products') || '[]');
+                const productsList = document.getElementById('productsList');
+                
+                // 使用文档片段优化DOM操作
+                const productsFragment = document.createDocumentFragment();
+                
+                products.forEach(product => {
+                    const productElement = document.createElement('div');
+                    productElement.className = 'product-card';
+                    productElement.innerHTML = `
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-description">${product.description || ''}</div>
+                        <div class="product-price">${product.price} 超级兑换券</div>
+                        <button class="btn" onclick="exchangeProduct(${product.id})">兑换</button>
+                    `;
+                    productsFragment.appendChild(productElement);
+                });
+                
+                productsList.innerHTML = '';
+                productsList.appendChild(productsFragment);
+                
+                // 更新商品管理列表
+                const manageProductsList = document.getElementById('manageProductsList');
+                const manageFragment = document.createDocumentFragment();
+                
+                products.forEach(product => {
+                    const productElement = document.createElement('div');
+                    productElement.className = 'history-item';
+                    productElement.innerHTML = `
+                        <div>
+                            <strong>${product.name}</strong> - ${product.price} 兑换券
+                            <div>${product.description || '暂无描述'}</div>
+                        </div>
+                        <div>
+                            <button class="btn" onclick="editProduct(${product.id})">编辑</button>
+                            <button class="btn btn-danger" onclick="openDeleteModal(${product.id}, '${product.name.replace(/'/g, "\\'")}')">删除</button>
+                        </div>
+                    `;
+                    manageFragment.appendChild(productElement);
+                });
+                
+                manageProductsList.innerHTML = '';
+                manageProductsList.appendChild(manageFragment);
+                
+                // 更新历史记录（修复错误）
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                const historyList = document.getElementById('historyList');
+                const historyFragment = document.createDocumentFragment();
+                
+                history.slice().reverse().forEach(record => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    // 根据操作类型添加不同样式
+                    if (record.type === "exchange") {
+                        historyItem.classList.add('exchange-item');
+                    } else if (record.type === "add") {
+                        historyItem.classList.add('add-item');
+                    } else if (record.type === "subtract") {
+                        historyItem.classList.add('subtract-item');
+                    }
+                    
+                    const amountClass = record.amount > 0 ? 'positive' : 'negative';
+                    const amountSign = record.amount > 0 ? '+' : '';
+                    
+                    historyItem.innerHTML = `
+                        <div>
+                            <strong>${record.reason}</strong>
+                            <div>${new Date(record.date).toLocaleString()}</div>
+                        </div>
+                        <div class="${amountClass}">${amountSign}${record.amount}</div>
+                    `;
+                    historyFragment.appendChild(historyItem);
+                });
+                
+                historyList.innerHTML = '';
+                historyList.appendChild(historyFragment);
+                
+                // 更新统计信息
+                document.getElementById('totalTransactions').textContent = history.length;
+                document.getElementById('totalProducts').textContent = products.length;
+                
+                // 更新当前日期
+                document.getElementById('currentDate').textContent = new Date().toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                showStatus("界面更新完成", "success");
+            } catch (error) {
+                console.error("UI更新错误:", error);
+                showStatus("界面更新失败，请检查控制台", "error");
+            } finally {
+                // 启用所有按钮
+                setTimeout(() => {
+                    document.querySelectorAll('button').forEach(btn => {
+                        btn.disabled = false;
+                    });
+                }, OPERATION_TIMEOUT);
+            }
+        }
+        
+        // 标签切换功能
+        function setupTabNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    // 移除所有active类
+                    document.querySelectorAll('.nav-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // 隐藏所有标签内容
+                    document.querySelectorAll('.tab-content').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    
+                    // 激活当前按钮和标签
+                    this.classList.add('active');
+                    document.getElementById(this.dataset.tab).classList.add('active');
+                });
+            });
+        }
+        
+        // 打开增加货币模态框
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'flex';
+            document.getElementById('addAmount').focus();
+        }
+        
+        // 关闭增加货币模态框
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('addAmount').value = '';
+            document.getElementById('addReason').value = '';
+            document.getElementById('addPassword').value = '';
+        }
+        
+        // 打开减少货币模态框
+        function openSubtractModal() {
+            document.getElementById('subtractModal').style.display = 'flex';
+            document.getElementById('subtractAmount').focus();
+        }
+        
+        // 关闭减少货币模态框
+        function closeSubtractModal() {
+            document.getElementById('subtractModal').style.display = 'none';
+            document.getElementById('subtractAmount').value = '';
+            document.getElementById('subtractReason').value = '';
+            document.getElementById('subtractPassword').value = '';
+        }
+        
+        // 打开修改密码模态框
+        function openPasswordModal() {
+            document.getElementById('passwordModal').style.display = 'flex';
+            document.getElementById('currentPassword').focus();
+        }
+        
+        // 关闭修改密码模态框
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+        
+        // 打开商品模态框
+        function openProductModal() {
+            document.getElementById('productModalTitle').textContent = '添加商品';
+            currentEditProductId = null;
+            document.getElementById('productModal').style.display = 'flex';
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productDescription').value = '';
+            document.getElementById('productPassword').value = '';
+            document.getElementById('productName').focus();
+        }
+        
+        // 关闭商品模态框
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+        
+        // 打开删除确认模态框
+        function openDeleteModal(productId, productName) {
+            currentDeleteProductId = productId;
+            document.getElementById('deleteProductName').textContent = `确定要删除"${productName}"吗？此操作不可恢复。`;
+            document.getElementById('deleteModal').style.display = 'flex';
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('deletePassword').focus();
+        }
+        
+        // 关闭删除确认模态框
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+        
+        // 增加货币（优化版）
+        function addCurrency() {
+            const amount = parseInt(document.getElementById('addAmount').value);
+            const reason = document.getElementById('addReason').value;
+            const password = document.getElementById('addPassword').value;
+            const btn = document.getElementById('confirmAddBtn');
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            btn.disabled = true;
+            btn.textContent = "处理中...";
+            
+            // 添加超时处理
+            const timeout = setTimeout(() => {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认增加";
+                showStatus("操作超时，请重试", "error");
+            }, OPERATION_TIMEOUT);
+            
+            try {
+                if (!amount || amount <= 0) {
+                    showStatus('请输入有效的增加数量！', "error");
+                    return;
+                }
+                
+                if (!reason) {
+                    showStatus('请输入原因！', "error");
+                    return;
+                }
+                
+                if (password !== localStorage.getItem('password')) {
+                    showStatus('密码错误！', "error");
+                    return;
+                }
+                
+                const currentCurrency = parseInt(localStorage.getItem('currency'));
+                localStorage.setItem('currency', currentCurrency + amount);
+                
+                // 添加历史记录
+                const history = JSON.parse(localStorage.getItem('history'));
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: amount,
+                    reason: reason,
+                    type: "add"
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+                
+                closeAddModal();
+                updateUI();
+                showStatus(`成功增加 ${amount} 超级兑换券！`, "success");
+            } catch (error) {
+                console.error("增加货币错误:", error);
+                showStatus('增加货币失败: ' + error.message, "error");
+            } finally {
+                clearTimeout(timeout);
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认增加";
+            }
+        }
+        
+        // 减少货币（优化版）
+        function subtractCurrency() {
+            const amount = parseInt(document.getElementById('subtractAmount').value);
+            const reason = document.getElementById('subtractReason').value;
+            const password = document.getElementById('subtractPassword').value;
+            const btn = document.getElementById('confirmSubtractBtn');
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            btn.disabled = true;
+            btn.textContent = "处理中...";
+            
+            const timeout = setTimeout(() => {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认减少";
+                showStatus("操作超时，请重试", "error");
+            }, OPERATION_TIMEOUT);
+            
+            try {
+                if (!amount || amount <= 0) {
+                    showStatus('请输入有效的减少数量！', "error");
+                    return;
+                }
+                
+                if (!reason) {
+                    showStatus('请输入原因！', "error");
+                    return;
+                }
+                
+                if (password !== localStorage.getItem('password')) {
+                    showStatus('密码错误！', "error");
+                    return;
+                }
+                
+                const currentCurrency = parseInt(localStorage.getItem('currency'));
+                if (currentCurrency < amount) {
+                    showStatus('超级兑换券不足！', "error");
+                    return;
+                }
+                
+                localStorage.setItem('currency', currentCurrency - amount);
+                
+                // 添加历史记录
+                const history = JSON.parse(localStorage.getItem('history'));
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: -amount,
+                    reason: reason,
+                    type: "subtract"
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+                
+                closeSubtractModal();
+                updateUI();
+                showStatus(`成功减少 ${amount} 超级兑换券！`, "success");
+            } catch (error) {
+                console.error("减少货币错误:", error);
+                showStatus('减少货币失败: ' + error.message, "error");
+            } finally {
+                clearTimeout(timeout);
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认减少";
+            }
+        }
+        
+        // 兑换商品（修复版本）
+        function exchangeProduct(productId) {
+            const products = JSON.parse(localStorage.getItem('products'));
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) {
+                showStatus('商品不存在！', "error");
+                return;
+            }
+            
+            const currentCurrency = parseInt(localStorage.getItem('currency'));
+            if (currentCurrency < product.price) {
+                showStatus('超级兑换券不足，无法兑换该商品！', "error");
+                return;
+            }
+            
+            if (confirm(`确定要兑换 ${product.name} 吗？这将花费 ${product.price} 超级兑换券。`)) {
+                localStorage.setItem('currency', currentCurrency - product.price);
+                
+                // 添加历史记录（修复类型问题）
+                const history = JSON.parse(localStorage.getItem('history'));
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: -product.price,
+                    reason: `兑换商品：${product.name}`,
+                    type: "exchange" // 确保类型正确
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+                
+                updateUI();
+                showStatus(`成功兑换 ${product.name}！`, "success");
+            }
+        }
+        
+        // 修改密码（优化版）
+        function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const btn = document.getElementById('changePwBtn');
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            btn.disabled = true;
+            btn.textContent = "处理中...";
+            
+            const timeout = setTimeout(() => {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认修改";
+                showStatus("操作超时，请重试", "error");
+            }, OPERATION_TIMEOUT);
+            
+            try {
+                if (currentPassword !== localStorage.getItem('password')) {
+                    showStatus('当前密码错误！', "error");
+                    return;
+                }
+                
+                if (!newPassword) {
+                    showStatus('新密码不能为空！', "error");
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    showStatus('两次输入的新密码不一致！', "error");
+                    return;
+                }
+                
+                localStorage.setItem('password', newPassword);
+                closePasswordModal();
+                showStatus('密码修改成功！', "success");
+            } catch (error) {
+                console.error("修改密码错误:", error);
+                showStatus('修改密码失败: ' + error.message, "error");
+            } finally {
+                clearTimeout(timeout);
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认修改";
+            }
+        }
+        
+        // 保存商品（优化版）
+        function saveProduct() {
+            const name = document.getElementById('productName').value;
+            const price = parseInt(document.getElementById('productPrice').value);
+            const description = document.getElementById('productDescription').value;
+            const password = document.getElementById('productPassword').value;
+            const btn = document.getElementById('saveProductBtn');
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            btn.disabled = true;
+            btn.textContent = "处理中...";
+            
+            const timeout = setTimeout(() => {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "保存";
+                showStatus("操作超时，请重试", "error");
+            }, OPERATION_TIMEOUT);
+            
+            try {
+                if (!name) {
+                    showStatus('请输入商品名称！', "error");
+                    return;
+                }
+                
+                if (!price || price <= 0) {
+                    showStatus('请输入有效的价格！', "error");
+                    return;
+                }
+                
+                if (password !== localStorage.getItem('password')) {
+                    showStatus('密码错误！', "error");
+                    return;
+                }
+                
+                const products = JSON.parse(localStorage.getItem('products'));
+                
+                if (currentEditProductId) {
+                    // 编辑现有商品
+                    const index = products.findIndex(p => p.id === currentEditProductId);
+                    if (index !== -1) {
+                        products[index] = {
+                            ...products[index],
+                            name: name,
+                            price: price,
+                            description: description
+                        };
+                    }
+                } else {
+                    // 添加新商品
+                    const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                    products.push({
+                        id: newId,
+                        name: name,
+                        price: price,
+                        description: description
+                    });
+                }
+                
+                localStorage.setItem('products', JSON.stringify(products));
+                closeProductModal();
+                updateUI();
+                showStatus(`商品${currentEditProductId ? '修改' : '添加'}成功！`, "success");
+            } catch (error) {
+                console.error("保存商品错误:", error);
+                showStatus('商品操作失败: ' + error.message, "error");
+            } finally {
+                clearTimeout(timeout);
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "保存";
+            }
+        }
+        
+        // 编辑商品
+        function editProduct(productId) {
+            const products = JSON.parse(localStorage.getItem('products'));
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) {
+                showStatus('商品不存在！', "error");
+                return;
+            }
+            
+            document.getElementById('productModalTitle').textContent = '编辑商品';
+            currentEditProductId = productId;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productDescription').value = product.description || '';
+            document.getElementById('productPassword').value = '';
+            document.getElementById('productModal').style.display = 'flex';
+            document.getElementById('productName').focus();
+        }
+        
+        // 确认删除商品（优化版）
+        function confirmDelete() {
+            const password = document.getElementById('deletePassword').value;
+            const btn = document.getElementById('confirmDeleteBtn');
+            
+            if (isProcessing) return;
+            isProcessing = true;
+            btn.disabled = true;
+            btn.textContent = "删除中...";
+            
+            const timeout = setTimeout(() => {
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认删除";
+                showStatus("操作超时，请重试", "error");
+            }, OPERATION_TIMEOUT);
+            
+            try {
+                if (password !== localStorage.getItem('password')) {
+                    showStatus('密码错误！', "error");
+                    return;
+                }
+                
+                const products = JSON.parse(localStorage.getItem('products'));
+                const index = products.findIndex(p => p.id === currentDeleteProductId);
+                
+                if (index !== -1) {
+                    const productName = products[index].name;
+                    products.splice(index, 1);
+                    localStorage.setItem('products', JSON.stringify(products));
+                    updateUI();
+                    showStatus(`商品"${productName}"删除成功！`, "success");
+                    closeDeleteModal();
+                }
+            } catch (error) {
+                console.error("删除商品错误:", error);
+                showStatus('删除商品失败: ' + error.message, "error");
+            } finally {
+                clearTimeout(timeout);
+                isProcessing = false;
+                btn.disabled = false;
+                btn.textContent = "确认删除";
+            }
+        }
+        
+        // 备份数据
+        function backupData() {
+            const btn = document.getElementById('backupBtn');
+            btn.disabled = true;
+            btn.textContent = "备份中...";
+            
+            try {
+                const data = {
+                    currency: localStorage.getItem('currency'),
+                    password: localStorage.getItem('password'),
+                    products: JSON.parse(localStorage.getItem('products')),
+                    history: JSON.parse(localStorage.getItem('history'))
+                };
+                
+                const dataStr = JSON.stringify(data);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `超级兑换券备份_${new Date().toLocaleDateString()}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                showStatus('数据备份成功！', "success");
+            } catch (error) {
+                console.error("备份数据错误:", error);
+                showStatus('备份数据失败: ' + error.message, "error");
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = "备份数据";
+                }, OPERATION_TIMEOUT);
+            }
+        }
+        
+        // 恢复数据
+        function restoreData() {
+            const password = prompt('请输入管理员密码：');
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            if (!confirm('警告：这将覆盖所有现有数据！确定要继续吗？')) {
+                return;
+            }
+            
+            const fileInput = document.getElementById('restoreFile');
+            fileInput.click();
+        }
+        
+        // 处理文件上传
+        document.getElementById('restoreFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const btn = document.getElementById('restoreBtn');
+            btn.disabled = true;
+            btn.textContent = "恢复中...";
+            
+            try {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        if (data.currency) localStorage.setItem('currency', data.currency);
+                        if (data.password) localStorage.setItem('password', data.password);
+                        if (data.products) localStorage.setItem('products', JSON.stringify(data.products));
+                        if (data.history) localStorage.setItem('history', JSON.stringify(data.history));
+                        
+                        updateUI();
+                        showStatus('数据恢复成功！', "success");
+                    } catch (error) {
+                        console.error("解析备份文件错误:", error);
+                        showStatus('文件格式错误，恢复失败！', "error");
+                    }
+                };
+                reader.readAsText(file);
+            } catch (error) {
+                console.error("恢复数据错误:", error);
+                showStatus('恢复数据失败: ' + error.message, "error");
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = "恢复数据";
+                }, OPERATION_TIMEOUT);
+                
+                // 清空input，允许重复选择同一文件
+                event.target.value = '';
+            }
+        });
+        
+        // 重置系统
+        function resetSystem() {
+            const password = prompt('请输入管理员密码：');
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            if (!confirm('警告：这将清除所有数据并恢复默认设置！确定要继续吗？')) {
+                return;
+            }
+            
+            const btn = document.getElementById('resetBtn');
+            btn.disabled = true;
+            btn.textContent = "重置中...";
+            
+            try {
+                localStorage.clear();
+                initializeData();
+                updateUI();
+                showStatus('系统已重置！', "success");
+            } catch (error) {
+                console.error("重置系统错误:", error);
+                showStatus('重置失败: ' + error.message, "error");
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = "重置系统";
+                }, OPERATION_TIMEOUT);
+            }
+        }
+        
+        // 初始化
+        function initApp() {
+            initializeData();
+            setupTabNavigation();
+            updateUI();
+            
+            // 点击模态框外部关闭模态框
+            window.onclick = function(event) {
+                if (event.target.className === 'modal') {
+                    event.target.style.display = 'none';
+                }
+            };
+        }
+        
+        // 启动应用
+        initApp();
+    </script>
+</body>
+</html>
