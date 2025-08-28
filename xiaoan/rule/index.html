@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>兑换规则 - 2508</title>
+    <title>超级兑换券乐园 - 完整修复版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -972,4 +972,238 @@
             
             if (!reward || reward <= 0) {
                 showStatus('请输入有效的奖励数量！', "error");
-    
+                return;
+            }
+            
+            if (!timeLimit || timeLimit <= 0) {
+                showStatus('请输入有效的倒计时时间！', "error");
+                return;
+            }
+            
+            if (!content) {
+                showStatus('请输入规则内容！', "error");
+                return;
+            }
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const ruleIndex = rules.findIndex(r => r.id === id);
+            
+            if (ruleIndex === -1) {
+                showStatus('规则不存在！', "error");
+                return;
+            }
+            
+            rules[ruleIndex] = {
+                id: id,
+                title: title,
+                reward: reward,
+                timeLimit: timeLimit,
+                content: content
+            };
+            
+            localStorage.setItem('rules', JSON.stringify(rules));
+            closeEditRuleModal();
+            updateUI();
+            showStatus('规则更新成功！');
+        }
+        
+        // 确认删除规则
+        function confirmDeleteRule() {
+            const id = parseInt(document.getElementById('deleteRuleId').value);
+            const password = document.getElementById('deleteRulePassword').value;
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const updatedRules = rules.filter(r => r.id !== id);
+            
+            localStorage.setItem('rules', JSON.stringify(updatedRules));
+            closeDeleteRuleModal();
+            updateUI();
+            showStatus('规则删除成功！');
+        }
+        
+        // 确认清空今日统计
+        function confirmResetToday() {
+            const password = document.getElementById('resetTodayPassword').value;
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            // 计算当前今日统计值
+            const history = JSON.parse(localStorage.getItem('history'));
+            const today = new Date().toDateString();
+            let todayTotal = 0;
+            
+            history.forEach(record => {
+                const recordDate = new Date(record.date).toDateString();
+                if (recordDate === today && record.amount > 0) {
+                    todayTotal += record.amount;
+                }
+            });
+            
+            // 设置调整值为负的今日总值
+            localStorage.setItem('todayAdjustment', (-todayTotal).toString());
+            
+            closeResetTodayModal();
+            updateUI();
+            showStatus('今日统计已清空！');
+        }
+        
+        // 开始任务
+        function startTask(ruleId) {
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const rule = rules.find(r => r.id === ruleId);
+            
+            if (!rule) {
+                showStatus('规则不存在！', "error");
+                return;
+            }
+            
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            activeTasks[ruleId] = {
+                status: 'in-progress',
+                startTime: new Date().toISOString(),
+                reward: rule.reward
+            };
+            
+            localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            updateUI();
+            showStatus('任务已开始！倒计时进行中...', "warning");
+            
+            // 启动定时器更新UI
+            startTimer();
+        }
+        
+        // 确认完成任务
+        function confirmCompleteRule() {
+            const id = parseInt(document.getElementById('completeRuleId').value);
+            const password = document.getElementById('completeRulePassword').value;
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const rule = rules.find(r => r.id === id);
+            
+            if (!rule) {
+                showStatus('规则不存在！', "error");
+                return;
+            }
+            
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            const task = activeTasks[id];
+            
+            if (!task || task.status !== 'in-progress') {
+                showStatus('任务未开始或已完成！', "error");
+                return;
+            }
+            
+            // 计算是否超时
+            const startTime = new Date(task.startTime);
+            const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
+            const timeLimitSeconds = rule.timeLimit * 60;
+            let reward = rule.reward;
+            let status = 'completed';
+            
+            if (elapsed > timeLimitSeconds) {
+                // 超时，奖励减半
+                reward = Math.floor(reward / 2);
+                status = 'timeout';
+                showStatus('任务超时！奖励减半。', "warning");
+            } else {
+                showStatus('任务按时完成！', "success");
+            }
+            
+            // 增加货币
+            const currentCurrency = parseInt(localStorage.getItem('currency'));
+            localStorage.setItem('currency', currentCurrency + reward);
+            
+            // 添加历史记录
+            const history = JSON.parse(localStorage.getItem('history'));
+            history.push({
+                date: new Date().toISOString(),
+                amount: reward,
+                reason: `完成任务：${rule.title}`,
+                type: 'add',
+                status: status
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+            
+            // 更新任务状态
+            task.status = status;
+            activeTasks[id] = task;
+            localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            
+            closeCompleteRuleModal();
+            updateUI();
+        }
+        
+        // 启动定时器更新UI
+        function startTimer() {
+            // 每秒更新一次UI
+            setInterval(() => {
+                const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+                const rules = JSON.parse(localStorage.getItem('rules'));
+                let needUpdate = false;
+                
+                // 检查任务是否超时
+                for (const [ruleId, task] of Object.entries(activeTasks)) {
+                    if (task.status === 'in-progress') {
+                        const rule = rules.find(r => r.id == ruleId);
+                        if (rule) {
+                            const startTime = new Date(task.startTime);
+                            const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
+                            const timeLimitSeconds = rule.timeLimit * 60;
+                            
+                            if (elapsed > timeLimitSeconds) {
+                                // 任务超时
+                                task.status = 'timeout';
+                                activeTasks[ruleId] = task;
+                                needUpdate = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (needUpdate) {
+                    localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+                    updateUI();
+                }
+            }, 1000); // 每秒检查一次
+        }
+        
+        // 初始化
+        function initApp() {
+            initializeData();
+            updateUI();
+            startTimer();
+            
+            // 点击模态框外部关闭模态框
+            window.onclick = function(event) {
+                if (event.target.className === 'modal') {
+                    const modals = document.querySelectorAll('.modal');
+                    modals.forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                }
+            };
+        }
+        
+        // 启动应用
+        initApp();
+    </script>
+</body>
+</html>
