@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>任务中心</title>
+    <title>超级兑换券乐园 - 完整修复版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -31,11 +31,13 @@
             padding: 30px;
             margin-top: 20px;
             border: 3px solid #ffd166;
+            position: relative;
         }
         
         .header {
             text-align: center;
             margin-bottom: 25px;
+            position: relative;
         }
         
         .header h1 {
@@ -51,40 +53,14 @@
             display: inline-block;
         }
         
-        .nav-tabs {
-            display: flex;
-            border-bottom: 3px solid #ffd166;
-            margin-bottom: 25px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .nav-tab {
-            padding: 15px 25px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #777;
-            font-size: 1.2rem;
-            position: relative;
-            transition: all 0.3s;
-            margin: 0 5px;
-            border-radius: 15px 15px 0 0;
-        }
-        
-        .nav-tab.active {
-            color: #118ab2;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .nav-tab.active::after {
+        .header::after {
             content: "";
             position: absolute;
-            bottom: -3px;
-            left: 0;
-            width: 100%;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
             height: 4px;
-            background: #06d6a0;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
             border-radius: 2px;
         }
         
@@ -220,6 +196,19 @@
             position: relative;
         }
         
+        .modal-content::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 2px solid #06d6a0;
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+        
         .rules-container {
             background: #f8f9fa;
             border-radius: 20px;
@@ -314,6 +303,43 @@
             color: #333;
         }
         
+        .nav-tabs {
+            display: flex;
+            border-bottom: 3px solid #ffd166;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+            font-size: 1.2rem;
+            position: relative;
+            transition: all 0.3s;
+            margin: 0 5px;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .nav-tab.active {
+            color: #118ab2;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #06d6a0;
+            border-radius: 2px;
+        }
+        
         .tab-content {
             display: none;
             animation: fadeIn 0.5s ease-in-out;
@@ -328,6 +354,60 @@
             justify-content: center;
             flex-wrap: wrap;
             margin: 20px 0;
+        }
+        
+        .complete-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .complete-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            animation: confetti-fall 1.5s ease-in-out forwards;
+        }
+        
+        .success-message {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            position: relative;
+            z-index: 10;
+            transform: scale(0.8);
+            opacity: 0;
+            animation: popup 0.5s 0.5s forwards;
+        }
+        
+        .success-message h2 {
+            color: #06d6a0;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .success-message p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
         }
         
         .today-summary {
@@ -396,6 +476,50 @@
         .status-timeout {
             background: rgba(231, 76, 60, 0.2);
             color: #e74c3c;
+        }
+        
+        .reset-today-btn {
+            background: #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-left: 10px;
+            border: none;
+            box-shadow: 0 3px 8px rgba(255, 107, 107, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .reset-today-btn:hover {
+            background: #ff5252;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(255, 107, 107, 0.4);
+        }
+        
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes popup {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
         
         @keyframes fadeIn {
@@ -570,6 +694,21 @@
         </div>
     </div>
     
+    <!-- 完成规则模态框 -->
+    <div class="modal" id="completeRuleModal">
+        <div class="modal-content">
+            <h2>完成任务</h2>
+            <input type="hidden" id="completeRuleId">
+            <p id="completeRuleText">请确认已完成任务，并输入密码</p>
+            <div class="form-group">
+                <label for="completeRulePassword">密码</label>
+                <input type="password" id="completeRulePassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="confirmCompleteRule()">确认完成</button>
+            <button class="btn btn-danger" onclick="closeCompleteRuleModal()">取消</button>
+        </div>
+    </div>
+    
     <!-- 清空今日统计模态框 -->
     <div class="modal" id="resetTodayModal">
         <div class="modal-content">
@@ -584,18 +723,12 @@
         </div>
     </div>
     
-    <!-- 完成规则模态框 -->
-    <div class="modal" id="completeRuleModal">
-        <div class="modal-content">
-            <h2>完成任务</h2>
-            <input type="hidden" id="completeRuleId">
-            <p id="completeRuleText">请确认已完成任务，并输入密码</p>
-            <div class="form-group">
-                <label for="completeRulePassword">密码</label>
-                <input type="password" id="completeRulePassword" placeholder="请输入密码">
-            </div>
-            <button class="btn" onclick="confirmCompleteRule()">确认完成</button>
-            <button class="btn btn-danger" onclick="closeCompleteRuleModal()">取消</button>
+    <!-- 完成动画 -->
+    <div class="complete-animation" id="completeAnimation">
+        <div class="success-message">
+            <h2>任务完成！</h2>
+            <p>恭喜你获得了 <span id="rewardAmount">0</span> 超级兑换券！</p>
+            <button class="btn" onclick="closeCompleteAnimation()">确定</button>
         </div>
     </div>
     
@@ -863,17 +996,6 @@
             document.getElementById('deleteRuleModal').style.display = 'none';
         }
         
-        // 打开清空今日统计模态框
-        function openResetTodayModal() {
-            document.getElementById('resetTodayModal').style.display = 'flex';
-            document.getElementById('resetTodayPassword').value = '';
-        }
-        
-        // 关闭清空今日统计模态框
-        function closeResetTodayModal() {
-            document.getElementById('resetTodayModal').style.display = 'none';
-        }
-        
         // 打开完成规则模态框
         function openCompleteRuleModal(ruleId) {
             const rules = JSON.parse(localStorage.getItem('rules'));
@@ -904,6 +1026,22 @@
         // 关闭完成规则模态框
         function closeCompleteRuleModal() {
             document.getElementById('completeRuleModal').style.display = 'none';
+        }
+        
+        // 打开清空今日统计模态框
+        function openResetTodayModal() {
+            document.getElementById('resetTodayModal').style.display = 'flex';
+            document.getElementById('resetTodayPassword').value = '';
+        }
+        
+        // 关闭清空今日统计模态框
+        function closeResetTodayModal() {
+            document.getElementById('resetTodayModal').style.display = 'none';
+        }
+        
+        // 关闭完成动画
+        function closeCompleteAnimation() {
+            document.getElementById('completeAnimation').classList.remove('active');
         }
         
         // 添加规则
@@ -1025,39 +1163,17 @@
             const rules = JSON.parse(localStorage.getItem('rules'));
             const updatedRules = rules.filter(r => r.id !== id);
             
+            // 修复问题：删除规则时同时删除相关任务状态
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            if (activeTasks[id]) {
+                delete activeTasks[id];
+                localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            }
+            
             localStorage.setItem('rules', JSON.stringify(updatedRules));
             closeDeleteRuleModal();
             updateUI();
             showStatus('规则删除成功！');
-        }
-        
-        // 确认清空今日统计
-        function confirmResetToday() {
-            const password = document.getElementById('resetTodayPassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
-                return;
-            }
-            
-            // 计算当前今日统计值
-            const history = JSON.parse(localStorage.getItem('history'));
-            const today = new Date().toDateString();
-            let todayTotal = 0;
-            
-            history.forEach(record => {
-                const recordDate = new Date(record.date).toDateString();
-                if (recordDate === today && record.amount > 0) {
-                    todayTotal += record.amount;
-                }
-            });
-            
-            // 设置调整值为负的今日总值
-            localStorage.setItem('todayAdjustment', (-todayTotal).toString());
-            
-            closeResetTodayModal();
-            updateUI();
-            showStatus('今日统计已清空！');
         }
         
         // 开始任务
@@ -1106,7 +1222,8 @@
             const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
             const task = activeTasks[id];
             
-            if (!task || task.status !== 'in-progress') {
+            // 修复问题：允许超时任务完成
+            if (!task || (task.status !== 'in-progress' && task.status !== 'timeout')) {
                 showStatus('任务未开始或已完成！', "error");
                 return;
             }
@@ -1118,7 +1235,7 @@
             let reward = rule.reward;
             let status = 'completed';
             
-            if (elapsed > timeLimitSeconds) {
+            if (elapsed > timeLimitSeconds || task.status === 'timeout') {
                 // 超时，奖励减半
                 reward = Math.floor(reward / 2);
                 status = 'timeout';
@@ -1143,12 +1260,79 @@
             localStorage.setItem('history', JSON.stringify(history));
             
             // 更新任务状态
-            task.status = status;
+            task.status = 'completed';
             activeTasks[id] = task;
             localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
             
+            // 显示完成动画
+            showCompleteAnimation(reward);
+            
+            // 关闭完成规则模态框
             closeCompleteRuleModal();
+            
+            // 更新界面
             updateUI();
+        }
+        
+        // 显示完成动画
+        function showCompleteAnimation(reward) {
+            const animation = document.getElementById('completeAnimation');
+            const rewardAmount = document.getElementById('rewardAmount');
+            
+            rewardAmount.textContent = reward;
+            animation.classList.add('active');
+            
+            // 创建彩色纸屑
+            createConfetti();
+        }
+        
+        // 创建彩色纸屑
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#06d6a0', '#118ab2', '#ffd166', '#8338ec'];
+            const container = document.getElementById('completeAnimation');
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(confetti);
+                
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1500);
+            }
+        }
+        
+        // 确认清空今日统计
+        function confirmResetToday() {
+            const password = document.getElementById('resetTodayPassword').value;
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('密码错误！', "error");
+                return;
+            }
+            
+            // 计算当前今日统计值
+            const history = JSON.parse(localStorage.getItem('history'));
+            const today = new Date().toDateString();
+            let todayTotal = 0;
+            
+            history.forEach(record => {
+                const recordDate = new Date(record.date).toDateString();
+                if (recordDate === today && record.amount > 0) {
+                    todayTotal += record.amount;
+                }
+            });
+            
+            // 设置调整值为负的今日总值
+            localStorage.setItem('todayAdjustment', (-todayTotal).toString());
+            
+            closeResetTodayModal();
+            updateUI();
+            showStatus('今日统计已清空！');
         }
         
         // 启动定时器更新UI
