@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超级兑换券乐园 - 多设备同步版</title>
+    <title>超级兑换券乐园 - v1.4.2</title>
     <style>
         * {
             box-sizing: border-box;
@@ -120,8 +120,12 @@
         
         .btn:hover {
             background: #05c191;
-            transform: translateY(-5px);
+            transform: translateY(-5px) scale(1.05);
             box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
+        }
+        
+        .btn:hover::after {
+            transform: rotate(30deg) translate(10%, 10%);
         }
         
         .btn-danger {
@@ -237,7 +241,7 @@
         }
         
         .product:hover {
-            transform: translateY(-8px);
+            transform: translateY(-8px) scale(1.03);
             box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
         }
         
@@ -434,6 +438,27 @@
             background: #ff6b6b;
         }
         
+        .sync-instructions {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 2px dashed #ffd166;
+        }
+        
+        .sync-instructions h3 {
+            color: #118ab2;
+            margin-bottom: 10px;
+        }
+        
+        .sync-instructions ol {
+            padding-left: 20px;
+        }
+        
+        .sync-instructions li {
+            margin-bottom: 10px;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -507,18 +532,6 @@
         
         <!-- 控制面板 -->
         <div id="dashboard" class="tab-content active">
-            <div class="sync-section">
-                <div class="sync-status">
-                    <div class="sync-indicator sync-active" id="syncIndicator"></div>
-                    <div>数据状态: <span id="syncStatusText">已同步</span></div>
-                </div>
-                <div class="action-buttons">
-                    <button class="btn" onclick="syncData()">🔄 立即同步数据</button>
-                    <button class="btn" onclick="backupData()">💾 备份数据到文件</button>
-                    <button class="btn" onclick="openRestoreModal()">📥 从文件恢复数据</button>
-                </div>
-            </div>
-            
             <div class="currency-display">
                 <h2>我的超级兑换券</h2>
                 <div class="coin-icon">💰</div>
@@ -567,13 +580,29 @@
             </div>
             
             <div class="sync-section">
-                <h3>多设备同步设置</h3>
-                <div class="form-group">
-                    <label for="syncCode">同步代码</label>
-                    <input type="text" id="syncCode" placeholder="输入同步代码" value="FAMILY123">
+                <h2>手动数据同步</h2>
+                <div class="sync-status">
+                    <div class="sync-indicator sync-active"></div>
+                    <div>数据状态: <span id="syncStatusText">本地存储</span></div>
                 </div>
-                <p>使用相同的同步代码可以在不同设备间同步数据</p>
-                <button class="btn" onclick="saveSyncCode()">💾 保存同步代码</button>
+                
+                <div class="action-buttons">
+                    <button class="btn" onclick="backupData()">💾 备份数据到文件</button>
+                    <button class="btn" onclick="openRestoreModal()">📥 从文件恢复数据</button>
+                </div>
+                
+                <div class="sync-instructions">
+                    <h3>同步操作指南</h3>
+                    <ol>
+                        <li>在设备A上点击<strong>"备份数据到文件"</strong>按钮</li>
+                        <li>将生成的备份文件保存到您的设备</li>
+                        <li>将备份文件发送到设备B（通过邮件、消息等）</li>
+                        <li>在设备B上点击<strong>"从文件恢复数据"</strong>按钮</li>
+                        <li>选择备份文件并输入密码</li>
+                        <li>点击<strong>"恢复数据"</strong>按钮完成同步</li>
+                    </ol>
+                    <p><strong>注意：</strong>每次同步前请确保所有设备都已备份最新数据</p>
+                </div>
             </div>
         </div>
     </div>
@@ -759,7 +788,6 @@
     <script>
         // 常量定义
         const DEFAULT_PASSWORD = "1234";
-        const DEFAULT_SYNC_CODE = "FAMILY123";
         
         // 初始化数据
         const defaultProducts = [
@@ -796,10 +824,6 @@
             if (!localStorage.getItem('lastResetDate')) {
                 localStorage.setItem('lastResetDate', new Date().toDateString());
             }
-            
-            if (!localStorage.getItem('syncCode')) {
-                localStorage.setItem('syncCode', DEFAULT_SYNC_CODE);
-            }
         }
         
         // 显示状态通知
@@ -820,9 +844,6 @@
         function updateUI() {
             // 更新货币数量
             document.getElementById('currencyAmount').textContent = localStorage.getItem('currency');
-            
-            // 更新同步代码显示
-            document.getElementById('syncCode').value = localStorage.getItem('syncCode');
             
             // 更新商品列表
             const products = JSON.parse(localStorage.getItem('products'));
@@ -938,211 +959,6 @@
                     tab.classList.add('active');
                 }
             });
-        }
-        
-        // 保存同步代码
-        function saveSyncCode() {
-            const syncCode = document.getElementById('syncCode').value;
-            if (syncCode && syncCode.length >= 6) {
-                localStorage.setItem('syncCode', syncCode);
-                showStatus('同步代码已保存！');
-            } else {
-                showStatus('同步代码至少需要6个字符！', 'error');
-            }
-        }
-        
-        // 模拟数据同步
-        function syncData() {
-            const syncIndicator = document.getElementById('syncIndicator');
-            const syncStatusText = document.getElementById('syncStatusText');
-            
-            syncIndicator.classList.remove('sync-active');
-            syncIndicator.classList.add('sync-inactive');
-            syncStatusText.textContent = '同步中...';
-            
-            // 模拟网络请求
-            setTimeout(() => {
-                syncIndicator.classList.remove('sync-inactive');
-                syncIndicator.classList.add('sync-active');
-                syncStatusText.textContent = '已同步';
-                showStatus('数据同步成功！');
-            }, 1500);
-        }
-        
-        // 备份数据到文件
-        function backupData() {
-            const data = {
-                currency: localStorage.getItem('currency'),
-                products: JSON.parse(localStorage.getItem('products')),
-                history: JSON.parse(localStorage.getItem('history')),
-                dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
-                lastResetDate: localStorage.getItem('lastResetDate'),
-                syncCode: localStorage.getItem('syncCode')
-            };
-            
-            const dataStr = JSON.stringify(data);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = 'super_voucher_backup.json';
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-            
-            showStatus('数据备份成功！');
-        }
-        
-        // 恢复数据
-        function restoreData() {
-            const fileInput = document.getElementById('restoreFile');
-            const password = document.getElementById('restorePassword').value;
-            
-            if (!fileInput.files.length) {
-                showStatus('请选择备份文件！', "error");
-                return;
-            }
-            
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
-                return;
-            }
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    
-                    // 验证备份文件格式
-                    if (!data.currency || !data.products || !data.history) {
-                        showStatus('备份文件格式错误！', "error");
-                        return;
-                    }
-                    
-                    localStorage.setItem('currency', data.currency);
-                    localStorage.setItem('products', JSON.stringify(data.products));
-                    localStorage.setItem('history', JSON.stringify(data.history));
-                    localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
-                    localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
-                    localStorage.setItem('syncCode', data.syncCode || DEFAULT_SYNC_CODE);
-                    
-                    closeRestoreModal();
-                    updateUI();
-                    showStatus('数据恢复成功！');
-                } catch (error) {
-                    console.error('恢复数据错误:', error);
-                    showStatus('恢复数据失败: ' + error.message, "error");
-                }
-            };
-            
-            reader.readAsText(file);
-        }
-        
-        // 模态框操作函数
-        function openAddModal() {
-            document.getElementById('addModal').style.display = 'flex';
-            document.getElementById('addAmount').value = '';
-            document.getElementById('addReason').value = '';
-            document.getElementById('addPassword').value = '';
-        }
-        
-        function closeAddModal() {
-            document.getElementById('addModal').style.display = 'none';
-        }
-        
-        function openSubtractModal() {
-            document.getElementById('subtractModal').style.display = 'flex';
-            document.getElementById('subtractAmount').value = '';
-            document.getElementById('subtractReason').value = '';
-            document.getElementById('subtractPassword').value = '';
-        }
-        
-        function closeSubtractModal() {
-            document.getElementById('subtractModal').style.display = 'none';
-        }
-        
-        function openPasswordModal() {
-            document.getElementById('passwordModal').style.display = 'flex';
-            document.getElementById('currentPassword').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
-        }
-        
-        function closePasswordModal() {
-            document.getElementById('passwordModal').style.display = 'none';
-        }
-        
-        function openAddProductModal() {
-            document.getElementById('addProductModal').style.display = 'flex';
-            document.getElementById('productName').value = '';
-            document.getElementById('productPrice').value = '';
-            document.getElementById('productDailyLimit').value = '';
-            document.getElementById('addProductPassword').value = '';
-        }
-        
-        function closeAddProductModal() {
-            document.getElementById('addProductModal').style.display = 'none';
-        }
-        
-        function openEditProductModal(productId) {
-            const products = JSON.parse(localStorage.getItem('products'));
-            const product = products.find(p => p.id === productId);
-            
-            if (product) {
-                document.getElementById('editProductId').value = product.id;
-                document.getElementById('editProductName').value = product.name;
-                document.getElementById('editProductPrice').value = product.price;
-                document.getElementById('editProductDailyLimit').value = product.dailyLimit;
-                document.getElementById('editProductPassword').value = '';
-                
-                document.getElementById('editProductModal').style.display = 'flex';
-            }
-        }
-        
-        function closeEditProductModal() {
-            document.getElementById('editProductModal').style.display = 'none';
-        }
-        
-        function openDeleteProductModal(productId, productName) {
-            document.getElementById('deleteProductId').value = productId;
-            document.getElementById('deleteProductText').textContent = `确定要删除商品"${productName}"吗？此操作不可恢复。`;
-            document.getElementById('deleteProductPassword').value = '';
-            
-            document.getElementById('deleteProductModal').style.display = 'flex';
-        }
-        
-        function closeDeleteProductModal() {
-            document.getElementById('deleteProductModal').style.display = 'none';
-        }
-        
-        function openClearHistoryModal() {
-            document.getElementById('clearHistoryModal').style.display = 'flex';
-            document.getElementById('clearHistoryPassword').value = '';
-        }
-        
-        function closeClearHistoryModal() {
-            document.getElementById('clearHistoryModal').style.display = 'none';
-        }
-        
-        function openRestoreModal() {
-            document.getElementById('restoreModal').style.display = 'flex';
-            document.getElementById('restoreFile').value = '';
-            document.getElementById('restorePassword').value = '';
-        }
-        
-        function closeRestoreModal() {
-            document.getElementById('restoreModal').style.display = 'none';
-        }
-        
-        function openResetModal() {
-            document.getElementById('resetModal').style.display = 'flex';
-            document.getElementById('resetPassword').value = '';
-        }
-        
-        function closeResetModal() {
-            document.getElementById('resetModal').style.display = 'none';
         }
         
         // 增加货币
@@ -1418,6 +1234,78 @@
             showStatus('交易历史已清空！');
         }
         
+        // 备份数据
+        function backupData() {
+            const data = {
+                currency: localStorage.getItem('currency'),
+                products: JSON.parse(localStorage.getItem('products')),
+                history: JSON.parse(localStorage.getItem('history')),
+                dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
+                lastResetDate: localStorage.getItem('lastResetDate'),
+                password: localStorage.getItem('password')
+            };
+            
+            const dataStr = JSON.stringify(data);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `super_voucher_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showStatus('数据备份成功！备份文件名: ' + exportFileDefaultName);
+        }
+        
+        // 恢复数据
+        function restoreData() {
+            const fileInput = document.getElementById('restoreFile');
+            const password = document.getElementById('restorePassword').value;
+            
+            if (!fileInput.files.length) {
+                showStatus('请选择备份文件！', "error");
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // 验证备份文件格式
+                    if (!data.currency || !data.products || !data.history) {
+                        showStatus('备份文件格式错误！', "error");
+                        return;
+                    }
+                    
+                    // 验证密码
+                    if (password !== data.password) {
+                        showStatus('密码错误！', "error");
+                        return;
+                    }
+                    
+                    localStorage.setItem('currency', data.currency);
+                    localStorage.setItem('products', JSON.stringify(data.products));
+                    localStorage.setItem('history', JSON.stringify(data.history));
+                    localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
+                    localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
+                    localStorage.setItem('password', data.password);
+                    
+                    closeRestoreModal();
+                    updateUI();
+                    showStatus('数据恢复成功！');
+                } catch (error) {
+                    console.error('恢复数据错误:', error);
+                    showStatus('恢复数据失败: ' + error.message, "error");
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+        
         // 确认重置系统
         function confirmResetSystem() {
             const password = document.getElementById('resetPassword').value;
@@ -1437,6 +1325,111 @@
             closeResetModal();
             updateUI();
             showStatus('系统已重置！');
+        }
+        
+        // 模态框操作函数
+        function openAddModal() {
+            document.getElementById('addModal').style.display = 'flex';
+            document.getElementById('addAmount').value = '';
+            document.getElementById('addReason').value = '';
+            document.getElementById('addPassword').value = '';
+        }
+        
+        function closeAddModal() {
+            document.getElementById('addModal').style.display = 'none';
+        }
+        
+        function openSubtractModal() {
+            document.getElementById('subtractModal').style.display = 'flex';
+            document.getElementById('subtractAmount').value = '';
+            document.getElementById('subtractReason').value = '';
+            document.getElementById('subtractPassword').value = '';
+        }
+        
+        function closeSubtractModal() {
+            document.getElementById('subtractModal').style.display = 'none';
+        }
+        
+        function openPasswordModal() {
+            document.getElementById('passwordModal').style.display = 'flex';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+        
+        function closePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+        }
+        
+        function openAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'flex';
+            document.getElementById('productName').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productDailyLimit').value = '';
+            document.getElementById('addProductPassword').value = '';
+        }
+        
+        function closeAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'none';
+        }
+        
+        function openEditProductModal(productId) {
+            const products = JSON.parse(localStorage.getItem('products'));
+            const product = products.find(p => p.id === productId);
+            
+            if (product) {
+                document.getElementById('editProductId').value = product.id;
+                document.getElementById('editProductName').value = product.name;
+                document.getElementById('editProductPrice').value = product.price;
+                document.getElementById('editProductDailyLimit').value = product.dailyLimit;
+                document.getElementById('editProductPassword').value = '';
+                
+                document.getElementById('editProductModal').style.display = 'flex';
+            }
+        }
+        
+        function closeEditProductModal() {
+            document.getElementById('editProductModal').style.display = 'none';
+        }
+        
+        function openDeleteProductModal(productId, productName) {
+            document.getElementById('deleteProductId').value = productId;
+            document.getElementById('deleteProductText').textContent = `确定要删除商品"${productName}"吗？此操作不可恢复。`;
+            document.getElementById('deleteProductPassword').value = '';
+            
+            document.getElementById('deleteProductModal').style.display = 'flex';
+        }
+        
+        function closeDeleteProductModal() {
+            document.getElementById('deleteProductModal').style.display = 'none';
+        }
+        
+        function openClearHistoryModal() {
+            document.getElementById('clearHistoryModal').style.display = 'flex';
+            document.getElementById('clearHistoryPassword').value = '';
+        }
+        
+        function closeClearHistoryModal() {
+            document.getElementById('clearHistoryModal').style.display = 'none';
+        }
+        
+        function openRestoreModal() {
+            document.getElementById('restoreModal').style.display = 'flex';
+            document.getElementById('restoreFile').value = '';
+            document.getElementById('restorePassword').value = '';
+        }
+        
+        function closeRestoreModal() {
+            document.getElementById('restoreModal').style.display = 'none';
+        }
+        
+        function openResetModal() {
+            document.getElementById('resetModal').style.display = 'flex';
+            document.getElementById('resetPassword').value = '';
+        }
+        
+        function closeResetModal() {
+            document.getElementById('resetModal').style.display = 'none';
         }
         
         // 初始化
