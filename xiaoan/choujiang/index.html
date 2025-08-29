@@ -358,8 +358,8 @@
         
         .admin-entry {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 10px;
+            right: 10px;
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -478,11 +478,11 @@
         }
         
         .prize-card {
-            background: #f8f9fa;
+            background: white;
             border-radius: 15px;
             padding: 15px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border: 2px solid #ffd166;
             transition: all 0.3s;
         }
@@ -493,32 +493,61 @@
         }
         
         .prize-icon {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 10px;
         }
         
         .prize-name {
+            font-weight: bold;
             font-size: 1.2rem;
             color: #118ab2;
-            font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .prize-weight {
+            background: #06d6a0;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 10px;
         }
         
         .prize-description {
+            color: #666;
             font-size: 0.9rem;
-            color: #555;
-            line-height: 1.4;
         }
         
-        .action-message {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
+        .record-item {
+            background: white;
             border-radius: 15px;
-            background: rgba(6, 214, 160, 0.1);
-            color: #06d6a0;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .record-prize {
+            font-weight: bold;
+            color: #118ab2;
+            font-size: 1.2rem;
+        }
+        
+        .record-date {
+            color: #777;
+            font-size: 0.9rem;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            animation: confetti-fall 1.5s ease-in-out forwards;
         }
         
         .result-card {
@@ -527,10 +556,9 @@
             padding: 30px;
             margin: 20px auto;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
             border: 3px solid #ffd166;
             max-width: 400px;
-            animation: pulse 1s infinite;
         }
         
         .result-title {
@@ -547,6 +575,28 @@
             margin: 20px 0;
         }
         
+        .reward-tag {
+            background: #ffd166;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 5px;
+            box-shadow: 0 3px 8px rgba(255, 209, 102, 0.3);
+        }
+        
+        .action-message {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(6, 214, 160, 0.1);
+            color: #06d6a0;
+        }
+        
         @keyframes confetti-fall {
             0% {
                 transform: translateY(-100px) rotate(0deg);
@@ -555,20 +605,6 @@
             100% {
                 transform: translateY(100vh) rotate(360deg);
                 opacity: 0;
-            }
-        }
-        
-        @keyframes popup {
-            0% {
-                transform: scale(0.8);
-                opacity: 0;
-            }
-            70% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
             }
         }
         
@@ -623,13 +659,6 @@
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 15px;
             }
-            
-            .admin-entry {
-                top: 20px;
-                right: 20px;
-                width: 35px;
-                height: 35px;
-            }
         }
     </style>
 </head>
@@ -645,8 +674,8 @@
         </div>
         
         <div class="nav-tabs">
-            <div class="nav-tab active" onclick="switchTab('lottery')">🎡 欢乐抽奖</div>
-            <div class="nav-tab" onclick="switchTab('records')">📝 抽奖记录</div>
+            <div class="nav-tab active" data-tab="lottery">🎡 欢乐抽奖</div>
+            <div class="nav-tab" data-tab="records">📝 抽奖记录</div>
         </div>
         
         <!-- 抽奖界面 -->
@@ -662,10 +691,10 @@
             
             <!-- 奖品展示 -->
             <div class="prizes-grid" id="prizesContainer">
-                <!-- 奖品卡片将通过JavaScript动态添加 -->
+                <!-- 奖品将通过JavaScript动态添加 -->
             </div>
             
-            <div class="action-box">
+            <div class="action-buttons">
                 <div class="action-message" id="actionMessage"></div>
                 <button class="btn pulse" id="startLotteryBtn">🎡 开始抽奖</button>
             </div>
@@ -685,8 +714,8 @@
             <h2>奖品管理</h2>
             <button class="btn pulse" id="addPrizeBtn">➕ 添加新奖品</button>
             
-            <div class="rules-container" id="managePrizesContainer">
-                <!-- 管理奖品卡片将通过JavaScript动态添加 -->
+            <div class="prizes-grid" id="managePrizesContainer">
+                <!-- 管理奖品将通过JavaScript动态添加 -->
             </div>
         </div>
         
@@ -694,7 +723,8 @@
         <div class="result-card" id="resultCard" style="display:none;">
             <div class="result-title">恭喜你获得了</div>
             <div class="result-content" id="resultContent"></div>
-            <button class="btn" onclick="closeResultCard()">确定</button>
+            <div id="rewardTags"></div>
+            <button class="btn" id="confirmResultBtn">确定</button>
         </div>
     </div>
     
@@ -712,12 +742,19 @@
                 <input type="number" id="prizeWeight" min="1" value="10" placeholder="权重越高，中奖概率越大">
             </div>
             <div class="form-group">
-                <label for="prizeDescription">奖品描述</label>
-                <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
+                <label for="prizeRewardType">奖励类型</label>
+                <select id="prizeRewardType">
+                    <option value="item">实物奖品</option>
+                    <option value="currency">兑换券</option>
+                </select>
+            </div>
+            <div class="form-group" id="currencyAmountGroup" style="display:none;">
+                <label for="currencyAmountInput">兑换券数量</label>
+                <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
             </div>
             <div class="form-group">
-                <label for="addPrizePassword">密码</label>
-                <input type="password" id="addPrizePassword" placeholder="请输入密码">
+                <label for="prizeDescription">奖品描述</label>
+                <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
             </div>
             <button class="btn" id="confirmAddPrizeBtn">添加奖品</button>
             <button class="btn btn-danger" id="cancelAddPrizeBtn">取消</button>
@@ -743,8 +780,6 @@
             <h2>删除奖品</h2>
             <div class="form-group">
                 <p id="deletePrizeMessage">确定要删除该奖品吗？此操作不可恢复。</p>
-                <label for="deletePassword">密码</label>
-                <input type="password" id="deletePassword" placeholder="请输入密码">
             </div>
             <button class="btn btn-danger" id="confirmDeleteBtn">确认删除</button>
             <button class="btn" id="cancelDeleteBtn">取消</button>
@@ -761,13 +796,42 @@
         
         // 默认奖品
         const defaultPrizes = [
-            { id: 1, name: "玩具小熊", icon: "🧸", weight: 10, description: "可爱的毛绒小熊玩具" },
-            { id: 2, name: "彩色画笔", icon: "🖌️", weight: 20, description: "24色水彩画笔套装" },
-            { id: 3, name: "故事书", icon: "📚", weight: 15, description: "精美绘本故事书" },
-            { id: 4, name: "拼图游戏", icon: "🧩", weight: 12, description: "100片卡通拼图" },
-            { id: 5, name: "贴纸套装", icon: "🎟️", weight: 25, description: "各种卡通贴纸" },
-            { id: 6, name: "小零食", icon: "🍪", weight: 30, description: "美味健康小零食" },
-            { id: 7, name: "神秘大奖", icon: "🎁", weight: 5, description: "特别惊喜礼物" }
+            {
+                id: 1,
+                name: "玩具小熊",
+                rewardType: "item",
+                currencyAmount: 0,
+                description: "可爱的毛绒小熊玩具",
+                icon: "🧸",
+                weight: 10
+            },
+            {
+                id: 2,
+                name: "兑换券奖励",
+                rewardType: "currency",
+                currencyAmount: 20,
+                description: "20张兑换券",
+                icon: "🎟️",
+                weight: 20
+            },
+            {
+                id: 3,
+                name: "故事书",
+                rewardType: "item",
+                currencyAmount: 0,
+                description: "精美绘本故事书",
+                icon: "📚",
+                weight: 15
+            },
+            {
+                id: 4,
+                name: "兑换券奖励",
+                rewardType: "currency",
+                currencyAmount: 50,
+                description: "50张兑换券",
+                icon: "🎟️",
+                weight: 5
+            }
         ];
         
         // 初始化数据
@@ -824,14 +888,22 @@
             container.innerHTML = '';
             
             prizes.forEach(prize => {
-                const card = document.createElement('div');
-                card.className = 'prize-card';
-                card.innerHTML = `
+                const prizeCard = document.createElement('div');
+                prizeCard.className = 'prize-card';
+                
+                let rewardTag = '';
+                if (prize.rewardType === 'currency') {
+                    rewardTag = `<div class="reward-tag">${prize.currencyAmount}兑换券</div>`;
+                }
+                
+                prizeCard.innerHTML = `
                     <div class="prize-icon">${prize.icon}</div>
                     <div class="prize-name">${prize.name}</div>
+                    <div class="prize-weight">权重: ${prize.weight}</div>
                     <div class="prize-description">${prize.description}</div>
+                    ${rewardTag}
                 `;
-                container.appendChild(card);
+                container.appendChild(prizeCard);
             });
         }
         
@@ -842,19 +914,25 @@
             container.innerHTML = '';
             
             prizes.forEach(prize => {
-                const card = document.createElement('div');
-                card.className = 'prize-item';
-                card.innerHTML = `
-                    <div class="prize-header">
-                        <div class="prize-title">${prize.name}</div>
-                        <div class="prize-reward">权重: ${prize.weight}</div>
-                    </div>
-                    <div class="prize-content">${prize.description}</div>
-                    <div class="prize-actions">
+                const prizeCard = document.createElement('div');
+                prizeCard.className = 'prize-card';
+                
+                let rewardTag = '';
+                if (prize.rewardType === 'currency') {
+                    rewardTag = `<div class="reward-tag">${prize.currencyAmount}兑换券</div>`;
+                }
+                
+                prizeCard.innerHTML = `
+                    <div class="prize-icon">${prize.icon}</div>
+                    <div class="prize-name">${prize.name}</div>
+                    <div class="prize-weight">权重: ${prize.weight}</div>
+                    <div class="prize-description">${prize.description}</div>
+                    ${rewardTag}
+                    <div class="action-buttons" style="margin-top:15px;">
                         <button class="btn btn-danger delete-btn" data-id="${prize.id}">🗑️ 删除</button>
                     </div>
                 `;
-                container.appendChild(card);
+                container.appendChild(prizeCard);
             });
         }
         
@@ -872,12 +950,45 @@
             records.slice().reverse().forEach(record => {
                 const recordElement = document.createElement('div');
                 recordElement.className = 'record-item';
+                
+                let rewardTag = '';
+                if (record.rewardType === 'currency') {
+                    rewardTag = `<div class="reward-tag">${record.currencyAmount}兑换券</div>`;
+                }
+                
                 recordElement.innerHTML = `
                     <div class="record-prize">${record.prize}</div>
+                    ${rewardTag}
                     <div class="record-date">${new Date(record.date).toLocaleString()}</div>
                 `;
                 recordsList.appendChild(recordElement);
             });
+        }
+        
+        // 创建彩色纸屑效果
+        function createConfetti() {
+            const container = document.querySelector('.container');
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = getRandomColor();
+                container.appendChild(confetti);
+                
+                // 移除动画结束后元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 1500);
+            }
+        }
+        
+        // 获取随机颜色
+        function getRandomColor() {
+            const colors = [
+                '#ff6b6b', '#48dbfb', '#1dd1a1', '#ff9ff3', 
+                '#feca57', '#ff9f43', '#00d2d3'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
         }
         
         // 切换标签页
@@ -896,11 +1007,23 @@
             document.getElementById(tabId).classList.add('active');
             
             // 激活选中的标签
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                if (tab.getAttribute('onclick').includes(tabId)) {
-                    tab.classList.add('active');
-                }
-            });
+            document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
+        }
+        
+        // 打开添加奖品模态框
+        function openAddPrizeModal() {
+            document.getElementById('addPrizeModal').style.display = 'flex';
+            document.getElementById('prizeName').value = '';
+            document.getElementById('prizeWeight').value = '10';
+            document.getElementById('prizeRewardType').value = 'item';
+            document.getElementById('currencyAmountInput').value = '';
+            document.getElementById('currencyAmountGroup').style.display = 'none';
+            document.getElementById('prizeDescription').value = '';
+        }
+        
+        // 关闭添加奖品模态框
+        function closeAddPrizeModal() {
+            document.getElementById('addPrizeModal').style.display = 'none';
         }
         
         // 开始抽奖
@@ -917,14 +1040,17 @@
             startBtn.disabled = true;
             startBtn.textContent = '抽奖中...';
             
-            // 显示"抽奖中..."消息
+            // 显示消息
             const actionMessage = document.getElementById('actionMessage');
-            actionMessage.textContent = '抽奖中...';
+            actionMessage.textContent = '正在抽奖中，请稍候...';
             actionMessage.style.display = 'block';
             
             // 扣除兑换券
             localStorage.setItem('currency', currency - LOTTERY_COST);
             document.getElementById('currencyAmount').textContent = currency - LOTTERY_COST;
+            
+            // 创建彩色纸屑效果
+            createConfetti();
             
             // 抽奖动画效果（5秒后显示结果）
             setTimeout(() => {
@@ -934,6 +1060,8 @@
                 const records = JSON.parse(localStorage.getItem('records'));
                 records.push({
                     prize: prize.name,
+                    rewardType: prize.rewardType,
+                    currencyAmount: prize.currencyAmount,
                     date: new Date().toISOString()
                 });
                 localStorage.setItem('records', JSON.stringify(records));
@@ -944,8 +1072,6 @@
                 // 启用抽奖按钮
                 startBtn.disabled = false;
                 startBtn.textContent = '🎡 开始抽奖';
-                
-                // 隐藏"抽奖中..."消息
                 actionMessage.style.display = 'none';
             }, 5000);
         }
@@ -954,19 +1080,47 @@
         function showLotteryResult(prize) {
             const resultCard = document.getElementById('resultCard');
             const resultContent = document.getElementById('resultContent');
+            const rewardTags = document.getElementById('rewardTags');
             
             resultContent.innerHTML = `
-                <div style="font-size: 3rem;">${prize.icon}</div>
+                <div style="font-size: 3rem; margin-bottom:15px;">${prize.icon}</div>
                 <div>${prize.name}</div>
             `;
             
+            rewardTags.innerHTML = '';
+            if (prize.rewardType === 'currency') {
+                rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount}兑换券</div>`;
+            }
+            
             resultCard.style.display = 'block';
-            showStatus(`恭喜获得：${prize.name}！`, "success");
+            
+            // 创建五彩纸屑效果
+            createConfetti();
+            
+            // 显示通知
+            let message = `恭喜获得：${prize.name}`;
+            if (prize.rewardType === 'currency') {
+                message += ` (${prize.currencyAmount}兑换券)`;
+            }
+            showStatus(message, "success");
         }
         
-        // 关闭结果卡片
-        function closeResultCard() {
-            document.getElementById('resultCard').style.display = 'none';
+        // 确认抽奖结果
+        function confirmResult() {
+            const resultCard = document.getElementById('resultCard');
+            const prizeName = document.getElementById('resultContent').textContent;
+            const prizes = JSON.parse(localStorage.getItem('prizes'));
+            const prize = prizes.find(p => p.name === prizeName);
+            
+            if (prize && prize.rewardType === 'currency') {
+                const currency = parseInt(localStorage.getItem('currency') || '100');
+                const newCurrency = currency + prize.currencyAmount;
+                localStorage.setItem('currency', newCurrency);
+                document.getElementById('currencyAmount').textContent = newCurrency;
+                showStatus(`已获得${prize.currencyAmount}兑换券！`, "success");
+            }
+            
+            resultCard.style.display = 'none';
         }
         
         // 随机获取奖品
@@ -999,8 +1153,9 @@
         function addPrize() {
             const name = document.getElementById('prizeName').value;
             const weight = parseInt(document.getElementById('prizeWeight').value);
+            const rewardType = document.getElementById('prizeRewardType').value;
+            const currencyAmount = parseInt(document.getElementById('currencyAmountInput').value) || 0;
             const description = document.getElementById('prizeDescription').value;
-            const password = document.getElementById('addPrizePassword').value;
             
             if (!name) {
                 showStatus('请输入奖品名称！', "error");
@@ -1012,8 +1167,8 @@
                 return;
             }
             
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
+            if (rewardType === 'currency' && currencyAmount <= 0) {
+                showStatus('请输入有效的兑换券数量！', "error");
                 return;
             }
             
@@ -1027,26 +1182,21 @@
             prizes.push({
                 id: newId,
                 name: name,
-                icon: randomIcon,
                 weight: weight,
-                description: description
+                rewardType: rewardType,
+                currencyAmount: currencyAmount,
+                description: description,
+                icon: randomIcon
             });
             
             localStorage.setItem('prizes', JSON.stringify(prizes));
-            document.getElementById('addPrizeModal').style.display = 'none';
+            closeAddPrizeModal();
             updateUI();
             showStatus('奖品添加成功！', "success");
         }
         
         // 删除奖品
         function deletePrize(prizeId) {
-            const password = document.getElementById('deletePassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
-                return;
-            }
-            
             const prizes = JSON.parse(localStorage.getItem('prizes'));
             const updatedPrizes = prizes.filter(prize => prize.id !== prizeId);
             
@@ -1061,11 +1211,56 @@
             initializeData();
             updateUI();
             
-            // 绑定事件
+            // 事件委托处理标签页切换
+            document.querySelector('.nav-tabs').addEventListener('click', function(e) {
+                const tab = e.target.closest('.nav-tab');
+                if (tab) {
+                    switchTab(tab.dataset.tab);
+                }
+            });
+            
+            // 绑定管理入口
             document.getElementById('adminEntry').addEventListener('click', function() {
                 document.getElementById('passwordModal').style.display = 'flex';
                 document.getElementById('passwordInput').value = '';
             });
+            
+            // 管理页添加奖品按钮
+            document.getElementById('addPrizeBtn').addEventListener('click', function() {
+                openAddPrizeModal();
+            });
+            
+            // 密码类型变更显示兑换券数量输入
+            document.getElementById('prizeRewardType').addEventListener('change', function() {
+                const currencyGroup = document.getElementById('currencyAmountGroup');
+                currencyGroup.style.display = this.value === 'currency' ? 'block' : 'none';
+            });
+            
+            // 开始抽奖
+            document.getElementById('startLotteryBtn').addEventListener('click', startLottery);
+            
+            // 确认抽奖结果
+            document.getElementById('confirmResultBtn').addEventListener('click', confirmResult);
+            
+            // 事件委托处理删除按钮
+            document.getElementById('managePrizesContainer').addEventListener('click', function(e) {
+                if (e.target.classList.contains('delete-btn')) {
+                    const prizeId = parseInt(e.target.dataset.id);
+                    const prizes = JSON.parse(localStorage.getItem('prizes'));
+                    const prize = prizes.find(p => p.id === prizeId);
+                    
+                    if (prize) {
+                        document.getElementById('deletePrizeMessage').textContent = 
+                            `确定要删除奖品"${prize.name}"吗？此操作不可恢复。`;
+                        document.getElementById('deletePrizeModal').dataset.prizeId = prizeId;
+                        document.getElementById('deletePrizeModal').style.display = 'flex';
+                    }
+                }
+            });
+            
+            // 绑定模态框按钮
+            document.getElementById('confirmAddPrizeBtn').addEventListener('click', addPrize);
+            document.getElementById('cancelAddPrizeBtn').addEventListener('click', closeAddPrizeModal);
             
             document.getElementById('confirmPasswordBtn').addEventListener('click', function() {
                 const password = document.getElementById('passwordInput').value;
@@ -1079,36 +1274,6 @@
             
             document.getElementById('cancelPasswordBtn').addEventListener('click', function() {
                 document.getElementById('passwordModal').style.display = 'none';
-            });
-            
-            document.getElementById('addPrizeBtn').addEventListener('click', function() {
-                document.getElementById('addPrizeModal').style.display = 'flex';
-                document.getElementById('prizeName').value = '';
-                document.getElementById('prizeWeight').value = '';
-                document.getElementById('prizeDescription').value = '';
-                document.getElementById('addPrizePassword').value = '';
-            });
-            
-            document.getElementById('confirmAddPrizeBtn').addEventListener('click', addPrize);
-            
-            document.getElementById('cancelAddPrizeBtn').addEventListener('click', function() {
-                document.getElementById('addPrizeModal').style.display = 'none';
-            });
-            
-            document.getElementById('startLotteryBtn').addEventListener('click', startLottery);
-            
-            // 管理页面删除奖品
-            document.getElementById('managePrizesContainer').addEventListener('click', function(e) {
-                if (e.target.classList.contains('delete-btn')) {
-                    const prizeId = parseInt(e.target.dataset.id);
-                    const prize = JSON.parse(localStorage.getItem('prizes')).find(p => p.id === prizeId);
-                    
-                    document.getElementById('deletePrizeMessage').textContent = 
-                        `确定要删除奖品"${prize.name}"吗？此操作不可恢复。`;
-                    document.getElementById('deletePrizeModal').dataset.prizeId = prizeId;
-                    document.getElementById('deletePrizeModal').style.display = 'flex';
-                    document.getElementById('deletePassword').value = '';
-                }
             });
             
             document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
@@ -1131,8 +1296,8 @@
             };
         }
         
-        // 启动应用
-        initApp();
+        // 当DOM加载完成后启动应用
+        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>
