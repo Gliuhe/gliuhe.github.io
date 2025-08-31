@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢乐公告栏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 1000px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 3px solid #ffd166;
+            position: relative;
+            max-height: 85vh; /* 优化iPad显示比例 */
+            overflow: auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .header h1 {
+            color: #e74c3c;
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            background: linear-gradient(to right, #ffd166, #ff9e7d);
+            font-family: 'Comic Sans MS', cursive; /* 儿童喜爱的字体 */
+        }
+        
+        .header::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
+            border-radius: 2px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            border-bottom: 3px solid #ffd166;
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+            font-size: 1.2rem;
+            position: relative;
+            transition: all 0.3s;
+            margin: 0 5px;
+            border-radius: 15px 15px 0 0;
+            font-family: 'Comic Sans MS', cursive; /* 儿童喜爱的字体 */
+        }
+        
+        .nav-tab.active {
+            color: #118ab2;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #06d6a0;
+            border-radius: 2px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .notice-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        @media (min-width: 1024px) {
+            .notice-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .notice-category {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #06d6a0;
+            position: relative;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .notice-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .category-title {
+            font-size: 1.4rem;
+            color: #118ab2;
+            font-weight: bold;
+            font-family: 'Comic Sans MS', cursive; /* 儿童喜爱的字体 */
+        }
+        
+        .category-icon {
+            font-size: 1.8rem;
+        }
+        
+        .notice-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            position: relative;
+        }
+        
+        .notice-title {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+            font-family: 'Comic Sans MS', cursive; /* 儿童喜爱的字体 */
+        }
+        
+        .notice-content {
+            line-height: 1.6;
+            color: #555;
+            font-size: 1.1rem;
+            font-family: 'Comic Sans MS', cursive; /* 儿童喜爱的字体 */
+        }
+        
+        .notice-date {
+            color: #777;
+            font-size: 0.9rem;
+            text-align: right;
+            margin-top: 10px;
+        }
+        
+        /* iPad优化样式 */
+        @media (min-width: 768px) and (max-width: 1024px) and (aspect-ratio: 4/3) {
+            .container {
+                max-height: 90vh;
+                padding: 20px;
+            }
+            
+            .notice-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .notice-category {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2.4rem;
+            }
+            
+            .category-title {
+                font-size: 1.2rem;
+            }
+            
+            .notice-content {
+                font-size: 1rem;
+            }
+        }
+        
+        /* 手机优化 */
+        @media (max-width: 767px) {
+            .notice-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 15px;
+                width: 95%;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .nav-tab {
+                padding: 10px 15px;
+                font-size: 1rem;
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>欢乐公告栏</h1>
+    </div>
+    
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="all">全部公告</div>
+            <div class="nav-tab" data-tab="notice">通知公告</div>
+            <div class="nav-tab" data-tab="activity">特殊奖励</div>
+            <div class="nav-tab" data-tab="story">基本奖励</div>
+            <div class="nav-tab" data-tab="important">重要提醒</div>
+        </div>
+        
+        <!-- 全部公告 -->
+        <div id="all" class="tab-content active">
+            <div class="notice-grid">
+                <!-- 通知公告 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">通知公告</div>
+                        <div class="category-icon">📢</div>
+                    </div>
+                    
+                    <!-- 通知公告1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">欢迎来到欢乐公告栏</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑通知公告1内容 -->
+                            欢迎小朋友们来到我们的欢乐公告栏！这里会发布各种有趣的通知、活动和故事，记得经常来看看哦！
+                        </div>
+                        <div class="notice-date">2023-06-15</div>
+                    </div>
+                    
+                    <!-- 通知公告2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">夏日作息时间调整</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑通知公告2内容 -->
+                            夏季炎热，我们调整了活动时间：上午9：00-11：30，下午2：30-5：00，请小朋友们注意防暑！
+                        </div>
+                        <div class="notice-date">2023-06-18</div>
+                    </div>
+                    
+                    <!-- 通知公告3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">绘画作品展通知</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑通知公告3内容 -->
+                            本周五下午将举办"我的梦想世界"绘画作品展，邀请爸爸妈妈一起来欣赏我们的创作吧！
+                        </div>
+                        <div class="notice-date">2023-06-20</div>
+                    </div>
+                </div>
+                
+                <!-- 活动信息 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">特殊奖励</div>
+                        <div class="category-icon">🌟</div>
+                    </div>
+                    
+                    <!-- 活动信息1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">特殊事件奖励</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑活动信息1内容 -->
+                            考试单科≥92分 - 69兑换券<br>考试单科≥96分 - 96兑换券<br>考试双科≥188分 - 188兑换券
+                            <br>考试双科≥193分 - 300兑换券<br>考试双科=200分 - 600兑换券
+                        </div>
+                        <div class="notice-date">2023-06-22</div>
+                    </div>
+                    
+                    <!-- 活动信息2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">里程碑奖励（每学期仅可获得一次）</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑活动信息2内容 -->
+                            初级里程碑(持有300兑换券) - 60兑换券<br>中级里程碑(持有600兑换券) - 120兑换券<br>高级里程碑(持有800兑换券) - 160兑换券
+                            <br>终极里程碑(持有1200兑换券) - 240+240(480)双倍兑换券<br>其他限时里程碑奖励 - 28~168兑换券（依据难度，超时清零）
+                        </div>
+                        <div class="notice-date">2025-08-31</div>
+                    </div>
+                    
+                    <!-- 活动信息3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">暂无其他奖励</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑活动信息3内容 -->
+                            等待后续开放。
+                        </div>
+                        <div class="notice-date">2025-08-31</div>
+                    </div>
+                </div>
+                
+                <!-- 故事分享 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">基本奖励</div>
+                        <div class="category-icon">💰</div>
+                    </div>
+                    
+                    <!-- 故事分享1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">阅读奖励</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑故事1内容 -->
+                            阅读1分钟 - 6兑换券<br>阅读20分钟 - 36兑换券<br>阅读30分钟 - 88兑换券<br><br>当日有效，次日重置进度。若连续阅读即可连续获得奖励，若分次阅读则需单次满足对应时间。
+                        </div>
+                        <div class="notice-date">2025-08-31</div>
+                    </div>
+                    
+                    <!-- 故事分享2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">作业奖励</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑故事2内容 -->
+                            完成上课及课后作业 - 120兑换券<br>完成学校布置的家庭作业 - 80兑换券<br>完成练字 - 30~60兑换券
+                        </div>
+                        <div class="notice-date">2025-08-31</div>
+                    </div>
+                    
+                    <!-- 故事分享3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">运动奖励（仅周五至周日）</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑故事3内容 -->
+                            400m跑步 - 40兑换券<br>1000m走路 - 40兑换券<br>下楼骑车 - 50兑换券(≥30min)<br>户外活动 - 38兑换券(≥15min)<br>
+                            <br>注：运动类任务不一定每项都同时发布，可能存在某项任务不存在的情况。
+                        </div>
+                        <div class="notice-date">2023-06-24</div>
+                    </div>
+                </div>
+                
+                <!-- 重要提醒 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">重要提醒</div>
+                        <div class="category-icon">⚠️</div>
+                    </div>
+                    
+                    <!-- 重要提醒1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">防暑降温须知</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑重要提醒1内容 -->
+                            暑期高温，请记得带水壶、遮阳帽和防晒霜，上午10点至下午3点避免在阳光下长时间活动！
+                        </div>
+                        <div class="notice-date">2023-06-20</div>
+                    </div>
+                    
+                    <!-- 重要提醒2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">暑期安全注意事项</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑重要提醒2内容 -->
+                            暑期活动期间，请牢记：不单独离开活动场地，不靠近水域、电器等危险区域，遵守安全规则！
+                        </div>
+                        <div class="notice-date">2023-06-25</div>
+                    </div>
+                    
+                    <!-- 重要提醒3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">健康信息登记</div>
+                        <div class="notice-content">
+                            <!-- 在此处编辑重要提醒3内容 -->
+                            请于7月5日前填写夏季健康登记表，包括过敏信息、紧急联系人等，确保活动安全进行！
+                        </div>
+                        <div class="notice-date">2023-06-30</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 其他分类页面（内容与全部公告相同，但只显示对应分类） -->
+        <div id="notice" class="tab-content">
+            <div class="notice-grid">
+                <!-- 通知公告 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">通知公告</div>
+                        <div class="category-icon">📢</div>
+                    </div>
+                    
+                    <!-- 通知公告1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">欢迎来到欢乐公告栏</div>
+                        <div class="notice-content">
+                            欢迎小朋友们来到我们的欢乐公告栏！这里会发布各种有趣的通知、活动和故事，记得经常来看看哦！
+                        </div>
+                        <div class="notice-date">2023-06-15</div>
+                    </div>
+                    
+                    <!-- 通知公告2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">夏日作息时间调整</div>
+                        <div class="notice-content">
+                            夏季炎热，我们调整了活动时间：上午9：00-11：30，下午2：30-5：00，请小朋友们注意防暑！
+                        </div>
+                        <div class="notice-date">2023-06-18</div>
+                    </div>
+                    
+                    <!-- 通知公告3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">绘画作品展通知</div>
+                        <div class="notice-content">
+                            本周五下午将举办"我的梦想世界"绘画作品展，邀请爸爸妈妈一起来欣赏我们的创作吧！
+                        </div>
+                        <div class="notice-date">2023-06-20</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="activity" class="tab-content">
+            <div class="notice-grid">
+                <!-- 活动信息 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">活动信息</div>
+                        <div class="category-icon">🎪</div>
+                    </div>
+                    
+                    <!-- 活动信息1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">夏日游泳课程</div>
+                        <div class="notice-content">
+                            7月1日开始暑期游泳课程，每周二、四下午3：00，学会水中安全知识和基本游泳技巧，快来报名吧！
+                        </div>
+                        <div class="notice-date">2023-06-22</div>
+                    </div>
+                    
+                    <!-- 活动信息2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">亲子运动会</div>
+                        <div class="notice-content">
+                            7月10日举办亲子运动会，有三足赛跑、亲子接力、气球传递等趣味项目，报名截止7月5日！
+                        </div>
+                        <div class="notice-date">2023-06-25</div>
+                    </div>
+                    
+                    <!-- 活动信息3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">小小厨师烹饪课</div>
+                        <div class="notice-content">
+                            7月15日举办烹饪课堂，学习制作水果沙拉、三明治和小甜点，在厨房里寻找乐趣！
+                        </div>
+                        <div class="notice-date">2023-06-28</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="story" class="tab-content">
+            <div class="notice-grid">
+                <!-- 故事分享 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">故事分享</div>
+                        <div class="category-icon">📚</div>
+                    </div>
+                    
+                    <!-- 故事分享1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">小兔子找朋友</div>
+                        <div class="notice-content">
+                            从前有一只小兔子，它非常想找一个好朋友。一天，它遇到了小松鼠、小鸟和小鹿...
+                        </div>
+                        <div class="notice-date">2023-06-10</div>
+                    </div>
+                    
+                    <!-- 故事分享2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">勇敢的小蚂蚁</div>
+                        <div class="notice-content">
+                            一只小蚂蚁在搬运食物时遇到了大雨，它勇敢地克服困难，最终成功将食物带回蚁巢...
+                        </div>
+                        <div class="notice-date">2023-06-18</div>
+                    </div>
+                    
+                    <!-- 故事分享3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">月亮婆婆的生日礼物</div>
+                        <div class="notice-content">
+                            月亮婆婆要过生日了，小星星们想送她一件特别的礼物，它们一起制作了一条闪闪发光的项链...
+                        </div>
+                        <div class="notice-date">2023-06-24</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="important" class="tab-content">
+            <div class="notice-grid">
+                <!-- 重要提醒 -->
+                <div class="notice-category">
+                    <div class="category-header">
+                        <div class="category-title">重要提醒</div>
+                        <div class="category-icon">⚠️</div>
+                    </div>
+                    
+                    <!-- 重要提醒1 -->
+                    <div class="notice-item">
+                        <div class="notice-title">防暑降温须知</div>
+                        <div class="notice-content">
+                            暑期高温，请记得带水壶、遮阳帽和防晒霜，上午10点至下午3点避免在阳光下长时间活动！
+                        </div>
+                        <div class="notice-date">2023-06-20</div>
+                    </div>
+                    
+                    <!-- 重要提醒2 -->
+                    <div class="notice-item">
+                        <div class="notice-title">暑期安全注意事项</div>
+                        <div class="notice-content">
+                            暑期活动期间，请牢记：不单独离开活动场地，不靠近水域、电器等危险区域，遵守安全规则！
+                        </div>
+                        <div class="notice-date">2023-06-25</div>
+                    </div>
+                    
+                    <!-- 重要提醒3 -->
+                    <div class="notice-item">
+                        <div class="notice-title">健康信息登记</div>
+                        <div class="notice-content">
+                            请于7月5日前填写夏季健康登记表，包括过敏信息、紧急联系人等，确保活动安全进行！
+                        </div>
+                        <div class="notice-date">2023-06-30</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 切换标签页
+        function switchTab(tabId) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 取消所有标签的激活状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 激活选中的标签
+            document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
+        }
+        
+        // 事件委托处理标签页切换
+        document.querySelector('.nav-tabs').addEventListener('click', function(e) {
+            const tab = e.target.closest('.nav-tab');
+            if (tab) {
+                switchTab(tab.dataset.tab);
+            }
+        });
+    </script>
+</body>
+</html>
