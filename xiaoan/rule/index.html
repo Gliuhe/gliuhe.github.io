@@ -161,6 +161,36 @@
             background: #f8f9fa;
         }
         
+        /* 复选框样式 */
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(6, 214, 160, 0.1);
+            padding: 12px 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(6, 214, 160, 0.3);
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        
+        .checkbox-wrapper:hover {
+            background: rgba(6, 214, 160, 0.2);
+        }
+        
+        .checkbox-wrapper label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            cursor: pointer;
+            width: 100%;
+        }
+        
         textarea {
             min-height: 150px;
             resize: vertical;
@@ -216,6 +246,27 @@
             margin: 25px 0;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
             border: 2px solid #ffd166;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        /* 滚动条样式 */
+        .rules-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .rules-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .rules-container::-webkit-scrollbar-thumb {
+            background: #ffd166;
+            border-radius: 10px;
+        }
+        
+        .rules-container::-webkit-scrollbar-thumb:hover {
+            background: #ffb703;
         }
         
         .rule-item {
@@ -640,10 +691,13 @@
                 <label for="ruleContent">规则内容</label>
                 <textarea id="ruleContent" placeholder="请输入规则详细内容"></textarea>
             </div>
-            <div class="form-group">
-                <label for="addRulePassword">密码</label>
-                <input type="password" id="addRulePassword" placeholder="请输入密码">
+            <div class="form-group checkbox-wrapper">
+                <label>
+                    <input type="checkbox" id="ruleResetNextDay">
+                    <span>次日自动重置 (任务将在第二天自动回到未接受状态)</span>
+                </label>
             </div>
+
             <button class="btn" onclick="addRule()">添加规则</button>
             <button class="btn btn-danger" onclick="closeAddRuleModal()">取消</button>
         </div>
@@ -670,10 +724,13 @@
                 <label for="editRuleContent">规则内容</label>
                 <textarea id="editRuleContent" placeholder="请输入规则详细内容"></textarea>
             </div>
-            <div class="form-group">
-                <label for="editRulePassword">密码</label>
-                <input type="password" id="editRulePassword" placeholder="请输入密码">
+            <div class="form-group checkbox-wrapper">
+                <label>
+                    <input type="checkbox" id="editRuleResetNextDay">
+                    <span>次日自动重置 (任务将在第二天自动回到未接受状态)</span>
+                </label>
             </div>
+
             <button class="btn" onclick="updateRule()">更新规则</button>
             <button class="btn btn-danger" onclick="closeEditRuleModal()">取消</button>
         </div>
@@ -734,6 +791,20 @@
     
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
+    
+    <!-- 密码验证模态框 -->
+    <div class="modal" id="passwordVerifyModal">
+        <div class="modal-content">
+            <h2>验证密码</h2>
+            <p>请输入密码进入规则设置</p>
+            <div class="form-group">
+                <label for="verifyPassword">密码</label>
+                <input type="password" id="verifyPassword" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="verifyPassword()">确认</button>
+            <button class="btn btn-danger" onclick="closePasswordVerifyModal()">取消</button>
+        </div>
+    </div>
 
     <script>
         // 常量定义
@@ -788,6 +859,30 @@
             
             if (!localStorage.getItem('todayAdjustment')) {
                 localStorage.setItem('todayAdjustment', '0');
+            }
+            
+            // 检查是否需要重置任务状态
+            checkDailyReset();
+        }
+        
+        // 检查并执行每日重置
+        function checkDailyReset() {
+            const lastResetDate = localStorage.getItem('lastResetDate');
+            const today = new Date().toDateString();
+            
+            if (lastResetDate !== today) {
+                const rules = JSON.parse(localStorage.getItem('rules'));
+                const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+                
+                // 重置标记为次日重置的任务
+                rules.forEach(rule => {
+                    if (rule.resetNextDay && activeTasks[rule.id]) {
+                        delete activeTasks[rule.id];
+                    }
+                });
+                
+                localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+                localStorage.setItem('lastResetDate', today);
             }
         }
         
@@ -922,8 +1017,24 @@
             document.getElementById('todayAmount').textContent = Math.max(0, todayTotal);
         }
         
+        let isPasswordVerified = false;
+        let pendingTabId = null;
+        let currentTab = 'rules'; // 默认标签
+        
         // 切换标签页
         function switchTab(tabId) {
+            // 如果从管理标签切换到其他标签，重置密码验证状态
+            if (currentTab === 'management' && tabId !== 'management') {
+                isPasswordVerified = false;
+            }
+            
+            // 如果切换到管理标签且未验证密码
+            if (tabId === 'management' && !isPasswordVerified) {
+                pendingTabId = tabId;
+                openPasswordVerifyModal();
+                return;
+            }
+            
             // 隐藏所有标签内容
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -943,6 +1054,42 @@
                     tab.classList.add('active');
                 }
             });
+            
+            // 更新当前标签
+            currentTab = tabId;
+        }
+        
+        // 打开密码验证模态框
+        function openPasswordVerifyModal() {
+            document.getElementById('passwordVerifyModal').style.display = 'flex';
+            document.getElementById('verifyPassword').value = '';
+            document.getElementById('verifyPassword').focus();
+        }
+        
+        // 关闭密码验证模态框
+        function closePasswordVerifyModal() {
+            document.getElementById('passwordVerifyModal').style.display = 'none';
+            // 如果取消验证，切回规则标签
+            if (pendingTabId) {
+                pendingTabId = null;
+                switchTab('rules');
+            }
+        }
+        
+        // 验证密码
+        function verifyPassword() {
+            const password = document.getElementById('verifyPassword').value;
+            if (password === localStorage.getItem('password')) {
+                isPasswordVerified = true;
+                document.getElementById('passwordVerifyModal').style.display = 'none';
+                if (pendingTabId) {
+                    const tabToSwitch = pendingTabId;
+                    pendingTabId = null;
+                    switchTab(tabToSwitch);
+                }
+            } else {
+                showStatus('密码错误！', "error");
+            }
         }
         
         // 打开添加规则模态框
@@ -952,7 +1099,7 @@
             document.getElementById('ruleReward').value = '';
             document.getElementById('ruleTimeLimit').value = '';
             document.getElementById('ruleContent').value = '';
-            document.getElementById('addRulePassword').value = '';
+            document.getElementById('ruleResetNextDay').checked = false;
         }
         
         // 关闭添加规则模态框
@@ -971,7 +1118,7 @@
                 document.getElementById('editRuleReward').value = rule.reward;
                 document.getElementById('editRuleTimeLimit').value = rule.timeLimit;
                 document.getElementById('editRuleContent').value = rule.content;
-                document.getElementById('editRulePassword').value = '';
+                document.getElementById('editRuleResetNextDay').checked = rule.resetNextDay || false;
                 
                 document.getElementById('editRuleModal').style.display = 'flex';
             }
@@ -1050,7 +1197,6 @@
             const reward = parseInt(document.getElementById('ruleReward').value);
             const timeLimit = parseInt(document.getElementById('ruleTimeLimit').value);
             const content = document.getElementById('ruleContent').value;
-            const password = document.getElementById('addRulePassword').value;
             
             if (!title) {
                 showStatus('请输入规则标题！', "error");
@@ -1072,11 +1218,6 @@
                 return;
             }
             
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
-                return;
-            }
-            
             const rules = JSON.parse(localStorage.getItem('rules'));
             const newId = rules.length > 0 ? Math.max(...rules.map(r => r.id)) + 1 : 1;
             
@@ -1085,7 +1226,8 @@
                 title: title,
                 reward: reward,
                 timeLimit: timeLimit,
-                content: content
+                content: content,
+                resetNextDay: document.getElementById('ruleResetNextDay').checked
             });
             
             localStorage.setItem('rules', JSON.stringify(rules));
@@ -1101,7 +1243,6 @@
             const reward = parseInt(document.getElementById('editRuleReward').value);
             const timeLimit = parseInt(document.getElementById('editRuleTimeLimit').value);
             const content = document.getElementById('editRuleContent').value;
-            const password = document.getElementById('editRulePassword').value;
             
             if (!title) {
                 showStatus('请输入规则标题！', "error");
@@ -1120,11 +1261,6 @@
             
             if (!content) {
                 showStatus('请输入规则内容！', "error");
-                return;
-            }
-            
-            if (password !== localStorage.getItem('password')) {
-                showStatus('密码错误！', "error");
                 return;
             }
             
@@ -1141,7 +1277,8 @@
                 title: title,
                 reward: reward,
                 timeLimit: timeLimit,
-                content: content
+                content: content,
+                resetNextDay: document.getElementById('editRuleResetNextDay').checked
             };
             
             localStorage.setItem('rules', JSON.stringify(rules));
@@ -1384,6 +1521,13 @@
                     });
                 }
             };
+            
+            // 为密码输入框添加回车键提交功能
+            document.getElementById('verifyPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyPassword();
+                }
+            });
         }
         
         // 启动应用
