@@ -821,7 +821,7 @@
     <div class="status-notification" id="statusNotification"></div>
     
     <!-- 返回按钮 -->
-    <a href="index.html" class="back-button" title="返回普通抽奖">⬅</a>
+    <a href="choujiang.html" class="back-button" title="返回普通抽奖">⬅</a>
 
     <script>
         // 常量定义
@@ -1000,8 +1000,20 @@
             records = savedRecords ? JSON.parse(savedRecords) : [];
             
             // 从localStorage加载兑换券数量
+            // 初始化并同步兑换券数据
+            const basicCurrency = localStorage.getItem("currency");
             const savedCurrency = localStorage.getItem("advancedCurrency");
-            currencyAmount = savedCurrency ? parseInt(savedCurrency) : 100;
+            currencyAmount = basicCurrency ? parseInt(basicCurrency) : (savedCurrency ? parseInt(savedCurrency) : 100);
+            localStorage.setItem("advancedCurrency", currencyAmount.toString());
+            
+            // 监听storage事件实现双向同步
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'currency') {
+                    localStorage.setItem('advancedCurrency', e.newValue);
+                    currencyAmount = parseInt(e.newValue);
+                    updateCurrencyDisplay();
+                }
+            });
         }
         
         // 保存数据
@@ -1203,8 +1215,10 @@
             
             isLotteryRunning = true;
             
-            // 扣除兑换券
+            // 扣除兑换券并同步到普通版
             currencyAmount -= LOTTERY_COST;
+            localStorage.setItem('advancedCurrency', currencyAmount.toString());
+            localStorage.setItem('currency', currencyAmount.toString());
             updateCurrencyDisplay();
             
             // 显示抽奖动画
