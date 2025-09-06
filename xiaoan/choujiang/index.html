@@ -888,13 +888,25 @@
                 localStorage.setItem('password', DEFAULT_PASSWORD);
             }
             
+            // 检查高级版是否有数据，优先使用高级版数据
+            const advancedCurrency = localStorage.getItem('advancedCurrency');
             if (!localStorage.getItem('currency')) {
-                localStorage.setItem('currency', '100');
+                localStorage.setItem('currency', advancedCurrency || '100');
+            } else if (advancedCurrency) {
+                localStorage.setItem('currency', advancedCurrency);
             }
             
             if (!localStorage.getItem('records')) {
                 localStorage.setItem('records', JSON.stringify([]));
             }
+
+            // 监听storage事件实现双向同步
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'advancedCurrency') {
+                    localStorage.setItem('currency', e.newValue);
+                    updateUI();
+                }
+            });
         }
         
         // 显示状态通知
@@ -1127,9 +1139,10 @@
             actionMessage.textContent = '正在抽奖中，请稍候...';
             actionMessage.style.display = 'block';
             
-            // 扣除兑换券
+            // 扣除兑换券并同步到高级版
             const newCurrency = currency - LOTTERY_COST;
             localStorage.setItem('currency', newCurrency);
+            localStorage.setItem('advancedCurrency', newCurrency);
             document.getElementById('currencyAmount').textContent = newCurrency;
             
             // 创建彩色纸屑效果
