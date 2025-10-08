@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -154,7 +153,7 @@
         }
         
         .currency-display {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
             border-radius: 20px;
             padding: 25px;
             text-align: center;
@@ -163,6 +162,12 @@
             border: 2px solid var(--accent-color);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .currency-display:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
         
         .currency-display::before {
@@ -173,14 +178,215 @@
             top: -20px;
             right: -20px;
             transform: rotate(15deg);
+            transition: all 0.3s ease;
+        }
+        
+        .currency-display:hover::before {
+            transform: rotate(25deg) scale(1.1);
+            opacity: 0.15;
+        }
+        
+        .currency-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+            min-height: 300px;
+        }
+        
+        .currency-card.voucher {
+            grid-row: 1 / 3;
+            grid-column: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        
+        .currency-card.voucher .currency-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .currency-card.voucher .currency-title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .currency-card.voucher .currency-amount {
+            font-size: 5rem;
+            margin: 20px 0;
+        }
+        
+        .currency-card.voucher .currency-actions {
+            margin-top: 30px;
+        }
+        
+        .currency-card.lottery {
+            grid-row: 1;
+            grid-column: 2;
+        }
+        
+        .currency-card.premium {
+            grid-row: 2;
+            grid-column: 2;
+        }
+        
+        .currency-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--accent-color);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .currency-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .currency-card::before {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.1;
+            top: -10px;
+            right: -10px;
+            transform: rotate(15deg);
+            transition: all 0.4s ease;
+        }
+        
+        .currency-card:hover::before {
+            transform: rotate(25deg) scale(1.2);
+            opacity: 0.2;
+        }
+        
+        .currency-card.voucher::before {
+            content: "🎫";
+        }
+        
+        .currency-card.lottery::before {
+            content: "🎲";
+        }
+        
+        .currency-card.premium::before {
+            content: "💎";
+        }
+        
+        .currency-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
         
         .currency-amount {
-            font-size: 4rem;
+            font-size: 3.5rem;
             font-weight: bold;
             color: var(--secondary-color);
             margin: 15px 0;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .currency-card:hover .currency-amount {
+            transform: scale(1.1);
+            color: var(--accent-color);
+        }
+        
+        .currency-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+            40%, 43% { transform: translate3d(0, -30px, 0); }
+            70% { transform: translate3d(0, -15px, 0); }
+            90% { transform: translate3d(0, -4px, 0); }
+        }
+        
+        @keyframes slideInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes countUp {
+            from { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-slide-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        .animate-bounce {
+            animation: bounce 1s ease-in-out;
+        }
+        
+        .animate-count-up {
+            animation: countUp 0.5s ease-out;
+        }
+        
+        .currency-card {
+            animation-delay: var(--delay, 0s);
+        }
+        
+        .currency-card:nth-child(1) { --delay: 0.1s; }
+        .currency-card:nth-child(2) { --delay: 0.2s; }
+        .currency-card:nth-child(3) { --delay: 0.3s; }
+        
+        .currency-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .currency-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .currency-btn.add {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .currency-btn.subtract {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .currency-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         .btn {
@@ -622,16 +828,42 @@
         
         <!-- 控制面板 -->
         <div id="dashboard" class="tab-content active">
-            <div class="currency-display">
-                <h2>我的超级兑换券</h2>
-                <div class="coin-icon">💰</div>
-                <div class="currency-amount" id="currencyAmount">0</div>
+            <h2>我的货币总览</h2>
+            <div class="currency-grid">
+                <div class="currency-card voucher">
+                    <div class="currency-icon">🎫</div>
+                    <div class="currency-title">兑换券</div>
+                    <div class="currency-amount" id="voucherAmount">0</div>
+                    <div class="currency-actions">
+                        <button class="currency-btn add" onclick="openAddModal('voucher')">➕</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('voucher')">➖</button>
+                    </div>
+                </div>
+                
+                <div class="currency-card lottery">
+                    <div class="currency-icon">🎲</div>
+                    <div class="currency-title">抽奖券</div>
+                    <div class="currency-amount" id="lotteryAmount">0</div>
+                    <div class="currency-actions">
+                        <button class="currency-btn add" onclick="openAddModal('lottery')">➕</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('lottery')">➖</button>
+                    </div>
+                </div>
+                
+                <div class="currency-card premium">
+                    <div class="currency-icon">💎</div>
+                    <div class="currency-title">高级抽奖券</div>
+                    <div class="currency-amount" id="premiumAmount">0</div>
+                    <div class="currency-actions">
+                        <button class="currency-btn add" onclick="openAddModal('premium')">➕</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('premium')">➖</button>
+                    </div>
+                </div>
             </div>
             
             <div class="action-buttons">
-                <button class="btn pulse" onclick="openAddModal()">➕ 增加兑换券</button>
-                <button class="btn btn-danger pulse" onclick="openSubtractModal()">➖ 减少兑换券</button>
-                <button class="btn btn-warning" onclick="switchTab('products')">🎁 兑换商品</button>
+                <button class="btn btn-warning pulse" onclick="switchTab('products')">🎁 兑换商品</button>
+                <button class="btn" onclick="window.location.href='choujiang/index.html'">🎰 前往抽奖</button>
             </div>
         </div>
         
@@ -701,7 +933,8 @@
     <!-- 增加货币模态框 -->
     <div class="modal" id="addModal">
         <div class="modal-content">
-            <h2>增加超级兑换券</h2>
+            <h2 id="addModalTitle">增加货币</h2>
+            <input type="hidden" id="addCurrencyType" value="">
             <div class="form-group">
                 <label for="addAmount">增加数量</label>
                 <input type="number" id="addAmount" min="1" placeholder="请输入增加数量">
@@ -722,7 +955,8 @@
     <!-- 减少货币模态框 -->
     <div class="modal" id="subtractModal">
         <div class="modal-content">
-            <h2>减少超级兑换券</h2>
+            <h2 id="subtractModalTitle">减少货币</h2>
+            <input type="hidden" id="subtractCurrencyType" value="">
             <div class="form-group">
                 <label for="subtractAmount">减少数量</label>
                 <input type="number" id="subtractAmount" min="1" placeholder="请输入减少数量">
@@ -770,7 +1004,7 @@
                 <input type="text" id="productName" placeholder="请输入商品名称">
             </div>
             <div class="form-group">
-                <label for="productPrice">价格（超级兑换券）</label>
+                <label for="productPrice">价格（兑换券）</label>
                 <input type="number" id="productPrice" min="1" placeholder="请输入价格">
             </div>
             <div class="form-group">
@@ -796,7 +1030,7 @@
                 <input type="text" id="editProductName" placeholder="请输入商品名称">
             </div>
             <div class="form-group">
-                <label for="editProductPrice">价格（超级兑换券）</label>
+                <label for="editProductPrice">价格（兑换券）</label>
                 <input type="number" id="editProductPrice" min="1" placeholder="请输入价格">
             </div>
             <div class="form-group">
@@ -889,10 +1123,30 @@
             { id: 6, name: "一小时游戏时间", price: 10, dailyLimit: 2 }
         ];
         
+        // 货币类型配置
+        const currencyConfig = {
+            voucher: { name: '兑换券', icon: '🎫', key: 'voucher' },
+            lottery: { name: '抽奖券', icon: '🎲', key: 'lottery' },
+            premium: { name: '高级抽奖券', icon: '💎', key: 'premium' }
+        };
+        
         // 初始化数据函数
         function initializeData() {
-            if (!localStorage.getItem('currency')) {
-                localStorage.setItem('currency', '100');
+            // 初始化三种货币
+            if (!localStorage.getItem('voucher')) {
+                localStorage.setItem('voucher', '100');
+            }
+            if (!localStorage.getItem('lottery')) {
+                localStorage.setItem('lottery', '10');
+            }
+            if (!localStorage.getItem('premium')) {
+                localStorage.setItem('premium', '2');
+            }
+            
+            // 兼容旧版本的currency数据
+            if (localStorage.getItem('currency') && !localStorage.getItem('voucher')) {
+                localStorage.setItem('voucher', localStorage.getItem('currency'));
+                localStorage.removeItem('currency');
             }
             
             if (!localStorage.getItem('password')) {
@@ -930,10 +1184,43 @@
             }, 3000);
         }
         
+        // 数字动画效果
+        function animateNumber(element, newValue, duration = 500) {
+            const startValue = parseInt(element.textContent) || 0;
+            const endValue = parseInt(newValue);
+            const startTime = performance.now();
+            
+            function updateNumber(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // 使用缓动函数
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                const currentValue = Math.round(startValue + (endValue - startValue) * easeOutQuart);
+                
+                element.textContent = currentValue;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(updateNumber);
+                } else {
+                    element.classList.add('animate-count-up');
+                    setTimeout(() => element.classList.remove('animate-count-up'), 500);
+                }
+            }
+            
+            requestAnimationFrame(updateNumber);
+        }
+        
         // 更新界面显示
         function updateUI() {
-            // 更新货币数量
-            document.getElementById('currencyAmount').textContent = localStorage.getItem('currency');
+            // 更新三种货币数量（带动画效果）
+            const voucherElement = document.getElementById('voucherAmount');
+            const lotteryElement = document.getElementById('lotteryAmount');
+            const premiumElement = document.getElementById('premiumAmount');
+            
+            animateNumber(voucherElement, localStorage.getItem('voucher') || '0');
+            animateNumber(lotteryElement, localStorage.getItem('lottery') || '0');
+            animateNumber(premiumElement, localStorage.getItem('premium') || '0');
             
             // 更新商品列表
             const products = JSON.parse(localStorage.getItem('products'));
@@ -953,7 +1240,7 @@
                 productElement.className = 'product';
                 productElement.innerHTML = `
                     <h3>${product.name}</h3>
-                    <p>${product.price} 超级兑换券</p>
+                    <p>${product.price} 兑换券</p>
                     ${product.dailyLimit > 0 ? 
                         `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` : 
                         ''}
@@ -973,7 +1260,7 @@
                 productElement.className = 'product';
                 productElement.innerHTML = `
                     <h3>${product.name}</h3>
-                    <p>${product.price} 超级兑换券</p>
+                    <p>${product.price} 兑换券</p>
                     <div class="daily-limit">每日限额: ${product.dailyLimit > 0 ? product.dailyLimit : '无限制'}</div>
                     <button class="btn" onclick="openEditProductModal(${product.id})">编辑</button>
                     <button class="btn btn-danger" onclick="openDeleteProductModal(${product.id}, '${product.name}')">删除</button>
@@ -1002,12 +1289,26 @@
                 const amountClass = record.amount > 0 ? 'positive' : 'negative';
                 const amountSign = record.amount > 0 ? '+' : '';
                 
+                // 获取货币类型和图标
+                let currencyDisplay = '';
+                if (record.currencyType && currencyConfig[record.currencyType]) {
+                    const config = currencyConfig[record.currencyType];
+                    currencyDisplay = ` ${config.icon} ${config.name}`;
+                } else if (record.currencyName) {
+                    currencyDisplay = ` ${record.currencyName}`;
+                } else {
+                    currencyDisplay = ' 兑换券'; // 兼容旧数据
+                }
+                
                 historyItem.innerHTML = `
                     <div>
                         <strong>${record.reason}</strong>
                         <div>${new Date(record.date).toLocaleString()}</div>
+                        ${record.balanceAfter !== undefined ? 
+                            `<div style="font-size: 0.9rem; color: #666; margin-top: 5px;">交易后余额: ${record.balanceAfter}${currencyDisplay}</div>` : 
+                            ''}
                     </div>
-                    <div class="${amountClass}">${amountSign}${record.amount}</div>
+                    <div class="${amountClass}">${amountSign}${record.amount}${currencyDisplay}</div>
                 `;
                 historyList.appendChild(historyItem);
             });
@@ -1056,6 +1357,7 @@
             const amount = parseInt(document.getElementById('addAmount').value);
             const reason = document.getElementById('addReason').value;
             const password = document.getElementById('addPassword').value;
+            const currencyType = document.getElementById('addCurrencyType').value;
             
             if (!amount || amount <= 0) {
                 showStatus('请输入有效的增加数量！', "error");
@@ -1072,22 +1374,27 @@
                 return;
             }
             
-            const currentCurrency = parseInt(localStorage.getItem('currency'));
-            localStorage.setItem('currency', currentCurrency + amount);
+            const currentAmount = parseInt(localStorage.getItem(currencyType) || '0');
+            const newAmount = currentAmount + amount;
+            localStorage.setItem(currencyType, newAmount);
             
             // 添加历史记录
             const history = JSON.parse(localStorage.getItem('history'));
+            const currencyName = currencyConfig[currencyType].name;
             history.push({
                 date: new Date().toISOString(),
                 amount: amount,
                 reason: reason,
-                type: 'add'
+                type: 'add',
+                currencyType: currencyType,
+                currencyName: currencyName,
+                balanceAfter: newAmount
             });
             localStorage.setItem('history', JSON.stringify(history));
             
             closeAddModal();
             updateUI();
-            showStatus(`成功增加 ${amount} 超级兑换券！`);
+            showStatus(`成功增加 ${amount} ${currencyName}！`);
         }
         
         // 减少货币
@@ -1095,6 +1402,7 @@
             const amount = parseInt(document.getElementById('subtractAmount').value);
             const reason = document.getElementById('subtractReason').value;
             const password = document.getElementById('subtractPassword').value;
+            const currencyType = document.getElementById('subtractCurrencyType').value;
             
             if (!amount || amount <= 0) {
                 showStatus('请输入有效的减少数量！', "error");
@@ -1111,13 +1419,16 @@
                 return;
             }
             
-            const currentCurrency = parseInt(localStorage.getItem('currency'));
-            if (currentCurrency < amount) {
-                showStatus('超级兑换券不足！', "error");
+            const currentAmount = parseInt(localStorage.getItem(currencyType) || '0');
+            const currencyName = currencyConfig[currencyType].name;
+            
+            if (currentAmount < amount) {
+                showStatus(`${currencyName}不足！`, "error");
                 return;
             }
             
-            localStorage.setItem('currency', currentCurrency - amount);
+            const newAmount = currentAmount - amount;
+            localStorage.setItem(currencyType, newAmount);
             
             // 添加历史记录
             const history = JSON.parse(localStorage.getItem('history'));
@@ -1125,13 +1436,16 @@
                 date: new Date().toISOString(),
                 amount: -amount,
                 reason: reason,
-                type: 'subtract'
+                type: 'subtract',
+                currencyType: currencyType,
+                currencyName: currencyName,
+                balanceAfter: newAmount
             });
             localStorage.setItem('history', JSON.stringify(history));
             
             closeSubtractModal();
             updateUI();
-            showStatus(`成功减少 ${amount} 超级兑换券！`);
+            showStatus(`成功减少 ${amount} ${currencyName}！`);
         }
         
         // 兑换商品
@@ -1154,14 +1468,15 @@
                 return;
             }
             
-            const currentCurrency = parseInt(localStorage.getItem('currency'));
-            if (currentCurrency < product.price) {
-                showStatus('超级兑换券不足，无法兑换该商品！', "error");
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < product.price) {
+                showStatus('兑换券不足，无法兑换该商品！', "error");
                 return;
             }
             
-            if (confirm(`确定要兑换 ${product.name} 吗？这将花费 ${product.price} 超级兑换券。`)) {
-                localStorage.setItem('currency', currentCurrency - product.price);
+            if (confirm(`确定要兑换 ${product.name} 吗？这将花费 ${product.price} 兑换券。`)) {
+                const newAmount = currentVoucher - product.price;
+                localStorage.setItem('voucher', newAmount);
                 
                 // 更新每日兑换记录
                 dailyExchange[product.id] = todayExchanges + 1;
@@ -1173,7 +1488,10 @@
                     date: new Date().toISOString(),
                     amount: -product.price,
                     reason: `兑换商品：${product.name}`,
-                    type: 'exchange'
+                    type: 'exchange',
+                    currencyType: 'voucher',
+                    currencyName: '兑换券',
+                    balanceAfter: newAmount
                 });
                 localStorage.setItem('history', JSON.stringify(history));
                 
@@ -1327,7 +1645,10 @@
         // 备份数据
         function backupData() {
             const data = {
-                currency: localStorage.getItem('currency'),
+                voucher: localStorage.getItem('voucher'),
+                lottery: localStorage.getItem('lottery'),
+                premium: localStorage.getItem('premium'),
+                currency: localStorage.getItem('currency'), // 兼容旧版本
                 products: JSON.parse(localStorage.getItem('products')),
                 history: JSON.parse(localStorage.getItem('history')),
                 dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
@@ -1366,7 +1687,7 @@
                     const data = JSON.parse(e.target.result);
                     
                     // 验证备份文件格式
-                    if (!data.currency || !data.products || !data.history) {
+                    if ((!data.voucher && !data.currency) || !data.products || !data.history) {
                         showStatus('备份文件格式错误！', "error");
                         return;
                     }
@@ -1377,7 +1698,16 @@
                         return;
                     }
                     
-                    localStorage.setItem('currency', data.currency);
+                    // 恢复三种货币数据
+                    if (data.voucher) localStorage.setItem('voucher', data.voucher);
+                    if (data.lottery) localStorage.setItem('lottery', data.lottery);
+                    if (data.premium) localStorage.setItem('premium', data.premium);
+                    
+                    // 兼容旧版本数据
+                    if (data.currency && !data.voucher) {
+                        localStorage.setItem('voucher', data.currency);
+                    }
+                    
                     localStorage.setItem('products', JSON.stringify(data.products));
                     localStorage.setItem('history', JSON.stringify(data.history));
                     localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
@@ -1405,7 +1735,11 @@
                 return;
             }
             
-            localStorage.removeItem('currency');
+            // 清除所有数据
+            localStorage.removeItem('voucher');
+            localStorage.removeItem('lottery');
+            localStorage.removeItem('premium');
+            localStorage.removeItem('currency'); // 兼容旧版本
             localStorage.removeItem('products');
             localStorage.removeItem('history');
             localStorage.removeItem('dailyExchange');
@@ -1418,7 +1752,10 @@
         }
         
         // 模态框操作函数
-        function openAddModal() {
+        function openAddModal(currencyType = 'voucher') {
+            const config = currencyConfig[currencyType];
+            document.getElementById('addModalTitle').textContent = `增加${config.name}`;
+            document.getElementById('addCurrencyType').value = currencyType;
             document.getElementById('addModal').style.display = 'flex';
             document.getElementById('addAmount').value = '';
             document.getElementById('addReason').value = '';
@@ -1429,7 +1766,10 @@
             document.getElementById('addModal').style.display = 'none';
         }
         
-        function openSubtractModal() {
+        function openSubtractModal(currencyType = 'voucher') {
+            const config = currencyConfig[currencyType];
+            document.getElementById('subtractModalTitle').textContent = `减少${config.name}`;
+            document.getElementById('subtractCurrencyType').value = currencyType;
             document.getElementById('subtractModal').style.display = 'flex';
             document.getElementById('subtractAmount').value = '';
             document.getElementById('subtractReason').value = '';
@@ -1553,6 +1893,16 @@
             initializeData();
             updateUI();
             initTheme();
+            
+            // 添加页面加载动画
+            setTimeout(() => {
+                const currencyCards = document.querySelectorAll('.currency-card');
+                currencyCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('animate-slide-in');
+                    }, index * 150);
+                });
+            }, 100);
             
             // 点击模态框外部关闭模态框
             window.onclick = function(event) {
