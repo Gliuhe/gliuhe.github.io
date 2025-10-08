@@ -221,9 +221,32 @@
             border-radius: 25px;
             width: 90%;
             max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
             border: 3px solid #ffd166;
             position: relative;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd166 #f1f1f1;
+        }
+        
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #ffd166;
+            border-radius: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #ffb703;
         }
         
         .modal-content::before {
@@ -248,6 +271,26 @@
             border: 2px solid #ffd166;
             max-height: 60vh;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffd166 #f1f1f1;
+        }
+        
+        .rules-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .rules-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .rules-container::-webkit-scrollbar-thumb {
+            background: #ffd166;
+            border-radius: 10px;
+        }
+        
+        .rules-container::-webkit-scrollbar-thumb:hover {
+            background: #ffb703;
         }
         
         /* 滚动条样式 */
@@ -679,10 +722,7 @@
                 <label for="ruleTitle">规则标题</label>
                 <input type="text" id="ruleTitle" placeholder="例如：完成作业">
             </div>
-            <div class="form-group">
-                <label for="ruleReward">奖励数量</label>
-                <input type="number" id="ruleReward" min="1" placeholder="请输入奖励数量">
-            </div>
+
             <div class="form-group">
                 <label for="ruleTimeLimit">倒计时（分钟）</label>
                 <input type="number" id="ruleTimeLimit" min="1" placeholder="完成任务的时间限制">
@@ -696,6 +736,27 @@
                     <input type="checkbox" id="ruleResetNextDay">
                     <span>次日自动重置 (任务将在第二天自动回到未接受状态)</span>
                 </label>
+            </div>
+            <div class="form-group">
+                <label>奖励类型</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="ruleRewardType1" style="flex: 1">
+                        <option value="none">无奖励</option>
+                        <option value="voucher" selected>兑换券</option>
+                        <option value="lottery">抽奖券</option>
+                        <option value="premium">高级抽奖券</option>
+                    </select>
+                    <input type="number" id="ruleRewardAmount1" min="0" value="0" style="flex: 1">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="ruleRewardType2" style="flex: 1">
+                        <option value="none" selected>无奖励</option>
+                        <option value="voucher">兑换券</option>
+                        <option value="lottery">抽奖券</option>
+                        <option value="premium">高级抽奖券</option>
+                    </select>
+                    <input type="number" id="ruleRewardAmount2" min="0" value="0" style="flex: 1">
+                </div>
             </div>
 
             <button class="btn" onclick="addRule()">添加规则</button>
@@ -712,10 +773,7 @@
                 <label for="editRuleTitle">规则标题</label>
                 <input type="text" id="editRuleTitle" placeholder="例如：完成作业">
             </div>
-            <div class="form-group">
-                <label for="editRuleReward">奖励数量</label>
-                <input type="number" id="editRuleReward" min="1" placeholder="请输入奖励数量">
-            </div>
+
             <div class="form-group">
                 <label for="editRuleTimeLimit">倒计时（分钟）</label>
                 <input type="number" id="editRuleTimeLimit" min="1" placeholder="完成任务的时间限制">
@@ -729,6 +787,27 @@
                     <input type="checkbox" id="editRuleResetNextDay">
                     <span>次日自动重置 (任务将在第二天自动回到未接受状态)</span>
                 </label>
+            </div>
+            <div class="form-group">
+                <label>奖励类型</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <select id="editRuleRewardType1" style="flex: 1">
+                        <option value="none">无奖励</option>
+                        <option value="voucher" selected>兑换券</option>
+                        <option value="lottery">抽奖券</option>
+                        <option value="premium">高级抽奖券</option>
+                    </select>
+                    <input type="number" id="editRuleRewardAmount1" min="0" value="0" style="flex: 1">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <select id="editRuleRewardType2" style="flex: 1">
+                        <option value="none" selected>无奖励</option>
+                        <option value="voucher">兑换券</option>
+                        <option value="lottery">抽奖券</option>
+                        <option value="premium">高级抽奖券</option>
+                    </select>
+                    <input type="number" id="editRuleRewardAmount2" min="0" value="0" style="flex: 1">
+                </div>
             </div>
 
             <button class="btn" onclick="updateRule()">更新规则</button>
@@ -784,7 +863,7 @@
     <div class="complete-animation" id="completeAnimation">
         <div class="success-message">
             <h2>任务完成！</h2>
-            <p>恭喜你获得了 <span id="rewardAmount">0</span> 超级兑换券！</p>
+            <p>恭喜你获得了 <span id="rewardAmount">0</span> ！</p>
             <button class="btn" onclick="closeCompleteAnimation()">确定</button>
         </div>
     </div>
@@ -815,26 +894,59 @@
             {
                 id: 1,
                 title: "完成家庭作业",
-                reward: 10,
+                rewardType1: "voucher",
+                rewardAmount1: 10,
+                rewardType2: "none",
+                rewardAmount2: 0,
                 timeLimit: 60, // 60分钟
                 content: "每天按时完成所有家庭作业，字迹工整，正确率高。完成后请家长检查并签字确认。"
             },
             {
                 id: 2,
                 title: "整理房间",
-                reward: 5,
+                rewardType1: "voucher",
+                rewardAmount1: 5,
+                rewardType2: "none",
+                rewardAmount2: 0,
                 timeLimit: 30, // 30分钟
                 content: "保持房间整洁，书桌整齐，床铺整理好，玩具归位。每天睡前完成整理工作。"
             },
             {
                 id: 3,
                 title: "阅读30分钟",
-                reward: 8,
+                rewardType1: "voucher",
+                rewardAmount1: 8,
+                rewardType2: "none",
+                rewardAmount2: 0,
                 timeLimit: 45, // 45分钟
                 content: "每天阅读课外书籍至少30分钟，并记录阅读心得或与家长分享阅读内容。"
             }
         ];
         
+        // 获取奖励显示文本
+        function getRewardDisplayText(rule) {
+            // 兼容旧数据
+            if (rule.reward !== undefined) {
+                return `奖励: ${rule.reward} 兑换券`;
+            }
+            
+            let rewards = [];
+            if (rule.rewardType1 && rule.rewardType1 !== 'none' && rule.rewardAmount1 > 0) {
+                const typeName = rule.rewardType1 === 'voucher' ? '兑换券' : 
+                                rule.rewardType1 === 'lottery' ? '抽奖券' : '高级抽奖券';
+                rewards.push(`${rule.rewardAmount1} ${typeName}`);
+            }
+            if (rule.rewardType2 && rule.rewardType2 !== 'none' && rule.rewardAmount2 > 0) {
+                const typeName = rule.rewardType2 === 'voucher' ? '兑换券' : 
+                                rule.rewardType2 === 'lottery' ? '抽奖券' : '高级抽奖券';
+                rewards.push(`${rule.rewardAmount2} ${typeName}`);
+            }
+            
+            if (rewards.length === 0) return '无奖励';
+            if (rewards.length === 1) return `奖励: ${rewards[0]}`;
+            return `奖励: ${rewards.join(' + ')}`;
+        }
+
         // 初始化数据
         function initializeData() {
             if (!localStorage.getItem('rules')) {
@@ -867,22 +979,79 @@
         
         // 检查并执行每日重置
         function checkDailyReset() {
-            const lastResetDate = localStorage.getItem('lastResetDate');
-            const today = new Date().toDateString();
+            console.log('开始检查每日重置...');
+            const today = new Date();
+            const todayStr = today.toDateString();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
             
-            if (lastResetDate !== today) {
-                const rules = JSON.parse(localStorage.getItem('rules'));
-                const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+            console.log('今天:', todayStr, '昨天:', yesterdayStr);
+            
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks')) || {};
+            const rules = JSON.parse(localStorage.getItem('rules')) || [];
+            let needsUpdate = false;
+            
+            console.log('当前活跃任务:', activeTasks);
+            
+            // 检查每个任务是否需要重置
+            Object.keys(activeTasks).forEach(ruleId => {
+                const task = activeTasks[ruleId];
+                const rule = rules.find(r => r.id === parseInt(ruleId));
                 
-                // 重置标记为次日重置的任务
-                rules.forEach(rule => {
-                    if (rule.resetNextDay && activeTasks[rule.id]) {
-                        delete activeTasks[rule.id];
+                console.log(`检查任务 ${ruleId}:`, task);
+                
+                // 兼容旧的布尔值数据格式
+                if (typeof task === 'boolean' && task === true) {
+                    console.log(`任务 ${ruleId} 使用旧格式，删除以强制重置`);
+                    delete activeTasks[ruleId];
+                    needsUpdate = true;
+                    return;
+                }
+                
+                // 确保task是对象且有status属性
+                if (!task || typeof task !== 'object' || !task.status) {
+                    console.log(`任务 ${ruleId} 数据格式异常，跳过`);
+                    return;
+                }
+                
+                let shouldReset = false;
+                
+                // 条件1：设置了次日重置且任务已完成
+                if (rule && rule.resetNextDay && task.status === 'completed' && task.completedTime) {
+                    const completedDate = new Date(task.completedTime).toDateString();
+                    console.log(`任务 ${ruleId} 设置次日重置，完成日期: ${completedDate}`);
+                    // 如果完成日期是昨天或更早，且不是今天，则重置
+                    if (completedDate !== todayStr && (completedDate === yesterdayStr || new Date(task.completedTime) < today)) {
+                        shouldReset = true;
+                        console.log(`任务 ${ruleId} 符合次日重置条件`);
                     }
-                });
+                }
                 
+                // 条件2：任务已完成且跨天（不依赖次日重置设置）
+                if (task.status === 'completed' && task.completedTime) {
+                    const completedDate = new Date(task.completedTime).toDateString();
+                    console.log(`任务 ${ruleId} 已完成，完成日期: ${completedDate}`);
+                    // 如果完成日期不是今天且确实是之前的日期，则重置
+                    if (completedDate !== todayStr && new Date(task.completedTime) < today) {
+                        shouldReset = true;
+                        console.log(`任务 ${ruleId} 符合跨天重置条件`);
+                    }
+                }
+                
+                if (shouldReset) {
+                    console.log(`重置任务 ${ruleId}`);
+                    delete activeTasks[ruleId];
+                    needsUpdate = true;
+                }
+            });
+            
+            if (needsUpdate) {
+                console.log('更新任务状态到localStorage');
                 localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
-                localStorage.setItem('lastResetDate', today);
+                localStorage.setItem('lastResetDate', todayStr);
+            } else {
+                console.log('无需更新任务状态');
             }
         }
         
@@ -959,7 +1128,9 @@
                 ruleElement.innerHTML = `
                     <div class="rule-header">
                         <div class="rule-title">${rule.title}</div>
-                        <div class="rule-reward">奖励: ${rule.reward} 超级兑换券</div>
+                        <div class="rule-reward">
+                    ${getRewardDisplayText(rule)}
+                </div>
                     </div>
                     <div class="rule-content">${rule.content}</div>
                     ${timerDisplay}
@@ -981,7 +1152,7 @@
                 ruleElement.innerHTML = `
                     <div class="rule-header">
                         <div class="rule-title">${rule.title}</div>
-                        <div class="rule-reward">奖励: ${rule.reward} 超级兑换券</div>
+                        <div class="rule-reward">${getRewardDisplayText(rule)}</div>
                     </div>
                     <div class="rule-content">${rule.content}</div>
                     <div class="rule-content">倒计时: ${rule.timeLimit} 分钟</div>
@@ -1107,21 +1278,37 @@
             document.getElementById('addRuleModal').style.display = 'none';
         }
         
-        // 打开编辑规则模态框
+        // 打开编辑规则模态框 - 修复版
         function openEditRuleModal(ruleId) {
-            const rules = JSON.parse(localStorage.getItem('rules'));
+            console.log('Opening edit modal for rule:', ruleId); // 调试日志
+            
+            const rules = JSON.parse(localStorage.getItem('rules')) || [];
             const rule = rules.find(r => r.id === ruleId);
             
-            if (rule) {
-                document.getElementById('editRuleId').value = rule.id;
-                document.getElementById('editRuleTitle').value = rule.title;
-                document.getElementById('editRuleReward').value = rule.reward;
-                document.getElementById('editRuleTimeLimit').value = rule.timeLimit;
-                document.getElementById('editRuleContent').value = rule.content;
-                document.getElementById('editRuleResetNextDay').checked = rule.resetNextDay || false;
-                
-                document.getElementById('editRuleModal').style.display = 'flex';
+            if (!rule) {
+                console.error('Rule not found:', ruleId);
+                showStatus('规则不存在！', "error");
+                return;
             }
+            
+            console.log('Editing rule:', rule); // 调试日志
+            
+            // 填充表单数据
+            document.getElementById('editRuleId').value = rule.id;
+            document.getElementById('editRuleTitle').value = rule.title;
+            document.getElementById('editRuleTimeLimit').value = rule.timeLimit;
+            document.getElementById('editRuleContent').value = rule.content;
+            document.getElementById('editRuleResetNextDay').checked = rule.resetNextDay || false;
+            
+            // 填充组合奖励数据
+            document.getElementById('editRuleRewardType1').value = rule.rewardType1 || 'none';
+            document.getElementById('editRuleRewardAmount1').value = rule.rewardAmount1 || 0;
+            document.getElementById('editRuleRewardType2').value = rule.rewardType2 || 'none';
+            document.getElementById('editRuleRewardAmount2').value = rule.rewardAmount2 || 0;
+            
+            // 显示模态框
+            document.getElementById('editRuleModal').style.display = 'flex';
+            console.log('Edit modal displayed for rule:', ruleId); // 调试日志
         }
         
         // 关闭编辑规则模态框
@@ -1153,18 +1340,18 @@
             const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
             const task = activeTasks[ruleId];
             
-            let displayReward = rule.reward;
+            // 获取实际奖励信息
+            const rewardText = getRewardDisplayText(rule).replace('奖励: ', '');
             let statusText = '';
             
-            // 修复问题：超时后显示减半的奖励
+            // 超时处理
             if (task && task.status === 'timeout') {
-                displayReward = Math.floor(rule.reward / 2);
                 statusText = '（超时奖励减半）';
             }
             
             document.getElementById('completeRuleId').value = rule.id;
             document.getElementById('completeRuleText').textContent = 
-                `请确认已完成任务"${rule.title}"，完成后将获得${displayReward}超级兑换券${statusText}。`;
+                `请确认已完成任务"${rule.title}"，完成后将获得 ${actualRewardText}${statusText}。`;
             document.getElementById('completeRulePassword').value = '';
             
             document.getElementById('completeRuleModal').style.display = 'flex';
@@ -1193,18 +1380,16 @@
         
         // 添加规则
         function addRule() {
+            console.log('addRule function called'); // 调试日志
+            
             const title = document.getElementById('ruleTitle').value;
-            const reward = parseInt(document.getElementById('ruleReward').value);
             const timeLimit = parseInt(document.getElementById('ruleTimeLimit').value);
             const content = document.getElementById('ruleContent').value;
+            const rewardAmount1 = parseInt(document.getElementById('ruleRewardAmount1').value) || 0;
+            const rewardAmount2 = parseInt(document.getElementById('ruleRewardAmount2').value) || 0;
             
             if (!title) {
                 showStatus('请输入规则标题！', "error");
-                return;
-            }
-            
-            if (!reward || reward <= 0) {
-                showStatus('请输入有效的奖励数量！', "error");
                 return;
             }
             
@@ -1218,13 +1403,18 @@
                 return;
             }
             
+            // 允许无奖励任务，移除奖励验证
+            
             const rules = JSON.parse(localStorage.getItem('rules'));
             const newId = rules.length > 0 ? Math.max(...rules.map(r => r.id)) + 1 : 1;
             
             rules.push({
                 id: newId,
                 title: title,
-                reward: reward,
+                rewardType1: document.getElementById('ruleRewardType1').value,
+                rewardAmount1: parseInt(document.getElementById('ruleRewardAmount1').value) || 0,
+                rewardType2: document.getElementById('ruleRewardType2').value,
+                rewardAmount2: parseInt(document.getElementById('ruleRewardAmount2').value) || 0,
                 timeLimit: timeLimit,
                 content: content,
                 resetNextDay: document.getElementById('ruleResetNextDay').checked
@@ -1238,19 +1428,17 @@
         
         // 更新规则
         function updateRule() {
+            console.log('updateRule function called'); // 调试日志
+            
             const id = parseInt(document.getElementById('editRuleId').value);
             const title = document.getElementById('editRuleTitle').value;
-            const reward = parseInt(document.getElementById('editRuleReward').value);
             const timeLimit = parseInt(document.getElementById('editRuleTimeLimit').value);
             const content = document.getElementById('editRuleContent').value;
+            const rewardAmount1 = parseInt(document.getElementById('editRuleRewardAmount1').value) || 0;
+            const rewardAmount2 = parseInt(document.getElementById('editRuleRewardAmount2').value) || 0;
             
             if (!title) {
                 showStatus('请输入规则标题！', "error");
-                return;
-            }
-            
-            if (!reward || reward <= 0) {
-                showStatus('请输入有效的奖励数量！', "error");
                 return;
             }
             
@@ -1264,6 +1452,8 @@
                 return;
             }
             
+            // 允许无奖励任务，移除奖励验证
+            
             const rules = JSON.parse(localStorage.getItem('rules'));
             const ruleIndex = rules.findIndex(r => r.id === id);
             
@@ -1275,7 +1465,10 @@
             rules[ruleIndex] = {
                 id: id,
                 title: title,
-                reward: reward,
+                rewardType1: document.getElementById('editRuleRewardType1').value,
+                rewardAmount1: parseInt(document.getElementById('editRuleRewardAmount1').value) || 0,
+                rewardType2: document.getElementById('editRuleRewardType2').value,
+                rewardAmount2: parseInt(document.getElementById('editRuleRewardAmount2').value) || 0,
                 timeLimit: timeLimit,
                 content: content,
                 resetNextDay: document.getElementById('editRuleResetNextDay').checked
@@ -1369,40 +1562,86 @@
             const startTime = new Date(task.startTime);
             const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
             const timeLimitSeconds = rule.timeLimit * 60;
-            let reward = rule.reward;
             let status = 'completed';
+            let isTimeout = false;
             
             if (elapsed > timeLimitSeconds || task.status === 'timeout') {
-                // 超时，奖励减半
-                reward = Math.floor(reward / 2);
                 status = 'timeout';
+                isTimeout = true;
                 showStatus('任务超时！奖励减半。', "warning");
             } else {
                 showStatus('任务按时完成！', "success");
             }
             
-            // 增加货币
-            const currentCurrency = parseInt(localStorage.getItem('currency'));
-            localStorage.setItem('currency', currentCurrency + reward);
+            // 处理双货币奖励（支持超时减半）
+            const rewardTypes = [
+                {type: rule.rewardType1 || 'none', amount: parseInt(rule.rewardAmount1 || 0)},
+                {type: rule.rewardType2 || 'none', amount: parseInt(rule.rewardAmount2 || 0)}
+            ].map(reward => ({
+                ...reward,
+                amount: isTimeout ? Math.floor(reward.amount / 2) : reward.amount
+            }));
             
-            // 添加历史记录
             const history = JSON.parse(localStorage.getItem('history'));
-            history.push({
-                date: new Date().toISOString(),
-                amount: reward,
-                reason: `完成任务：${rule.title}`,
-                type: 'add',
-                status: status
+            
+            // 生成奖励文本（使用实际奖励值）
+            const actualRewardText = getRewardDisplayText({
+                ...rule,
+                rewardAmount1: rewardTypes[0].amount,
+                rewardAmount2: rewardTypes[1].amount
+            });
+            
+            rewardTypes.forEach(reward => {
+                if (reward.type !== 'none' && reward.amount > 0) {
+                    const currentAmount = parseInt(localStorage.getItem(reward.type) || '0');
+                    localStorage.setItem(reward.type, currentAmount + reward.amount);
+                    
+                    history.push({
+                        date: new Date().toISOString(),
+                        amount: reward.amount,
+                        reason: `完成任务：${rule.title}`,
+                        type: 'add',
+                        currencyType: reward.type,
+                        currencyName: reward.type === 'voucher' ? '兑换券' : 
+                                     reward.type === 'lottery' ? '抽奖券' : '高级抽奖券',
+                        status: status
+                    });
+                }
             });
             localStorage.setItem('history', JSON.stringify(history));
             
-            // 更新任务状态
+            // 更新任务状态并记录完成时间
             task.status = 'completed';
+            task.completedTime = new Date().toISOString();
             activeTasks[id] = task;
             localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
             
-            // 显示完成动画
-            showCompleteAnimation(reward);
+            // 显示完成动画和奖励详情 - 最终修复版
+            const rewards = [];
+            
+            // 收集实际获得的奖励
+            if (rule.rewardType1 && rule.rewardType1 !== 'none' && rule.rewardAmount1 > 0) {
+                const typeName = rule.rewardType1 === 'voucher' ? '兑换券' : 
+                               rule.rewardType1 === 'lottery' ? '抽奖券' : '高级抽奖券';
+                rewards.push(`${rule.rewardAmount1} ${typeName}`);
+            }
+            
+            if (rule.rewardType2 && rule.rewardType2 !== 'none' && rule.rewardAmount2 > 0) {
+                const typeName = rule.rewardType2 === 'voucher' ? '兑换券' : 
+                               rule.rewardType2 === 'lottery' ? '抽奖券' : '高级抽奖券';
+                rewards.push(`${rule.rewardAmount2} ${typeName}`);
+            }
+            
+            // 生成简洁的奖励文本
+            let rewardText = '任务完成';
+            if (rewards.length === 1) {
+                rewardText = rewards[0];
+            } else if (rewards.length > 1) {
+                rewardText = rewards.join(' 和 ');
+            }
+            
+            document.getElementById('rewardAmount').textContent = rewardText;
+            showCompleteAnimation();
             
             // 关闭完成规则模态框
             closeCompleteRuleModal();
@@ -1412,11 +1651,12 @@
         }
         
         // 显示完成动画
-        function showCompleteAnimation(reward) {
+        function showCompleteAnimation() {
             const animation = document.getElementById('completeAnimation');
-            const rewardAmount = document.getElementById('rewardAmount');
+            animation.classList.add('active');
             
-            rewardAmount.textContent = reward;
+            // 创建彩色纸屑
+            createConfetti();
             animation.classList.add('active');
             
             // 创建彩色纸屑
