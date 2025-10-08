@@ -490,7 +490,8 @@
             text-align: center;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
             border: 3px solid #ffd166;
-            max-width: 400px;
+            max-width: 850px;
+            width: 90%;
         }
         
         .result-title {
@@ -656,6 +657,18 @@
             }
         }
         
+        @media (max-width: 1024px) {
+            #resultContent > div {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #resultContent > div {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         @media (max-width: 480px) {
             .prizes-grid {
                 grid-template-columns: 1fr;
@@ -680,6 +693,7 @@
 <body>
     <div class="header">
         <h1>🎪 儿童抽奖乐园 🎪</h1>
+        <button class="btn btn-warning" id="homeBtn" style="margin-top: 15px;">返回主页</button>
     </div>
     
     <div class="container">
@@ -694,8 +708,9 @@
             <h2>欢乐抽奖</h2>
             
             <!-- 兑换券显示 -->
-            <div class="today-summary">
-                当前兑换券: <span id="currencyAmount">100</span>
+            <div class="today-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>当前兑换券: <span id="currencyAmount">100</span></div>
+                <div>当前抽奖券: <span id="ticketAmount">0</span></div>
             </div>
             
             <p>每次抽奖消耗10兑换券，试试你的手气吧！</p>
@@ -707,8 +722,22 @@
             
             <div class="action-buttons">
                 <div class="action-message" id="actionMessage"></div>
-                <button class="btn pulse" id="startLotteryBtn">🎡 开始抽奖</button>
-                <a href="advanced_choujiang.html" class="btn btn-premium" style="text-decoration: none;">🌟 高级抽奖系统</a>
+                <div class="lottery-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
+                    <button class="btn btn-warning pulse" id="singleLotteryBtn">🎟️ 1抽奖券抽1次</button>
+                    <button class="btn btn-premium pulse" id="multiLotteryBtn">🎟️🎟️ 10抽奖券抽10次</button>
+                </div>
+            </div>
+            
+            <!-- 兑换券购买确认模态框 -->
+            <div class="modal" id="exchangeModal">
+                <div class="modal-content">
+                    <h2 id="exchangeModalTitle">兑换券购买确认</h2>
+                    <p id="exchangeModalText">确定要用50兑换券购买1张抽奖券吗？</p>
+                    <div class="action-buttons">
+                        <button class="btn" id="confirmExchangeBtn">确认购买</button>
+                        <button class="btn btn-danger" id="cancelExchangeBtn">取消</button>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -812,7 +841,9 @@
     <script>
         // 常量定义
         const DEFAULT_PASSWORD = "1234";
-        const LOTTERY_COST = 10;
+        const LOTTERY_COST = 10;  // 抽奖消耗的兑换券
+        const EXCHANGE_RATE = 50; // 50兑换券=1抽奖券
+        let lotteryTickets = 0;   // 当前抽奖券数量
         
         // 默认奖品
         const defaultPrizes = [
@@ -888,22 +919,38 @@
                 localStorage.setItem('password', DEFAULT_PASSWORD);
             }
             
-            // 检查高级版是否有数据，优先使用高级版数据
-            const advancedCurrency = localStorage.getItem('advancedCurrency');
-            if (!localStorage.getItem('currency')) {
-                localStorage.setItem('currency', advancedCurrency || '100');
-            } else if (advancedCurrency) {
-                localStorage.setItem('currency', advancedCurrency);
+            // 数据兼容处理：将旧版currency数据迁移到voucher
+            if (localStorage.getItem('currency') && !localStorage.getItem('voucher')) {
+                localStorage.setItem('voucher', localStorage.getItem('currency'));
+            }
+            
+            // 确保有默认兑换券数据
+            if (!localStorage.getItem('voucher')) {
+                localStorage.setItem('voucher', '100');
             }
             
             if (!localStorage.getItem('records')) {
                 localStorage.setItem('records', JSON.stringify([]));
             }
-
+            
+            // 兼容处理：将旧版lotteryTickets数据迁移到lottery
+            if (localStorage.getItem('lotteryTickets')) {
+                localStorage.setItem('lottery', localStorage.getItem('lotteryTickets'));
+                localStorage.removeItem('lotteryTickets');
+            }
+            
+            if (!localStorage.getItem('lottery')) {
+                localStorage.setItem('lottery', '0');
+            }
+            lotteryTickets = parseInt(localStorage.getItem('lottery'));
+            
             // 监听storage事件实现双向同步
+            // 统一监听storage变化
             window.addEventListener('storage', function(e) {
-                if (e.key === 'advancedCurrency') {
-                    localStorage.setItem('currency', e.newValue);
+                if (e.key === 'lottery' || e.key === 'voucher') {
+                    if (e.key === 'lottery') {
+                        lotteryTickets = parseInt(e.newValue || '0');
+                    }
                     updateUI();
                 }
             });
@@ -925,9 +972,11 @@
         
         // 更新界面显示
         function updateUI() {
-            // 更新兑换券显示
-            const currency = parseInt(localStorage.getItem('currency') || '100');
-            document.getElementById('currencyAmount').textContent = currency;
+            // 更新兑换券显示（使用voucher键名）
+            const voucher = parseInt(localStorage.getItem('voucher') || '100');
+            lotteryTickets = parseInt(localStorage.getItem('lottery') || '0');
+            document.getElementById('currencyAmount').textContent = voucher;
+            document.getElementById('ticketAmount').textContent = lotteryTickets;
             
             // 更新奖品显示
             updatePrizesContainer();
@@ -1120,59 +1169,114 @@
             document.getElementById('addPrizeModal').style.display = 'none';
         }
         
-        // 开始抽奖
-        function startLottery() {
-            const currency = parseInt(localStorage.getItem('currency') || '100');
-            
-            if (currency < LOTTERY_COST) {
-                showStatus('兑换券不足！', "error");
-                return;
+        // 单次抽奖
+        function startSingleLottery() {
+            if (lotteryTickets >= 1) {
+                // 直接使用抽奖券
+                lotteryTickets--;
+                localStorage.setItem('lottery', lotteryTickets.toString());
+                updateUI();
+                performLottery(1);
+            } else {
+                // 询问是否用兑换券购买
+                const voucher = parseInt(localStorage.getItem('voucher') || '100');
+                if (voucher >= EXCHANGE_RATE) {
+                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
+                    document.getElementById('exchangeModalText').textContent = 
+                        '抽奖券不足！确定要用50兑换券购买1张抽奖券吗？';
+                    document.getElementById('exchangeModal').style.display = 'flex';
+                } else {
+                    showStatus('抽奖券不足且兑换券也不足！', "error");
+                }
             }
-            
-            // 禁用抽奖按钮
-            const startBtn = document.getElementById('startLotteryBtn');
-            startBtn.disabled = true;
-            startBtn.textContent = '抽奖中...';
-            
-            // 显示消息
+        }
+
+        // 多次抽奖
+        function startMultiLottery() {
+            if (lotteryTickets >= 10) {
+                // 直接使用抽奖券
+                lotteryTickets -= 10;
+                localStorage.setItem('lottery', lotteryTickets.toString());
+                updateUI();
+                performLottery(10);
+            } else {
+                // 计算需要补充的抽奖券数量
+                const neededTickets = 10 - lotteryTickets;
+                const totalCost = neededTickets * EXCHANGE_RATE;
+                const voucher = parseInt(localStorage.getItem('voucher') || '100');
+                
+                if (voucher >= totalCost) {
+                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
+                    document.getElementById('exchangeModalText').textContent = 
+                        `抽奖券不足！需要补充${neededTickets}张抽奖券，确定要用${totalCost}兑换券购买吗？`;
+                    document.getElementById('exchangeModal').style.display = 'flex';
+                } else {
+                    showStatus(`抽奖券不足且兑换券不足（需要${totalCost}兑换券）！`, "error");
+                }
+            }
+        }
+
+        // 执行抽奖
+        function performLottery(times) {
             const actionMessage = document.getElementById('actionMessage');
-            actionMessage.textContent = '正在抽奖中，请稍候...';
+            actionMessage.textContent = `正在抽奖中（${times}次），请稍候...`;
             actionMessage.style.display = 'block';
             
-            // 扣除兑换券并同步到高级版
-            const newCurrency = currency - LOTTERY_COST;
-            localStorage.setItem('currency', newCurrency);
-            localStorage.setItem('advancedCurrency', newCurrency);
-            document.getElementById('currencyAmount').textContent = newCurrency;
-            
-            // 创建彩色纸屑效果
-            createConfetti();
+            // 禁用按钮
+            document.getElementById('singleLotteryBtn').disabled = true;
+            document.getElementById('multiLotteryBtn').disabled = true;
             
             // 抽奖动画效果（5秒后显示结果）
             setTimeout(() => {
-                const prize = getRandomPrize();
+                const prizes = [];
+                for (let i = 0; i < times; i++) {
+                    prizes.push(getRandomPrize());
+                }
                 
-                // 添加抽奖记录
-                const records = JSON.parse(localStorage.getItem('records'));
+                // 处理奖品
+                processPrizes(prizes);
+                
+                // 根据抽奖次数显示对应结果
+                if (times === 1) {
+                    showSingleLotteryResult(prizes[0]);
+                } else {
+                    showMultiLotteryResult(prizes);
+                }
+                
+                // 启用按钮
+                document.getElementById('singleLotteryBtn').disabled = false;
+                document.getElementById('multiLotteryBtn').disabled = false;
+                actionMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // 处理奖品结果
+        function processPrizes(prizes) {
+            const records = JSON.parse(localStorage.getItem('records'));
+            let currencyEarned = 0;
+            
+            // 获取当前兑换券数量
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '100');
+            
+            prizes.forEach(prize => {
                 records.push({
                     prize: prize.name,
                     rewardType: prize.rewardType,
                     currencyAmount: prize.currencyAmount,
                     date: new Date().toISOString()
                 });
-                localStorage.setItem('records', JSON.stringify(records));
                 
-                // 如果是兑换券奖励，立即增加兑换券数量
                 if (prize.rewardType === 'currency') {
-                    const newCurrencyAfterWin = newCurrency + prize.currencyAmount;
-                    localStorage.setItem('currency', newCurrencyAfterWin);
-                    document.getElementById('currencyAmount').textContent = newCurrencyAfterWin;
+                    currencyEarned += prize.currencyAmount;
+                    // 立即更新兑换券数量
+                    const newVoucher = currentVoucher + prize.currencyAmount;
+                    localStorage.setItem('voucher', newVoucher.toString());
                 }
                 
-                // 如果是有限库存奖品，减少库存
+                // 减少库存
                 if (prize.stock !== -1) {
-                    const prizes = JSON.parse(localStorage.getItem('prizes'));
-                    const updatedPrizes = prizes.map(p => {
+                    const allPrizes = JSON.parse(localStorage.getItem('prizes'));
+                    const updatedPrizes = allPrizes.map(p => {
                         if (p.id === prize.id && p.stock > 0) {
                             return {...p, stock: p.stock - 1};
                         }
@@ -1180,29 +1284,78 @@
                     });
                     localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
                 }
-                
-                // 显示抽奖结果
-                showLotteryResult(prize);
-                
-                // 启用抽奖按钮
-                startBtn.disabled = false;
-                startBtn.textContent = '🎡 开始抽奖';
-                actionMessage.style.display = 'none';
-                
-                // 更新UI
-                updateUI();
-            }, 5000);
+            });
+            
+            // 更新记录
+            localStorage.setItem('records', JSON.stringify(records));
+            
+            // 增加兑换券奖励
+            if (currencyEarned > 0) {
+                const voucher = parseInt(localStorage.getItem('voucher') || '100');
+                const newVoucher = voucher + currencyEarned;
+                localStorage.setItem('voucher', newVoucher.toString());
+                document.getElementById('currencyAmount').textContent = newVoucher;
+                showStatus(`成功获得${currencyEarned}兑换券！`, "success");
+            }
+            
+            // 触发UI更新
+            updateUI();
+            
+            // 显示结果
+            showMultiLotteryResult(prizes);
+            updateUI();
         }
-        
-        // 显示抽奖结果
-        function showLotteryResult(prize) {
+
+        // 显示十连抽结果
+        function showMultiLotteryResult(prizes) {
             const resultCard = document.getElementById('resultCard');
             const resultContent = document.getElementById('resultContent');
             const rewardTags = document.getElementById('rewardTags');
             
             resultContent.innerHTML = `
-                <div style="font-size: 3rem; margin-bottom:15px;">${prize.icon}</div>
-                <div>${prize.name}</div>
+                <div style="font-size: 2rem; margin-bottom:15px; text-align:center;">🎉 十连抽结果 🎉</div>
+                <div style="display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; padding: 10px; max-width: 800px; margin: 0 auto;">
+                    ${prizes.map((prize, index) => `
+                        <div style="
+                            border: 2px solid #ffd166;
+                            border-radius: 15px;
+                            padding: 12px;
+                            background: rgba(255, 255, 255, 0.9);
+                            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+                            min-height: 140px;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                        ">
+                            <div style="font-size: 1.1rem; font-weight:bold; color:#118ab2;">第${index+1}抽</div>
+                            <div style="font-size: 1.5rem; margin:8px 0; text-align:center;">${prize.icon}</div>
+                            <div style="font-size: 1.1rem; margin-bottom:5px; text-align:center;">${prize.name}</div>
+                            ${prize.rewardType === 'currency' ? 
+                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center;">${prize.currencyAmount}兑换券</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            rewardTags.innerHTML = '';
+            resultCard.style.display = 'block';
+            createConfetti();
+        }
+        
+        // 显示单次抽奖结果
+        function showSingleLotteryResult(prize) {
+            const resultCard = document.getElementById('resultCard');
+            const resultContent = document.getElementById('resultContent');
+            const rewardTags = document.getElementById('rewardTags');
+            
+            resultContent.innerHTML = `
+                <div style="font-size: 2rem; margin-bottom:15px; text-align:center;">🎉 抽奖结果 🎉</div>
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3rem; margin:20px 0;">${prize.icon}</div>
+                    <div style="font-size: 1.5rem; margin-bottom:10px;">${prize.name}</div>
+                    ${prize.rewardType === 'currency' ? 
+                        `<div class="reward-tag">${prize.currencyAmount}兑换券</div>` : ''}
+                </div>
             `;
             
             rewardTags.innerHTML = '';
@@ -1381,7 +1534,8 @@
             updateUI();
             
             // 事件绑定
-            document.getElementById('startLotteryBtn').addEventListener('click', startLottery);
+            document.getElementById('singleLotteryBtn').addEventListener('click', startSingleLottery);
+            document.getElementById('multiLotteryBtn').addEventListener('click', startMultiLottery);
             document.getElementById('confirmResultBtn').addEventListener('click', confirmResult);
             document.getElementById('addPrizeBtn').addEventListener('click', openAddPrizeModal);
             document.getElementById('confirmAddPrizeBtn').addEventListener('click', addPrize);
@@ -1397,6 +1551,46 @@
             document.getElementById('confirmPasswordBtn').addEventListener('click', verifyPassword);
             document.getElementById('cancelPasswordBtn').addEventListener('click', function() {
                 document.getElementById('passwordModal').style.display = 'none';
+            });
+            document.getElementById('confirmExchangeBtn').addEventListener('click', function() {
+                const modalText = document.getElementById('exchangeModalText').textContent;
+                const voucher = parseInt(localStorage.getItem('voucher') || '100');
+                
+                // 解析需要购买的抽奖券数量
+                let ticketsToBuy = 1;
+                if (modalText.includes('补充')) {
+                    const match = modalText.match(/需要补充(\d+)张/);
+                    if (match) ticketsToBuy = parseInt(match[1]);
+                }
+                
+                const totalCost = ticketsToBuy * EXCHANGE_RATE;
+                
+                if (voucher >= totalCost) {
+                    // 扣除兑换券
+                    const newVoucher = voucher - totalCost;
+                    localStorage.setItem('voucher', newVoucher.toString());
+                    
+                    // 增加抽奖券
+                    lotteryTickets += ticketsToBuy;
+                    localStorage.setItem('lottery', lotteryTickets.toString());
+                    
+                    // 更新UI
+                    updateUI();
+                    document.getElementById('exchangeModal').style.display = 'none';
+                    showStatus(`成功购买${ticketsToBuy}张抽奖券！`, "success");
+                    
+                    // 自动开始抽奖
+                    if (modalText.includes('1张抽奖券')) {
+                        startSingleLottery();
+                    } else if (modalText.includes('10抽奖券') || modalText.includes('补充')) {
+                        startMultiLottery();
+                    }
+                } else {
+                    showStatus('兑换券不足！', "error");
+                }
+            });
+            document.getElementById('cancelExchangeBtn').addEventListener('click', function() {
+                document.getElementById('exchangeModal').style.display = 'none';
             });
             
             // 标签页切换事件
@@ -1434,6 +1628,11 @@
             });
         }
         
+        // 返回主页功能
+        document.getElementById('homeBtn').addEventListener('click', function() {
+            window.location.href = '/';
+        });
+
         // 当DOM加载完成后启动应用
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
