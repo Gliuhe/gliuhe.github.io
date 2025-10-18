@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公告栏</title>
+    <title>欢乐奖励公告栏</title>
     <style>
         /* 基础样式 */
         * {
@@ -142,6 +142,310 @@
             border-left: 3px solid #ffd166;
         }
         
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 公告样式 */
+        .announcement-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-left: 5px solid #06d6a0;
+        }
+        
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .announcement-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .announcement-tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .tag-penalty {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .tag-activity {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .tag-other {
+            background: #ffd166;
+            color: #333;
+        }
+        
+        .announcement-content {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .announcement-date {
+            font-size: 0.9rem;
+            color: #999;
+            text-align: right;
+        }
+        
+        /* 管理界面样式 */
+        .management-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #06d6a0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #06d6a0 0%, #118ab2 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef476f 0%, #ff6b6b 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffd166 0%, #ff9e7d 100%);
+            color: #333;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            z-index: 1001;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 1.1rem;
+        }
+        
+        /* iPad 4:3横屏适配 */
+        @media (min-width: 768px) and (max-width: 1024px) and (aspect-ratio: 4/3) {
+            .reward-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .container {
+                padding: 20px;
+                max-height: 85vh;
+            }
+            
+            .header h1 {
+                font-size: 2.4rem;
+            }
+        }
+        
+        /* iPad竖屏适配 */
+        @media (min-width: 768px) and (max-width: 1024px) and (aspect-ratio: 3/4) {
+            .container {
+                max-height: 80vh;
+            }
+            
+            .reward-item {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .reward-amount {
+                margin-top: 5px;
+                text-align: left;
+                width: 100%;
+            }
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .reward-item, .announcement-item {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        /* 触控优化 */
+        .reward-item, .announcement-item {
+            transition: transform 0.2s;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        .reward-item:active, .announcement-item:active {
+            transform: scale(0.98);
+            font-weight: bold;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        
+        .category-icon {
+            font-size: 2rem;
+        }
+        
+        /* 奖励项目样式 */
+        .reward-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #06d6a0;
+        }
+        
+        .reward-action {
+            font-size: 1.2rem;
+            color: #333;
+            flex: 1;
+        }
+        
+        .reward-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e74c3c;
+            min-width: 100px;
+            text-align: right;
+        }
+        
+        .reward-note {
+            margin-top: 15px;
+            padding: 10px;
+            font-size: 1rem;
+            color: #666;
+            background: #fff8e1;
+            border-radius: 8px;
+            border-left: 3px solid #ffd166;
+        }
+        
         /* iPad 4:3横屏适配 */
         @media (min-width: 768px) and (max-width: 1024px) and (aspect-ratio: 4/3) {
             .reward-grid {
@@ -197,6 +501,212 @@
         .reward-item:active {
             transform: scale(0.98);
         }
+        
+        /* 标签页样式 */
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 25px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Comic Sans MS', cursive;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 公告管理样式 */
+        .announcement-item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border-left: 5px solid #06d6a0;
+        }
+        
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .announcement-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .announcement-tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .tag-penalty {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .tag-activity {
+            background: #4ecdc4;
+            color: white;
+        }
+        
+        .tag-other {
+            background: #ffd166;
+            color: #333;
+        }
+        
+        .announcement-content {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+        
+        .announcement-date {
+            font-size: 0.9rem;
+            color: #999;
+            text-align: right;
+        }
+        
+        /* 管理界面样式 */
+        .management-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #06d6a0;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #06d6a0 0%, #118ab2 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef476f 0%, #ff6b6b 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffd166 0%, #ff9e7d 100%);
+            color: #333;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            z-index: 1001;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 1.1rem;
+        }
     </style>
 </head>
 <body>
@@ -208,125 +718,409 @@
     </div>
     
     <div class="container">
-        <div class="reward-grid">
-            <!-- 特殊事件奖励 -->
-            <div class="reward-category">
-                <div class="category-header">
-                    <div class="category-title">特殊事件奖励</div>
-                    <div class="category-icon">🌟</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">考试单科≤89分</div>
-                    <div class="reward-amount">-150-50/分 兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">考试单科≥90分</div>
-                    <div class="reward-amount">200+300/分 兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">考试单科≥96分</div>
-                    <div class="reward-amount">888+308/分 兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">考试双科≥193分</div>
-                    <div class="reward-amount">1666+500/分 兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">考试双科≥197分</div>
-                    <div class="reward-amount">2333+1888/分 兑换券</div>
+        <!-- 标签页导航 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('announcements')">📢 公告</button>
+            <button class="tab" onclick="switchTab('rewards')">🏆 奖励规则</button>
+            <button class="tab" onclick="switchTab('settings')">⚙️ 公告设置</button>
+        </div>
+        
+        <!-- 公告页 -->
+        <div id="announcements" class="tab-content active">
+            <div id="announcementsList">
+                <div class="empty-state" id="noAnnouncements">
+                    <p>暂无公告</p>
                 </div>
             </div>
-            
-            <!-- 里程碑奖励 -->
-            <div class="reward-category">
-                <div class="category-header">
-                    <div class="category-title">里程碑奖励</div>
-                    <div class="category-icon">🏆</div>
+        </div>
+        
+        <!-- 奖励规则页 -->
+        <div id="rewards" class="tab-content">
+            <div class="reward-grid">
+                <!-- 特殊事件奖励 -->
+                <div class="reward-category">
+                    <div class="category-header">
+                        <div class="category-title">特殊事件奖励</div>
+                        <div class="category-icon">🌟</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试单科≤89分</div>
+                        <div class="reward-amount">-100-50/分 兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试单科≥90分</div>
+                        <div class="reward-amount">50+300/分 兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试单科≥96分</div>
+                        <div class="reward-amount">300+666/分兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试双科≥193分</div>
+                        <div class="reward-amount">1666+500/分 兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试双科≥197分</div>
+                        <div class="reward-amount">5666+1000/分 兑换券</div>
+                    </div>
                 </div>
                 
-                <div class="reward-item">
-                    <div class="reward-action">初级里程碑(持有1288兑换券)『已获得✔』</div>
-                    <div class="reward-amount">100兑换券+8抽奖券</div>
+                <!-- 里程碑奖励 -->
+                <div class="reward-category">
+                    <div class="category-header">
+                        <div class="category-title">里程碑奖励</div>
+                        <div class="category-icon">🏆</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">初级里程碑(持有1288兑换券)【已达成✅】</div>
+                        <div class="reward-amount">100兑换券+5抽奖券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">中级里程碑(持有3488兑换券)</div>
+                        <div class="reward-amount">200兑换券+10抽奖券+5高级抽奖券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">高级里程碑(持有6988兑换券)</div>
+                        <div class="reward-amount">1888兑换券+20抽奖券+10高级抽奖券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">终极里程碑(持有12888兑换券)</div>
+                        <div class="reward-amount">2888兑换券+40抽奖券+20高级抽奖券</div>
+                    </div>
+                    
+                    <div class="reward-note">每学期仅可获得一次里程碑奖励</div>
                 </div>
                 
-                <div class="reward-item">
-                    <div class="reward-action">中级里程碑(持有2888兑换券)</div>
-                    <div class="reward-amount">300兑换券+14抽奖券+1高级抽奖券+VIP</div>
+                <!-- 阅读奖励 -->
+                <div class="reward-category">
+                    <div class="category-header">
+                        <div class="category-title">阅读奖励</div>
+                        <div class="category-icon">📚</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">阅读10分钟</div>
+                        <div class="reward-amount">30兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">阅读20分钟</div>
+                        <div class="reward-amount">100兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">阅读≥30分钟</div>
+                        <div class="reward-amount">160+2/min兑换券</div>
+                    </div>
+                    
+                    <div class="reward-note">当日有效，次日重置进度。连续阅读可累计奖励</div>
                 </div>
                 
-                <div class="reward-item">
-                    <div class="reward-action">高级里程碑(持有6666兑换券)</div>
-                    <div class="reward-amount">500兑换券+30抽奖券+5高级抽奖券+SVIP</div>
+                <!-- 运动奖励 -->
+                <div class="reward-category">
+                    <div class="category-header">
+                        <div class="category-title">运动奖励</div>
+                        <div class="category-icon">⚽</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">400m跑步</div>
+                        <div class="reward-amount">60兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">1000m走路</div>
+                        <div class="reward-amount">60兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">下楼骑车(≥30min)</div>
+                        <div class="reward-amount">60+1/min 兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">/</div>
+                        <div class="reward-amount">/</div>
+                    </div>
+                    
+                    <div class="reward-note">仅周五及节假日有效，任务可能不定期调整</div>
                 </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">终极里程碑(持有12888兑换券)</div>
-                    <div class="reward-amount">2888兑换券+60抽奖券+12高级抽奖券+至尊SVIP</div>
-                </div>
-                
-                <div class="reward-note">每学期仅可获得一次里程碑奖励</div>
+            </div>
+        </div>
+        
+        <!-- 公告设置页 -->
+        <div id="settings" class="tab-content">
+            <div class="empty-state" id="passwordPrompt">
+                <p>🔒 公告管理需要密码验证</p>
+                <button class="btn btn-primary" onclick="showPasswordModal()">输入密码</button>
             </div>
             
-            <!-- 阅读奖励 -->
-            <div class="reward-category">
-                <div class="category-header">
-                    <div class="category-title">阅读奖励</div>
-                    <div class="category-icon">📚</div>
+            <div id="managementPanel" style="display: none;">
+                <div class="management-panel">
+                    <h3 style="margin-bottom: 20px;">📝 添加新公告</h3>
+                    <div class="form-group">
+                        <label for="announcementTitle">公告标题</label>
+                        <input type="text" id="announcementTitle" class="form-control" placeholder="请输入公告标题">
+                    </div>
+                    <div class="form-group">
+                        <label for="announcementContent">公告内容</label>
+                        <textarea id="announcementContent" class="form-control" rows="4" placeholder="请输入公告内容"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="announcementTag">公告类型</label>
+                        <select id="announcementTag" class="form-control">
+                            <option value="penalty">处罚通告</option>
+                            <option value="activity">活动通告</option>
+                            <option value="other">其他通告</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="addAnnouncement()">添加公告</button>
                 </div>
                 
-                <div class="reward-item">
-                    <div class="reward-action">阅读10分钟</div>
-                    <div class="reward-amount">30兑换券</div>
+                <div id="settingsAnnouncementsList">
+                    <h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>
+                    <div class="empty-state" id="noSettingsAnnouncements">
+                        <p>暂无公告，请添加第一条公告</p>
+                    </div>
                 </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">阅读20分钟</div>
-                    <div class="reward-amount">100兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">阅读≥30分钟</div>
-                    <div class="reward-amount">160+2/min兑换券</div>
-                </div>
-                
-                <div class="reward-note">当日有效，次日重置进度。连续阅读可累计奖励</div>
-            </div>
-            
-            <!-- 运动奖励 -->
-            <div class="reward-category">
-                <div class="category-header">
-                    <div class="category-title">运动奖励</div>
-                    <div class="category-icon">⚽</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">400m跑步</div>
-                    <div class="reward-amount">60兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">1000m走路</div>
-                    <div class="reward-amount">60兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">下楼骑车(≥30min)</div>
-                    <div class="reward-amount">60+1/min 兑换券</div>
-                </div>
-                
-                <div class="reward-item">
-                    <div class="reward-action">/</div>
-                    <div class="reward-amount">/</div>
-                </div>
-                
-                <div class="reward-note">仅周五及节假日有效，任务可能不定期调整</div>
             </div>
         </div>
     </div>
+    
+    <!-- 密码验证模态框 -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">🔒 密码验证</div>
+            <div class="form-group">
+                <label for="passwordInput">请输入管理密码</label>
+                <input type="password" id="passwordInput" class="form-control" placeholder="输入密码">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-warning" onclick="hidePasswordModal()">取消</button>
+                <button class="btn btn-primary" onclick="verifyPassword()">确认</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 公告数据存储
+        let announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+        let isAuthenticated = false;
+        
+        // 标签页切换
+        function switchTab(tabName) {
+            // 更新标签页状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // 根据标签页类型加载不同内容
+            if (tabName === 'announcements') {
+                renderAnnouncementsView();
+            } else if (tabName === 'settings') {
+                // 每次进入公告设置页都需要重新验证密码
+                isAuthenticated = false;
+                document.getElementById('passwordPrompt').style.display = 'block';
+                document.getElementById('managementPanel').style.display = 'none';
+            }
+        }
+        
+        // 显示密码模态框
+        function showPasswordModal() {
+            document.getElementById('passwordModal').style.display = 'block';
+            document.getElementById('passwordInput').focus();
+        }
+        
+        // 隐藏密码模态框
+        function hidePasswordModal() {
+            document.getElementById('passwordModal').style.display = 'none';
+            document.getElementById('passwordInput').value = '';
+        }
+        
+        // 验证密码
+        function verifyPassword() {
+            const password = document.getElementById('passwordInput').value;
+            // 从localStorage获取密码，与index.html保持一致
+            const storedPassword = localStorage.getItem('password') || '1234';
+            
+            if (password === storedPassword) {
+                isAuthenticated = true;
+                document.getElementById('passwordPrompt').style.display = 'none';
+                document.getElementById('managementPanel').style.display = 'block';
+                hidePasswordModal();
+                renderSettingsAnnouncements();
+            } else {
+                alert('密码错误！');
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+        
+        // 添加公告
+        function addAnnouncement() {
+            const title = document.getElementById('announcementTitle').value.trim();
+            const content = document.getElementById('announcementContent').value.trim();
+            const tag = document.getElementById('announcementTag').value;
+            
+            if (!title || !content) {
+                alert('请填写完整的公告信息！');
+                return;
+            }
+            
+            const newAnnouncement = {
+                id: Date.now(),
+                title: title,
+                content: content,
+                tag: tag,
+                date: new Date().toLocaleDateString('zh-CN')
+            };
+            
+            announcements.unshift(newAnnouncement);
+            saveAnnouncements();
+            renderAnnouncementsView();
+            renderSettingsAnnouncements();
+            
+            // 清空表单
+            document.getElementById('announcementTitle').value = '';
+            document.getElementById('announcementContent').value = '';
+            document.getElementById('announcementTag').value = 'penalty';
+            
+            alert('公告添加成功！');
+        }
+        
+        // 删除公告
+        function deleteAnnouncement(id) {
+            if (confirm('确定要删除这条公告吗？')) {
+                announcements = announcements.filter(ann => ann.id !== id);
+                saveAnnouncements();
+                renderAnnouncementsView();
+                renderSettingsAnnouncements();
+            }
+        }
+        
+        // 编辑公告
+        function editAnnouncement(id) {
+            const announcement = announcements.find(ann => ann.id === id);
+            if (!announcement) return;
+            
+            const newTitle = prompt('修改公告标题：', announcement.title);
+            if (newTitle === null) return;
+            
+            const newContent = prompt('修改公告内容：', announcement.content);
+            if (newContent === null) return;
+            
+            announcement.title = newTitle.trim();
+            announcement.content = newContent.trim();
+            saveAnnouncements();
+            renderAnnouncementsView();
+            renderSettingsAnnouncements();
+        }
+        
+        // 渲染公告查看页
+        function renderAnnouncementsView() {
+            const container = document.getElementById('announcementsList');
+            const noAnnouncements = document.getElementById('noAnnouncements');
+            
+            if (announcements.length === 0) {
+                noAnnouncements.style.display = 'block';
+                container.innerHTML = '';
+                container.appendChild(noAnnouncements);
+                return;
+            }
+            
+            noAnnouncements.style.display = 'none';
+            
+            let html = '';
+            
+            announcements.forEach(ann => {
+                const tagClass = `tag-${ann.tag}`;
+                const tagText = ann.tag === 'penalty' ? '处罚' : ann.tag === 'activity' ? '活动' : '其他';
+                
+                html += `
+                    <div class="announcement-item">
+                        <div class="announcement-header">
+                            <div class="announcement-title">${ann.title}</div>
+                            <span class="announcement-tag ${tagClass}">${tagText}</span>
+                        </div>
+                        <div class="announcement-content">${ann.content}</div>
+                        <div class="announcement-date">${ann.date}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 渲染公告设置页
+        function renderSettingsAnnouncements() {
+            const container = document.getElementById('settingsAnnouncementsList');
+            const noAnnouncements = document.getElementById('noSettingsAnnouncements');
+            
+            if (announcements.length === 0) {
+                noAnnouncements.style.display = 'block';
+                container.innerHTML = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>';
+                container.appendChild(noAnnouncements);
+                return;
+            }
+            
+            noAnnouncements.style.display = 'none';
+            
+            let html = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>';
+            
+            announcements.forEach(ann => {
+                const tagClass = `tag-${ann.tag}`;
+                const tagText = ann.tag === 'penalty' ? '处罚' : ann.tag === 'activity' ? '活动' : '其他';
+                
+                html += `
+                    <div class="announcement-item">
+                        <div class="announcement-header">
+                            <div class="announcement-title">${ann.title}</div>
+                            <span class="announcement-tag ${tagClass}">${tagText}</span>
+                        </div>
+                        <div class="announcement-content">${ann.content}</div>
+                        <div class="announcement-date">${ann.date}</div>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            <button class="btn btn-warning" onclick="editAnnouncement(${ann.id})">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteAnnouncement(${ann.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        // 保存公告到本地存储
+        function saveAnnouncements() {
+            localStorage.setItem('announcements', JSON.stringify(announcements));
+        }
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始渲染公告查看页
+            renderAnnouncementsView();
+            
+            // 为密码输入框添加回车键支持
+            document.getElementById('passwordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    verifyPassword();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
