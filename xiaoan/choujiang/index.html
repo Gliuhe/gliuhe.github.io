@@ -693,7 +693,10 @@
 <body>
     <div class="header">
         <h1>🎪 儿童抽奖乐园 🎪</h1>
-        <button class="btn btn-warning" id="homeBtn" style="margin-top: 15px;">返回主页</button>
+        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-warning" id="homeBtn">返回主页</button>
+            <button class="btn btn-premium" id="advancedBtn">✨ 前往高级抽奖</button>
+        </div>
     </div>
     
     <div class="container">
@@ -1630,7 +1633,12 @@
         
         // 返回主页功能
         document.getElementById('homeBtn').addEventListener('click', function() {
-            window.location.href = '/xiaoan';
+            window.location.href = '/';
+        });
+
+        // 前往高级抽奖功能
+        document.getElementById('advancedBtn').addEventListener('click', function() {
+            window.location.href = 'advanced_choujiang.html';
         });
 
         // 当DOM加载完成后启动应用
