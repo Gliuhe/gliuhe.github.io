@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超级兑换券银行 - 理财中心</title>
+    <style>
+        /* 基础样式 - 与主页面保持一致 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+        
+        :root {
+            --primary-color: #06d6a0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #ffd166;
+            --background-gradient: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd166;
+        }
+        
+        [data-theme="dark"] {
+            --primary-color: #00c896;
+            --secondary-color: #ff5252;
+            --accent-color: #ffb74d;
+            --background-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --card-bg: rgba(52, 73, 94, 0.95);
+            --text-color: #ecf0f1;
+            --border-color: #ffb74d;
+        }
+        
+        [data-theme="pink"] {
+            --primary-color: #ff6b9d;
+            --secondary-color: #ff9a9e;
+            --accent-color: #ffd1dc;
+            --background-gradient: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd1dc;
+        }
+        
+        [data-theme="blue"] {
+            --primary-color: #4fc3f7;
+            --secondary-color: #29b6f6;
+            --accent-color: #81d4fa;
+            --background-gradient: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #81d4fa;
+        }
+
+        /* 主题选择器样式 */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        body {
+            background: var(--background-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+        
+        .container {
+            background: var(--card-bg);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 1000px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 3px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .header h1 {
+            color: var(--secondary-color);
+            font-size: 2.8rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+        }
+        
+        .header::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--accent-color));
+            border-radius: 2px;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 20px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed var(--accent-color);
+            font-size: 1.8rem;
+        }
+        
+        /* 银行卡片样式 */
+        .bank-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .bank-card {
+            width: 100%;
+            min-height: 320px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+        
+        .bank-card-main {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .bank-card-history {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            max-height: 300px;
+            overflow-y: auto;
+            height: 100%;
+            width: 100%;
+            min-height: 220px;
+        }
+        
+        .history-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            text-align: center;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+        }
+        
+        .history-item {
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 40px;
+        }
+        
+        .history-profit {
+            background: rgba(6, 214, 160, 0.2);
+            border-left: 4px solid #06d6a0;
+        }
+        
+        .history-loss {
+            background: rgba(255, 107, 107, 0.2);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .history-zero {
+            background: rgba(200, 200, 200, 0.2);
+            border-left: 4px solid #cccccc;
+        }
+        
+        .history-amount {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .history-date {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .bank-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--accent-color);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .bank-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .bank-card::before {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.1;
+            top: -10px;
+            right: -10px;
+            transform: rotate(15deg);
+            transition: all 0.4s ease;
+        }
+        
+        .bank-card:hover::before {
+            transform: rotate(25deg) scale(1.2);
+            opacity: 0.2;
+        }
+        
+        .bank-card.savings::before {
+            content: "💰";
+        }
+        
+        .bank-card.deposit::before {
+            content: "🏦";
+        }
+        
+        .bank-card.investment::before {
+            content: "📈";
+        }
+        
+        .bank-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .bank-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bank-amount {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .bank-card:hover .bank-amount {
+            transform: scale(1.1);
+            color: var(--accent-color);
+        }
+        
+        .bank-info {
+            font-size: 1rem;
+            color: #666;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+        
+        .bank-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .bank-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 18px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            flex: 1;
+            min-width: 100px;
+        }
+        
+        .bank-btn.deposit {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .bank-btn.withdraw {
+            background: var(--secondary-color);
+            color: white;
+        }
+        
+        .bank-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+
+        
+        /* 交易历史样式 */
+        .transaction-history {
+            margin-top: 30px;
+        }
+        
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 2px dashed var(--accent-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        .transaction-item:hover {
+            background: rgba(255, 255, 255, 0.8);
+            transform: translateX(5px);
+        }
+        
+        .transaction-positive {
+            background-color: rgba(6, 214, 160, 0.1);
+        }
+        
+        .transaction-negative {
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+        
+        .transaction-interest {
+            background-color: rgba(255, 209, 102, 0.1);
+        }
+        
+        /* 按钮样式 */
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 8px;
+            box-shadow: 0 6px 12px rgba(6, 214, 160, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .btn:hover {
+            background: #05c191;
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
+        }
+        
+        .btn-danger {
+            background: #ff6b6b;
+            box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-danger:hover {
+            background: #ff5252;
+            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.4);
+        }
+        
+        .form-group {
+            margin: 18px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        input:focus, select:focus {
+            border-color: #06d6a0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
+        }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            border: 3px solid #ffd166;
+            position: relative;
+        }
+        
+        .status-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideDown 0.5s ease-out;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status-success {
+            background: #06d6a0;
+            color: white;
+        }
+        
+        .status-error {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .status-warning {
+            background: #ffd166;
+            color: #333;
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes countUp {
+            from { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-count-up {
+            animation: countUp 0.5s ease-out;
+        }
+        
+        /* 银行设置特定样式 */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 3px solid var(--accent-color);
+            margin-bottom: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+            font-size: 1.2rem;
+            position: relative;
+            transition: all 0.3s;
+            margin: 0 5px;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .nav-tab.active {
+            color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .nav-tab.active::after {
+            content: "";
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .setting-description {
+            background: rgba(255, 255, 255, 0.7);
+            border-left: 4px solid var(--primary-color);
+            padding: 12px 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .setting-description strong {
+            color: var(--primary-color);
+        }
+        
+        .setting-description ul {
+            margin: 8px 0 0 20px;
+        }
+        
+        .setting-description li {
+            margin-bottom: 5px;
+        }
+        
+        .risk-display {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border-radius: 10px;
+        }
+        
+        .rule-section {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid var(--accent-color);
+        }
+        
+        .rule-section h4 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            border-bottom: 2px dashed var(--accent-color);
+            padding-bottom: 8px;
+        }
+        
+        .rule-section ul {
+            margin-left: 20px;
+        }
+        
+        .rule-section li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 15px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 范围滑块样式 */
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .bank-grid {
+                gap: 15px;
+            }
+            
+            .bank-card {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+
+            
+            .bank-actions {
+                flex-direction: column;
+            }
+            
+            .bank-btn {
+                min-width: auto;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                text-align: center;
+                padding: 12px 8px;
+                font-size: 1rem;
+                margin: 3px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 90%;
+                margin: 8px 0;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .rule-section {
+                padding: 15px;
+            }
+            
+            .risk-display {
+                font-size: 1rem;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主题选择器 -->
+    <div class="theme-selector">
+        <button class="theme-btn active" onclick="setTheme('default')">默认</button>
+        <button class="theme-btn" onclick="setTheme('dark')">暗黑</button>
+        <button class="theme-btn" onclick="setTheme('pink')">粉色</button>
+        <button class="theme-btn" onclick="setTheme('blue')">蓝色</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>超级兑换券银行</h1>
+            <p>让您的兑换券增值！安全理财，获取利息</p>
+        </div>
+
+        <!-- 返回主页按钮 -->
+        <div style="text-align: center; margin-bottom: 25px;">
+            <button class="btn" onclick="goBack()">🏠 返回主页面</button>
+            <button class="btn" onclick="openSettingsModal()" style="background: var(--accent-color); color: #333;">⚙️ 银行设置</button>
+        </div>
+
+        <!-- 当前兑换券余额 -->
+        <div class="bank-card savings">
+            <div class="bank-icon">🎫</div>
+            <div class="bank-title">当前兑换券余额</div>
+            <div class="bank-amount" id="currentVoucherAmount">0</div>
+            <div class="bank-info">这是您可以用于存储和消费的兑换券数量</div>
+        </div>
+
+        <!-- 银行账户总览 -->
+        <h2>我的银行账户</h2>
+        <div class="bank-grid">
+            <!-- 活期存款 -->
+            <div class="bank-card savings">
+                <div class="bank-card-main">
+                    <div class="bank-icon">💰</div>
+                    <div class="bank-title">活期存款</div>
+                    <div class="bank-amount" id="savingsAmount">0</div>
+                    <div class="bank-earnings" style="margin: 10px 0; padding: 8px; background: rgba(6, 214, 160, 0.1); border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9rem; color: #666;">昨日收益</div>
+                        <div class="yesterday-earnings" id="savingsEarnings" style="font-size: 1.4rem; font-weight: bold; color: #ff6b6b;">0</div>
+                    </div>
+                    <div class="bank-info">
+                        <div>日利率: <span id="savingsRateDisplay">0.1%</span></div>
+                        <div>随时存取，灵活方便</div>
+                    </div>
+                    <div class="bank-actions">
+                        <button class="bank-btn deposit" onclick="openDepositModal('savings')">存入</button>
+                        <button class="bank-btn withdraw" onclick="openWithdrawModal('savings')">取出</button>
+                    </div>
+                </div>
+                <div class="bank-card-history">
+                    <div class="history-title">📊 收益记录</div>
+                    <div id="savingsHistory"></div>
+                </div>
+            </div>
+
+            <!-- 定期存款 -->
+            <div class="bank-card deposit">
+                <div class="bank-card-main">
+                    <div class="bank-icon">🏦</div>
+                    <div class="bank-title">定期存款</div>
+                    <div class="bank-amount" id="depositAmount">0</div>
+                    <div class="bank-earnings" style="margin: 10px 0; padding: 8px; background: rgba(6, 214, 160, 0.1); border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9rem; color: #666;">昨日收益</div>
+                        <div class="yesterday-earnings" id="depositEarnings" style="font-size: 1.4rem; font-weight: bold; color: #ff6b6b;">0</div>
+                    </div>
+                    <div class="bank-info" id="depositInfo">
+                        <div>日利率: <span id="depositRateDisplay">0.3%</span></div>
+                        <div>7天期限，收益更高</div>
+                    </div>
+                    <div class="bank-actions">
+                        <button class="bank-btn deposit" onclick="openDepositModal('deposit')">存入</button>
+                        <button class="bank-btn withdraw" onclick="openWithdrawModal('deposit')">取出</button>
+                    </div>
+                </div>
+                <div class="bank-card-history">
+                    <div class="history-title">📊 收益记录</div>
+                    <div id="depositHistory"></div>
+                </div>
+            </div>
+
+            <!-- 投资理财 -->
+            <div class="bank-card investment">
+                <div class="bank-card-main">
+                    <div class="bank-icon">📈</div>
+                    <div class="bank-title">投资理财</div>
+                    <div class="bank-amount" id="investmentAmount">0</div>
+                    <div class="bank-earnings" style="margin: 10px 0; padding: 8px; background: rgba(255, 107, 107, 0.1); border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9rem; color: #666;">昨日收益</div>
+                        <div class="yesterday-earnings" id="investmentEarnings" style="font-size: 1.4rem; font-weight: bold; color: #ff6b6b;">0</div>
+                    </div>
+                    <div class="bank-info" id="investmentInfo">
+                        <div>日收益: <span id="investmentRateDisplay">波动收益</span></div>
+                        <div>当日存入次日可取，纯靠波动</div>
+                    </div>
+                    <div class="bank-actions">
+                        <button class="bank-btn deposit" onclick="openDepositModal('investment')">投资</button>
+                        <button class="bank-btn withdraw" onclick="openWithdrawModal('investment')">赎回</button>
+                    </div>
+                </div>
+                <div class="bank-card-history">
+                    <div class="history-title">📊 盈利/亏损记录</div>
+                    <div id="investmentHistory"></div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <!-- 交易历史 -->
+        <h2>交易历史</h2>
+        <div class="transaction-history">
+            <div id="transactionList"></div>
+        </div>
+    </div>
+
+    <!-- 存入模态框 -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <h2 id="depositModalTitle">存入资金</h2>
+            <input type="hidden" id="depositAccountType" value="">
+            <div class="form-group">
+                <label for="depositInputAmount">存入数量</label>
+                <input type="number" id="depositInputAmount" min="1" placeholder="请输入存入数量">
+            </div>
+            
+            <button class="btn" onclick="processDeposit()">确认存入</button>
+            <button class="btn btn-danger" onclick="closeDepositModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 取出模态框 -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <h2 id="withdrawModalTitle">取出资金</h2>
+            <input type="hidden" id="withdrawAccountType" value="">
+            <div class="form-group">
+                <label for="withdrawAmount">取出数量</label>
+                <input type="number" id="withdrawAmount" min="1" placeholder="请输入取出数量">
+            </div>
+            
+            <button class="btn" onclick="processWithdraw()">确认取出</button>
+            <button class="btn btn-danger" onclick="closeWithdrawModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 密码验证模态框 -->
+    <div id="passwordVerifyModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <h2>🔒 密码验证</h2>
+            <p>请输入密码进入银行设置</p>
+            <div class="form-group">
+                <label for="verifyPassword">密码</label>
+                <input type="password" id="verifyPassword" placeholder="请输入密码">
+            </div>
+            <div class="modal-actions">
+                <button class="btn" onclick="verifyBankPassword()">确认</button>
+                <button class="btn btn-danger" onclick="closePasswordVerifyModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 银行设置模态框 -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
+            <h2>⚙️ 银行系统设置</h2>
+            
+            <!-- 标签页导航 -->
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchSettingsTab('rates')">💰 利率设置</div>
+                <div class="nav-tab" onclick="switchSettingsTab('risk')">📊 风险配置</div>
+                <div class="nav-tab" onclick="switchSettingsTab('records')">📋 记录管理</div>
+                <div class="nav-tab" onclick="switchSettingsTab('rules')">📝 规则说明</div>
+            </div>
+            
+            <!-- 利率设置标签页 -->
+            <div id="rates" class="tab-content active">
+                <h3>账户利率配置</h3>
+                <div class="form-group">
+                    <label for="savingsRate">活期存款利率 (%)</label>
+                    <input type="number" id="savingsRate" min="0" max="100" step="0.01" placeholder="请输入活期存款利率">
+                    <div class="setting-description">
+                        <strong>规则说明：</strong>活期存款每日计算利息，随时存取，适合短期资金管理
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="depositRate">定期存款利率 (%)</label>
+                    <input type="number" id="depositRate" min="0" max="100" step="0.01" placeholder="请输入定期存款利率">
+                    <div class="setting-description">
+                        <strong>规则说明：</strong>定期存款7天期限，期间不可取出，到期自动续存
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="investmentRate">投资理财基础收益率 (%)</label>
+                    <input type="number" id="investmentRate" min="0" max="100" step="0.01" placeholder="请输入基础收益率" disabled>
+                    <div class="setting-description">
+                        <strong>规则说明：</strong>投资理财基础收益率为0%，纯靠每日波动，当日存入次日可取
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 风险配置标签页 -->
+            <div id="risk" class="tab-content">
+                <h3>风险波动配置</h3>
+                
+                <div class="form-group">
+                    <label for="riskMinLoss">最大亏损比例 (%)</label>
+                    <input type="number" id="riskMinLoss" min="-100" max="0" step="1" value="-18" placeholder="请输入最大亏损比例">
+                    <div class="setting-description">
+                        <strong>说明：</strong>投资理财账户可能出现的最大亏损比例，负值表示亏损
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="riskMaxProfit">最大盈利比例 (%)</label>
+                    <input type="number" id="riskMaxProfit" min="0" max="100" step="1" value="25" placeholder="请输入最大盈利比例">
+                    <div class="setting-description">
+                        <strong>说明：</strong>投资理财账户可能出现的最大盈利比例
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>波动概率分布</label>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="color: #ff6b6b;">📉 亏损概率: 30%</span>
+                            <span style="color: #06d6a0;">📈 盈利概率: 65%</span>
+                            <span style="color: #666;">📊 零收益概率: 5%</span>
+                        </div>
+                        <div style="background: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden;">
+                            <div style="background: #ff6b6b; width: 30%; height: 100%; float: left;"></div>
+                            <div style="background: #06d6a0; width: 65%; height: 100%; float: left;"></div>
+                            <div style="background: #666; width: 5%; height: 100%; float: left;"></div>
+                        </div>
+                    </div>
+                    <div class="setting-description">
+                        <strong>概率说明：</strong>投资理财账户每日收益的波动概率分布
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>当前配置预览</label>
+                    <div class="risk-display" style="text-align: center; font-size: 1.1rem;">
+                        <div>投资理财波动范围: <span id="currentRiskRange">-18% ~ +25%</span></div>
+                        <div style="font-size: 0.9rem; margin-top: 5px;">仅对投资理财账户生效</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 记录管理标签页 -->
+            <div id="records" class="tab-content">
+                <h3>📋 记录管理</h3>
+                
+                <div class="form-group">
+                    <label>收益记录管理</label>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <h4 style="color: #ff6b6b; margin: 0;">⚠️ 危险操作</h4>
+                            <p style="font-size: 0.9rem; color: #666;">此操作将永久删除所有收益记录，无法恢复！</p>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            <button class="btn btn-danger" onclick="clearEarningsRecords()" style="background: #ff6b6b; color: white; padding: 10px 20px;">
+                                🗑️ 清空收益记录
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 5px;">
+                            <p style="font-size: 0.85rem; color: #ff6b6b; margin: 0;">
+                                <strong>注意：</strong>清空后所有历史收益记录将被永久删除，包括利息收益、投资盈亏等所有记录。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>当前记录统计</label>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div id="recordsStats" style="text-align: center;">
+                            <div>📊 正在加载记录统计...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 记录管理标签页 -->
+            <div id="records" class="tab-content">
+                <h3>📋 记录管理</h3>
+                
+                <div class="form-group">
+                    <label>收益记录管理</label>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <h4 style="color: #ff6b6b; margin: 0;">⚠️ 危险操作</h4>
+                            <p style="font-size: 0.9rem; color: #666;">此操作将永久删除所有收益记录，无法恢复！</p>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: center; gap: 15px;">
+                            <button class="btn btn-danger" onclick="clearEarningsRecords()" style="background: #ff6b6b; color: white; padding: 10px 20px;">
+                                🗑️ 清空收益记录
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 15px; padding: 10px; background: rgba(255, 107, 107, 0.1); border-radius: 5px;">
+                            <p style="font-size: 0.85rem; color: #ff6b6b; margin: 0;">
+                                <strong>注意：</strong>清空后所有历史收益记录将被永久删除，包括利息收益、投资盈亏等所有记录。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>当前记录统计</label>
+                    <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
+                        <div id="recordsStats" style="text-align: center;">
+                            <div>📊 正在加载记录统计...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 规则说明标签页 -->
+            <div id="rules" class="tab-content">
+                <h3>银行系统规则说明</h3>
+                
+                <div class="rule-section">
+                    <h4>📈 利息计算规则</h4>
+                    <ul>
+                        <li><strong>每日计息：</strong>所有账户类型每日凌晨自动计算利息</li>
+                        <li><strong>复利计算：</strong>利息自动加入本金，次日继续计算利息</li>
+                        <li><strong>时间规则：</strong>定期和投资账户按完整周期计算</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-section">
+                    <h4>⚡ 存取款规则</h4>
+                    <ul>
+                        <li><strong>活期存款：</strong>随时存取，无限制条件</li>
+                        <li><strong>定期存款：</strong>7天期限，期间不可取出，到期自动续存</li>
+                        <li><strong>投资理财：</strong>基础收益率为0%，纯靠每日波动，当日存入次日可取</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-section">
+                    <h4>📊 风险机制</h4>
+                    <ul>
+                        <li><strong>风险波动：</strong>仅对投资理财账户生效，活期和定期存款无风险波动</li>
+                        <li><strong>波动范围：</strong>每日收益在-18%~+25%之间随机波动</li>
+                        <li><strong>概率分布：</strong>30%概率亏损，65%概率盈利，5%概率零收益</li>
+                        <li><strong>安全保障：</strong>本金不会因风险波动而减少</li>
+                    </ul>
+                </div>
+                
+                <div class="rule-section">
+                    <h4>💡 使用建议</h4>
+                    <ul>
+                        <li>根据资金使用计划选择合适的账户类型</li>
+                        <li>风险承受能力较低建议选择保守型配置</li>
+                        <li>定期检查账户余额和利息收益</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn" onclick="saveSettings()">💾 保存设置</button>
+                <button class="btn btn-warning" onclick="resetToDefault()">🔄 恢复默认</button>
+                <button class="btn btn-danger" onclick="closeSettingsModal()">❌ 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 诊断代码 - 全局错误捕获
+        window.addEventListener('error', function(e) {
+            console.error("[全局错误] ", e.message, "发生在", e.filename, "行号:", e.lineno);
+        });
+
+        // 银行配置
+        let BANK_CONFIG = {
+            savings: { name: '活期存款', rate: parseFloat(localStorage.getItem('bankSavingsRate') || '0.001'), key: 'bankSavings', period: 0, hasFluctuation: false },
+            deposit: { name: '定期存款', rate: parseFloat(localStorage.getItem('bankDepositRate') || '0.003'), key: 'bankDeposit', period: 7, hasFluctuation: false }, // 改回7天期限
+            investment: { name: '投资理财', rate: 0, key: 'bankInvestment', period: 1, hasFluctuation: true } // 投资理财基础收益率为0%，纯靠波动
+        };
+
+        // 风险波动配置
+        let RISK_CONFIG = {
+            minLoss: parseFloat(localStorage.getItem('riskMinLoss') || '-0.18'),  // 最小亏损比例
+            maxProfit: parseFloat(localStorage.getItem('riskMaxProfit') || '0.25'), // 最大盈利比例
+            lossProbability: 0.30,  // 亏损概率 30%
+            profitProbability: 0.65, // 盈利概率 65%
+            zeroProbability: 0.05    // 零收益概率 5%
+        };
+
+        // 更新利率显示
+        function updateRateDisplays() {
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const rateDisplay = document.getElementById(`${type}RateDisplay`);
+                if (rateDisplay) {
+                    rateDisplay.textContent = `${(config.rate * 100).toFixed(1)}%`;
+                }
+            });
+        }
+
+        // 银行账户昨日收益功能
+        function updateBankEarnings() {
+            // 检查是否需要更新昨日收益
+            const today = new Date().toDateString();
+            const lastVisitDate = localStorage.getItem('lastVisitDate');
+            
+            // 如果是第一次访问或新的一天，计算昨日收益
+            if (!lastVisitDate || lastVisitDate !== today) {
+                console.log("[利息计算] 检测到新的一天，开始计算利息");
+                
+                // 计算昨日收益（考虑波动）
+                Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                    const amount = parseInt(localStorage.getItem(config.key) || '0');
+                    if (amount > 0) {
+                        console.log(`[利息计算] 计算 ${config.name} 利息，金额: ${amount}`);
+                        
+                        // 计算实际利率（考虑波动）
+                        let actualRate = config.rate;
+                        let fluctuationType = 'none';
+                        
+                        if (config.hasFluctuation) {
+                            // 使用新的纯波动算法
+                            const random = Math.random();
+                            
+                            if (random < RISK_CONFIG.lossProbability) {
+                                // 30%概率亏损
+                                fluctuationType = 'loss';
+                                actualRate = Math.random() * (RISK_CONFIG.minLoss - 0) + RISK_CONFIG.minLoss; // 纯波动，范围：-18%到0%
+                                console.log(`[利息计算] ${config.name} 亏损波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
+                            } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
+                                // 65%概率盈利
+                                fluctuationType = 'profit';
+                                actualRate = Math.random() * (RISK_CONFIG.maxProfit - 0) + 0; // 纯波动，范围：0%到25%
+                                console.log(`[利息计算] ${config.name} 盈利波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
+                            } else {
+                                // 5%概率零收益
+                                fluctuationType = 'zero';
+                                actualRate = 0;
+                                console.log(`[利息计算] ${config.name} 零收益`);
+                            }
+                        }
+                        
+                        const interest = Math.floor(amount * actualRate);
+                        console.log(`[利息计算] ${config.name} 计算利息: ${interest} (利率: ${(actualRate * 100).toFixed(2)}%)`);
+                        
+                        if (interest !== 0) {
+                            // 添加利息到账户（只有非零收益才记录）
+                            localStorage.setItem(config.key, (amount + interest).toString());
+                            
+                            // 保存昨日收益和实际利率用于显示
+                            localStorage.setItem(`yesterdayEarnings_${type}`, interest.toString());
+                            localStorage.setItem(`yesterdayRate_${type}`, actualRate.toString());
+                            
+                            // 记录利息交易到交易历史
+                            const transaction = {
+                                type: 'interest',
+                                accountType: type,
+                                accountName: config.name,
+                                amount: interest,
+                                date: new Date().toISOString(),
+                                fluctuationType: fluctuationType
+                            };
+                            
+                            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+                            transactions.push(transaction);
+                            localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+                            
+                            console.log(`[利息计算] ${config.name} 利息已更新，新余额: ${amount + interest}`);
+                        } else if (config.hasFluctuation && fluctuationType === 'zero') {
+                            // 零收益时只记录显示信息，不改变账户余额
+                            localStorage.setItem(`yesterdayEarnings_${type}`, '0');
+                            localStorage.setItem(`yesterdayRate_${type}`, '0');
+                            console.log(`[利息计算] ${config.name} 零收益，仅记录显示信息`);
+                        }
+                    } else {
+                        console.log(`[利息计算] ${config.name} 余额为0，跳过计算`);
+                    }
+                });
+                
+                // 更新最后访问日期
+                localStorage.setItem('lastVisitDate', today);
+                console.log("[利息计算] 利息计算完成，更新最后访问日期");
+            } else {
+                console.log("[利息计算] 今天已经计算过利息，跳过计算");
+            }
+
+            // 显示昨日收益
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const earningsElement = document.getElementById(`${type}Earnings`);
+                if (earningsElement) {
+                    const yesterdayEarnings = parseInt(localStorage.getItem(`yesterdayEarnings_${type}`) || '0');
+                    const yesterdayRate = parseFloat(localStorage.getItem(`yesterdayRate_${type}`) || config.rate);
+                    
+                    // 显示收益和实际利率
+                    if (config.hasFluctuation) {
+                        const baseRatePercent = (config.rate * 100).toFixed(1);
+                        const actualRatePercent = (yesterdayRate * 100).toFixed(1);
+                        
+                        // 避免除以零错误
+                        let fluctuation = '0.0';
+                        if (config.rate !== 0) {
+                            fluctuation = ((yesterdayRate - config.rate) / config.rate * 100).toFixed(1);
+                        }
+                        
+                        const fluctuationSign = fluctuation >= 0 ? '+' : '';
+                        
+                        earningsElement.innerHTML = `${yesterdayEarnings}<br><span style="font-size: 0.8rem; color: ${yesterdayRate >= 0 ? '#06d6a0' : '#ff6b6b'}">${actualRatePercent}% (${fluctuationSign}${fluctuation}%)</span>`;
+                    } else {
+                        earningsElement.textContent = yesterdayEarnings;
+                    }
+                    
+                    // 添加动画效果
+                    if (yesterdayEarnings > 0) {
+                        earningsElement.classList.add('animate-count-up');
+                        setTimeout(() => earningsElement.classList.remove('animate-count-up'), 500);
+                    }
+                }
+            });
+        }
+
+        // 诊断核心对象和函数（放在BANK_CONFIG定义之后）
+        console.log("[诊断] 页面加载开始");
+        console.log("[诊断] BANK_CONFIG 是否定义？", typeof BANK_CONFIG !== 'undefined' ? '是' : '否');
+
+        // 默认密码
+        
+
+        // 初始化数据（只在第一次访问时执行）
+        function initializeData() {
+            // 检查是否已经初始化过（使用一个标记）
+            const isInitialized = localStorage.getItem('bankInitialized');
+            
+            if (!isInitialized) {
+                console.log("[初始化] 第一次访问银行页面，初始化数据");
+                
+                // 初始化兑换券余额（与主页面同步）
+                if (!localStorage.getItem('voucher')) {
+                    localStorage.setItem('voucher', '0');
+                }
+                
+                // 初始化银行账户数据
+                Object.values(BANK_CONFIG).forEach(config => {
+                    if (!localStorage.getItem(config.key)) {
+                        localStorage.setItem(config.key, '0');
+                    }
+                });
+
+                // 初始化交易历史
+                if (!localStorage.getItem('bankTransactions')) {
+                    localStorage.setItem('bankTransactions', JSON.stringify([]));
+                }
+
+                // 初始化最后利息计算日期
+                if (!localStorage.getItem('lastInterestDate')) {
+                    localStorage.setItem('lastInterestDate', new Date().toDateString());
+                }
+                
+                // 标记为已初始化
+                localStorage.setItem('bankInitialized', 'true');
+                console.log("[初始化] 数据初始化完成");
+            } else {
+                console.log("[初始化] 银行数据已存在，跳过初始化");
+            }
+        }
+
+        // 更新UI
+        function updateUI() {
+            // 更新当前兑换券余额（与主页面同步）
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            document.getElementById('currentVoucherAmount').textContent = currentVoucher;
+            
+            // 同步到主页面（确保主页面也能看到最新数据）
+            if (window.parent && window.parent.updateVoucherDisplay) {
+                window.parent.updateVoucherDisplay();
+            }
+
+            // 更新银行账户余额
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const amount = parseInt(localStorage.getItem(config.key) || '0');
+                document.getElementById(type + 'Amount').textContent = amount;
+                
+                // 显示定期存款的详细信息
+                if (config.period > 0) {
+                    const depositRecords = JSON.parse(localStorage.getItem(config.key + 'Records') || '[]');
+                    const now = new Date();
+                    const activeDeposits = depositRecords.filter(record => {
+                        const maturityDate = new Date(record.maturityDate);
+                        return maturityDate > now;
+                    });
+                    
+                    const depositInfoElement = document.getElementById(type + 'Info');
+                    if (depositInfoElement) {
+                        if (activeDeposits.length > 0) {
+                            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                            const todayDeposits = activeDeposits.filter(record => {
+                                const depositDate = new Date(record.depositDate);
+                                const depositDay = new Date(depositDate.getFullYear(), depositDate.getMonth(), depositDate.getDate());
+                                return depositDay.getTime() === today.getTime();
+                            });
+                            
+                            if (type === 'investment' && todayDeposits.length > 0) {
+                                depositInfoElement.innerHTML = `
+                                    <div>日利率: <span id="${type}RateDisplay">${(config.rate * 100).toFixed(1)}%</span></div>
+                                    <div>当日存入次日可取，最高收益</div>
+                                    <div style="color: #ff6b6b; font-size: 0.9rem; margin-top: 5px;">
+                                        📅 今日存入 ${todayDeposits.length} 笔，次日可取出
+                                    </div>
+                                `;
+                            } else if (type === 'investment') {
+                                depositInfoElement.innerHTML = `
+                                    <div>日利率: <span id="${type}RateDisplay">${(config.rate * 100).toFixed(1)}%</span></div>
+                                    <div>当日存入次日可取，最高收益</div>
+                                `;
+                            } else if (type === 'deposit' && activeDeposits.length > 0) {
+                                const earliestMaturity = new Date(Math.min(...activeDeposits.map(r => new Date(r.maturityDate))));
+                                const daysLeft = Math.ceil((earliestMaturity - now) / (1000 * 60 * 60 * 24));
+                                depositInfoElement.innerHTML = `
+                                    <div>日利率: <span id="${type}RateDisplay">${(config.rate * 100).toFixed(1)}%</span></div>
+                                    <div>7天期限，收益更高</div>
+                                    <div style="color: #ff6b6b; font-size: 0.9rem; margin-top: 5px;">
+                                        📅 有 ${activeDeposits.length} 笔存款，最早 ${daysLeft} 天后到期
+                                    </div>
+                                `;
+                            } else {
+                                depositInfoElement.innerHTML = `
+                                    <div>日利率: <span id="${type}RateDisplay">${(config.rate * 100).toFixed(1)}%</span></div>
+                                    <div>${type === 'deposit' ? '7天期限，收益更高' : '当日存入次日可取，最高收益'}</div>
+                                `;
+                            }
+                        } else {
+                            depositInfoElement.innerHTML = `
+                                <div>日利率: <span id="${type}RateDisplay">${(config.rate * 100).toFixed(1)}%</span></div>
+                                <div>${type === 'deposit' ? '7天期限，收益更高' : '当日存入次日可取，最高收益'}</div>
+                            `;
+                        }
+                    }
+                }
+            });
+
+            // 更新交易历史
+            updateTransactionHistory();
+            
+            // 更新各账户的盈利/亏损记录
+            updateAccountHistory();
+
+            // 计算并显示利息
+            calculateAndShowInterest();
+        }
+
+        // 更新交易历史（仅显示存取情况，不显示收益）
+        function updateTransactionHistory() {
+            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+            const transactionList = document.getElementById('transactionList');
+            transactionList.innerHTML = '';
+
+            // 过滤掉利息交易，只保留存取交易
+            const filteredTransactions = transactions.filter(transaction => 
+                transaction.type === 'deposit' || transaction.type === 'withdraw'
+            );
+
+            filteredTransactions.slice(-10).reverse().forEach(transaction => {
+                const transactionItem = document.createElement('div');
+                transactionItem.className = `transaction-item ${transaction.type === 'deposit' ? 'transaction-positive' : 'transaction-negative'}`;
+
+                const amountSign = transaction.type === 'deposit' ? '+' : '-';
+                const amountClass = transaction.type === 'deposit' ? 'positive' : 'negative';
+
+                transactionItem.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold;">${transaction.accountName}</div>
+                        <div style="font-size: 0.9rem; color: #666;">${new Date(transaction.date).toLocaleString()}</div>
+                    </div>
+                    <div class="${amountClass}" style="font-size: 1.2rem; font-weight: bold;">
+                        ${amountSign}${transaction.amount} 兑换券
+                    </div>
+                `;
+
+                transactionList.appendChild(transactionItem);
+            });
+
+            // 如果没有存取记录，显示提示信息
+            if (filteredTransactions.length === 0) {
+                transactionList.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.9rem; padding: 20px;">暂无存取记录</div>';
+            }
+        }
+
+        // 计算并显示利息（已废弃，使用 updateBankEarnings 替代）
+        function calculateAndShowInterest() {
+            // 这个函数现在只调用统一的利息计算函数
+            updateBankEarnings();
+        }
+
+        // 更新各账户的盈利/亏损记录
+        function updateAccountHistory() {
+            console.log("[历史记录] 开始更新各账户的盈利/亏损记录");
+            
+            // 获取所有交易记录
+            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+            
+            // 自动删除7天前的记录
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            
+            const filteredTransactions = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate >= sevenDaysAgo;
+            });
+            
+            // 如果删除了记录，更新localStorage
+            if (filteredTransactions.length < transactions.length) {
+                localStorage.setItem('bankTransactions', JSON.stringify(filteredTransactions));
+                console.log(`[历史记录] 已删除 ${transactions.length - filteredTransactions.length} 条7天前的记录`);
+            }
+            
+            // 按账户类型分组交易记录
+            const accountHistories = {
+                savings: [],
+                deposit: [],
+                investment: []
+            };
+            
+            // 筛选出利息交易记录
+            transactions.forEach(transaction => {
+                if (transaction.type === 'interest' && accountHistories[transaction.accountType]) {
+                    accountHistories[transaction.accountType].push(transaction);
+                }
+            });
+            
+            // 更新各账户的历史记录显示
+            Object.entries(accountHistories).forEach(([accountType, history]) => {
+                const historyElement = document.getElementById(accountType + 'History');
+                if (historyElement) {
+                    // 按日期倒序排列，显示最近5条记录
+                    const recentHistory = history
+                        .sort((a, b) => new Date(b.date) - new Date(a.date))
+                        .slice(0, 5);
+                    
+                    if (recentHistory.length === 0) {
+                        historyElement.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.9rem; padding: 20px;">暂无收益记录</div>';
+                    } else {
+                        historyElement.innerHTML = recentHistory.map(transaction => {
+                            const date = new Date(transaction.date);
+                            const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            
+                            let className = 'history-item';
+                            let amountText = '';
+                            
+                            if (transaction.fluctuationType === 'profit') {
+                                className += ' history-profit';
+                                amountText = `+${transaction.amount}`;
+                            } else if (transaction.fluctuationType === 'loss') {
+                                className += ' history-loss';
+                                amountText = `-${Math.abs(transaction.amount)}`;
+                            } else if (transaction.fluctuationType === 'zero') {
+                                className += ' history-zero';
+                                amountText = '0';
+                            } else {
+                                className += ' history-profit';
+                                amountText = `+${transaction.amount}`;
+                            }
+                            
+                            return `
+                                <div class="${className}">
+                                    <div>
+                                        <div class="history-amount">${amountText} 兑换券</div>
+                                        <div class="history-date">${dateStr}</div>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #666;">
+                                        ${transaction.fluctuationType === 'profit' ? '📈 盈利' : 
+                                          transaction.fluctuationType === 'loss' ? '📉 亏损' : 
+                                          transaction.fluctuationType === 'zero' ? '⚪ 零收益' : '💰 收益'}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+            });
+            
+            console.log("[历史记录] 盈利/亏损记录更新完成");
+        }
+
+        // 打开存入模态框
+        function openDepositModal(accountType) {
+            console.log("[诊断] openDepositModal 被调用，账户类型:", accountType);
+            const config = BANK_CONFIG[accountType];
+            console.log("[诊断] 银行配置:", config);
+            
+            const modalTitle = document.getElementById('depositModalTitle');
+            const modal = document.getElementById('depositModal');
+            
+            if (!modalTitle || !modal) {
+                console.error("[错误] 未找到存入模态框元素！");
+                return;
+            }
+            
+            modalTitle.textContent = `存入${config.name}`;
+            document.getElementById('depositAccountType').value = accountType;
+            document.getElementById('depositAmount').value = '';
+            modal.style.display = 'flex';
+            console.log("[诊断] 存入模态框已打开");
+        }
+
+        // 关闭存入模态框
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+
+        // 打开取出模态框
+        function openWithdrawModal(accountType) {
+            console.log("[诊断] openWithdrawModal 被调用，账户类型:", accountType);
+            const config = BANK_CONFIG[accountType];
+            console.log("[诊断] 银行配置:", config);
+            
+            const modalTitle = document.getElementById('withdrawModalTitle');
+            const modal = document.getElementById('withdrawModal');
+            
+            if (!modalTitle || !modal) {
+                console.error("[错误] 未找到取出模态框元素！");
+                return;
+            }
+            
+            modalTitle.textContent = `取出${config.name}`;
+            document.getElementById('withdrawAccountType').value = accountType;
+            document.getElementById('withdrawAmount').value = '';
+            modal.style.display = 'flex';
+            console.log("[诊断] 取出模态框已打开");
+        }
+
+        // 关闭取出模态框
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+
+        // 处理存入
+        function processDeposit() {
+            console.log("[诊断] processDeposit 被调用");
+            
+            const accountType = document.getElementById('depositAccountType').value;
+            const amountInput = document.getElementById('depositInputAmount').value;
+            const amount = parseFloat(amountInput);
+            
+            console.log("[诊断] 存入参数:", { accountType, amount, amountInput });
+
+            if (isNaN(amount) || amount <= 0 || amountInput.trim() === '') {
+                console.error("[错误] 存入数量无效", { amount, amountInput });
+                showStatus('请输入有效的存入数量！', 'error');
+                return;
+            }
+
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            console.log("[诊断] 当前兑换券余额:", currentVoucher);
+            
+            if (amount > currentVoucher) {
+                console.error("[错误] 兑换券余额不足");
+                showStatus('兑换券余额不足！', 'error');
+                return;
+            }
+
+            const config = BANK_CONFIG[accountType];
+            const currentBankAmount = parseInt(localStorage.getItem(config.key) || '0');
+            console.log("[诊断] 银行账户余额:", { accountType, currentBankAmount });
+            
+            // 更新兑换券余额
+            localStorage.setItem('voucher', (currentVoucher - amount).toString());
+            
+            // 更新银行账户余额
+            localStorage.setItem(config.key, (currentBankAmount + amount).toString());
+            
+            // 如果是定期存款或投资理财，记录存入时间
+            if (config.period > 0) {
+                console.log(`[存款记录] 记录 ${config.name} 存入时间，期限: ${config.period} 天`);
+                console.log(`[存款记录] 记录 ${config.name} 存入时间，期限: ${config.period} 天`);
+                const depositRecords = JSON.parse(localStorage.getItem(config.key + 'Records') || '[]');
+                depositRecords.push({
+                    amount: amount,
+                    depositDate: new Date().toISOString(),
+                    maturityDate: new Date(Date.now() + config.period * 24 * 60 * 60 * 1000).toISOString()
+                });
+                localStorage.setItem(config.key + 'Records', JSON.stringify(depositRecords));
+            }
+
+            // 记录交易
+            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+            transactions.push({
+                type: 'deposit',
+                accountType: accountType,
+                accountName: config.name,
+                amount: amount,
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+
+            closeDepositModal();
+            updateUI();
+            showStatus(`成功存入 ${amount} 兑换券到${config.name}！`, 'success');
+            console.log("[诊断] 存入操作完成");
+        }
+
+        // 处理取出
+        function processWithdraw() {
+            console.log("[诊断] processWithdraw 被调用");
+            
+            const accountType = document.getElementById('withdrawAccountType').value;
+            const amountInput = document.getElementById('withdrawAmount').value;
+            const amount = parseFloat(amountInput);
+            
+            console.log("[诊断] 取出参数:", { accountType, amount, amountInput });
+
+            if (isNaN(amount) || amount <= 0 || amountInput.trim() === '') {
+                console.error("[错误] 取出数量无效", { amount, amountInput });
+                showStatus('请输入有效的取出数量！', 'error');
+                return;
+            }
+
+            const config = BANK_CONFIG[accountType];
+            const currentBankAmount = parseInt(localStorage.getItem(config.key) || '0');
+            console.log("[诊断] 银行账户余额:", { accountType, currentBankAmount });
+            
+            if (amount > currentBankAmount) {
+                console.error("[错误] 银行账户余额不足");
+                showStatus('银行账户余额不足！', 'error');
+                return;
+            }
+            
+            // 检查定期存款或投资理财是否在期限内
+            if (config.period > 0) {
+                const depositRecords = JSON.parse(localStorage.getItem(config.key + 'Records') || '[]');
+                const now = new Date();
+                
+                if (accountType === 'investment') {
+                    // 投资理财：检查是否有今日存入的记录（次日可取）
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const todayDeposits = depositRecords.filter(record => {
+                        const depositDate = new Date(record.depositDate);
+                        const depositDay = new Date(depositDate.getFullYear(), depositDate.getMonth(), depositDate.getDate());
+                        return depositDay.getTime() === today.getTime();
+                    });
+                    
+                    if (todayDeposits.length > 0) {
+                        console.error("[错误] 投资理财今日存入的资金不可取出");
+                        showStatus(`${config.name}今日存入的资金不可取出，请等待次日再操作！`, 'error');
+                        return;
+                    }
+                } else if (accountType === 'deposit') {
+                    // 定期存款：检查是否有未到期的记录（7天期限）
+                    const activeDeposits = depositRecords.filter(record => {
+                        const maturityDate = new Date(record.maturityDate);
+                        return maturityDate > now;
+                    });
+                    
+                    if (activeDeposits.length > 0) {
+                        console.error("[错误] 定期存款在期限内，不可取出");
+                        const earliestMaturity = new Date(Math.min(...activeDeposits.map(r => new Date(r.maturityDate))));
+                        const daysLeft = Math.ceil((earliestMaturity - now) / (1000 * 60 * 60 * 24));
+                        showStatus(`${config.name}有 ${activeDeposits.length} 笔存款在期限内，最早 ${daysLeft} 天后到期！请等待到期后再操作。`, 'error');
+                        return;
+                    }
+                }
+            }
+
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            console.log("[诊断] 当前兑换券余额:", currentVoucher);
+            
+            // 更新银行账户余额
+            localStorage.setItem(config.key, (currentBankAmount - amount).toString());
+            
+            // 更新兑换券余额
+            localStorage.setItem('voucher', (currentVoucher + amount).toString());
+            
+            // 如果是定期存款或投资理财，更新存款记录（移除已取出的记录）
+            if (config.period > 0) {
+                const depositRecords = JSON.parse(localStorage.getItem(config.key + 'Records') || '[]');
+                const now = new Date();
+                
+                // 模拟取出操作：从最新的记录开始取出
+                let remainingAmount = amount;
+                const updatedRecords = [];
+                
+                // 按存入时间排序（从旧到新）
+                const sortedRecords = depositRecords.sort((a, b) => new Date(a.depositDate) - new Date(b.depositDate));
+                
+                for (const record of sortedRecords) {
+                    if (remainingAmount <= 0) {
+                        updatedRecords.push(record);
+                        continue;
+                    }
+                    
+                    if (record.amount <= remainingAmount) {
+                        // 完全取出这笔记录
+                        remainingAmount -= record.amount;
+                    } else {
+                        // 部分取出这笔记录
+                        record.amount -= remainingAmount;
+                        updatedRecords.push(record);
+                        remainingAmount = 0;
+                    }
+                }
+                
+                localStorage.setItem(config.key + 'Records', JSON.stringify(updatedRecords));
+            }
+
+            // 记录交易
+            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+            transactions.push({
+                type: 'withdraw',
+                accountType: accountType,
+                accountName: config.name,
+                amount: amount,
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+
+            closeWithdrawModal();
+            updateUI();
+            showStatus(`成功从${config.name}取出 ${amount} 兑换券！`, 'success');
+            console.log("[诊断] 取出操作完成");
+        }
+
+        // 打开设置模态框（需要密码验证）
+        function openSettingsModal() {
+            console.log("[诊断] openSettingsModal 被调用");
+            
+            // 打开密码验证模态框
+            openPasswordVerifyModal();
+        }
+
+        // 打开密码验证模态框
+        function openPasswordVerifyModal() {
+            console.log("[诊断] 打开密码验证模态框");
+            
+            const passwordModal = document.getElementById('passwordVerifyModal');
+            if (!passwordModal) {
+                console.error("[错误] 未找到密码验证模态框！");
+                return;
+            }
+            
+            passwordModal.style.display = 'flex';
+            document.getElementById('verifyPassword').value = '';
+            document.getElementById('verifyPassword').focus();
+            console.log("[诊断] 密码验证模态框已打开");
+        }
+
+        // 关闭密码验证模态框
+        function closePasswordVerifyModal() {
+            const passwordModal = document.getElementById('passwordVerifyModal');
+            if (passwordModal) {
+                passwordModal.style.display = 'none';
+            }
+        }
+
+        // 验证银行设置密码
+        function verifyBankPassword() {
+            const password = document.getElementById('verifyPassword').value;
+            // 从localStorage获取密码，与index.html保持一致
+            const storedPassword = localStorage.getItem('password') || '1234';
+            
+            if (password === storedPassword) {
+                closePasswordVerifyModal();
+                openSettingsModalDirect(); // 密码验证通过后直接打开设置模态框
+            } else {
+                showStatus('密码错误！', "error");
+                document.getElementById('verifyPassword').value = '';
+                document.getElementById('verifyPassword').focus();
+            }
+        }
+
+        // 直接打开设置模态框（密码验证通过后调用）
+        function openSettingsModalDirect() {
+            console.log("[诊断] openSettingsModalDirect 被调用");
+            
+            const settingsModal = document.getElementById('settingsModal');
+            if (!settingsModal) {
+                console.error("[错误] 未找到银行设置模态框！");
+                return;
+            }
+            
+            console.log("[诊断] 银行设置模态框存在，开始设置值");
+            
+            const savingsRateInput = document.getElementById('savingsRate');
+            const depositRateInput = document.getElementById('depositRate');
+            const investmentRateInput = document.getElementById('investmentRate');
+            const riskMinLossInput = document.getElementById('riskMinLoss');
+            const riskMaxProfitInput = document.getElementById('riskMaxProfit');
+            
+            if (!savingsRateInput || !depositRateInput || !investmentRateInput || !riskMinLossInput || !riskMaxProfitInput) {
+                console.error("[错误] 未找到设置输入框！");
+                return;
+            }
+            
+            savingsRateInput.value = (BANK_CONFIG.savings.rate * 100).toFixed(2);
+            depositRateInput.value = (BANK_CONFIG.deposit.rate * 100).toFixed(2);
+            investmentRateInput.value = (BANK_CONFIG.investment.rate * 100).toFixed(2);
+            
+            // 设置风险波动范围
+            riskMinLossInput.value = (RISK_CONFIG.minLoss * 100).toFixed(0);
+            riskMaxProfitInput.value = (RISK_CONFIG.maxProfit * 100).toFixed(0);
+            
+            // 更新当前配置预览
+            updateRiskRangeDisplay();
+            
+            // 默认显示利率设置标签页
+            switchSettingsTab('rates');
+            
+            settingsModal.style.display = 'flex';
+            console.log("[诊断] 银行设置模态框已打开");
+        }
+        
+        // 更新风险范围显示
+        function updateRiskRangeDisplay() {
+            const minLoss = document.getElementById('riskMinLoss').value;
+            const maxProfit = document.getElementById('riskMaxProfit').value;
+            const currentRiskRange = document.getElementById('currentRiskRange');
+            
+            if (currentRiskRange) {
+                currentRiskRange.textContent = `${minLoss}% ~ +${maxProfit}%`;
+            }
+        }
+
+        // 切换设置标签页
+        function switchSettingsTab(tabId) {
+            console.log("[诊断] switchSettingsTab 被调用，标签页ID:", tabId);
+            
+            // 隐藏所有标签内容
+            document.querySelectorAll('#settingsModal .tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 取消所有标签的激活状态
+            document.querySelectorAll('#settingsModal .nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+                console.log("[诊断] 标签内容已显示:", tabId);
+            } else {
+                console.error("[错误] 未找到标签内容:", tabId);
+            }
+            
+            // 激活选中的标签
+            document.querySelectorAll('#settingsModal .nav-tab').forEach(tab => {
+                const onclickAttr = tab.getAttribute('onclick');
+                if (onclickAttr && onclickAttr.includes(tabId)) {
+                    tab.classList.add('active');
+                    console.log("[诊断] 标签按钮已激活:", tab.textContent);
+                }
+            });
+            
+            // 如果切换到记录管理标签页，更新记录统计
+            if (tabId === 'records') {
+                updateRecordsStats();
+            }
+            
+            // 如果切换到记录管理标签页，更新记录统计
+            if (tabId === 'records') {
+                updateRecordsStats();
+            }
+        }
+
+        // 更新风险等级显示
+        function updateRiskDisplay(riskLevel) {
+            const riskValue = document.getElementById('riskValue');
+            const riskDescription = document.getElementById('riskDescription');
+            const multiplierValue = document.getElementById('multiplierValue');
+            const riskMultiplier = document.getElementById('riskMultiplier');
+            const riskDisplay = document.querySelector('.risk-display');
+            
+            if (!riskValue || !riskDescription || !multiplierValue || !riskMultiplier || !riskDisplay) {
+                return;
+            }
+            
+            riskValue.textContent = riskLevel;
+            
+            let description = '';
+            let multiplier = 1.0;
+            let riskColor = '';
+            let riskDetails = '';
+            
+            if (riskLevel <= 3) {
+                description = '保守型';
+                multiplier = 1.0;
+                riskColor = 'linear-gradient(135deg, #06d6a0, #118ab2)';
+                riskDetails = '稳定收益，无风险波动，适合风险承受能力较低的用户';
+            } else if (riskLevel <= 6) {
+                description = '平衡型';
+                multiplier = 1.0 + (riskLevel - 3) * 0.2;
+                riskColor = 'linear-gradient(135deg, #ffd166, #ff9e00)';
+                riskDetails = '中等收益，轻微波动，适合追求平衡的用户';
+            } else if (riskLevel <= 8) {
+                description = '进取型';
+                multiplier = 1.6 + (riskLevel - 6) * 0.3;
+                riskColor = 'linear-gradient(135deg, #ff9e00, #ff6b6b)';
+                riskDetails = '较高收益，中等波动，适合有一定风险承受能力的用户';
+            } else {
+                description = '激进型';
+                multiplier = 2.2 + (riskLevel - 8) * 0.4;
+                riskColor = 'linear-gradient(135deg, #ff6b6b, #ef476f)';
+                riskDetails = '最高收益，高风险波动，适合风险承受能力强的用户';
+            }
+            
+            riskDescription.textContent = description;
+            multiplierValue.textContent = multiplier.toFixed(1) + 'x';
+            riskMultiplier.value = multiplier.toFixed(1);
+            
+            // 动态更新风险显示区域的颜色
+            riskDisplay.style.background = riskColor;
+            
+            // 更新风险详情描述
+            const existingDetails = document.getElementById('riskDetails');
+            if (existingDetails) {
+                existingDetails.textContent = riskDetails;
+            } else {
+                const riskDetailsElement = document.createElement('div');
+                riskDetailsElement.id = 'riskDetails';
+                riskDetailsElement.style.cssText = 'font-size: 0.9rem; margin-top: 8px; opacity: 0.9;';
+                riskDetailsElement.textContent = riskDetails;
+                riskDisplay.appendChild(riskDetailsElement);
+            }
+            
+            console.log("[诊断] 风险等级更新:", { riskLevel, description, multiplier, riskDetails });
+        }
+
+        // 恢复默认设置
+        function resetToDefault() {
+            document.getElementById('savingsRate').value = '0.1';
+            document.getElementById('depositRate').value = '0.3';
+            document.getElementById('investmentRate').value = '0.5';
+            document.getElementById('riskMinLoss').value = '-18';
+            document.getElementById('riskMaxProfit').value = '25';
+            updateRiskRangeDisplay();
+            
+            showStatus('已恢复默认设置！', 'warning');
+        }
+
+        // 关闭设置模态框
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        // 保存设置
+        function saveSettings() {
+            console.log("[诊断] saveSettings 被调用");
+            
+            const savingsRate = parseFloat(document.getElementById('savingsRate').value) / 100;
+            const depositRate = parseFloat(document.getElementById('depositRate').value) / 100;
+            const investmentRate = parseFloat(document.getElementById('investmentRate').value) / 100;
+            const riskMinLoss = parseFloat(document.getElementById('riskMinLoss').value) / 100;
+            const riskMaxProfit = parseFloat(document.getElementById('riskMaxProfit').value) / 100;
+
+            console.log("[诊断] 设置值:", { savingsRate, depositRate, investmentRate, riskMinLoss, riskMaxProfit });
+
+            if (isNaN(savingsRate) || isNaN(depositRate) || isNaN(investmentRate) || isNaN(riskMinLoss) || isNaN(riskMaxProfit)) {
+                console.error("[错误] 设置值无效");
+                showStatus('请输入有效的设置值！', 'error');
+                return;
+            }
+
+            // 验证利率设置是否合理
+            if (savingsRate > 0.1 || depositRate > 0.5 || investmentRate > 1.0) {
+                const confirmHighRates = confirm('您设置的利率较高，可能会影响游戏平衡。确定要继续吗？');
+                if (!confirmHighRates) {
+                    return;
+                }
+            }
+
+            // 验证风险波动范围设置
+            if (riskMinLoss > 0 || riskMaxProfit < 0) {
+                showStatus('风险波动范围设置无效！亏损比例应为负数，盈利比例应为正数。', 'error');
+                return;
+            }
+
+            if (Math.abs(riskMinLoss) > 1.0 || riskMaxProfit > 1.0) {
+                const confirmHighRisk = confirm('您设置的风险波动范围较大，可能会导致收益波动剧烈。确定要继续吗？');
+                if (!confirmHighRisk) {
+                    return;
+                }
+            }
+
+            // 保存设置到localStorage
+            localStorage.setItem('bankSavingsRate', savingsRate.toString());
+            localStorage.setItem('bankDepositRate', depositRate.toString());
+            localStorage.setItem('bankInvestmentRate', investmentRate.toString());
+            localStorage.setItem('riskMinLoss', riskMinLoss.toString());
+            localStorage.setItem('riskMaxProfit', riskMaxProfit.toString());
+
+            // 更新BANK_CONFIG
+            BANK_CONFIG.savings.rate = savingsRate;
+            BANK_CONFIG.deposit.rate = depositRate;
+            BANK_CONFIG.investment.rate = investmentRate;
+
+            // 更新RISK_CONFIG
+            RISK_CONFIG.minLoss = riskMinLoss;
+            RISK_CONFIG.maxProfit = riskMaxProfit;
+
+            // 更新利率显示和昨日收益
+            updateRateDisplays();
+            updateBankEarnings();
+
+            closeSettingsModal();
+            showStatus('银行设置已保存！新的设置将在下次存取款时生效。', 'success');
+            console.log("[诊断] 银行设置已保存");
+        }
+
+
+
+        // 显示状态消息
+        function showStatus(message, type) {
+            const status = document.createElement('div');
+            status.className = `status-message status-${type}`;
+            status.textContent = message;
+            
+            document.body.appendChild(status);
+            
+            setTimeout(() => {
+                status.remove();
+            }, 3000);
+        }
+
+        // 清空收益记录
+        function clearEarningsRecords() {
+            if (!confirm('⚠️ 确定要清空所有收益记录吗？此操作将永久删除所有历史收益记录，包括利息收益、投资盈亏等所有记录，无法恢复！')) {
+                return;
+            }
+            
+            // 清空所有账户的收益记录
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                localStorage.removeItem(config.key + 'History');
+            });
+            
+            // 清空银行总收益记录
+            localStorage.removeItem('bankEarningsHistory');
+            
+            // 更新记录统计显示
+            updateRecordsStats();
+            
+            // 显示成功消息
+            showStatus('✅ 所有收益记录已成功清空！', 'success');
+            
+            console.log('[记录管理] 所有收益记录已清空');
+        }
+
+        // 更新记录统计显示
+        function updateRecordsStats() {
+            const statsElement = document.getElementById('recordsStats');
+            if (!statsElement) return;
+            
+            let totalRecords = 0;
+            let statsHTML = '<div style="text-align: left;">';
+            
+            // 统计各账户的记录数量
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const history = JSON.parse(localStorage.getItem(config.key + 'History') || '[]');
+                const count = history.length;
+                totalRecords += count;
+                
+                statsHTML += `<div style="margin-bottom: 8px;">
+                    <span style="font-weight: bold;">${config.name}：</span>
+                    <span style="color: ${count > 0 ? '#06d6a0' : '#666'};">${count} 条记录</span>
+                </div>`;
+            });
+            
+            // 统计银行总收益记录
+            const bankHistory = JSON.parse(localStorage.getItem('bankEarningsHistory') || '[]');
+            const bankCount = bankHistory.length;
+            totalRecords += bankCount;
+            
+            statsHTML += `<div style="margin-bottom: 8px;">
+                <span style="font-weight: bold;">银行总收益：</span>
+                <span style="color: ${bankCount > 0 ? '#06d6a0' : '#666'};">${bankCount} 条记录</span>
+            </div>`;
+            
+            statsHTML += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">
+                <span style="font-weight: bold; color: #ff6b6b;">总计：${totalRecords} 条记录</span>
+            </div>`;
+            
+            statsHTML += '</div>';
+            statsElement.innerHTML = statsHTML;
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme === 'default' ? '' : theme);
+            
+            // 更新主题按钮状态
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // 返回主页
+        function goBack() {
+            window.location.href = '../index.html';
+        }
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("[诊断] DOMContentLoaded 事件触发");
+            
+            // 检查按钮绑定
+            console.log("[诊断] 检查按钮绑定状态");
+            
+            // 检查银行设置按钮
+            const settingsBtn = document.querySelector('button[onclick*="openSettingsModal"]');
+            console.log("[诊断] 银行设置按钮:", settingsBtn ? '找到' : '未找到');
+            
+            // 检查存款按钮
+            const depositBtns = document.querySelectorAll('button[onclick*="openDepositModal"]');
+            console.log("[诊断] 存款按钮数量:", depositBtns.length);
+            
+            // 检查取款按钮
+            const withdrawBtns = document.querySelectorAll('button[onclick*="openWithdrawModal"]');
+            console.log("[诊断] 取款按钮数量:", withdrawBtns.length);
+            
+            // 检查模态框元素
+            const depositModal = document.getElementById('depositModal');
+            const withdrawModal = document.getElementById('withdrawModal');
+            const settingsModal = document.getElementById('settingsModal');
+            console.log("[诊断] 模态框状态:", {
+                depositModal: depositModal ? '找到' : '未找到',
+                withdrawModal: withdrawModal ? '找到' : '未找到',
+                settingsModal: settingsModal ? '找到' : '未找到'
+            });
+            
+            initializeData();
+            updateUI();
+            updateRateDisplays();
+            updateBankEarnings();
+            
+            // 页面加载时更新一次UI
+            
+            console.log("[诊断] 页面初始化完成");
+        });
+
+
+
+        // 模拟次日功能
+        function simulateNextDay() {
+            console.log("[模拟次日] 开始模拟次日利息计算");
+            
+            // 获取当前日期
+            const currentDate = new Date();
+            console.log("[模拟次日] 当前日期:", currentDate.toDateString());
+            
+            // 获取最后访问日期
+            const lastVisitDate = localStorage.getItem('lastVisitDate');
+            console.log("[模拟次日] 最后访问日期:", lastVisitDate);
+            
+            // 模拟次日：将最后访问日期设置为昨天
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+            
+            localStorage.setItem('lastVisitDate', yesterdayStr);
+            console.log("[模拟次日] 设置最后访问日期为:", yesterdayStr);
+            
+            // 强制重新计算利息
+            updateBankEarnings();
+            
+            // 更新UI显示
+            updateUI();
+            
+            // 显示成功消息
+            alert("✅ 已成功模拟次日！利息计算已完成，请查看各账户的昨日收益变化。投资理财账户会根据波动概率计算实际收益：• 65%概率盈利 (0%-25%)• 30%概率亏损 (-18%-0%)• 5%概率零收益");
+            
+            console.log("[模拟次日] 模拟完成，UI已更新");
+        }
+    </script>
+</body>
+</html>
