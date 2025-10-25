@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超级兑换券乐园 - v1.4.7</title>
+    <title>超级兑换券乐园 - v1.6.3</title>
     <style>
         * {
             box-sizing: border-box;
@@ -861,11 +861,14 @@
                 </div>
             </div>
             
+
+
             <div class="action-buttons">
                 <button class="btn btn-warning pulse" onclick="switchTab('products')">🎁 兑换商品</button>
                 <button class="btn" onclick="window.location.href='choujiang/index.html'">🎰 前往抽奖</button>
                 <button class="btn" onclick="window.location.href='rule/index.html'">📝 任务中心</button>
                 <button class="btn" onclick="window.location.href='rule/announcement.html'">📢 公告栏</button>
+                <button class="btn" onclick="window.location.href='bank/indexs.html'">🏦 银行理财</button>
             </div>
         </div>
         
@@ -1215,6 +1218,9 @@
         
         // 更新界面显示
         function updateUI() {
+            // 更新银行账户昨日收益
+            updateBankEarnings();
+            
             // 更新三种货币数量（带动画效果）
             const voucherElement = document.getElementById('voucherAmount');
             const lotteryElement = document.getElementById('lotteryAmount');
@@ -1888,6 +1894,60 @@
                     themeBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 });
+            });
+        }
+
+        // 银行账户昨日收益功能
+        function updateBankEarnings() {
+            // 银行配置
+            const BANK_CONFIG = {
+                savings: { name: '活期存款', rate: parseFloat(localStorage.getItem('bankSavingsRate') || '0.001'), key: 'bankSavings' },
+                deposit: { name: '定期存款', rate: parseFloat(localStorage.getItem('bankDepositRate') || '0.003'), key: 'bankDeposit' },
+                investment: { name: '投资理财', rate: parseFloat(localStorage.getItem('bankInvestmentRate') || '0.005'), key: 'bankInvestment' }
+            };
+
+            // 初始化银行数据（如果不存在）
+            Object.values(BANK_CONFIG).forEach(config => {
+                if (!localStorage.getItem(config.key)) {
+                    localStorage.setItem(config.key, '0');
+                }
+            });
+
+            // 检查是否需要更新昨日收益
+            const today = new Date().toDateString();
+            const lastVisitDate = localStorage.getItem('lastVisitDate');
+            
+            // 如果是第一次访问或新的一天，计算昨日收益
+            if (!lastVisitDate || lastVisitDate !== today) {
+                // 计算昨日收益
+                Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                    const amount = parseInt(localStorage.getItem(config.key) || '0');
+                    if (amount > 0) {
+                        const interest = Math.floor(amount * config.rate);
+                        if (interest > 0) {
+                            // 保存昨日收益
+                            localStorage.setItem(`yesterdayEarnings_${type}`, interest.toString());
+                        }
+                    }
+                });
+                
+                // 更新最后访问日期
+                localStorage.setItem('lastVisitDate', today);
+            }
+
+            // 显示昨日收益
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const earningsElement = document.getElementById(`${type}Earnings`);
+                if (earningsElement) {
+                    const yesterdayEarnings = parseInt(localStorage.getItem(`yesterdayEarnings_${type}`) || '0');
+                    earningsElement.textContent = yesterdayEarnings;
+                    
+                    // 添加动画效果
+                    if (yesterdayEarnings > 0) {
+                        earningsElement.classList.add('animate-count-up');
+                        setTimeout(() => earningsElement.classList.remove('animate-count-up'), 500);
+                    }
+                }
             });
         }
 
