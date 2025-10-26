@@ -2165,9 +2165,9 @@
             });
             
             initializeData();
-            updateUI();
+            updateBankEarnings(); // 先计算利息
+            updateUI(); // 再更新UI显示最新数据
             updateRateDisplays();
-            updateBankEarnings();
             
             // 页面加载时更新一次UI
             
