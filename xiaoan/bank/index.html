@@ -1154,6 +1154,48 @@
 
         // 银行账户昨日收益功能
         function updateBankEarnings() {
+            // 检查是否使用了超级快进功能
+            const superFastForwardUsed = localStorage.getItem('superFastForwardUsed');
+            if (superFastForwardUsed === 'true') {
+                console.log("[利息计算] 检测到超级快进已使用，跳过利息计算");
+                // 清除超级快进标记，以便下次正常计算
+                localStorage.removeItem('superFastForwardUsed');
+                
+                // 显示昨日收益（但不计算新的利息）
+                Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                    const earningsElement = document.getElementById(`${type}Earnings`);
+                    if (earningsElement) {
+                        const yesterdayEarnings = parseInt(localStorage.getItem(`yesterdayEarnings_${type}`) || '0');
+                        const yesterdayRate = parseFloat(localStorage.getItem(`yesterdayRate_${type}`) || config.rate);
+                        
+                        // 显示收益和实际利率
+                        if (config.hasFluctuation) {
+                            const baseRatePercent = (config.rate * 100).toFixed(1);
+                            const actualRatePercent = (yesterdayRate * 100).toFixed(1);
+                            
+                            // 避免除以零错误
+                            let fluctuation = '0.0';
+                            if (config.rate !== 0) {
+                                fluctuation = ((yesterdayRate - config.rate) / config.rate * 100).toFixed(1);
+                            }
+                            
+                            const fluctuationSign = fluctuation >= 0 ? '+' : '';
+                            
+                            earningsElement.innerHTML = `${yesterdayEarnings}<br><span style="font-size: 0.8rem; color: ${yesterdayRate >= 0 ? '#06d6a0' : '#ff6b6b'}">${actualRatePercent}% (${fluctuationSign}${fluctuation}%)</span>`;
+                        } else {
+                            earningsElement.textContent = yesterdayEarnings;
+                        }
+                        
+                        // 添加动画效果
+                        if (yesterdayEarnings > 0) {
+                            earningsElement.classList.add('animate-count-up');
+                            setTimeout(() => earningsElement.classList.remove('animate-count-up'), 500);
+                        }
+                    }
+                });
+                return;
+            }
+            
             // 检查是否需要更新昨日收益
             const today = new Date().toDateString();
             const lastVisitDate = localStorage.getItem('lastVisitDate');
@@ -2414,10 +2456,10 @@
             localStorage.setItem('lastVisitDate', yesterdayStr);
             console.log("[超级快进] 设置最后访问日期为:", yesterdayStr);
             
-            // 使用与主页面完全一致的利息计算逻辑
-            simulateMainPageInterestCalculation();
+            // 设置超级快进标记，防止刷新页面时重复计算
+            localStorage.setItem('superFastForwardUsed', 'true');
             
-            // 更新UI显示
+            // 更新UI显示（此时不会计算利息，因为日期已经设置为昨天）
             updateUI();
             
             // 显示成功消息模态框
