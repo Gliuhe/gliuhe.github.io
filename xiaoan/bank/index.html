@@ -752,6 +752,7 @@
         <div style="text-align: center; margin-bottom: 25px;">
             <button class="btn" onclick="goBack()">🏠 返回主页面</button>
             <button class="btn" onclick="openSettingsModal()" style="background: var(--accent-color); color: #333;">⚙️ 银行设置</button>
+            <button class="btn" onclick="simulateNextDay()" style="background: var(--secondary-color); color: white;">🚀 超级快进</button>
         </div>
 
         <!-- 当前兑换券余额 -->
@@ -896,6 +897,20 @@
         </div>
     </div>
 
+    <!-- 超级快进模态框 -->
+    <div id="simulateNextDayModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; max-height: 70vh; overflow-y: auto;">
+            <h2>🚀 超级快进</h2>
+            <div id="simulateNextDayContent">
+                <p>正在检查货币数量...</p>
+            </div>
+            <div class="modal-actions" style="margin-top: 20px;">
+                <button class="btn" id="confirmSimulateBtn" style="display: none;">确认快进</button>
+                <button class="btn btn-danger" onclick="closeSimulateNextDayModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 银行设置模态框 -->
     <div id="settingsModal" class="modal">
         <div class="modal-content" style="max-width: 800px; max-height: 80vh; overflow-y: auto;">
@@ -959,13 +974,13 @@
                     <label>波动概率分布</label>
                     <div style="background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; margin-top: 10px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span style="color: #ff6b6b;">📉 亏损概率: 30%</span>
-                            <span style="color: #06d6a0;">📈 盈利概率: 65%</span>
+                            <span style="color: #ff6b6b;">📉 亏损概率: 38%</span>
+                            <span style="color: #06d6a0;">📈 盈利概率: 57%</span>
                             <span style="color: #666;">📊 零收益概率: 5%</span>
                         </div>
                         <div style="background: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden;">
-                            <div style="background: #ff6b6b; width: 30%; height: 100%; float: left;"></div>
-                            <div style="background: #06d6a0; width: 65%; height: 100%; float: left;"></div>
+                            <div style="background: #ff6b6b; width: 38%; height: 100%; float: left;"></div>
+                            <div style="background: #06d6a0; width: 57%; height: 100%; float: left;"></div>
                             <div style="background: #666; width: 5%; height: 100%; float: left;"></div>
                         </div>
                     </div>
@@ -1122,8 +1137,8 @@
         let RISK_CONFIG = {
             minLoss: parseFloat(localStorage.getItem('riskMinLoss') || '-0.18'),  // 最小亏损比例
             maxProfit: parseFloat(localStorage.getItem('riskMaxProfit') || '0.25'), // 最大盈利比例
-            lossProbability: 0.30,  // 亏损概率 30%
-            profitProbability: 0.65, // 盈利概率 65%
+            lossProbability: 0.38,  // 亏损概率 38%
+            profitProbability: 0.57, // 盈利概率 57%
             zeroProbability: 0.05    // 零收益概率 5%
         };
 
@@ -1158,18 +1173,18 @@
                         let fluctuationType = 'none';
                         
                         if (config.hasFluctuation) {
-                            // 使用新的纯波动算法
+                            // 使用优化的波动算法，确保概率分布准确
                             const random = Math.random();
                             
                             if (random < RISK_CONFIG.lossProbability) {
-                                // 30%概率亏损
+                                // 30%概率亏损：-18%到0%
                                 fluctuationType = 'loss';
-                                actualRate = Math.random() * (RISK_CONFIG.minLoss - 0) + RISK_CONFIG.minLoss; // 纯波动，范围：-18%到0%
+                                actualRate = RISK_CONFIG.minLoss * Math.random(); // 均匀分布在最小亏损到0之间
                                 console.log(`[利息计算] ${config.name} 亏损波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
                             } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
-                                // 65%概率盈利
+                                // 65%概率盈利：0%到25%
                                 fluctuationType = 'profit';
-                                actualRate = Math.random() * (RISK_CONFIG.maxProfit - 0) + 0; // 纯波动，范围：0%到25%
+                                actualRate = RISK_CONFIG.maxProfit * Math.random(); // 均匀分布在0到最大盈利之间
                                 console.log(`[利息计算] ${config.name} 盈利波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
                             } else {
                                 // 5%概率零收益
@@ -1302,8 +1317,57 @@
             }
         }
 
+        // 检查并处理定期存款到期自动续存
+        function checkAndRenewDeposits() {
+            console.log("[定期存款] 检查定期存款到期情况");
+            
+            const depositRecords = JSON.parse(localStorage.getItem('bankDepositRecords') || '[]');
+            const now = new Date();
+            let renewed = false;
+            
+            // 检查是否有到期的定期存款
+            const updatedRecords = depositRecords.filter(record => {
+                const maturityDate = new Date(record.maturityDate);
+                
+                if (maturityDate <= now) {
+                    // 定期存款到期，自动续存
+                    console.log(`[定期存款] 发现到期存款，金额: ${record.amount}，自动续存7天`);
+                    
+                    // 更新到期时间为7天后
+                    record.maturityDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+                    renewed = true;
+                    
+                    // 记录续存交易
+                    const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+                    transactions.push({
+                        type: 'renew',
+                        accountType: 'deposit',
+                        accountName: '定期存款',
+                        amount: record.amount,
+                        date: new Date().toISOString(),
+                        description: '定期存款到期自动续存7天'
+                    });
+                    localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+                    
+                    return true; // 保留记录，但更新到期时间
+                }
+                
+                return true; // 保留未到期的记录
+            });
+            
+            if (renewed) {
+                localStorage.setItem('bankDepositRecords', JSON.stringify(updatedRecords));
+                console.log("[定期存款] 定期存款自动续存完成");
+            }
+            
+            return renewed;
+        }
+
         // 更新UI
         function updateUI() {
+            // 先检查定期存款到期自动续存
+            checkAndRenewDeposits();
+            
             // 更新当前兑换券余额（与主页面同步）
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
             document.getElementById('currentVoucherAmount').textContent = currentVoucher;
@@ -1436,19 +1500,19 @@
             // 获取所有交易记录
             const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
             
-            // 自动删除7天前的记录
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            // 自动删除14天前的记录
+            const fourteenDaysAgo = new Date();
+            fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
             
             const filteredTransactions = transactions.filter(transaction => {
                 const transactionDate = new Date(transaction.date);
-                return transactionDate >= sevenDaysAgo;
+                return transactionDate >= fourteenDaysAgo;
             });
             
             // 如果删除了记录，更新localStorage
             if (filteredTransactions.length < transactions.length) {
                 localStorage.setItem('bankTransactions', JSON.stringify(filteredTransactions));
-                console.log(`[历史记录] 已删除 ${transactions.length - filteredTransactions.length} 条7天前的记录`);
+                console.log(`[历史记录] 已删除 ${transactions.length - filteredTransactions.length} 条14天前的记录`);
             }
             
             // 按账户类型分组交易记录
@@ -1458,9 +1522,9 @@
                 investment: []
             };
             
-            // 筛选出利息交易记录
+            // 筛选出所有交易记录（包括存取和利息）
             transactions.forEach(transaction => {
-                if (transaction.type === 'interest' && accountHistories[transaction.accountType]) {
+                if (accountHistories[transaction.accountType]) {
                     accountHistories[transaction.accountType].push(transaction);
                 }
             });
@@ -1608,7 +1672,6 @@
             
             // 如果是定期存款或投资理财，记录存入时间
             if (config.period > 0) {
-                console.log(`[存款记录] 记录 ${config.name} 存入时间，期限: ${config.period} 天`);
                 console.log(`[存款记录] 记录 ${config.name} 存入时间，期限: ${config.period} 天`);
                 const depositRecords = JSON.parse(localStorage.getItem(config.key + 'Records') || '[]');
                 depositRecords.push({
@@ -2058,9 +2121,16 @@
             }, 3000);
         }
 
-        // 清空收益记录
+        // 清空收益记录和交易记录
         function clearEarningsRecords() {
-            if (!confirm('⚠️ 确定要清空所有收益记录吗？此操作将永久删除所有历史收益记录，包括利息收益、投资盈亏等所有记录，无法恢复！')) {
+            // 第一次确认
+            if (!confirm('⚠️ 确定要清空所有记录吗？此操作将永久删除所有历史记录，包括收益记录、交易记录、利息收益、投资盈亏等所有记录，无法恢复！')) {
+                return;
+            }
+            
+            // 第二次确认，简单的确认框
+            if (!confirm('⚠️ 二次确认：您确定要永久删除所有记录吗？此操作不可撤销！')) {
+                showStatus('操作已取消，记录未被删除。', 'warning');
                 return;
             }
             
@@ -2072,13 +2142,22 @@
             // 清空银行总收益记录
             localStorage.removeItem('bankEarningsHistory');
             
+            // 清空交易记录
+            localStorage.setItem('bankTransactions', JSON.stringify([]));
+            
+            // 清空定期存款记录
+            localStorage.removeItem('bankDepositRecords');
+            
             // 更新记录统计显示
             updateRecordsStats();
             
-            // 显示成功消息
-            showStatus('✅ 所有收益记录已成功清空！', 'success');
+            // 更新交易历史显示
+            updateTransactionHistory();
             
-            console.log('[记录管理] 所有收益记录已清空');
+            // 显示成功消息
+            showStatus('✅ 所有记录已成功清空！', 'success');
+            
+            console.log('[记录管理] 所有记录已清空');
         }
 
         // 更新记录统计显示
@@ -2109,6 +2188,16 @@
             statsHTML += `<div style="margin-bottom: 8px;">
                 <span style="font-weight: bold;">银行总收益：</span>
                 <span style="color: ${bankCount > 0 ? '#06d6a0' : '#666'};">${bankCount} 条记录</span>
+            </div>`;
+            
+            // 统计交易记录
+            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+            const transactionCount = transactions.length;
+            totalRecords += transactionCount;
+            
+            statsHTML += `<div style="margin-bottom: 8px;">
+                <span style="font-weight: bold;">交易记录：</span>
+                <span style="color: ${transactionCount > 0 ? '#06d6a0' : '#666'};">${transactionCount} 条记录</span>
             </div>`;
             
             statsHTML += `<div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">
@@ -2176,17 +2265,146 @@
 
 
 
-        // 模拟次日功能
+        // 计算所有存款项目的总余额
+        function calculateTotalDeposits() {
+            let total = 0;
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const amount = parseInt(localStorage.getItem(config.key) || '0');
+                total += amount;
+            });
+            return total;
+        }
+        
+        // 根据总余额计算超级快进费用
+        function calculateSuperFastForwardCost(totalDeposits) {
+            if (totalDeposits < 1000) {
+                return { type: 'lottery', amount: 3, name: '抽奖券' };
+            } else if (totalDeposits < 2300) {
+                return { type: 'lottery', amount: 5, name: '抽奖券' };
+            } else if (totalDeposits < 3600) {
+                return { type: 'lottery', amount: 9, name: '抽奖券' };
+            } else if (totalDeposits < 6000) {
+                return { type: 'lottery', amount: 15, name: '抽奖券' };
+            } else {
+                return { type: 'premium', amount: 5, name: '高级抽奖券' };
+            }
+        }
+        
+        // 打开超级快进模态框
         function simulateNextDay() {
-            console.log("[模拟次日] 开始模拟次日利息计算");
+            console.log("[超级快进] 打开超级快进模态框");
+            
+            // 计算总存款余额
+            const totalDeposits = calculateTotalDeposits();
+            console.log("[超级快进] 总存款余额:", totalDeposits);
+            
+            // 计算费用
+            const cost = calculateSuperFastForwardCost(totalDeposits);
+            console.log("[超级快进] 费用计算:", cost);
+            
+            // 检查货币数量
+            const currentAmount = parseInt(localStorage.getItem(cost.type) || '0');
+            console.log("[超级快进] 当前货币数量:", currentAmount);
+            
+            const modal = document.getElementById('simulateNextDayModal');
+            const content = document.getElementById('simulateNextDayContent');
+            const confirmBtn = document.getElementById('confirmSimulateBtn');
+            
+            if (!modal || !content || !confirmBtn) {
+                console.error("[错误] 未找到超级快进模态框元素！");
+                return;
+            }
+            
+            // 重置按钮状态
+            confirmBtn.textContent = '确认快进';
+            confirmBtn.style.display = 'none';
+            
+            // 重置按钮状态
+            confirmBtn.textContent = '确认快进';
+            confirmBtn.style.display = 'none';
+            
+            // 重置按钮状态
+            confirmBtn.textContent = '确认快进';
+            confirmBtn.style.display = 'none';
+            
+            // 重置按钮状态
+            confirmBtn.textContent = '确认快进';
+            confirmBtn.style.display = 'none';
+            
+            if (currentAmount < cost.amount) {
+                // 货币不足的情况
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">❌</div>
+                        <h3 style="color: #ff6b6b; margin-bottom: 15px;">${cost.name}不足</h3>
+                        <p style="margin-bottom: 10px;">需要${cost.amount}张${cost.name}才能使用超级快进功能。</p>
+                        <p style="color: #666; font-size: 14px;">当前剩余：<strong>${currentAmount}</strong> 张${cost.name}</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 15px;">您可以在主页面或抽奖页面获取${cost.name}。</p>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <p style="margin: 5px 0;"><strong>当前总存款：</strong>${totalDeposits}兑换券</p>
+                            <p style="margin: 5px 0;"><strong>费用阶梯：</strong></p>
+                            <ul style="text-align: left; margin: 5px 0; font-size: 12px;">
+                                <li>总存款 &lt; 1000：3抽奖券/次</li>
+                                <li>1000 ≤ 总存款 &lt; 2300：5抽奖券/次</li>
+                                <li>2300 ≤ 总存款 &lt; 3600：9抽奖券/次</li>
+                                <li>3600 ≤ 总存款 &lt; 6000：15抽奖券/次</li>
+                                <li>总存款 ≥ 6000：5高级抽奖券/次</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                confirmBtn.style.display = 'none';
+            } else {
+                // 货币足够的情况
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 48px; margin-bottom: 15px;">🚀</div>
+                        <h3 style="color: #06d6a0; margin-bottom: 15px;">超级快进</h3>
+                        <p style="margin-bottom: 15px;">立即模拟次日利息计算，查看收益变化</p>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                            <p style="margin: 5px 0;"><strong>总存款：</strong>${totalDeposits}兑换券</p>
+                            <p style="margin: 5px 0;"><strong>消耗：</strong>${cost.amount}张${cost.name}</p>
+                            <p style="margin: 5px 0;"><strong>当前剩余：</strong>${currentAmount}张</p>
+                            <p style="margin: 5px 0;"><strong>操作后剩余：</strong>${currentAmount - cost.amount}张</p>
+                        </div>
+                        <div style="background: #f0f8ff; padding: 10px; border-radius: 8px; margin: 10px 0;">
+                            <p style="font-size: 12px; color: #666; margin-bottom: 5px;"><strong>费用阶梯：</strong></p>
+                            <ul style="text-align: left; margin: 0; font-size: 11px; padding-left: 15px;">
+                                <li>&lt;1000：3抽奖券</li>
+                                <li>1000-2299：5抽奖券</li>
+                                <li>2300-3599：9抽奖券</li>
+                                <li>3600-5999：15抽奖券</li>
+                                <li>≥6000：5高级抽奖券</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                confirmBtn.style.display = 'inline-block';
+                confirmBtn.onclick = function() {
+                    executeSimulateNextDay(currentAmount, cost);
+                };
+            }
+            
+            modal.style.display = 'flex';
+            console.log("[超级快进] 超级快进模态框已打开");
+        }
+        
+        // 执行超级快进操作
+        function executeSimulateNextDay(currentAmount, cost) {
+            console.log("[超级快进] 开始执行超级快进操作");
+            
+            // 扣除相应货币
+            const newAmount = currentAmount - cost.amount;
+            localStorage.setItem(cost.type, newAmount.toString());
+            console.log(`[超级快进] 扣除${cost.amount}张${cost.name}，剩余:`, newAmount);
             
             // 获取当前日期
             const currentDate = new Date();
-            console.log("[模拟次日] 当前日期:", currentDate.toDateString());
+            console.log("[超级快进] 当前日期:", currentDate.toDateString());
             
             // 获取最后访问日期
             const lastVisitDate = localStorage.getItem('lastVisitDate');
-            console.log("[模拟次日] 最后访问日期:", lastVisitDate);
+            console.log("[超级快进] 最后访问日期:", lastVisitDate);
             
             // 模拟次日：将最后访问日期设置为昨天
             const yesterday = new Date();
@@ -2194,18 +2412,136 @@
             const yesterdayStr = yesterday.toDateString();
             
             localStorage.setItem('lastVisitDate', yesterdayStr);
-            console.log("[模拟次日] 设置最后访问日期为:", yesterdayStr);
+            console.log("[超级快进] 设置最后访问日期为:", yesterdayStr);
             
-            // 强制重新计算利息
-            updateBankEarnings();
+            // 使用与主页面完全一致的利息计算逻辑
+            simulateMainPageInterestCalculation();
             
             // 更新UI显示
             updateUI();
             
-            // 显示成功消息
-            alert("✅ 已成功模拟次日！利息计算已完成，请查看各账户的昨日收益变化。投资理财账户会根据波动概率计算实际收益：• 65%概率盈利 (0%-25%)• 30%概率亏损 (-18%-0%)• 5%概率零收益");
+            // 显示成功消息模态框
+            showSimulateNextDayResult(newAmount, cost);
             
-            console.log("[模拟次日] 模拟完成，UI已更新");
+            console.log("[超级快进] 模拟完成，UI已更新");
+        }
+        
+        // 使用与主页面完全一致的利息计算逻辑
+        function simulateMainPageInterestCalculation() {
+            console.log("[模拟次日] 使用主页面利息计算逻辑");
+            
+            // 使用与主页面完全一致的利息计算逻辑
+            Object.entries(BANK_CONFIG).forEach(([type, config]) => {
+                const amount = parseInt(localStorage.getItem(config.key) || '0');
+                if (amount > 0) {
+                    console.log(`[模拟次日] 计算 ${config.name} 利息，金额: ${amount}`);
+                    
+                    // 计算实际利率（考虑波动）
+                    let actualRate = config.rate;
+                    let fluctuationType = 'none';
+                    
+                    if (config.hasFluctuation) {
+                        // 使用与主页面完全一致的波动算法
+                        const random = Math.random();
+                        
+                        if (random < RISK_CONFIG.lossProbability) {
+                            // 38%概率亏损：-18%到0%
+                            fluctuationType = 'loss';
+                            actualRate = RISK_CONFIG.minLoss * Math.random(); // 均匀分布在最小亏损到0之间
+                            console.log(`[模拟次日] ${config.name} 亏损波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
+                        } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
+                            // 57%概率盈利：0%到25%
+                            fluctuationType = 'profit';
+                            actualRate = RISK_CONFIG.maxProfit * Math.random(); // 均匀分布在0到最大盈利之间
+                            console.log(`[模拟次日] ${config.name} 盈利波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
+                        } else {
+                            // 5%概率零收益
+                            fluctuationType = 'zero';
+                            actualRate = 0;
+                            console.log(`[模拟次日] ${config.name} 零收益`);
+                        }
+                    }
+                    
+                    const interest = Math.floor(amount * actualRate);
+                    
+                    if (interest !== 0) {
+                        // 添加利息到账户（只有非零收益才记录）
+                        localStorage.setItem(config.key, (amount + interest).toString());
+                        
+                        // 保存昨日收益和实际利率用于显示
+                        localStorage.setItem(`yesterdayEarnings_${type}`, interest.toString());
+                        localStorage.setItem(`yesterdayRate_${type}`, actualRate.toString());
+                        
+                        // 记录利息交易到交易历史
+                        const transaction = {
+                            type: 'interest',
+                            accountType: type,
+                            accountName: config.name,
+                            amount: interest,
+                            date: new Date().toISOString(),
+                            fluctuationType: fluctuationType
+                        };
+                        
+                        const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+                        transactions.push(transaction);
+                        localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+                        
+                        console.log(`[模拟次日] ${config.name} 利息已更新，新余额: ${amount + interest}`);
+                    } else if (config.hasFluctuation && fluctuationType === 'zero') {
+                        // 零收益时只记录显示信息，不改变账户余额
+                        localStorage.setItem(`yesterdayEarnings_${type}`, '0');
+                        localStorage.setItem(`yesterdayRate_${type}`, '0');
+                        console.log(`[模拟次日] ${config.name} 零收益，仅记录显示信息`);
+                    }
+                } else {
+                    console.log(`[模拟次日] ${config.name} 余额为0，跳过计算`);
+                }
+            });
+            
+            console.log("[模拟次日] 主页面利息计算逻辑执行完成");
+        }
+        
+        // 显示超级快进结果
+        function showSimulateNextDayResult(newAmount, cost) {
+            const modal = document.getElementById('simulateNextDayModal');
+            const content = document.getElementById('simulateNextDayContent');
+            const confirmBtn = document.getElementById('confirmSimulateBtn');
+            
+            if (!modal || !content || !confirmBtn) {
+                console.error("[错误] 未找到超级快进模态框元素！");
+                return;
+            }
+            
+            content.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                    <h3 style="color: #06d6a0; margin-bottom: 15px;">超级快进成功</h3>
+                    <p style="margin-bottom: 10px;">已成功模拟次日利息计算！</p>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <p style="margin: 5px 0;"><strong>消耗：</strong>${cost.amount}张${cost.name}</p>
+                        <p style="margin: 5px 0;"><strong>当前剩余：</strong>${newAmount}张</p>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">请查看各账户的昨日收益变化。</p>
+                    <p style="color: #666; font-size: 14px;">此功能使用与主页面完全一致的利息计算逻辑，确保模拟结果与真正次日一致。</p>
+                </div>
+            `;
+            
+            confirmBtn.style.display = 'inline-block';
+            confirmBtn.textContent = '关闭';
+            confirmBtn.onclick = function() {
+                closeSimulateNextDayModal();
+            };
+            
+            console.log("[超级快进] 成功消息模态框已显示");
+        }
+        
+        // 关闭模拟次日模态框
+        function closeSimulateNextDayModal() {
+            const modal = document.getElementById('simulateNextDayModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            console.log("[模拟次日] 模拟次日模态框已关闭");
         }
     </script>
 </body>
