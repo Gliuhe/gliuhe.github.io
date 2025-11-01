@@ -1219,12 +1219,12 @@
                             const random = Math.random();
                             
                             if (random < RISK_CONFIG.lossProbability) {
-                                // 30%概率亏损：-18%到0%
+                                // 38%概率亏损：-18%到0%
                                 fluctuationType = 'loss';
                                 actualRate = RISK_CONFIG.minLoss * Math.random(); // 均匀分布在最小亏损到0之间
                                 console.log(`[利息计算] ${config.name} 亏损波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
                             } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
-                                // 65%概率盈利：0%到25%
+                                // 57%概率盈利：0%到25%
                                 fluctuationType = 'profit';
                                 actualRate = RISK_CONFIG.maxProfit * Math.random(); // 均匀分布在0到最大盈利之间
                                 console.log(`[利息计算] ${config.name} 盈利波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
@@ -2296,8 +2296,7 @@
             });
             
             initializeData();
-            updateBankEarnings(); // 先计算利息
-            updateUI(); // 再更新UI显示最新数据
+            updateUI(); // 更新UI显示最新数据（包含利息计算）
             updateRateDisplays();
             
             // 页面加载时更新一次UI
