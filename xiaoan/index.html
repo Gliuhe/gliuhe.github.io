@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>超级兑换券乐园 - v1.6.3</title>
+    <title>超级兑换券乐园 - v1.4.7</title>
     <style>
         * {
             box-sizing: border-box;
@@ -588,6 +588,377 @@
             background-color: rgba(255, 209, 102, 0.1);
         }
         
+        .history-fine {
+            background-color: rgba(255, 107, 107, 0.15);
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        /* 罚款管理样式 */
+        .fine-tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .fine-tab-content.active {
+            display: block;
+        }
+        
+        /* 罚款管理页滚动条样式 */
+        #fineManageContent {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-thumb:hover {
+            background: #05c191;
+        }
+        
+        /* 罚款提示横幅 */
+        .fine-banner {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            border-left: 5px solid #ffd166;
+            display: none;
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .fine-banner.warning {
+            background: linear-gradient(135deg, #ffd166 0%, #ffc745 100%);
+            color: #333;
+            box-shadow: 0 4px 12px rgba(255, 209, 102, 0.3);
+        }
+        
+        .fine-banner.success {
+            background: linear-gradient(135deg, #06d6a0 0%, #05c191 100%);
+            box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
+        }
+        
+        .fine-banner-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .fine-banner-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .fine-banner-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .fine-banner.warning .fine-banner-amount {
+            background: rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        
+        .fine-banner-actions {
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .fine-banner-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .fine-banner-btn.primary {
+            background: white;
+            color: #ff6b6b;
+        }
+        
+        .fine-banner-btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .fine-banner.warning .fine-banner-btn.primary {
+            color: #333;
+        }
+        
+        .fine-banner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .fine-reason-select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .fine-reason-select:focus {
+            border-color: #06d6a0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
+        }
+        
+        .fine-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #ffd166;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .fine-item-info {
+            flex: 1;
+        }
+        
+        .fine-item-reason {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+        
+        .fine-item-amount {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .fine-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fine-progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .fine-progress-bar {
+            background: #ff6b6b;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
+        /* 罚款管理样式 */
+        .fine-tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .fine-tab-content.active {
+            display: block;
+        }
+        
+        /* 罚款管理页滚动条样式 */
+        #fineManageContent {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        #fineManageContent::-webkit-scrollbar-thumb:hover {
+            background: #05c191;
+        }
+        
+        /* 罚款提示横幅 */
+        .fine-banner {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+            border-left: 5px solid #ffd166;
+            display: none;
+            animation: slideInUp 0.5s ease-out;
+        }
+        
+        .fine-banner.warning {
+            background: linear-gradient(135deg, #ffd166 0%, #ffc745 100%);
+            color: #333;
+            box-shadow: 0 4px 12px rgba(255, 209, 102, 0.3);
+        }
+        
+        .fine-banner.success {
+            background: linear-gradient(135deg, #06d6a0 0%, #05c191 100%);
+            box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
+        }
+        
+        .fine-banner-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .fine-banner-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .fine-banner-amount {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        
+        .fine-banner.warning .fine-banner-amount {
+            background: rgba(255, 255, 255, 0.3);
+            color: #333;
+        }
+        
+        .fine-banner-actions {
+            margin-top: 10px;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .fine-banner-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .fine-banner-btn.primary {
+            background: white;
+            color: #ff6b6b;
+        }
+        
+        .fine-banner-btn.secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .fine-banner.warning .fine-banner-btn.primary {
+            color: #333;
+        }
+        
+        .fine-banner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .fine-reason-select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .fine-reason-select:focus {
+            border-color: #06d6a0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
+        }
+        
+        .fine-item {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #ffd166;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .fine-item-info {
+            flex: 1;
+        }
+        
+        .fine-item-reason {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 5px;
+        }
+        
+        .fine-item-amount {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .fine-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .fine-progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .fine-progress-bar {
+            background: #ff6b6b;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        
         .positive {
             color: #06d6a0;
             font-weight: bold;
@@ -817,6 +1188,22 @@
         <h1>超级兑换券乐园</h1>
     </div>
     
+    <!-- 罚款提示横幅 -->
+    <div id="fineBanner" class="fine-banner">
+        <div class="fine-banner-content">
+            <div class="fine-banner-text">
+                <span id="bannerText">当前有罚款未缴</span>
+            </div>
+            <div class="fine-banner-amount">
+                <span id="bannerAmount">0</span> 兑换券
+            </div>
+        </div>
+        <div class="fine-banner-actions">
+            <button class="fine-banner-btn primary" onclick="openFineModal()">立即缴纳</button>
+            <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('dashboard')">🏠 控制面板</div>
@@ -903,6 +1290,7 @@
             <h2>系统设置</h2>
             <div class="action-buttons">
                 <button class="btn" onclick="openPasswordModal()">🔑 修改密码</button>
+                <button class="btn btn-warning" onclick="openFineModal()">💰 缴纳罚款</button>
                 <button class="btn btn-danger" onclick="openResetModal()">🔄 重置系统</button>
             </div>
             
@@ -1097,6 +1485,83 @@
         </div>
     </div>
     
+    <!-- 罚款管理模态框 -->
+    <div class="modal" id="fineModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <!-- 罚款模态框标签页 -->
+            <div class="nav-tabs" style="margin-bottom: 20px;">
+                <div class="nav-tab active" onclick="switchFineTab('pay')">💰 缴纳罚款</div>
+                <div class="nav-tab" onclick="switchFineTab('manage')">⚙️ 罚款管理</div>
+            </div>
+            
+            <!-- 缴纳罚款页 -->
+            <div id="finePayTab" class="fine-tab-content active">
+                <h2>💰 缴纳罚款</h2>
+                <div class="fine-summary" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div id="fineSummaryText">当前无待缴罚款</div>
+                </div>
+                <div class="form-group">
+                    <label for="fineReasonSelect">选择罚款原因</label>
+                    <select id="fineReasonSelect" class="fine-reason-select">
+                        <option value="">请选择罚款原因</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="finePayAmount">缴纳金额（兑换券）</label>
+                    <input type="number" id="finePayAmount" min="1" placeholder="请输入缴纳金额">
+                </div>
+                <button class="btn btn-warning" onclick="payFine()">确认缴纳</button>
+                <button class="btn btn-danger" onclick="closeFineModal()">取消</button>
+            </div>
+            
+            <!-- 罚款管理页 -->
+            <div id="fineManageTab" class="fine-tab-content">
+                <h2>⚙️ 罚款管理</h2>
+                
+                <!-- 罚款提示横幅 -->
+                <div id="fineBanner" class="fine-banner">
+                    <div class="fine-banner-content">
+                        <div class="fine-banner-text">
+                            <span id="bannerText">当前有罚款未缴</span>
+                        </div>
+                        <div class="fine-banner-amount">
+                            <span id="bannerAmount">0</span> 兑换券
+                        </div>
+                    </div>
+                    <div class="fine-banner-actions">
+                        <button class="fine-banner-btn primary" onclick="switchFineTab('pay')">立即缴纳</button>
+                        <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="managePassword">管理密码</label>
+                    <input type="password" id="managePassword" placeholder="请输入管理密码" oninput="verifyManagePassword()">
+                </div>
+                <div id="fineManageContent" style="display: none;">
+                    <div class="form-group">
+                        <label for="newFineReason">罚款原因</label>
+                        <input type="text" id="newFineReason" placeholder="例如：未按时完成作业">
+                    </div>
+                    <div class="form-group">
+                        <label for="newFineAmount">罚款总额（兑换券）</label>
+                        <input type="number" id="newFineAmount" min="1" placeholder="请输入罚款总额">
+                    </div>
+                    <div class="form-group">
+                        <label for="newFineDueDays">缴纳期限（天数）</label>
+                        <input type="number" id="newFineDueDays" min="1" value="7" placeholder="请输入缴纳期限">
+                    </div>
+                    <button class="btn" onclick="addFineItem()">➕ 添加罚款项</button>
+                    
+                    <div id="fineItemsList" style="margin-top: 20px;">
+                        <!-- 罚款项列表将在这里动态生成 -->
+                    </div>
+                </div>
+                <button class="btn btn-danger" onclick="closeFineModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 重置系统模态框 -->
     <div class="modal" id="resetModal">
         <div class="modal-content">
@@ -1173,6 +1638,11 @@
             if (!localStorage.getItem('lastResetDate')) {
                 localStorage.setItem('lastResetDate', new Date().toDateString());
             }
+            
+            // 初始化罚款数据
+            if (!localStorage.getItem('fineItems')) {
+                localStorage.setItem('fineItems', JSON.stringify([]));
+            }
         }
         
         // 显示状态通知
@@ -1218,6 +1688,12 @@
         
         // 更新界面显示
         function updateUI() {
+            // 检查逾期罚款并应用惩罚
+            checkOverdueFines();
+            
+            // 检查兑换限制
+            checkExchangeRestriction();
+            
             // 更新银行账户昨日收益
             updateBankEarnings();
             
@@ -1239,10 +1715,13 @@
             const dailyExchange = JSON.parse(localStorage.getItem('dailyExchange'));
             const today = new Date().toDateString();
             
+            // 检查是否有逾期罚款
+            const hasOverdueFines = checkExchangeRestriction();
+            
             products.forEach(product => {
                 const todayExchanges = dailyExchange[product.id] || 0;
                 const remaining = product.dailyLimit > 0 ? product.dailyLimit - todayExchanges : Infinity;
-                const isDisabled = remaining <= 0;
+                const isDisabled = remaining <= 0 || hasOverdueFines;
                 
                 const productElement = document.createElement('div');
                 productElement.className = 'product';
@@ -1253,7 +1732,7 @@
                         `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` : 
                         ''}
                     <button class="btn" onclick="exchangeProduct(${product.id})" ${isDisabled ? 'disabled' : ''}>
-                        ${isDisabled ? '已达限额' : '兑换'}
+                        ${hasOverdueFines ? '逾期罚款，禁止兑换' : (isDisabled ? '已达限额' : '兑换')}
                     </button>
                 `;
                 productsList.appendChild(productElement);
@@ -1288,6 +1767,10 @@
                 // 根据操作类型设置不同的背景色
                 if (record.type === 'exchange') {
                     historyItem.classList.add('history-exchange');
+                } else if (record.type === 'fine') {
+                    historyItem.classList.add('history-fine');
+                } else if (record.type === 'fine_penalty') {
+                    historyItem.classList.add('history-fine');
                 } else if (record.amount > 0) {
                     historyItem.classList.add('history-positive');
                 } else {
@@ -1335,6 +1818,84 @@
                 localStorage.setItem('dailyExchange', JSON.stringify({}));
                 localStorage.setItem('lastResetDate', today);
             }
+        }
+        
+        // 检查逾期罚款并应用惩罚
+        function checkOverdueFines() {
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const now = new Date();
+            let hasOverdue = false;
+            
+            fineItems.forEach(item => {
+                if (item.remaining > 0) {
+                    const dueDate = new Date(item.dueDate);
+                    const isOverdue = now > dueDate;
+                    
+                    if (isOverdue && !item.isOverdue) {
+                        // 首次逾期，标记为逾期
+                        item.isOverdue = true;
+                        hasOverdue = true;
+                        
+                        // 显示逾期提醒
+                        showStatus(`罚款"${item.reason}"已逾期！请尽快缴纳。`, "warning");
+                    }
+                    
+                    if (isOverdue && !item.penaltyApplied) {
+                        // 应用20%的惩罚
+                        const penaltyAmount = Math.ceil(item.total * 0.2);
+                        item.total += penaltyAmount;
+                        item.remaining += penaltyAmount;
+                        item.penaltyApplied = true;
+                        
+                        // 添加惩罚历史记录
+                        const history = JSON.parse(localStorage.getItem('history'));
+                        history.push({
+                            date: new Date().toISOString(),
+                            amount: -penaltyAmount,
+                            reason: `逾期罚款惩罚：${item.reason}`,
+                            type: 'fine_penalty',
+                            currencyType: 'voucher',
+                            currencyName: '兑换券',
+                            balanceAfter: parseInt(localStorage.getItem('voucher') || '0')
+                        });
+                        localStorage.setItem('history', JSON.stringify(history));
+                        
+                        showStatus(`罚款"${item.reason}"逾期，已追加20%惩罚（${penaltyAmount}兑换券）！`, "error");
+                    }
+                }
+            });
+            
+            if (hasOverdue) {
+                localStorage.setItem('fineItems', JSON.stringify(fineItems));
+            }
+            
+            return hasOverdue;
+        }
+        
+        // 检查是否有逾期罚款并禁止兑换
+        function checkExchangeRestriction() {
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const now = new Date();
+            
+            const hasOverdueFines = fineItems.some(item => 
+                item.remaining > 0 && new Date(item.dueDate) < now
+            );
+            
+            // 禁用或启用兑换按钮
+            const exchangeButtons = document.querySelectorAll('#productsList .btn');
+            exchangeButtons.forEach(button => {
+                if (hasOverdueFines && !button.disabled) {
+                    button.disabled = true;
+                    button.textContent = '逾期罚款，禁止兑换';
+                    button.style.background = '#cccccc';
+                } else if (!hasOverdueFines && button.disabled && button.textContent === '逾期罚款，禁止兑换') {
+                    button.disabled = false;
+                    button.textContent = '兑换';
+                    button.style.background = '';
+                }
+            });
+            
+            return hasOverdueFines;
         }
         
         // 切换标签页
@@ -1458,6 +2019,13 @@
         
         // 兑换商品
         function exchangeProduct(productId) {
+            // 检查是否有逾期罚款
+            const hasOverdueFines = checkExchangeRestriction();
+            if (hasOverdueFines) {
+                showStatus('存在逾期罚款，禁止兑换商品！请先缴纳罚款。', "error");
+                return;
+            }
+            
             const products = JSON.parse(localStorage.getItem('products'));
             const product = products.find(p => p.id === productId);
             
@@ -1661,7 +2229,8 @@
                 history: JSON.parse(localStorage.getItem('history')),
                 dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
                 lastResetDate: localStorage.getItem('lastResetDate'),
-                password: localStorage.getItem('password')
+                password: localStorage.getItem('password'),
+                fineItems: JSON.parse(localStorage.getItem('fineItems')) // 包含罚款数据
             };
             
             const dataStr = JSON.stringify(data);
@@ -1722,6 +2291,11 @@
                     localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
                     localStorage.setItem('password', data.password);
                     
+                    // 恢复罚款数据（如果存在）
+                    if (data.fineItems) {
+                        localStorage.setItem('fineItems', JSON.stringify(data.fineItems));
+                    }
+                    
                     closeRestoreModal();
                     updateUI();
                     showStatus('数据恢复成功！');
@@ -1732,6 +2306,332 @@
             };
             
             reader.readAsText(file);
+        }
+        
+
+        
+        // 切换罚款标签页
+        function switchFineTab(tab) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.fine-tab-content').forEach(tabContent => {
+                tabContent.classList.remove('active');
+            });
+            
+            // 取消所有标签的激活状态
+            document.querySelectorAll('#fineModal .nav-tab').forEach(tabBtn => {
+                tabBtn.classList.remove('active');
+            });
+            
+            // 显示选中的标签内容
+            document.getElementById(`fine${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`).classList.add('active');
+            
+            // 激活选中的标签
+            document.querySelectorAll('#fineModal .nav-tab').forEach(tabBtn => {
+                if (tabBtn.getAttribute('onclick').includes(tab)) {
+                    tabBtn.classList.add('active');
+                }
+            });
+            
+            // 如果是缴纳罚款页，更新罚款摘要和原因选项
+            if (tab === 'pay') {
+                updateFineSummary();
+                updateFineReasonSelect();
+            }
+            // 如果是管理页，检查密码
+            else if (tab === 'manage') {
+                document.getElementById('fineManageContent').style.display = 'none';
+                document.getElementById('managePassword').value = '';
+                // 更新罚款横幅显示
+                updateFineBanner();
+            }
+        }
+        
+        // 验证管理密码
+        function verifyManagePassword() {
+            const password = document.getElementById('managePassword').value;
+            
+            if (password !== localStorage.getItem('password')) {
+                showStatus('管理密码错误！', "error");
+                return false;
+            }
+            
+            document.getElementById('fineManageContent').style.display = 'block';
+            updateFineItemsList();
+            
+            // 更新罚款横幅显示
+            updateFineBanner();
+            return true;
+        }
+        
+        // 更新罚款横幅显示
+        function updateFineBanner() {
+            const banner = document.getElementById('fineBanner');
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const activeFines = fineItems.filter(item => item.remaining > 0);
+            
+            if (activeFines.length === 0) {
+                // 没有罚款，隐藏横幅
+                banner.style.display = 'none';
+                return;
+            }
+            
+            // 计算剩余罚款总额
+            const remainingAmount = activeFines.reduce((sum, item) => sum + item.remaining, 0);
+            const overdueFines = activeFines.filter(item => new Date(item.dueDate) < new Date());
+            
+            // 更新横幅内容
+            document.getElementById('bannerAmount').textContent = remainingAmount;
+            
+            if (overdueFines.length > 0) {
+                // 有逾期罚款，显示警告横幅
+                banner.className = 'fine-banner';
+                document.getElementById('bannerText').textContent = `⚠️ 有 ${overdueFines.length} 项罚款已逾期！`;
+            } else {
+                // 没有逾期罚款，显示提醒横幅
+                banner.className = 'fine-banner warning';
+                document.getElementById('bannerText').textContent = `您有 ${activeFines.length} 项罚款待缴`;
+            }
+            
+            // 显示横幅
+            banner.style.display = 'block';
+        }
+        
+        // 隐藏罚款横幅
+        function hideFineBanner() {
+            const banner = document.getElementById('fineBanner');
+            banner.style.display = 'none';
+            showStatus('已隐藏罚款提醒，请记得及时缴纳罚款！', "warning");
+        }
+        
+        // 更新罚款摘要
+        function updateFineSummary() {
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const activeFines = fineItems.filter(item => item.remaining > 0);
+            const overdueFines = activeFines.filter(item => new Date(item.dueDate) < new Date());
+            
+            if (activeFines.length === 0) {
+                document.getElementById('fineSummaryText').innerHTML = '当前无待缴罚款';
+                return;
+            }
+            
+            const totalAmount = activeFines.reduce((sum, item) => sum + item.total, 0);
+            const remainingAmount = activeFines.reduce((sum, item) => sum + item.remaining, 0);
+            const paidAmount = totalAmount - remainingAmount;
+            
+            document.getElementById('fineSummaryText').innerHTML = `
+                <strong>待缴罚款汇总：</strong><br>
+                总罚款：${totalAmount} 兑换券<br>
+                已缴纳：${paidAmount} 兑换券<br>
+                剩余：${remainingAmount} 兑换券<br>
+                待缴项目：${activeFines.length} 个
+                ${overdueFines.length > 0 ? `<br><span style="color: #ff6b6b;">⚠️ 逾期项目：${overdueFines.length} 个</span>` : ''}
+            `;
+        }
+        
+        // 更新罚款原因选择框
+        function updateFineReasonSelect() {
+            const select = document.getElementById('fineReasonSelect');
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const activeFines = fineItems.filter(item => item.remaining > 0);
+            
+            // 清空选项（保留第一个空选项）
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // 添加活动罚款项
+            activeFines.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = `${item.reason} (剩余: ${item.remaining}/${item.total} 兑换券)`;
+                select.appendChild(option);
+            });
+        }
+        
+        // 更新罚款项列表
+        function updateFineItemsList() {
+            const container = document.getElementById('fineItemsList');
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            
+            container.innerHTML = '';
+            
+            if (fineItems.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">暂无罚款项</p>';
+                return;
+            }
+            
+            fineItems.forEach(item => {
+                const progress = item.total > 0 ? (item.remaining / item.total) * 100 : 0;
+                const dueDate = new Date(item.dueDate);
+                const now = new Date();
+                const isOverdue = now > dueDate;
+                const daysLeft = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'fine-item';
+                if (isOverdue) {
+                    itemElement.style.borderLeft = '4px solid #ff6b6b';
+                    itemElement.style.background = 'rgba(255, 107, 107, 0.1)';
+                }
+                
+                itemElement.innerHTML = `
+                    <div class="fine-item-info">
+                        <div class="fine-item-reason">
+                            ${item.reason}
+                            ${isOverdue ? '<span style="color: #ff6b6b; margin-left: 10px;">⚠️ 已逾期</span>' : 
+                            `<span style="color: #06d6a0; margin-left: 10px;">⏰ 剩余${daysLeft}天</span>`}
+                        </div>
+                        <div class="fine-item-amount">
+                            总额：${item.total} 兑换券 | 剩余：${item.remaining} 兑换券
+                            ${item.penaltyApplied ? '<span style="color: #ff6b6b; margin-left: 10px;">(已追加20%惩罚)</span>' : ''}
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                            截止日期：${dueDate.toLocaleDateString()}
+                        </div>
+                        <div class="fine-progress">
+                            <div class="fine-progress-bar" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                    <div class="fine-item-actions">
+                        <button class="btn btn-danger" onclick="deleteFineItem(${item.id})">删除</button>
+                    </div>
+                `;
+                container.appendChild(itemElement);
+            });
+        }
+        
+        // 添加罚款项
+        function addFineItem() {
+            const reason = document.getElementById('newFineReason').value;
+            const amount = parseInt(document.getElementById('newFineAmount').value);
+            const dueDays = parseInt(document.getElementById('newFineDueDays').value) || 7;
+            
+            if (!reason) {
+                showStatus('请输入罚款原因！', "error");
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                showStatus('请输入有效的罚款金额！', "error");
+                return;
+            }
+            
+            if (!dueDays || dueDays <= 0) {
+                showStatus('请输入有效的缴纳期限！', "error");
+                return;
+            }
+            
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const newId = fineItems.length > 0 ? Math.max(...fineItems.map(item => item.id)) + 1 : 1;
+            
+            // 设置截止日期
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + dueDays);
+            
+            fineItems.push({
+                id: newId,
+                reason: reason,
+                total: amount,
+                remaining: amount,
+                created: new Date().toISOString(),
+                dueDate: dueDate.toISOString(),
+                isOverdue: false,
+                penaltyApplied: false
+            });
+            
+            localStorage.setItem('fineItems', JSON.stringify(fineItems));
+            
+            // 清空输入框
+            document.getElementById('newFineReason').value = '';
+            document.getElementById('newFineAmount').value = '';
+            document.getElementById('newFineDueDays').value = '7';
+            
+            updateFineItemsList();
+            showStatus(`罚款项添加成功！期限为${dueDays}天。`);
+        }
+        
+        // 删除罚款项
+        function deleteFineItem(id) {
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const updatedItems = fineItems.filter(item => item.id !== id);
+            
+            localStorage.setItem('fineItems', JSON.stringify(updatedItems));
+            updateFineItemsList();
+            showStatus('罚款项删除成功！');
+        }
+        
+        // 缴纳罚款
+        function payFine() {
+            const selectedReasonId = parseInt(document.getElementById('fineReasonSelect').value);
+            const amount = parseInt(document.getElementById('finePayAmount').value);
+            
+            if (!selectedReasonId) {
+                showStatus('请选择罚款原因！', "error");
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                showStatus('请输入有效的缴纳金额！', "error");
+                return;
+            }
+            
+            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+            const fineItem = fineItems.find(item => item.id === selectedReasonId);
+            
+            if (!fineItem) {
+                showStatus('选择的罚款项不存在！', "error");
+                return;
+            }
+            
+            if (amount > fineItem.remaining) {
+                showStatus(`缴纳金额不能超过剩余罚款金额 ${fineItem.remaining}！`, "error");
+                return;
+            }
+            
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            
+            if (currentVoucher < amount) {
+                showStatus('兑换券不足，无法缴纳罚款！', "error");
+                return;
+            }
+            
+            // 扣除兑换券
+            const newAmount = currentVoucher - amount;
+            localStorage.setItem('voucher', newAmount);
+            
+            // 更新罚款项剩余金额
+            fineItem.remaining -= amount;
+            localStorage.setItem('fineItems', JSON.stringify(fineItems));
+            
+            // 添加历史记录
+            const history = JSON.parse(localStorage.getItem('history'));
+            history.push({
+                date: new Date().toISOString(),
+                amount: -amount,
+                reason: `罚款：${fineItem.reason}`,
+                type: 'fine',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                balanceAfter: newAmount
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+            
+            // 检查是否需要删除已缴清的罚款项
+            if (fineItem.remaining === 0) {
+                const updatedItems = fineItems.filter(item => item.remaining > 0);
+                localStorage.setItem('fineItems', JSON.stringify(updatedItems));
+                showStatus(`成功缴清罚款 "${fineItem.reason}"！`);
+            } else {
+                showStatus(`成功缴纳罚款 ${amount} 兑换券！剩余 ${fineItem.remaining} 兑换券`);
+            }
+            
+            // 更新界面
+            updateFineSummary();
+            updateFineReasonSelect();
+            updateUI();
+            
+            // 清空输入框
+            document.getElementById('finePayAmount').value = '';
         }
         
         // 确认重置系统
@@ -1752,6 +2652,7 @@
             localStorage.removeItem('history');
             localStorage.removeItem('dailyExchange');
             localStorage.removeItem('lastResetDate');
+            localStorage.removeItem('fineItems'); // 清除罚款数据
             
             initializeData();
             closeResetModal();
@@ -1866,6 +2767,18 @@
             document.getElementById('resetPassword').value = '';
         }
         
+        function openFineModal() {
+            document.getElementById('fineModal').style.display = 'flex';
+            // 默认显示缴纳罚款页
+            switchFineTab('pay');
+            // 清空缴纳罚款页的输入框
+            document.getElementById('finePayAmount').value = '';
+        }
+        
+        function closeFineModal() {
+            document.getElementById('fineModal').style.display = 'none';
+        }
+        
         function closeResetModal() {
             document.getElementById('resetModal').style.display = 'none';
         }
@@ -1955,6 +2868,9 @@
             initializeData();
             updateUI();
             initTheme();
+            
+            // 更新罚款横幅显示
+            updateFineBanner();
             
             // 添加页面加载动画
             setTimeout(() => {
