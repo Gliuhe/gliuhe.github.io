@@ -1239,37 +1239,37 @@
                         const interest = Math.floor(amount * actualRate);
                         console.log(`[利息计算] ${config.name} 计算利息: ${interest} (利率: ${(actualRate * 100).toFixed(2)}%)`);
                         
+                        // 保存昨日收益和实际利率用于显示
+                        localStorage.setItem(`yesterdayEarnings_${type}`, interest.toString());
+                        localStorage.setItem(`yesterdayRate_${type}`, actualRate.toString());
+                        
+                        // 记录利息交易到交易历史（无论是否为零收益都记录）
+                        const transaction = {
+                            type: 'interest',
+                            accountType: type,
+                            accountName: config.name,
+                            amount: interest,
+                            date: new Date().toISOString(),
+                            fluctuationType: fluctuationType
+                        };
+                        
+                        const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
+                        transactions.push(transaction);
+                        localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+                        
+                        // 只有非零收益才实际添加到账户余额
                         if (interest !== 0) {
-                            // 添加利息到账户（只有非零收益才记录）
+                            // 添加利息到账户
                             localStorage.setItem(config.key, (amount + interest).toString());
-                            
-                            // 保存昨日收益和实际利率用于显示
-                            localStorage.setItem(`yesterdayEarnings_${type}`, interest.toString());
-                            localStorage.setItem(`yesterdayRate_${type}`, actualRate.toString());
-                            
-                            // 记录利息交易到交易历史
-                            const transaction = {
-                                type: 'interest',
-                                accountType: type,
-                                accountName: config.name,
-                                amount: interest,
-                                date: new Date().toISOString(),
-                                fluctuationType: fluctuationType
-                            };
-                            
-                            const transactions = JSON.parse(localStorage.getItem('bankTransactions') || '[]');
-                            transactions.push(transaction);
-                            localStorage.setItem('bankTransactions', JSON.stringify(transactions));
-                            
                             console.log(`[利息计算] ${config.name} 利息已更新，新余额: ${amount + interest}`);
-                        } else if (config.hasFluctuation && fluctuationType === 'zero') {
-                            // 零收益时只记录显示信息，不改变账户余额
-                            localStorage.setItem(`yesterdayEarnings_${type}`, '0');
-                            localStorage.setItem(`yesterdayRate_${type}`, '0');
+                        } else {
                             console.log(`[利息计算] ${config.name} 零收益，仅记录显示信息`);
                         }
                     } else {
                         console.log(`[利息计算] ${config.name} 余额为0，跳过计算`);
+                        // 余额为0时也记录零收益
+                        localStorage.setItem(`yesterdayEarnings_${type}`, '0');
+                        localStorage.setItem(`yesterdayRate_${type}`, '0');
                     }
                 });
                 
@@ -1564,9 +1564,9 @@
                 investment: []
             };
             
-            // 筛选出所有交易记录（包括存取和利息）
+            // 筛选出利息收益记录（排除存取款记录）
             transactions.forEach(transaction => {
-                if (accountHistories[transaction.accountType]) {
+                if (accountHistories[transaction.accountType] && transaction.type === 'interest') {
                     accountHistories[transaction.accountType].push(transaction);
                 }
             });
