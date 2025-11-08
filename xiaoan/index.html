@@ -52,28 +52,49 @@
             --border-color: #81d4fa;
         }
 
-        /* 音乐播放器样式 */
+        /* 音乐播放器样式 - 页面底部独立区域 */
         .music-player {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            position: relative;
+            margin: 40px auto 20px;
             z-index: 100;
             background: var(--card-bg);
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
             border: 2px solid var(--border-color);
             backdrop-filter: blur(10px);
-            width: 260px;
-            max-width: 70vw;
-            min-width: 200px;
+            width: 600px;
+            max-width: 80vw;
+            min-width: 300px;
             font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
             transition: all 0.3s ease;
-            /* 自适应容器 */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
+        }
+        
+        /* 桌面端大屏幕 - 音乐播放器在页面底部独立区域 */
+        @media (min-width: 1025px) {
+            .music-player {
+                width: 600px;
+                max-width: 80vw;
+                min-width: 300px;
+                padding: 15px;
+                border-radius: 20px;
+                gap: 10px;
+            }
+        }
+        
+        /* 平板横屏 (1024px以下) - 调整样式 */
+        @media (max-width: 1024px) and (min-width: 768px) {
+            .music-player {
+                width: 80%;
+                max-width: 500px;
+                padding: 12px;
+                border-radius: 18px;
+                gap: 8px;
+            }
         }
 
         .music-player:hover {
@@ -1349,34 +1370,36 @@
                 margin: 8px 0;
             }
             
-            /* 音乐播放器在小屏幕上的响应式调整 */
-            .music-player {
-                width: 320px;
-                max-width: 85vw;
-                min-width: 250px;
-                left: 10px;
-                top: 10px;
-                padding: 12px;
-            }
-            
-            .music-player-btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-            }
-            
-            .music-player-select {
-                padding: 6px;
-                font-size: 0.8rem;
-            }
-            
-            .music-player-title {
-                font-size: 0.9rem;
-            }
-            
-            .music-player-song-title {
-                font-size: 0.75rem;
-            }
+        /* 音乐播放器在小屏幕上的响应式调整 */
+        .music-player {
+            width: 320px;
+            max-width: 85vw;
+            min-width: 250px;
+            left: 10px;
+            top: 10px;
+            padding: 12px;
         }
+        
+        .music-player-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .music-player-select {
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .music-player-title {
+            font-size: 0.9rem;
+        }
+        
+        .music-player-song-title {
+            font-size: 0.75rem;
+        }
+        }
+        
+
         
         @media (max-width: 480px) {
             .music-player {
@@ -1415,40 +1438,6 @@
     </style>
 </head>
 <body>
-    <!-- 音乐播放器 -->
-    <div class="music-player" id="musicPlayer">
-        <div class="music-player-title">🎵 音乐</div>
-        <button onclick="togglePlay()" id="playBtn" class="music-player-btn">▶️ 播放</button>
-        <div class="music-player-song-title" id="songTitle">选择歌曲</div>
-        
-        <!-- 进度条 -->
-        <div class="music-progress-container" id="progressContainer">
-            <div class="music-progress-bar" id="progressBar">
-                <div class="music-progress-fill" id="progressFill"></div>
-                <div class="music-progress-handle" id="progressHandle"></div>
-            </div>
-            <div class="music-time-display">
-                <span id="currentTime">00:00</span>
-                <span id="duration">00:00</span>
-            </div>
-        </div>
-        
-        <!-- 播放控制按钮 -->
-        <div class="music-controls">
-            <button onclick="previousSong()" class="music-player-btn control-btn" title="上一首">⏮️</button>
-            <button onclick="nextSong()" class="music-player-btn control-btn" title="下一首">⏭️</button>
-            <button onclick="togglePlayMode()" id="playModeBtn" class="music-player-btn control-btn" title="单曲循环">🔁</button>
-        </div>
-        
-        <select onchange="changeSong(this.value)" class="music-player-select">
-            <option value="">选择歌曲...</option>
-            <option value="rfgsn.aac">🎵 让风告诉你</option>
-            <option value="twsmystar.mp3">🎵 提瓦特民谣 - 星空</option>
-            <option value="wbcwj.aac">🎵 我不曾忘记</option>
-            <option value="track.aac">🎵 室内系的TrackMaker</option>
-        </select>
-    </div>
-
     <!-- 主题选择器 -->
     <div class="theme-selector">
         <button class="theme-btn" data-theme="default">默认</button>
@@ -1592,6 +1581,44 @@
                     <p><strong>注意：</strong>每次同步前请确保所有设备都已备份最新数据</p>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- 音乐播放器 - 大模态框下方独立区域 -->
+    <div class="music-player">
+        <div class="music-player-title">🎵 音乐播放器</div>
+        <select class="music-player-select" id="songSelect">
+            <option value="">选择歌曲</option>
+            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/rfgsn.aac">🎵 让风告诉你</option>
+            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/twsmystar.mp3">🎵 提瓦特民谣 - 星空</option>
+            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/wbcwj.aac">🎵 我不曾忘记</option>
+            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/track.aac">🎵 室内系的TrackMaker</option>
+        </select>
+        
+        <div class="music-player-song-title" id="songTitle">选择歌曲</div>
+        
+        <!-- 播放控制按钮 -->
+        <div class="music-controls">
+            <button class="music-player-btn control-btn" id="prevBtn">⏮️</button>
+            <button class="music-player-btn control-btn" id="playBtn">▶️ 播放</button>
+            <button class="music-player-btn control-btn" id="nextBtn">⏭️</button>
+        </div>
+        
+        <!-- 播放模式按钮 -->
+        <button class="music-player-btn" id="playModeBtn" title="顺序播放">🔁</button>
+        
+        <!-- 进度条 -->
+        <div class="music-progress-container" id="progressContainer">
+            <div class="music-progress-bar" id="progressBar">
+                <div class="music-progress-fill" id="progressFill"></div>
+                <div class="music-progress-handle" id="progressHandle"></div>
+            </div>
+        </div>
+        
+        <!-- 时间显示 -->
+        <div class="music-time-display">
+            <span id="currentTime">00:00</span>
+            <span id="duration">00:00</span>
         </div>
     </div>
     
@@ -3057,6 +3084,8 @@
         }
         
         // 初始化
+        
+        
         // 主题管理功能
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'default';
@@ -3165,17 +3194,15 @@
                 }
             };
         }
-        
-        // 启动应用
-        initApp();
-    </script>
-    
-    <!-- 音频播放器 -->
-    <audio id="audioPlayer" preload="metadata"></audio>
 
-    <script>
-        // 音乐播放器功能
-        const audio = document.getElementById('audioPlayer');
+        // 音频播放器变量定义
+        let audio = new Audio();
+        let isPlaying = false;
+        let isDragging = false;
+        let currentSongIndex = -1;
+        let playMode = 'sequence'; // 'sequence' 顺序播放, 'repeat-one' 单曲循环
+        
+        // DOM元素引用
         const playBtn = document.getElementById('playBtn');
         const songTitle = document.getElementById('songTitle');
         const progressFill = document.getElementById('progressFill');
@@ -3186,16 +3213,11 @@
         const durationEl = document.getElementById('duration');
         const playModeBtn = document.getElementById('playModeBtn');
         
-        let isPlaying = false;
-        let isDragging = false;
-        let currentSongIndex = -1;
-        let playMode = 'sequence'; // 'sequence' 顺序播放, 'repeat-one' 单曲循环
-        
         const songs = {
-            'rfgsn.aac': '🎵 让风告诉你',
-            'twsmystar.mp3': '🎵 提瓦特民谣 - 星空', 
-            'wbcwj.aac': '🎵 我不曾忘记',
-            'track.aac': '🎵 室内系的TrackMaker'
+            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/rfgsn.aac': '🎵 让风告诉你',
+            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/twsmystar.mp3': '🎵 提瓦特民谣 - 星空', 
+            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/wbcwj.aac': '🎵 我不曾忘记',
+            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/track.aac': '🎵 室内系的TrackMaker'
         };
         
         const songFiles = Object.keys(songs);
@@ -3205,22 +3227,6 @@
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // 更新进度条
-        function updateProgress() {
-            if (audio.duration) {
-                const progress = (audio.currentTime / audio.duration) * 100;
-                progressFill.style.width = `${progress}%`;
-                
-                // 计算滑块相对于进度条容器的精确位置
-                const progressBarWidth = progressBar.offsetWidth;
-                const handleOffset = (progressBarWidth * progress / 100) - (progressHandle.offsetWidth / 2);
-                progressHandle.style.left = `${handleOffset}px`;
-                
-                currentTimeEl.textContent = formatTime(audio.currentTime);
-                durationEl.textContent = formatTime(audio.duration);
-            }
         }
 
         // 设置播放进度
@@ -3255,6 +3261,24 @@
             isDragging = false;
             progressHandle.style.cursor = 'grab';
         }
+
+        // 更新进度条
+        function updateProgress() {
+            if (audio.duration) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                progressFill.style.width = `${progress}%`;
+                
+                // 计算滑块相对于进度条容器的精确位置
+                const progressBarWidth = progressBar.offsetWidth;
+                const handleOffset = (progressBarWidth * progress / 100) - (progressHandle.offsetWidth / 2);
+                progressHandle.style.left = `${handleOffset}px`;
+                
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+                durationEl.textContent = formatTime(audio.duration);
+            }
+        }
+
+
 
         // 切换播放模式
         function togglePlayMode() {
@@ -3412,7 +3436,49 @@
             }
         });
         
-        document.addEventListener('touchend', stopDrag);
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+        
+        // 歌曲选择事件
+        const songSelect = document.getElementById('songSelect');
+        songSelect.addEventListener('change', function() {
+            const selectedSong = this.value;
+            if (selectedSong) {
+                const songIndex = songFiles.indexOf(selectedSong);
+                if (songIndex !== -1) {
+                    currentSongIndex = songIndex;
+                    loadSong(selectedSong);
+                }
+            }
+        });
+        
+        // 播放按钮事件
+        playBtn.addEventListener('click', togglePlay);
+        
+        // 上一首/下一首按钮事件
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        prevBtn.addEventListener('click', previousSong);
+        nextBtn.addEventListener('click', nextSong);
+        
+        // 播放模式按钮事件
+        playModeBtn.addEventListener('click', togglePlayMode);
+        
+        // 添加键盘快捷键支持
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.code === 'ArrowLeft') {
+                previousSong();
+            } else if (e.code === 'ArrowRight') {
+                nextSong();
+            }
+        });
+        
+        // 启动应用
+        initApp();
     </script>
 </body>
 </html>
