@@ -1586,13 +1586,13 @@
     
     <!-- 音乐播放器 - 大模态框下方独立区域 -->
     <div class="music-player">
-        <div class="music-player-title">🎵 音乐播放器</div>
+        <div class="music-player-title">🎵 音乐播放</div>
         <select class="music-player-select" id="songSelect">
             <option value="">选择歌曲</option>
-            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/rfgsn.m4a">🎵 让风告诉你</option>
-            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/twsmystar.m4a">🎵 提瓦特民谣 - 星空</option>
-            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/wbcwj.m4a">🎵 我不曾忘记</option>
-            <option value="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/track.m4a">🎵 室内系的TrackMaker</option>
+            <option value="rfgsn.aac">🎵 让风告诉你</option>
+            <option value="twsmystar.mp3">🎵 提瓦特民谣 - 星空</option>
+            <option value="wbcwj.aac">🎵 我不曾忘记</option>
+            <option value="track.aac">🎵 室内系的TrackMaker</option>
         </select>
         
         <div class="music-player-song-title" id="songTitle">选择歌曲</div>
@@ -1876,7 +1876,7 @@
         </div>
     </div>
     
-    <!-- 状态通知 --> 
+    <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
 
     <script>
@@ -3214,10 +3214,10 @@
         const playModeBtn = document.getElementById('playModeBtn');
         
         const songs = {
-            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/rfgsn.m4a': '🎵 让风告诉你',
-            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/twsmystar.m4a': '🎵 提瓦特民谣 - 星空', 
-            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/wbcwj.m4a': '🎵 我不曾忘记',
-            'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/xiaoan/track.m4a': '🎵 室内系的TrackMaker'
+            'rfgsn.aac': '🎵 让风告诉你',
+            'twsmystar.mp3': '🎵 提瓦特民谣 - 星空', 
+            'wbcwj.aac': '🎵 我不曾忘记',
+            'track.aac': '🎵 室内系的TrackMaker'
         };
         
         const songFiles = Object.keys(songs);
@@ -3327,25 +3327,312 @@
             loadSong(prevSongFile);
         }
 
-        // 加载歌曲
-        function loadSong(songFile) {
-            audio.src = songFile;
-            songTitle.textContent = songs[songFile] || '未知歌曲';
-            currentSongIndex = songFiles.indexOf(songFile);
+        // CDN音频播放器类（iOS优化版）
+        class FixedAudioPlayer {
+            constructor(fileName, branch = 'xiaoan') {
+                this.fileName = fileName;
+                // 规范化分支路径，移除前后的斜杠
+                this.branch = branch.replace(/^\/+|\/+$/g, '');
+                this.audio = new Audio();
+                this.setupAudio();
+            }
             
-            // 重置进度条
-            progressFill.style.width = '0%';
-            progressHandle.style.left = '0px';
-            currentTimeEl.textContent = '00:00';
-            durationEl.textContent = '00:00';
+            // 构建安全的URL路径
+            buildURL(cdnBase, branchPath = '') {
+                const branch = this.branch || 'xiaoan';
+                const cleanPath = branchPath.replace(/^\/+|\/+$/g, '');
+                const fileName = this.fileName.replace(/^\/+|\/+$/g, '');
+                
+                // 避免重复斜杠
+                if (cleanPath) {
+                    return `${cdnBase}/${cleanPath}/${fileName}`;
+                }
+                return `${cdnBase}/${branch}/${fileName}`;
+            }
             
-            // 当音频元数据加载完成时更新时长
-            audio.addEventListener('loadedmetadata', function() {
-                durationEl.textContent = formatTime(audio.duration);
-            }, { once: true });
+            getCDNSources() {
+                // 为iOS设备添加更多兼容性选项
+                const timestamp = Date.now();
+                return [
+                    {
+                        name: 'statically',
+                        url: this.buildURL('https://cdn.statically.io/gh/Gliuhe/gliuhe.github.io'),
+                        priority: 10
+                    },
+                    {
+                        name: 'unpkg',
+                        url: this.buildURL('https://unpkg.com/gliuhe-github-io@latest'),
+                        priority: 9
+                    },
+                    {
+                        name: 'jsDelivr（带时间戳-iOS）',
+                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io') + `?t=${timestamp}&nocache=1`,
+                        priority: 15 // iOS设备优先使用带时间戳的版本
+                    },
+                    {
+                        name: 'jsDelivr（带时间戳）',
+                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io') + `?t=${timestamp}`,
+                        priority: 8
+                    },
+                    {
+                        name: 'jsDelivr',
+                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io'),
+                        priority: 5
+                    },
+                    {
+                        name: 'GitHub Raw（直接链接）',
+                        url: `https://raw.githubusercontent.com/Gliuhe/gliuhe.github.io/main/${this.branch}/${this.fileName}`,
+                        priority: 7
+                    },
+                    {
+                        name: 'GitHub Raw（CDN）',
+                        url: `https://githubusercontent.com/Gliuhe/gliuhe.github.io/main/${this.branch}/${this.fileName}`,
+                        priority: 3
+                    }
+                ].sort((a, b) => b.priority - a.priority);
+            }
             
-            if (isPlaying) {
-                audio.play().catch(e => console.log('播放失败:', e));
+            async load() {
+                const sources = this.getCDNSources();
+                const failedSources = [];
+                
+                for (const source of sources) {
+                    try {
+                        console.log(`🎵 尝试加载: ${source.name}`);
+                        
+                        // iOS优化：在设置src之前先重置音频
+                        this.audio.pause();
+                        this.audio.src = '';
+                        this.audio.load();
+                        
+                        // 设置新的音频源
+                        this.audio.src = source.url;
+                        
+                        // iOS优化：添加加载超时机制
+                        const loadPromise = new Promise((resolve, reject) => {
+                            const timeout = setTimeout(() => {
+                                reject(new Error(`加载超时 (10秒): ${source.name}`));
+                            }, 10000);
+                            
+                            const onCanPlay = () => {
+                                clearTimeout(timeout);
+                                resolve();
+                            };
+                            
+                            const onError = (e) => {
+                                clearTimeout(timeout);
+                                reject(new Error(`音频加载错误: ${source.name} - ${e.message}`));
+                            };
+                            
+                            this.audio.addEventListener('canplaythrough', onCanPlay, { once: true });
+                            this.audio.addEventListener('canplay', onCanPlay, { once: true });
+                            this.audio.addEventListener('loadeddata', onCanPlay, { once: true });
+                            this.audio.addEventListener('error', onError, { once: true });
+                            
+                            // iOS优化：手动触发加载
+                            this.audio.load();
+                        });
+                        
+                        await loadPromise;
+                        console.log(`✅ 成功加载: ${source.name}`);
+                        
+                        // iOS优化：添加额外的元数据等待
+                        if (this.audio.readyState < 3) {
+                            await new Promise(resolve => {
+                                this.audio.addEventListener('loadedmetadata', resolve, { once: true });
+                            });
+                        }
+                        
+                        return source.url;
+                    } catch (error) {
+                        console.log(`❌ ${source.name} 加载失败: ${error.message}`);
+                        failedSources.push({ name: source.name, error: error.message });
+                        
+                        // iOS优化：清理失败的音频资源
+                        this.audio.pause();
+                        this.audio.src = '';
+                        this.audio.load();
+                        
+                        continue;
+                    }
+                }
+                
+                // 提供更详细的错误信息
+                const errorDetails = failedSources.map(s => `${s.name}: ${s.error}`).join('\n');
+                throw new Error(`所有CDN都加载失败:\n${errorDetails}`);
+            }
+            
+            async play() {
+                try {
+                    // iOS优化：等待音频加载完成
+                    if (this.audio.readyState < 3) {
+                        await new Promise(resolve => {
+                            this.audio.addEventListener('canplaythrough', resolve, { once: true });
+                        });
+                    }
+                    
+                    // iOS优化：检查播放权限
+                    if (this.audio.paused) {
+                        await this.audio.play();
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.log('播放失败:', error);
+                    
+                    // iOS优化：处理自动播放限制
+                    if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
+                        console.log('iOS自动播放限制，需要用户交互');
+                        // 这里可以添加用户交互提示
+                    }
+                    
+                    return false;
+                }
+            }
+            
+            pause() {
+                this.audio.pause();
+            }
+            
+            setupAudio() {
+                // iOS优化：设置音频属性
+                this.audio.preload = 'auto';
+                this.audio.crossOrigin = 'anonymous';
+                
+                // iOS优化：添加更多兼容性设置
+                this.audio.setAttribute('playsinline', 'true');
+                this.audio.setAttribute('webkit-playsinline', 'true');
+                this.audio.setAttribute('x-webkit-airplay', 'allow');
+                
+                // iOS优化：禁用自动播放，避免iOS限制
+                this.audio.autoplay = false;
+                
+                // iOS优化：设置音量
+                this.audio.volume = 1.0;
+            }
+        }
+
+        // iOS优化：设备检测函数
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        // iOS优化：错误信息处理函数
+        function getErrorMessage(error) {
+            if (error.message.includes('超时')) {
+                return '网络连接超时';
+            }
+            if (error.message.includes('加载失败')) {
+                return 'CDN资源加载失败';
+            }
+            if (error.name === 'NotAllowedError') {
+                return isIOS() ? 'iOS自动播放限制（请点击播放按钮）' : '播放权限受限';
+            }
+            if (error.name === 'AbortError') {
+                return '播放被中断';
+            }
+            if (error.name === 'NetworkError') {
+                return '网络连接问题';
+            }
+            return '未知错误，请尝试刷新页面';
+        }
+
+        // iOS优化：自动播放处理
+        function handleAutoPlayRestrictions() {
+            if (isIOS()) {
+                console.log('检测到iOS设备，应用自动播放优化');
+                // iOS设备上禁用自动播放提示
+                const playButton = document.getElementById('playButton');
+                if (playButton) {
+                    playButton.style.display = 'block';
+                }
+            }
+        }
+
+        // 页面加载完成后执行iOS优化
+        document.addEventListener('DOMContentLoaded', handleAutoPlayRestrictions);
+
+        // 优化后的加载歌曲函数
+        async function loadSong(songFile) {
+            try {
+                // 先停止当前正在播放的音频（如果存在）
+                if (audio) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    // 清除所有事件监听器，避免内存泄漏
+                    audio.removeEventListener('timeupdate', updateProgress);
+                    audio.removeEventListener('ended', handleSongEnd);
+                    audio.removeEventListener('error', () => {});
+                    audio.removeEventListener('loadedmetadata', () => {});
+                }
+                
+                // 重置播放状态
+                isPlaying = false;
+                playBtn.textContent = '▶️ 播放';
+                
+                // 创建新的CDN播放器实例
+                const player = new FixedAudioPlayer(songFile);
+                
+                // 显示加载状态
+                songTitle.textContent = `正在加载: ${songs[songFile] || '未知歌曲'}`;
+                
+                // 尝试从多个CDN源加载
+                const loadedUrl = await player.load();
+                
+                // 替换现有的audio对象
+                audio = player.audio;
+                
+                // 更新事件监听器
+                audio.addEventListener('timeupdate', updateProgress);
+                audio.addEventListener('ended', handleSongEnd);
+                audio.addEventListener('error', (e) => {
+                    console.error('音频加载失败:', songFile, e);
+                    
+                    // iOS优化：更友好的错误提示
+                    const errorMessage = getErrorMessage(e);
+                    songTitle.textContent = `加载失败: ${errorMessage}`;
+                    
+                    // 延迟显示错误提示，避免频繁弹窗
+                    setTimeout(() => {
+                        const userConfirmation = confirm(`歌曲加载失败：${errorMessage}\n\n是否尝试重新加载？`);
+                        if (userConfirmation) {
+                            loadSong(songFile);
+                        }
+                    }, 500);
+                });
+                
+                songTitle.textContent = songs[songFile] || '未知歌曲';
+                currentSongIndex = songFiles.indexOf(songFile);
+                
+                // 重置进度条
+                progressFill.style.width = '0%';
+                progressHandle.style.left = '0px';
+                currentTimeEl.textContent = '00:00';
+                durationEl.textContent = '00:00';
+                
+                // 当音频元数据加载完成时更新时长
+                audio.addEventListener('loadedmetadata', function() {
+                    durationEl.textContent = formatTime(audio.duration);
+                }, { once: true });
+                
+                if (isPlaying) {
+                    const playSuccess = await player.play();
+                    if (!playSuccess) {
+                        isPlaying = false;
+                        playBtn.textContent = '▶️ 播放';
+                    }
+                }
+                
+                console.log('✅ 歌曲加载成功:', songs[songFile]);
+                
+            } catch (error) {
+                console.error('❌ 歌曲加载失败:', error);
+                songTitle.textContent = '加载失败，请重试';
+                alert('所有CDN都加载失败，请检查网络连接！');
+                
+                // 恢复原始状态
+                isPlaying = false;
+                playBtn.textContent = '▶️ 播放';
             }
         }
 
