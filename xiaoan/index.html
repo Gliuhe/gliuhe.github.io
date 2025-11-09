@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate">
+    <meta name="theme-color" content="#06d6a0">
     <title>超级兑换券乐园 - v1.4.7</title>
     <style>
         * {
@@ -1435,6 +1437,45 @@
                 font-size: 0.65rem;
             }
         }
+        
+        /* CDN状态显示样式 */
+        .cdn-status {
+            margin-top: 8px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.7rem;
+        }
+        
+        .cdn-status-title {
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 2px;
+            font-size: 0.75rem;
+        }
+        
+        .cdn-status-content {
+            color: var(--text-color);
+            opacity: 0.9;
+            word-break: break-word;
+            font-size: 0.7rem;
+        }
+        
+        .cdn-status.success {
+            border-color: var(--primary-color);
+            background: rgba(6, 214, 160, 0.1);
+        }
+        
+        .cdn-status.warning {
+            border-color: var(--accent-color);
+            background: rgba(255, 209, 102, 0.1);
+        }
+        
+        .cdn-status.error {
+            border-color: var(--secondary-color);
+            background: rgba(255, 107, 107, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1619,6 +1660,12 @@
         <div class="music-time-display">
             <span id="currentTime">00:00</span>
             <span id="duration">00:00</span>
+        </div>
+        
+        <!-- CDN状态显示 -->
+        <div class="cdn-status">
+            <div class="cdn-status-title">🚀 CDN状态</div>
+            <div class="cdn-status-content" id="cdnStatus">等待加载...</div>
         </div>
     </div>
     
@@ -3351,43 +3398,67 @@
             }
             
             getCDNSources() {
-                // 为iOS设备添加更多兼容性选项
+                // 按照用户要求：jsDelivr → Statically → GitHub Pages
                 const timestamp = Date.now();
                 return [
+                    // 第一优先级：jsDelivr CDN（最快）
                     {
-                        name: 'statically',
-                        url: this.buildURL('https://cdn.statically.io/gh/Gliuhe/gliuhe.github.io'),
-                        priority: 10
+                        name: 'jsDelivr（快速版）',
+                        url: `https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/${this.branch}/${this.fileName}?t=${timestamp}&fast=1`,
+                        priority: 30,
+                        timeout: 4000, // 4秒超时
+                        retryCount: 1
                     },
                     {
-                        name: 'unpkg',
-                        url: this.buildURL('https://unpkg.com/gliuhe-github-io@latest'),
-                        priority: 9
+                        name: 'jsDelivr（标准版）',
+                        url: `https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io/${this.branch}/${this.fileName}`,
+                        priority: 28,
+                        timeout: 5000, // 5秒超时
+                        retryCount: 1
                     },
                     {
-                        name: 'jsDelivr（带时间戳-iOS）',
-                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io') + `?t=${timestamp}&nocache=1`,
-                        priority: 15 // iOS设备优先使用带时间戳的版本
+                        name: 'jsDelivr（最新版）',
+                        url: `https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@latest/${this.branch}/${this.fileName}`,
+                        priority: 25,
+                        timeout: 6000, // 6秒超时
+                        retryCount: 1
+                    },
+                    // 第二优先级：Statically CDN
+                    {
+                        name: 'Statically（优化版）',
+                        url: `https://cdn.statically.io/gh/Gliuhe/gliuhe.github.io/master/${this.branch}/${this.fileName}?f=auto&w=1000&q=80`,
+                        priority: 20,
+                        timeout: 6000, // 6秒超时
+                        retryCount: 1
                     },
                     {
-                        name: 'jsDelivr（带时间戳）',
-                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io') + `?t=${timestamp}`,
-                        priority: 8
+                        name: 'Statically（标准版）',
+                        url: `https://cdn.statically.io/gh/Gliuhe/gliuhe.github.io/master/${this.branch}/${this.fileName}`,
+                        priority: 18,
+                        timeout: 7000, // 7秒超时
+                        retryCount: 1
+                    },
+                    // 第三优先级：GitHub Pages（当其他都超时后使用）
+                    {
+                        name: 'GitHub Pages（主用）',
+                        url: `https://gliuhe.github.io/${this.branch}/${this.fileName}`,
+                        priority: 15,
+                        timeout: 8000, // 8秒超时
+                        retryCount: 2
                     },
                     {
-                        name: 'jsDelivr',
-                        url: this.buildURL('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io'),
-                        priority: 5
+                        name: 'GitHub Pages（备用）',
+                        url: `https://gliuhe.github.io/${this.branch}/${this.fileName}?t=${timestamp}`,
+                        priority: 10,
+                        timeout: 10000, // 10秒超时
+                        retryCount: 1
                     },
-                    {
-                        name: 'GitHub Raw（直接链接）',
-                        url: `https://raw.githubusercontent.com/Gliuhe/gliuhe.github.io/main/${this.branch}/${this.fileName}`,
-                        priority: 7
-                    },
+                    // 备用选项：GitHub Raw
                     {
                         name: 'GitHub Raw（CDN）',
-                        url: `https://githubusercontent.com/Gliuhe/gliuhe.github.io/main/${this.branch}/${this.fileName}`,
-                        priority: 3
+                        url: `https://raw.githubusercontent.com/Gliuhe/gliuhe.github.io/master/${this.branch}/${this.fileName}`,
+                        priority: 5,
+                        timeout: 12000 // 12秒超时
                     }
                 ].sort((a, b) => b.priority - a.priority);
             }
@@ -3397,68 +3468,101 @@
                 const failedSources = [];
                 
                 for (const source of sources) {
-                    try {
-                        console.log(`🎵 尝试加载: ${source.name}`);
-                        
-                        // iOS优化：在设置src之前先重置音频
-                        this.audio.pause();
-                        this.audio.src = '';
-                        this.audio.load();
-                        
-                        // 设置新的音频源
-                        this.audio.src = source.url;
-                        
-                        // iOS优化：添加加载超时机制
-                        const loadPromise = new Promise((resolve, reject) => {
-                            const timeout = setTimeout(() => {
-                                reject(new Error(`加载超时 (10秒): ${source.name}`));
-                            }, 10000);
+                    let retryCount = source.retryCount || 0;
+                    let attempt = 0;
+                    
+                    // 重试机制
+                    while (attempt <= retryCount) {
+                        try {
+                            console.log(`🎵 尝试加载${attempt > 0 ? `(第${attempt + 1}次重试)` : ''}: ${source.name}`);
                             
-                            const onCanPlay = () => {
-                                clearTimeout(timeout);
-                                resolve();
-                            };
+                            // 更新CDN状态显示
+                            updateCDNStatus(`正在尝试: ${source.name}`, 'warning');
                             
-                            const onError = (e) => {
-                                clearTimeout(timeout);
-                                reject(new Error(`音频加载错误: ${source.name} - ${e.message}`));
-                            };
-                            
-                            this.audio.addEventListener('canplaythrough', onCanPlay, { once: true });
-                            this.audio.addEventListener('canplay', onCanPlay, { once: true });
-                            this.audio.addEventListener('loadeddata', onCanPlay, { once: true });
-                            this.audio.addEventListener('error', onError, { once: true });
-                            
-                            // iOS优化：手动触发加载
+                            // 重置音频
+                            this.audio.pause();
+                            this.audio.src = '';
                             this.audio.load();
-                        });
-                        
-                        await loadPromise;
-                        console.log(`✅ 成功加载: ${source.name}`);
-                        
-                        // iOS优化：添加额外的元数据等待
-                        if (this.audio.readyState < 3) {
-                            await new Promise(resolve => {
-                                this.audio.addEventListener('loadedmetadata', resolve, { once: true });
+                            
+                            // 设置新的音频源
+                            this.audio.src = source.url;
+                            
+                            // 动态超时时间（根据优先级调整）
+                            const timeoutDuration = source.timeout || 10000;
+                            
+                            const loadPromise = new Promise((resolve, reject) => {
+                                const timeout = setTimeout(() => {
+                                    reject(new Error(`加载超时 (${timeoutDuration/1000}秒): ${source.name}`));
+                                }, timeoutDuration);
+                                
+                                const onCanPlay = () => {
+                                    clearTimeout(timeout);
+                                    resolve();
+                                };
+                                
+                                const onError = (e) => {
+                                    clearTimeout(timeout);
+                                    reject(new Error(`音频加载错误: ${source.name} - ${e.message}`));
+                                };
+                                
+                                this.audio.addEventListener('canplaythrough', onCanPlay, { once: true });
+                                this.audio.addEventListener('canplay', onCanPlay, { once: true });
+                                this.audio.addEventListener('loadeddata', onCanPlay, { once: true });
+                                this.audio.addEventListener('error', onError, { once: true });
+                                
+                                // 手动触发加载
+                                this.audio.load();
                             });
+                            
+                            await loadPromise;
+                            console.log(`✅ 成功加载: ${source.name}`);
+                            
+                            // 等待元数据加载完成
+                            if (this.audio.readyState < 3) {
+                                await new Promise(resolve => {
+                                    this.audio.addEventListener('loadedmetadata', resolve, { once: true });
+                                });
+                            }
+                            
+                            // 成功加载后更新CDN状态
+                            updateCDNStatus(`✅ 已连接: ${source.name}`, 'success');
+                            return source.url;
+                            
+                        } catch (error) {
+                            console.log(`❌ ${source.name} 加载失败${attempt > 0 ? `(第${attempt + 1}次)` : ''}: ${error.message}`);
+                            
+                            // 记录失败的源
+                            failedSources.push({ source: source.name, error: error.message });
+                            
+                            // 更新CDN状态显示
+                            updateCDNStatus(`❌ ${source.name} 失败`, 'error');
+                            
+                            // 清理失败的音频资源
+                            this.audio.pause();
+                            this.audio.src = '';
+                            this.audio.load();
+                            
+                            attempt++;
+                            
+                            // 如果不是最后一次尝试，延迟后再重试
+                            if (attempt <= retryCount) {
+                                console.log(`⏱️ 等待500ms后重试...`);
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                continue;
+                            } else {
+                                failedSources.push({ 
+                                    name: source.name, 
+                                    error: error.message,
+                                    attempts: attempt 
+                                });
+                                break;
+                            }
                         }
-                        
-                        return source.url;
-                    } catch (error) {
-                        console.log(`❌ ${source.name} 加载失败: ${error.message}`);
-                        failedSources.push({ name: source.name, error: error.message });
-                        
-                        // iOS优化：清理失败的音频资源
-                        this.audio.pause();
-                        this.audio.src = '';
-                        this.audio.load();
-                        
-                        continue;
                     }
                 }
                 
                 // 提供更详细的错误信息
-                const errorDetails = failedSources.map(s => `${s.name}: ${s.error}`).join('\n');
+                const errorDetails = failedSources.map(s => `${s.name} (尝试${s.attempts}次): ${s.error}`).join('\n');
                 throw new Error(`所有CDN都加载失败:\n${errorDetails}`);
             }
             
@@ -3535,6 +3639,32 @@
                 return '网络连接问题';
             }
             return '未知错误，请尝试刷新页面';
+        }
+
+        // CDN状态更新函数
+        function updateCDNStatus(message, type = 'info') {
+            const cdnStatusElement = document.getElementById('cdnStatus');
+            const cdnStatusContainer = cdnStatusElement ? cdnStatusElement.closest('.cdn-status') : null;
+            
+            if (cdnStatusElement) {
+                cdnStatusElement.textContent = message;
+                
+                // 移除所有状态类
+                if (cdnStatusContainer) {
+                    cdnStatusContainer.classList.remove('success', 'warning', 'error');
+                    
+                    // 添加新的状态类
+                    if (type === 'success') {
+                        cdnStatusContainer.classList.add('success');
+                    } else if (type === 'warning') {
+                        cdnStatusContainer.classList.add('warning');
+                    } else if (type === 'error') {
+                        cdnStatusContainer.classList.add('error');
+                    }
+                }
+                
+                console.log(`🔄 CDN状态: ${message} (${type})`);
+            }
         }
 
         // iOS优化：自动播放处理
