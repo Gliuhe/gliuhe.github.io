@@ -1,4 +1,4 @@
-下面    n'm'j'j'j'j'j'n'm'm<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -278,6 +278,8 @@
             border-radius: 25px;
             width: 90%;
             max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25), 0 0 30px rgba(123, 31, 162, 0.3);
             border: 3px solid #9c27b0;
             position: fixed;
@@ -286,6 +288,24 @@
             transform: translate(-50%, -50%);
             z-index: 10001;
             margin: 0;
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            border-radius: 10px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #7b1fa2, #512da8);
         }
         
         @keyframes modal-appear {
@@ -842,6 +862,14 @@
                     <option value="currency">兑换券</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label for="prizePool">奖池类型（普通＜黄金＜钻石）</label>
+                <select id="prizePool">
+                    <option value="normal">普通奖池</option>
+                    <option value="gold">黄金奖池</option>
+                    <option value="diamond">钻石奖池</option>
+                </select>
+            </div>
             <div class="form-group" id="currencyAmountGroup" style="display:none;">
                 <label for="currencyAmountInput">兑换券数量</label>
                 <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
@@ -869,7 +897,27 @@
     <script>
         // 常量定义
         const LOTTERY_COST = 1; // 固定使用1高级抽奖券
-        
+
+        // 奖池配置
+        const POOL_CONFIG = {
+            normal: { threshold: 4000, name: "普通奖池", color: "#ff9800" },
+            gold: { threshold: 10000, name: "黄金奖池", color: "#ffd700" },
+            diamond: { threshold: Infinity, name: "钻石奖池", color: "#00bcd4" }
+        };
+
+        // 根据兑换券数量获取当前奖池类型
+        function getCurrentPoolType(voucherAmount) {
+            if (voucherAmount >= POOL_CONFIG.gold.threshold) return "diamond";
+            if (voucherAmount >= POOL_CONFIG.normal.threshold) return "gold";
+            return "normal";
+        }
+
+        // 根据奖池类型过滤奖品
+        function filterPrizesByPool(prizes, poolType) {
+            // 如果奖品没有pool字段，默认为normal（兼容旧数据）
+            return prizes.filter(prize => (prize.pool || "normal") === poolType);
+        }
+
         // 默认奖品
         const defaultPrizes = [
             {
@@ -879,7 +927,8 @@
                 weight: 20,
                 stock: 5,
                 description: "精美的豪华玩具熊，柔软舒适",
-                icon: "🧸"
+                icon: "🧸",
+                pool: "normal"
             },
             {
                 id: 2,
@@ -888,7 +937,8 @@
                 weight: 15,
                 stock: 3,
                 description: "培养创造力的高级积木套装",
-                icon: "🧩"
+                icon: "🧩",
+                pool: "normal"
             },
             {
                 id: 3,
@@ -898,7 +948,8 @@
                 stock: -1,
                 currencyAmount: 5,
                 description: "获得5张兑换券",
-                icon: "🎫"
+                icon: "🎫",
+                pool: "normal"
             },
             {
                 id: 4,
@@ -907,7 +958,8 @@
                 weight: 10,
                 stock: 2,
                 description: "高速遥控赛车，炫酷外观",
-                icon: "🏎️"
+                icon: "🏎️",
+                pool: "gold"
             },
             {
                 id: 5,
@@ -917,7 +969,8 @@
                 stock: -1,
                 currencyAmount: 20,
                 description: "获得20张兑换券",
-                icon: "🎫"
+                icon: "🎫",
+                pool: "gold"
             },
             {
                 id: 6,
@@ -926,7 +979,8 @@
                 weight: 8,
                 stock: 1,
                 description: "内含神秘惊喜",
-                icon: "🎁"
+                icon: "🎁",
+                pool: "diamond"
             }
         ];
         
@@ -965,6 +1019,7 @@
         const prizeWeight = document.getElementById("prizeWeight");
         const prizeStock = document.getElementById("prizeStock");
         const prizeRewardType = document.getElementById("prizeRewardType");
+        const prizePool = document.getElementById("prizePool");
         const currencyAmountGroup = document.getElementById("currencyAmountGroup");
         const currencyAmountInput = document.getElementById("currencyAmountInput");
         const prizeDescription = document.getElementById("prizeDescription");
@@ -1057,8 +1112,26 @@
         // 渲染奖品
         function renderPrizes() {
             prizesContainer.innerHTML = "";
-            
-            prizes.forEach(prize => {
+
+            const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
+            const currentPoolType = getCurrentPoolType(voucherAmount);
+            const filteredPrizes = filterPrizesByPool(prizes, currentPoolType);
+
+            // 显示当前奖池信息
+            const poolInfo = document.createElement('div');
+            poolInfo.style.cssText = 'position: absolute; top: 50px; right: 20px; text-align: center; padding: 15px 20px; border-radius: 15px; background: linear-gradient(135deg, #9c27b0, #673ab7); color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4); z-index: 10;';
+            poolInfo.innerHTML = `🎯 ${POOL_CONFIG[currentPoolType].name}<br><span style="font-size: 0.9rem; opacity: 0.9;">兑换券: ${voucherAmount}</span>`;
+            prizesContainer.appendChild(poolInfo);
+
+            if (filteredPrizes.length === 0) {
+                const noPrizes = document.createElement('div');
+                noPrizes.style.cssText = 'text-align: center; padding: 30px; color: #666; font-size: 1.1rem; margin-top: 40px;';
+                noPrizes.textContent = '当前奖池暂无奖品，请添加奖品或提升兑换券数量';
+                prizesContainer.appendChild(noPrizes);
+                return;
+            }
+
+            filteredPrizes.forEach(prize => {
                 if (prize.stock !== 0) {
                     const prizeCard = document.createElement("div");
                     prizeCard.classList.add("prize-card");
@@ -1166,9 +1239,9 @@
         
         // 更新兑换券抽奖按钮文字
         function updateVoucherLotteryButtonText(voucherAmount) {
-            const MIN_VOUCHER_REQUIRED = 800;
+            const MIN_VOUCHER_REQUIRED = 1200;
             const startVoucherLotteryBtn = document.getElementById("startVoucherLotteryBtn");
-            const voucherCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(388, Math.round(voucherAmount * 0.22)) : 0;
+            const voucherCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(488, Math.round(voucherAmount * 0.30)) : 0;
             
             if (voucherAmount < MIN_VOUCHER_REQUIRED) {
                 startVoucherLotteryBtn.textContent = `🎫 兑换券不足${MIN_VOUCHER_REQUIRED}`;
@@ -1272,15 +1345,19 @@
         // 开始抽奖（使用高级抽奖券）
         function startLottery() {
             if (isLotteryRunning) return;
-            
+
             if (currencyAmount < LOTTERY_COST) {
                 showNotification("高级抽奖券不足", "error");
                 return;
             }
-            
-            const availablePrizes = prizes.filter(prize => prize.stock !== 0);
+
+            const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
+            const currentPoolType = getCurrentPoolType(voucherAmount);
+            const poolPrizes = filterPrizesByPool(prizes, currentPoolType);
+            const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
+
             if (availablePrizes.length === 0) {
-                showNotification("没有可用奖品", "error");
+                showNotification("当前奖池没有可用奖品", "error");
                 return;
             }
             
@@ -1361,25 +1438,27 @@
         // 开始抽奖（使用兑换券）
         function startVoucherLottery() {
             if (isLotteryRunning) return;
-            
+
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
-            const MIN_VOUCHER_REQUIRED = 800;
-            const VOUCHER_COST = Math.max(388, Math.round(voucherAmount * 0.22));
-            
+            const MIN_VOUCHER_REQUIRED = 1200;
+            const VOUCHER_COST = Math.max(488, Math.round(voucherAmount * 0.30));
+
             if (voucherAmount < MIN_VOUCHER_REQUIRED) {
                 showNotification(`兑换券不足${MIN_VOUCHER_REQUIRED}，无法使用兑换券抽奖`, "error");
                 return;
             }
-            
+
             if (voucherAmount < VOUCHER_COST) {
                 showNotification("兑换券不足", "error");
                 return;
             }
-            
-            // 检查是否有可用奖品
-            const availablePrizes = prizes.filter(prize => prize.stock !== 0);
+
+            // 检查当前奖池是否有可用奖品
+            const currentPoolType = getCurrentPoolType(voucherAmount);
+            const poolPrizes = filterPrizesByPool(prizes, currentPoolType);
+            const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
             if (availablePrizes.length === 0) {
-                showNotification("没有可用奖品", "error");
+                showNotification("当前奖池没有可用奖品", "error");
                 return;
             }
             
@@ -1458,8 +1537,9 @@
         }
         
         // 保底抽奖函数
-        function drawGuaranteedPrize(minWeight, maxWeight, isGuaranteedType) {
-            const eligiblePrizes = prizes.filter(prize => 
+        function drawGuaranteedPrize(minWeight, maxWeight, isGuaranteedType, poolPrizes = null) {
+            const prizesToUse = poolPrizes || prizes;
+            const eligiblePrizes = prizesToUse.filter(prize =>
                 prize.stock !== 0 && prize.weight >= minWeight && prize.weight < maxWeight
             );
             
@@ -1489,36 +1569,40 @@
             counterA++;
             counterB++;
             updateCountersDisplay();
-            
+
+            const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
+            const currentPoolType = getCurrentPoolType(voucherAmount);
+            const poolPrizes = filterPrizesByPool(prizes, currentPoolType);
+
             // 优先检查B类保底（每40次，权重1-4）
             if (counterB >= 40) {
-                const prize = drawGuaranteedPrize(1, 5, 'B');
+                const prize = drawGuaranteedPrize(1, 5, 'B', poolPrizes);
                 counterB = 0;
                 updateCountersDisplay();
                 return { prize: prize, isGuaranteed: true };
             }
-            
+
             // 然后检查A类保底（每10次，权重5-9）
             if (counterA >= 10) {
-                const prize = drawGuaranteedPrize(5, 10, 'A');
+                const prize = drawGuaranteedPrize(5, 10, 'A', poolPrizes);
                 counterA = 0;
                 updateCountersDisplay();
                 return { prize: prize, isGuaranteed: true };
             }
-            
-            const eligiblePrizes = prizes.filter(prize => prize.stock !== 0);
+
+            const eligiblePrizes = poolPrizes.filter(prize => prize.stock !== 0);
             if (eligiblePrizes.length === 0) return null;
-            
+
             const totalWeight = eligiblePrizes.reduce((sum, prize) => sum + prize.weight, 0);
             let random = Math.random() * totalWeight;
-            
+
             for (const prize of eligiblePrizes) {
                 if (random <= prize.weight) {
                     return { prize: prize, isGuaranteed: false };
                 }
                 random -= prize.weight;
             }
-            
+
             return { prize: eligiblePrizes[0], isGuaranteed: false };
         }
 
@@ -1756,14 +1840,15 @@
                 weight: parseInt(prizeWeight.value),
                 stock: parseInt(prizeStock.value),
                 description: prizeDescription.value,
-                icon: getRandomIcon()
+                icon: getRandomIcon(),
+                pool: prizePool.value || "normal" // 默认为普通奖池
             };
-            
+
             // 如果是兑换券奖励，添加兑换券数量
             if (prizeRewardType.value === "currency") {
                 newPrize.currencyAmount = parseInt(currencyAmountInput.value);
             }
-            
+
 
             
             // 添加奖品
