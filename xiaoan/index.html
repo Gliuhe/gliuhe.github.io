@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate">
     <meta name="theme-color" content="#06d6a0">
-    <title>超级兑换券乐园 - v1.4.7</title>
+    <title>超级兑换券乐园 - v2.1</title>
     <style>
         * {
             box-sizing: border-box;
@@ -1752,6 +1752,39 @@
                 <input type="number" id="productDailyLimit" min="0" placeholder="请输入每日限额">
             </div>
             <div class="form-group">
+                <label>上架星期（留空表示每天都上架）</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay0" value="0">
+                        周日
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay1" value="1">
+                        周一
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay2" value="2">
+                        周二
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay3" value="3">
+                        周三
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay4" value="4">
+                        周四
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay5" value="5">
+                        周五
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="productDay6" value="6">
+                        周六
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
                 <label for="addProductPassword">密码</label>
                 <input type="password" id="addProductPassword" placeholder="请输入密码">
             </div>
@@ -1776,6 +1809,39 @@
             <div class="form-group">
                 <label for="editProductDailyLimit">每日兑换限额（0表示无限制）</label>
                 <input type="number" id="editProductDailyLimit" min="0" placeholder="请输入每日限额">
+            </div>
+            <div class="form-group">
+                <label>上架星期（留空表示每天都上架）</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay0" value="0">
+                        周日
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay1" value="1">
+                        周一
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay2" value="2">
+                        周二
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay3" value="3">
+                        周三
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay4" value="4">
+                        周四
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay5" value="5">
+                        周五
+                    </label>
+                    <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
+                        <input type="checkbox" id="editProductDay6" value="6">
+                        周六
+                    </label>
+                </div>
             </div>
             <div class="form-group">
                 <label for="editProductPassword">密码</label>
@@ -1966,8 +2032,8 @@
                 localStorage.removeItem('currency');
             }
             
-            if (!localStorage.getItem('password')) {
-                localStorage.setItem('password', DEFAULT_PASSWORD);
+            if (!localStorage.getItem('xiaoan_password')) {
+                localStorage.setItem('xiaoan_password', DEFAULT_PASSWORD);
             }
             
             if (!localStorage.getItem('products')) {
@@ -2057,26 +2123,39 @@
             const products = JSON.parse(localStorage.getItem('products'));
             const productsList = document.getElementById('productsList');
             productsList.innerHTML = '';
-            
+
+            // 获取当前星期几 (0=周日, 1=周一, ..., 6=周六)
+            const today = new Date().getDay();
+
             // 获取今日兑换记录
             const dailyExchange = JSON.parse(localStorage.getItem('dailyExchange'));
-            const today = new Date().toDateString();
-            
+            const todayDate = new Date().toDateString();
+
             // 检查是否有逾期罚款
             const hasOverdueFines = checkExchangeRestriction();
-            
+
             products.forEach(product => {
+                const days = product.days || [];
+
+                // 判断商品是否应该在今天显示
+                // 如果 days 为空数组或未设置，则每天显示
+                const shouldShowToday = days.length === 0 || days.includes(today);
+
+                if (!shouldShowToday) {
+                    return; // 跳过今天不显示的商品
+                }
+
                 const todayExchanges = dailyExchange[product.id] || 0;
                 const remaining = product.dailyLimit > 0 ? product.dailyLimit - todayExchanges : Infinity;
                 const isDisabled = remaining <= 0 || hasOverdueFines;
-                
+
                 const productElement = document.createElement('div');
                 productElement.className = 'product';
                 productElement.innerHTML = `
                     <h3>${product.name}</h3>
                     <p>${product.price} 兑换券</p>
-                    ${product.dailyLimit > 0 ? 
-                        `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` : 
+                    ${product.dailyLimit > 0 ?
+                        `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` :
                         ''}
                     <button class="btn" onclick="exchangeProduct(${product.id})" ${isDisabled ? 'disabled' : ''}>
                         ${hasOverdueFines ? '逾期罚款，禁止兑换' : (isDisabled ? '已达限额' : '兑换')}
@@ -2088,14 +2167,23 @@
             // 更新管理商品列表
             const manageProductsList = document.getElementById('manageProductsList');
             manageProductsList.innerHTML = '';
-            
+
             products.forEach(product => {
                 const productElement = document.createElement('div');
                 productElement.className = 'product';
+
+                // 生成星期显示文本
+                let daysText = '每天';
+                if (product.days && product.days.length > 0) {
+                    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                    daysText = product.days.map(d => dayNames[d]).join(' ');
+                }
+
                 productElement.innerHTML = `
                     <h3>${product.name}</h3>
                     <p>${product.price} 兑换券</p>
                     <div class="daily-limit">每日限额: ${product.dailyLimit > 0 ? product.dailyLimit : '无限制'}</div>
+                    <div class="daily-limit" style="color: #ff6b6b; font-size: 0.95rem;">📅 上架: ${daysText}</div>
                     <button class="btn" onclick="openEditProductModal(${product.id})">编辑</button>
                     <button class="btn btn-danger" onclick="openDeleteProductModal(${product.id}, '${product.name}')">删除</button>
                 `;
@@ -2274,18 +2362,18 @@
             const reason = document.getElementById('addReason').value;
             const password = document.getElementById('addPassword').value;
             const currencyType = document.getElementById('addCurrencyType').value;
-            
+
             if (!amount || amount <= 0) {
                 showStatus('请输入有效的增加数量！', "error");
                 return;
             }
-            
+
             if (!reason) {
                 showStatus('请输入原因！', "error");
                 return;
             }
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
@@ -2319,18 +2407,18 @@
             const reason = document.getElementById('subtractReason').value;
             const password = document.getElementById('subtractPassword').value;
             const currencyType = document.getElementById('subtractCurrencyType').value;
-            
+
             if (!amount || amount <= 0) {
                 showStatus('请输入有效的减少数量！', "error");
                 return;
             }
-            
+
             if (!reason) {
                 showStatus('请输入原因！', "error");
                 return;
             }
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
@@ -2428,8 +2516,8 @@
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (currentPassword !== localStorage.getItem('password')) {
+
+            if (currentPassword !== localStorage.getItem('xiaoan_password')) {
                 showStatus('当前密码错误！', "error");
                 return;
             }
@@ -2443,8 +2531,8 @@
                 showStatus('两次输入的新密码不一致！', "error");
                 return;
             }
-            
-            localStorage.setItem('password', newPassword);
+
+            localStorage.setItem('xiaoan_password', newPassword);
             closePasswordModal();
             showStatus('密码修改成功！');
         }
@@ -2455,18 +2543,18 @@
             const price = parseInt(document.getElementById('productPrice').value);
             const dailyLimit = parseInt(document.getElementById('productDailyLimit').value);
             const password = document.getElementById('addProductPassword').value;
-            
+
             if (!name) {
                 showStatus('请输入商品名称！', "error");
                 return;
             }
-            
+
             if (!price || price <= 0) {
                 showStatus('请输入有效的价格！', "error");
                 return;
             }
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
@@ -2494,37 +2582,46 @@
             const price = parseInt(document.getElementById('editProductPrice').value);
             const dailyLimit = parseInt(document.getElementById('editProductDailyLimit').value);
             const password = document.getElementById('editProductPassword').value;
-            
+
             if (!name) {
                 showStatus('请输入商品名称！', "error");
                 return;
             }
-            
+
             if (!price || price <= 0) {
                 showStatus('请输入有效的价格！', "error");
                 return;
             }
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
-            
+
+            // 获取选中的星期
+            const days = [];
+            for (let i = 0; i <= 6; i++) {
+                if (document.getElementById(`editProductDay${i}`).checked) {
+                    days.push(i);
+                }
+            }
+
             const products = JSON.parse(localStorage.getItem('products'));
             const productIndex = products.findIndex(p => p.id === id);
-            
+
             if (productIndex === -1) {
                 showStatus('商品不存在！', "error");
                 return;
             }
-            
+
             products[productIndex] = {
                 id: id,
                 name: name,
                 price: price,
-                dailyLimit: dailyLimit || 0
+                dailyLimit: dailyLimit || 0,
+                days: days
             };
-            
+
             localStorage.setItem('products', JSON.stringify(products));
             closeEditProductModal();
             updateUI();
@@ -2535,8 +2632,8 @@
         function confirmDeleteProduct() {
             const id = parseInt(document.getElementById('deleteProductId').value);
             const password = document.getElementById('deleteProductPassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
@@ -2553,12 +2650,12 @@
         // 确认清空历史
         function confirmClearHistory() {
             const password = document.getElementById('clearHistoryPassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
-            
+
             localStorage.setItem('history', JSON.stringify([]));
             closeClearHistoryModal();
             updateUI();
@@ -2576,7 +2673,7 @@
                 history: JSON.parse(localStorage.getItem('history')),
                 dailyExchange: JSON.parse(localStorage.getItem('dailyExchange')),
                 lastResetDate: localStorage.getItem('lastResetDate'),
-                password: localStorage.getItem('password'),
+                password: localStorage.getItem('xiaoan_password'),
                 fineItems: JSON.parse(localStorage.getItem('fineItems')) // 包含罚款数据
             };
             
@@ -2636,7 +2733,7 @@
                     localStorage.setItem('history', JSON.stringify(data.history));
                     localStorage.setItem('dailyExchange', JSON.stringify(data.dailyExchange || {}));
                     localStorage.setItem('lastResetDate', data.lastResetDate || new Date().toDateString());
-                    localStorage.setItem('password', data.password);
+                    localStorage.setItem('xiaoan_password', data.password);
                     
                     // 恢复罚款数据（如果存在）
                     if (data.fineItems) {
@@ -2696,8 +2793,8 @@
         // 验证管理密码
         function verifyManagePassword() {
             const password = document.getElementById('managePassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('管理密码错误！', "error");
                 return false;
             }
@@ -2984,8 +3081,8 @@
         // 确认重置系统
         function confirmResetSystem() {
             const password = document.getElementById('resetPassword').value;
-            
-            if (password !== localStorage.getItem('password')) {
+
+            if (password !== localStorage.getItem('xiaoan_password')) {
                 showStatus('密码错误！', "error");
                 return;
             }
@@ -3062,20 +3159,30 @@
         function openEditProductModal(productId) {
             const products = JSON.parse(localStorage.getItem('products'));
             const product = products.find(p => p.id === productId);
-            
+
             if (product) {
                 document.getElementById('editProductId').value = product.id;
                 document.getElementById('editProductName').value = product.name;
                 document.getElementById('editProductPrice').value = product.price;
                 document.getElementById('editProductDailyLimit').value = product.dailyLimit;
                 document.getElementById('editProductPassword').value = '';
-                
+
+                // 设置星期选择
+                const days = product.days || [];
+                for (let i = 0; i <= 6; i++) {
+                    document.getElementById(`editProductDay${i}`).checked = days.includes(i);
+                }
+
                 document.getElementById('editProductModal').style.display = 'flex';
             }
         }
         
         function closeEditProductModal() {
             document.getElementById('editProductModal').style.display = 'none';
+            // 重置星期选择
+            for (let i = 0; i <= 6; i++) {
+                document.getElementById(`editProductDay${i}`).checked = false;
+            }
         }
         
         function openDeleteProductModal(productId, productName) {
