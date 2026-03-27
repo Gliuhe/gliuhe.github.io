@@ -1117,15 +1117,22 @@
             const currentPoolType = getCurrentPoolType(voucherAmount);
             const filteredPrizes = filterPrizesByPool(prizes, currentPoolType);
 
-            // 显示当前奖池信息
-            const poolInfo = document.createElement('div');
-            poolInfo.style.cssText = 'position: absolute; top: 50px; right: 20px; text-align: center; padding: 15px 20px; border-radius: 15px; background: linear-gradient(135deg, #9c27b0, #673ab7); color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4); z-index: 10;';
-            poolInfo.innerHTML = `🎯 ${POOL_CONFIG[currentPoolType].name}<br><span style="font-size: 0.9rem; opacity: 0.9;">兑换券: ${voucherAmount}</span>`;
-            prizesContainer.appendChild(poolInfo);
+            // 显示当前奖池信息 - 移到prizesContainer外部，在h2标题旁边
+            const lotteryTab = document.querySelector('#lottery h2');
+            if (lotteryTab && !lotteryTab.querySelector('.pool-info')) {
+                const poolInfo = document.createElement('div');
+                poolInfo.className = 'pool-info';
+                poolInfo.style.cssText = 'display: inline-block; margin-left: 20px; padding: 12px 24px; border-radius: 20px; background: linear-gradient(135deg, #9c27b0, #673ab7); color: white; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.4); vertical-align: middle;';
+                poolInfo.innerHTML = `🎯 ${POOL_CONFIG[currentPoolType].name}<br><span style="font-size: 0.95rem; opacity: 0.9;">兑换券: ${voucherAmount}</span>`;
+                lotteryTab.appendChild(poolInfo);
+            } else if (lotteryTab && lotteryTab.querySelector('.pool-info')) {
+                const poolInfo = lotteryTab.querySelector('.pool-info');
+                poolInfo.innerHTML = `🎯 ${POOL_CONFIG[currentPoolType].name}<br><span style="font-size: 0.95rem; opacity: 0.9;">兑换券: ${voucherAmount}</span>`;
+            }
 
             if (filteredPrizes.length === 0) {
                 const noPrizes = document.createElement('div');
-                noPrizes.style.cssText = 'text-align: center; padding: 30px; color: #666; font-size: 1.1rem; margin-top: 40px;';
+                noPrizes.style.cssText = 'text-align: center; padding: 30px; color: #666; font-size: 1.1rem;';
                 noPrizes.textContent = '当前奖池暂无奖品，请添加奖品或提升兑换券数量';
                 prizesContainer.appendChild(noPrizes);
                 return;
