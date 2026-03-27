@@ -552,8 +552,34 @@
             100% { transform: scale(1); }
         }
         
+        @keyframes prizeUsed {
+            0% { 
+                transform: scale(1);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 8px 20px rgba(6, 214, 160, 0.4);
+                background: linear-gradient(135deg, #ffd166, #ff9e7d);
+            }
+            100% { 
+                transform: scale(1);
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            }
+        }
+        
+        @keyframes buttonBounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+        
         .pulse {
             animation: pulse 1.5s infinite;
+        }
+        
+        .bounce {
+            animation: buttonBounce 0.6s ease;
         }
         
         .prize-delete {
@@ -716,7 +742,7 @@
                 <div>当前抽奖券: <span id="ticketAmount">0</span></div>
             </div>
             
-            <p>每次抽奖消耗10兑换券，试试你的手气吧！</p>
+            <p>每次抽奖消耗 1 抽奖券，试试你的手气吧！</p>
             
             <!-- 奖品展示 -->
             <div class="prizes-grid" id="prizesContainer">
@@ -735,7 +761,7 @@
             <div class="modal" id="exchangeModal">
                 <div class="modal-content">
                     <h2 id="exchangeModalTitle">兑换券购买确认</h2>
-                    <p id="exchangeModalText">确定要用50兑换券购买1张抽奖券吗？</p>
+                    <p id="exchangeModalText">确定要用200兑换券购买1张抽奖券吗？</p>
                     <div class="action-buttons">
                         <button class="btn" id="confirmExchangeBtn">确认购买</button>
                         <button class="btn btn-danger" id="cancelExchangeBtn">取消</button>
@@ -803,6 +829,13 @@
                 <label for="currencyAmountInput">兑换券数量</label>
                 <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
             </div>
+            <div class="form-group" id="usableGroup">
+                <label for="prizeUsable">是否可使用</label>
+                <select id="prizeUsable">
+                    <option value="true">✅ 可使用（中奖后显示使用按钮）</option>
+                    <option value="false">❌ 不可使用（仅记录，无使用按钮）</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="prizeDescription">奖品描述</label>
                 <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
@@ -844,8 +877,8 @@
     <script>
         // 常量定义
         const DEFAULT_PASSWORD = "1234";
-        const LOTTERY_COST = 10;  // 抽奖消耗的兑换券
-        const EXCHANGE_RATE = 50; // 50兑换券=1抽奖券
+const LOTTERY_COST = 10;  // 抽奖消耗的兑换券
+const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         let lotteryTickets = 0;   // 当前抽奖券数量
         
         // 默认奖品
@@ -1090,24 +1123,162 @@
                 return;
             }
             
-            records.slice().reverse().forEach(record => {
+            records.slice().reverse().forEach((record, index) => {
                 const recordElement = document.createElement('div');
                 recordElement.className = 'record-item';
-                
+
+                // 检查是否已使用
+                const isUsed = record.used || false;
+                const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
+
+                // 检查是否可使用(如果记录没有usable属性，默认为true)
+                const isUsable = record.usable !== false;
+
                 let rewardTag = '';
                 if (record.rewardType === 'currency') {
                     rewardTag = `<div class="reward-tag">${record.currencyAmount}兑换券</div>`;
                 }
-                
+
+                // 如果是奖品、可使用且未使用，显示使用按钮；否则显示已使用状态或不可使用不显示按钮
+                let useButton = '';
+                if (isUsable && !isUsed) {
+                    // 可使用且未使用
+                    useButton = `
+                        <button class="btn use-btn" data-index="${index}" style="padding: 10px 20px; font-size: 1rem; background: linear-gradient(135deg, #06d6a0, #48dbfb); border: 2px solid #06d6a0; box-shadow: 0 4px 8px rgba(6, 214, 160, 0.3);">
+                            🎁 使用奖品
+                        </button>
+                    `;
+                } else if (isUsed) {
+                    // 已使用
+                    useButton = `
+                        <div class="used-status" style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; text-align: center; box-shadow: 0 4px 8px rgba(127, 140, 141, 0.3);">
+                            已使用<br><small style="font-size: 0.7rem;">${usedTime}</small>
+                        </div>
+                    `;
+                }
+                // 不可使用的奖品不显示任何按钮(useButton为空字符串)
+
                 recordElement.innerHTML = `
-                    <div class="record-prize">${record.prize}</div>
-                    ${rewardTag}
-                    <div class="record-date">${new Date(record.date).toLocaleString()}</div>
+                    <div style="flex: 1;">
+                        <div class="record-prize" style="${isUsed ? 'text-decoration: line-through; color: #95a5a6;' : ''}">${record.prize}</div>
+                        ${rewardTag}
+                        <div class="record-date">${new Date(record.date).toLocaleString()}</div>
+                    </div>
+                    ${useButton}
                 `;
                 recordsList.appendChild(recordElement);
             });
+            
+            // 使用事件委托绑定使用按钮事件 - 更可靠的方式
+            bindUseButtonEvents();
         }
         
+        // 绑定使用按钮事件（使用事件委托）
+        function bindUseButtonEvents() {
+            const recordsList = document.getElementById('recordsList');
+            
+            // 移除之前的事件监听器（避免重复绑定）
+            recordsList.removeEventListener('click', handleUseButtonClick);
+            
+            // 添加新的事件监听器
+            recordsList.addEventListener('click', handleUseButtonClick);
+        }
+        
+        // 处理使用按钮点击事件
+        function handleUseButtonClick(event) {
+            const useButton = event.target.closest('.use-btn');
+            if (useButton) {
+                event.preventDefault();
+                const recordIndex = parseInt(useButton.dataset.index);
+                console.log('检测到使用按钮点击，索引:', recordIndex);
+                markAsUsed(recordIndex);
+            }
+        }
+        
+        // 标记奖品为已使用
+        function markAsUsed(recordIndex) {
+            console.log('markAsUsed called with display index:', recordIndex);
+
+            const records = JSON.parse(localStorage.getItem('records'));
+            console.log('Total records:', records.length);
+
+            // recordIndex是反向显示的索引，需要转换为正向索引
+            // 反向显示：index 0 = 最后一条记录，index 1 = 倒数第二条...
+            // 正向索引：index 0 = 第一条记录，index 1 = 第二条...
+            const actualIndex = records.length - 1 - recordIndex;
+            console.log('Converted to actual index:', actualIndex);
+
+            // 检查记录是否存在
+            if (!records[actualIndex]) {
+                console.log('记录不存在，索引:', actualIndex);
+                showStatus('记录不存在，无法使用此奖品', "error");
+                return;
+            }
+
+            const record = records[actualIndex];
+
+            // 调试信息：显示记录详情
+            console.log('当前记录详情:', record);
+            console.log('rewardType值:', record.rewardType);
+            console.log('rewardType类型:', typeof record.rewardType);
+
+            // 检查是否已经使用过
+            if (record.used) {
+                console.log('奖品已经使用过:', record);
+                return; // 直接返回，不显示任何提示
+            }
+
+            const prizeName = record.prize;
+
+            // 直接标记为已使用，不再询问确认（确保基础功能可用）
+            record.used = true;
+            record.usedTime = new Date().toISOString();
+
+            localStorage.setItem('records', JSON.stringify(records));
+
+            // 局部更新当前记录，不重新渲染整个列表
+            updateSingleRecord(actualIndex);
+
+            // 添加庆祝效果（不显示提示消息）
+            createConfetti();
+        }
+
+        // 局部更新单个记录（避免重新渲染整个列表）
+        function updateSingleRecord(actualIndex) {
+            const records = JSON.parse(localStorage.getItem('records'));
+            const record = records[actualIndex];
+            if (!record) return;
+
+            const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
+
+            // actualIndex是正向索引，需要转换为反向显示的索引
+            const displayIndex = records.length - 1 - actualIndex;
+            const recordElements = document.querySelectorAll('.record-item');
+            const recordElement = recordElements[displayIndex];
+
+            if (recordElement) {
+                // 更新奖品名称样式（添加删除线和灰色）
+                const prizeElement = recordElement.querySelector('.record-prize');
+                if (prizeElement) {
+                    prizeElement.style.textDecoration = 'line-through';
+                    prizeElement.style.color = '#95a5a6';
+                }
+
+                // 找到按钮并替换为已使用状态
+                const useButton = recordElement.querySelector('.use-btn');
+                if (useButton) {
+                    // 创建已使用状态的div
+                    const usedStatus = document.createElement('div');
+                    usedStatus.className = 'used-status';
+                    usedStatus.style.cssText = 'background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; text-align: center; box-shadow: 0 4px 8px rgba(127, 140, 141, 0.3);';
+                    usedStatus.innerHTML = `已使用<br><small style="font-size: 0.7rem;">${usedTime}</small>`;
+
+                    // 替换按钮
+                    useButton.parentNode.replaceChild(usedStatus, useButton);
+                }
+            }
+        }
+
         // 创建彩色纸屑效果
         function createConfetti() {
             const container = document.querySelector('.container');
@@ -1153,6 +1324,11 @@
             
             // 激活选中的标签
             document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
+            
+            // 如果切换到抽奖记录标签页，更新记录
+            if (tabId === 'records') {
+                updateRecords();
+            }
         }
         
         // 打开添加奖品模态框
@@ -1164,6 +1340,7 @@
             document.getElementById('prizeRewardType').value = 'item';
             document.getElementById('currencyAmountInput').value = '';
             document.getElementById('currencyAmountGroup').style.display = 'none';
+            document.getElementById('prizeUsable').value = 'true'; // 默认可使用
             document.getElementById('prizeDescription').value = '';
         }
         
@@ -1186,7 +1363,7 @@
                 if (voucher >= EXCHANGE_RATE) {
                     document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
                     document.getElementById('exchangeModalText').textContent = 
-                        '抽奖券不足！确定要用50兑换券购买1张抽奖券吗？';
+                        '抽奖券不足！确定要用200兑换券购买1张抽奖券吗？';
                     document.getElementById('exchangeModal').style.display = 'flex';
                 } else {
                     showStatus('抽奖券不足且兑换券也不足！', "error");
@@ -1266,6 +1443,7 @@
                     prize: prize.name,
                     rewardType: prize.rewardType,
                     currencyAmount: prize.currencyAmount,
+                    usable: prize.usable !== false, // 默认为true，如果奖品没有设置usable属性则默认可使用
                     date: new Date().toISOString()
                 });
                 
@@ -1437,41 +1615,42 @@
             const weight = parseInt(document.getElementById('prizeWeight').value);
             const stock = parseInt(document.getElementById('prizeStock').value);
             const rewardType = document.getElementById('prizeRewardType').value;
+            const usable = document.getElementById('prizeUsable').value === 'true'; // 是否可使用
             let currencyAmount = 0;
-            
+
             if (rewardType === 'currency') {
                 currencyAmount = parseInt(document.getElementById('currencyAmountInput').value);
             }
-            
+
             const description = document.getElementById('prizeDescription').value;
-            
+
             if (!name) {
                 showStatus('请输入奖品名称！', "error");
                 return;
             }
-            
+
             if (!weight || weight <= 0) {
                 showStatus('请输入有效的权重值！', "error");
                 return;
             }
-            
+
             if (isNaN(stock) || stock < -1) {
                 showStatus('请输入有效的库存值（-1或大于0）！', "error");
                 return;
             }
-            
+
             if (rewardType === 'currency' && (!currencyAmount || currencyAmount <= 0)) {
                 showStatus('请输入有效的兑换券数量！', "error");
                 return;
             }
-            
+
             const prizes = JSON.parse(localStorage.getItem('prizes'));
             const newId = prizes.length > 0 ? Math.max(...prizes.map(p => p.id)) + 1 : 1;
-            
+
             // 默认图标
             const icons = ["🎁", "🏆", "🏅", "🥇", "🎗️", "🧸", "🪀", "🧩", "🎮", "📱"];
             const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-            
+
             prizes.push({
                 id: newId,
                 name: name,
@@ -1480,7 +1659,8 @@
                 rewardType: rewardType,
                 currencyAmount: currencyAmount,
                 description: description,
-                icon: randomIcon
+                icon: randomIcon,
+                usable: usable // 添加可使用属性
             });
             
             localStorage.setItem('prizes', JSON.stringify(prizes));
@@ -1535,6 +1715,7 @@
         function initApp() {
             initializeData();
             updateUI();
+            updateRecords();
             
             // 事件绑定
             document.getElementById('singleLotteryBtn').addEventListener('click', startSingleLottery);
@@ -1643,6 +1824,7 @@
 
         // 当DOM加载完成后启动应用
         document.addEventListener('DOMContentLoaded', initApp);
+
     </script>
 </body>
 </html>
