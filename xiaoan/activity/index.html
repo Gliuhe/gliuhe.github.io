@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动中心 - 超级兑换券乐园</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        /* 主题变量 */
+        :root {
+            --primary-color: #06d6a0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #ffd166;
+            --background-gradient: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd166;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #00c896;
+            --secondary-color: #ff5252;
+            --accent-color: #ffb74d;
+            --background-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --card-bg: rgba(52, 73, 94, 0.95);
+            --text-color: #ecf0f1;
+            --border-color: #ffb74d;
+        }
+
+        [data-theme="pink"] {
+            --primary-color: #ff6b9d;
+            --secondary-color: #ff9a9e;
+            --accent-color: #ffd1dc;
+            --background-gradient: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd1dc;
+        }
+
+        [data-theme="blue"] {
+            --primary-color: #4fc3f7;
+            --secondary-color: #29b6f6;
+            --accent-color: #81d4fa;
+            --background-gradient: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #81d4fa;
+        }
+
+        body {
+            background: var(--background-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.5s ease;
+        }
+
+        /* 主题选择器 */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 主容器 */
+        .container {
+            background: var(--card-bg);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            width: 95%;
+            max-width: 900px;
+            padding: 30px;
+            margin-top: 70px;
+            border: 3px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        /* 签到横幅 - 精简版 */
+        .checkin-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 25px 30px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .checkin-banner::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .banner-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .banner-icon {
+            font-size: 2rem;
+        }
+
+        .banner-title h1 {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        .banner-title p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .banner-status {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .banner-status.checked {
+            background: rgba(40, 167, 69, 0.8);
+        }
+
+        .checkin-btn {
+            background: linear-gradient(135deg, #ffd166 0%, #ffb347 100%);
+            color: #333;
+            font-size: 1rem;
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.4);
+            position: relative;
+            z-index: 1;
+            margin-left: 15px;
+        }
+
+        .checkin-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .checkin-btn:disabled {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            cursor: default;
+        }
+
+        /* 本周签到日历 - 精简版 */
+        .week-calendar {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .day-cell {
+            flex: 1;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 8px 5px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .day-cell.today {
+            background: rgba(255,255,255,0.25);
+            border: 2px solid #ffd166;
+        }
+
+        .day-cell.checked {
+            background: rgba(40, 167, 69, 0.6);
+        }
+
+        .day-cell .day-name {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .day-cell .day-icon {
+            font-size: 1rem;
+        }
+
+        .day-cell .day-reward {
+            font-size: 0.65rem;
+            margin-top: 3px;
+            opacity: 0.85;
+        }
+
+        /* 签到统计 - 精简版 */
+        .stats-mini {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+            font-size: 0.8rem;
+        }
+
+        .stats-mini span {
+            opacity: 0.9;
+        }
+
+        .stats-mini strong {
+            color: #ffd166;
+        }
+
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            border: 3px solid var(--border-color);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        /* 活动入口区域 - 左右分栏 */
+        .activities-section {
+            margin-top: 25px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .section-title h2 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+        }
+
+        .section-title span {
+            font-size: 1.5rem;
+        }
+
+        /* 左右分栏布局 */
+        .activities-layout {
+            display: flex;
+            gap: 20px;
+            min-height: 380px;
+        }
+
+        /* 左侧导航 */
+        .activity-nav {
+            width: 140px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .activity-nav-item {
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 12px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .activity-nav-item:hover {
+            border-color: var(--border-color);
+            transform: translateX(3px);
+        }
+
+        .activity-nav-item.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1), rgba(6, 214, 160, 0.05));
+        }
+
+        .activity-nav-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .activity-nav-item.disabled:hover {
+            transform: none;
+            border-color: transparent;
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .activity-nav-item.lucky-wheel .nav-icon {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+
+        .activity-nav-item.bank .nav-icon {
+            background: linear-gradient(135deg, #54a0ff, #5f27cd);
+        }
+
+        .activity-nav-item.quiz .nav-icon {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+        }
+
+        .activity-nav-item.special .nav-icon {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        }
+
+        .nav-label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .nav-status {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+
+        .nav-status.hot {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .nav-status.new {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: white;
+        }
+
+        .nav-status.coming {
+            background: #c8d6e5;
+            color: #576574;
+        }
+
+        /* 右侧详情区 - 图片背景渐变透底 */
+        .activity-detail {
+            flex: 1;
+            border-radius: 20px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 360px;
+        }
+
+        /* 背景图片层 */
+        .detail-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease;
+        }
+
+        /* 从上到下透明度渐变遮罩 */
+        .detail-bg::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                rgba(0, 0, 0, 0.1) 0%,
+                rgba(0, 0, 0, 0.2) 30%,
+                rgba(0, 0, 0, 0.5) 60%,
+                var(--card-bg) 100%
+            );
+        }
+
+        /* 活动对应的背景图片 */
+        .activity-detail.lucky-wheel .detail-bg {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/activity/lucky-wheel.jpg');
+        }
+
+        .activity-detail.bank .detail-bg {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/activity/bank.jpg');
+        }
+
+        .activity-detail.quiz .detail-bg {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/activity/quiz.jpg');
+        }
+
+        .activity-detail.special .detail-bg {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/activity/special.jpg');
+        }
+
+        /* 内容层 */
+        .detail-content {
+            position: relative;
+            z-index: 2;
+            padding: 40px 30px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 底部渐变遮罩 */
+        .detail-content::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(0,0,0,0.15), transparent);
+            z-index: -1;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .detail-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .detail-title {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            color: white;
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        .detail-status {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .detail-desc {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            max-width: 420px;
+            margin-bottom: 25px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .detail-rewards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .reward-tag {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        .reward-tag:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .detail-btn {
+            padding: 16px 50px;
+            font-size: 1.15rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-btn:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .detail-btn.disabled {
+            background: rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.5);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .detail-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .theme-selector {
+                top: 10px;
+                right: 10px;
+                padding: 8px;
+            }
+
+            .theme-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+
+            .back-btn {
+                top: 10px;
+                left: 10px;
+            }
+
+            .container {
+                padding: 20px;
+                margin-top: 80px;
+            }
+
+            .checkin-banner {
+                padding: 25px 20px;
+            }
+
+            .banner-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .banner-title h1 {
+                font-size: 1.5rem;
+            }
+
+            .banner-icon {
+                font-size: 2.5rem;
+            }
+
+            .today-reward {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .reward-amount {
+                font-size: 2rem;
+            }
+
+            .checkin-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .week-calendar {
+                gap: 5px;
+            }
+
+            .day-cell {
+                padding: 6px 3px;
+            }
+
+            .day-cell .day-icon {
+                font-size: 0.85rem;
+            }
+
+            /* 移动端改为上下布局 */
+            .activities-layout {
+                flex-direction: column;
+                min-height: auto;
+            }
+
+            .activity-nav {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .activity-nav-item {
+                min-width: 80px;
+                padding: 10px 8px;
+            }
+
+            .nav-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2rem;
+            }
+
+            .nav-label {
+                font-size: 0.75rem;
+            }
+
+            .activity-detail {
+                padding: 0;
+                min-height: 320px;
+            }
+
+            .detail-content {
+                padding: 30px 20px;
+            }
+
+            .detail-icon {
+                width: 90px;
+                height: 90px;
+                font-size: 3rem;
+            }
+
+            .detail-title {
+                font-size: 1.7rem;
+            }
+
+            .detail-desc {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主题选择器 -->
+    <div class="theme-selector">
+        <button class="theme-btn active" onclick="setTheme('light')">☀️ 默认</button>
+        <button class="theme-btn" onclick="setTheme('dark')">🌙 暗黑</button>
+        <button class="theme-btn" onclick="setTheme('pink')">🌸 粉色</button>
+        <button class="theme-btn" onclick="setTheme('blue')">💎 蓝色</button>
+    </div>
+
+    <!-- 返回按钮 -->
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='/xiaoan'">🏠 返回主页</button>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 签到横幅 -->
+        <div class="checkin-banner">
+            <div class="banner-header">
+                <div class="banner-title">
+                    <span class="banner-icon">📅</span>
+                    <div>
+                        <h1>每日签到</h1>
+                        <p id="todayInfo">加载中...</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div class="banner-status" id="bannerStatus">未签到</div>
+                    <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">签到</button>
+                </div>
+            </div>
+
+            <!-- 本周签到日历 -->
+            <div class="week-calendar" id="weekCalendar"></div>
+
+            <!-- 统计 -->
+            <div class="stats-mini">
+                <span>累计签到 <strong id="totalCheckins">0</strong> 天</span>
+                <span>连续 <strong id="streakDays">0</strong> 天</span>
+                <span>本周 <strong id="weekCheckins">0</strong>/7</span>
+            </div>
+        </div>
+
+        <!-- 活动入口区域 -->
+        <div class="activities-section">
+            <div class="section-title">
+                <span>🎮</span>
+                <h2>精彩活动</h2>
+            </div>
+
+            <div class="activities-layout">
+                <!-- 左侧导航 -->
+                <div class="activity-nav">
+                    <div class="activity-nav-item lucky-wheel active" data-activity="lucky-wheel">
+                        <div class="nav-icon">🎰</div>
+                        <div class="nav-label">轮盘</div>
+                        <div class="nav-status hot">🔥</div>
+                    </div>
+                    <div class="activity-nav-item bank" data-activity="bank">
+                        <div class="nav-icon">🏦</div>
+                        <div class="nav-label">银行</div>
+                        <div class="nav-status new">✨</div>
+                    </div>
+                    <div class="activity-nav-item quiz disabled" data-activity="quiz">
+                        <div class="nav-icon">❓</div>
+                        <div class="nav-label">答题</div>
+                        <div class="nav-status coming">即将</div>
+                    </div>
+                    <div class="activity-nav-item special disabled" data-activity="special">
+                        <div class="nav-icon">🎉</div>
+                        <div class="nav-label">活动</div>
+                        <div class="nav-status coming">敬请期待</div>
+                    </div>
+                </div>
+
+                <!-- 右侧详情 -->
+                <div class="activity-detail lucky-wheel" id="activityDetail">
+                    <div class="detail-bg" id="detailBg"></div>
+                    <div class="detail-content">
+                        <div class="detail-icon">🎰</div>
+                        <h2 class="detail-title">幸运轮盘</h2>
+                        <div class="detail-status">🔥 热门活动</div>
+                        <p class="detail-desc">消耗抽奖券转动幸运轮盘，赢取丰厚奖励！每天来试试手气，大奖等你来拿~</p>
+                        <div class="detail-rewards">
+                            <span class="reward-tag">🎫 兑换券</span>
+                            <span class="reward-tag">🎰 抽奖券</span>
+                            <span class="reward-tag">💎 高级券</span>
+                            <span class="reward-tag">🎁 神秘奖励</span>
+                        </div>
+                        <button class="detail-btn" id="detailBtn" onclick="goToActivity()">立即前往</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 签到成功弹窗 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎊</div>
+            <h2 class="modal-title">签到成功！</h2>
+            <div class="modal-text" id="rewardText">恭喜获得奖励！</div>
+            <button class="btn btn-primary" onclick="closeModal()" style="padding: 15px 40px; font-size: 1.1rem;">太棒了！</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 签到奖励配置 =====
+        const WEEKLY_REWARDS = [
+            { day: '周一', type: 'voucher', amount: 5, icon: '🎫', name: '兑换券' },
+            { day: '周二', type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券' },
+            { day: '周三', type: 'bankTicket', amount: 3, icon: '🏦', name: '银行券' },
+            { day: '周四', type: 'voucher', amount: 8, icon: '🎫', name: '兑换券' },
+            { day: '周五', type: 'lottery', amount: 5, icon: '🎰', name: '抽奖券' },
+            { day: '周六', type: 'premiumLottery', amount: 1, icon: '💎', name: '高级抽奖券' },
+            { day: '周日', type: 'voucher', amount: 15, icon: '🎫', name: '兑换券' }
+        ];
+
+        // 连续签到奖励
+        const STREAK_REWARDS = [
+            { days: 3, type: 'voucher', amount: 5, icon: '🎫', name: '+5兑换券' },
+            { days: 7, type: 'lottery', amount: 2, icon: '🎰', name: '+2抽奖券' },
+            { days: 14, type: 'premiumLottery', amount: 1, icon: '💎', name: '+1高级券' },
+            { days: 30, type: 'voucher', amount: 10, icon: '🎫', name: '+10兑换券' }
+        ];
+
+        // ===== 初始化 =====
+        function init() {
+            loadTheme();
+            loadCheckinData();
+            updateUI();
+        }
+
+        // ===== 主题功能 =====
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+            localStorage.setItem('xiaoanTheme', theme);
+            
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('xiaoanTheme') || 'light';
+            if (savedTheme !== 'light') {
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                const btnTheme = btn.textContent.includes('默认') ? 'light' : 
+                                 btn.textContent.includes('暗黑') ? 'dark' :
+                                 btn.textContent.includes('粉色') ? 'pink' : 'blue';
+                if (btnTheme === savedTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // ===== 签到数据管理 =====
+        function getCheckinData() {
+            const data = localStorage.getItem('checkinData');
+            return data ? JSON.parse(data) : {
+                lastCheckinDate: null,
+                checkinLog: [],
+                streakDays: 0,
+                totalCheckins: 0,
+                weekCheckins: 0,
+                lastStreakReward: 0
+            };
+        }
+
+        function saveCheckinData(data) {
+            localStorage.setItem('checkinData', JSON.stringify(data));
+        }
+
+        function loadCheckinData() {
+            const data = getCheckinData();
+            const today = getDateString();
+            
+            // 检查连续签到（如果超过一天没签，重置连续天数）
+            if (data.lastCheckinDate) {
+                const lastDate = new Date(data.lastCheckinDate);
+                const todayDate = new Date(today);
+                const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 1) {
+                    data.streakDays = 0;
+                    data.weekCheckins = 0;
+                    saveCheckinData(data);
+                }
+            }
+        }
+
+        function getDateString(date = new Date()) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function getDayOfWeek(date = new Date()) {
+            const day = date.getDay();
+            return day === 0 ? 6 : day - 1; // 0=周一, 6=周日
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function hasCheckedInToday() {
+            const data = getCheckinData();
+            return data.lastCheckinDate === getDateString();
+        }
+
+        function hasCheckedInDay(dayIndex) {
+            const data = getCheckinData();
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            
+            return data.checkinLog.some(log => {
+                const logDate = new Date(log.date);
+                const logWeek = getWeekNumber(logDate);
+                return log.dayOfWeek === dayIndex && logWeek === currentWeek;
+            });
+        }
+
+        // ===== 签到逻辑 =====
+        function doCheckin() {
+            if (hasCheckedInToday()) {
+                alert('今天已经签到过了！');
+                return;
+            }
+
+            const data = getCheckinData();
+            const today = getDateString();
+            const dayIndex = getDayOfWeek();
+            const reward = { ...WEEKLY_REWARDS[dayIndex] };
+
+            // 更新签到数据
+            const lastDate = data.lastCheckinDate ? new Date(data.lastCheckinDate) : null;
+            const todayDate = new Date(today);
+            const diffDays = lastDate ? Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24)) : 999;
+
+            if (diffDays === 1) {
+                data.streakDays++;
+            } else {
+                data.streakDays = 1;
+            }
+            
+            data.totalCheckins++;
+            data.weekCheckins = Math.min(data.weekCheckins + 1, 7);
+            data.lastCheckinDate = today;
+            data.checkinLog.push({
+                date: today,
+                dayOfWeek: dayIndex,
+                reward: reward
+            });
+
+            // 发放奖励
+            addReward(reward.type, reward.amount);
+
+            // 检查连续签到奖励
+            let streakReward = null;
+            for (const sr of STREAK_REWARDS) {
+                if (data.streakDays >= sr.days && data.lastStreakReward < sr.days) {
+                    streakReward = sr;
+                    data.lastStreakReward = sr.days;
+                    addReward(sr.type, sr.amount);
+                    break;
+                }
+            }
+
+            saveCheckinData(data);
+            updateUI();
+
+            // 显示成功弹窗
+            showSuccessModal(reward, streakReward);
+        }
+
+        function addReward(type, amount) {
+            const keys = {
+                'voucher': 'voucherCount',
+                'lottery': 'lotteryTicketCount',
+                'premiumLottery': 'premiumLotteryTicketCount',
+                'bankTicket': 'bankTicketCount'
+            };
+            
+            const key = keys[type];
+            if (key) {
+                const current = parseInt(localStorage.getItem(key) || '0');
+                localStorage.setItem(key, current + amount);
+            }
+        }
+
+        // ===== UI更新 =====
+        function updateUI() {
+            const data = getCheckinData();
+            const dayIndex = getDayOfWeek();
+            const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+            const today = new Date();
+
+            // 更新今日信息
+            document.getElementById('todayInfo').textContent =
+                `${today.getMonth() + 1}月${today.getDate()}日 星期${dayNames[today.getDay()]}`;
+
+            // 更新签到按钮和状态
+            const btn = document.getElementById('checkinBtn');
+            const status = document.getElementById('bannerStatus');
+
+            if (hasCheckedInToday()) {
+                btn.disabled = true;
+                btn.textContent = '已签到';
+                status.textContent = '已签到';
+                status.classList.add('checked');
+            } else {
+                btn.disabled = false;
+                btn.textContent = '签到';
+                status.textContent = '未签到';
+                status.classList.remove('checked');
+            }
+
+            // 更新统计
+            document.getElementById('totalCheckins').textContent = data.totalCheckins || 0;
+            document.getElementById('streakDays').textContent = data.streakDays || 0;
+            document.getElementById('weekCheckins').textContent = data.weekCheckins || 0;
+
+            // 渲染本周日历
+            renderWeekCalendar(dayIndex);
+        }
+
+        function renderWeekCalendar(todayIndex) {
+            const calendar = document.getElementById('weekCalendar');
+            let html = '';
+
+            WEEKLY_REWARDS.forEach((reward, index) => {
+                const isToday = index === todayIndex;
+                const isChecked = hasCheckedInDay(index);
+
+                let classes = 'day-cell';
+                if (isToday) classes += ' today';
+                if (isChecked) classes += ' checked';
+
+                html += `
+                    <div class="${classes}">
+                        <div class="day-name">${reward.day}</div>
+                        <div class="day-icon">${isChecked ? '✅' : reward.icon}</div>
+                        <div class="day-reward">${reward.amount}</div>
+                    </div>
+                `;
+            });
+
+            calendar.innerHTML = html;
+        }
+
+        // ===== 弹窗 =====
+        function showSuccessModal(reward, streakReward) {
+            let text = `获得 <strong>${reward.icon} ${reward.amount} ${reward.name}</strong>`;
+
+            if (streakReward) {
+                text += `<br><small style="opacity:0.8">连续签到 ${streakReward.days} 天，额外获得 ${streakReward.icon} ${streakReward.name}</small>`;
+            }
+
+            document.getElementById('rewardText').innerHTML = text;
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 初始化
+        init();
+
+        // ===== 活动切换 =====
+        const ACTIVITIES = {
+            'lucky-wheel': {
+                icon: '🎰',
+                title: '幸运轮盘',
+                status: 'hot',
+                statusText: '🔥 热门活动',
+                desc: '消耗抽奖券转动幸运轮盘，赢取丰厚奖励！每天来试试手气，大奖等你来拿~',
+                rewards: ['🎫 兑换券', '🎰 抽奖券', '💎 高级券', '🎁 神秘奖励'],
+                url: '/xiaoan/choujiang/',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/lucky-wheel.jpg'
+            },
+            'bank': {
+                icon: '🏦',
+                title: '超级银行',
+                status: 'new',
+                statusText: '✨ 新功能',
+                desc: '安全存储你的财富！存入兑换券获取银行券，享受便捷的资产管理服务。',
+                rewards: ['🏦 银行券', '📊 存取记录', '🔒 安全存储'],
+                url: '/xiaoan/bank/',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/bank.jpg'
+            },
+            'quiz': {
+                icon: '❓',
+                title: '每日答题',
+                status: 'coming',
+                statusText: '即将上线',
+                desc: '挑战你的知识储备！答对题目获得抽奖券奖励，知识就是力量~',
+                rewards: ['🎰 抽奖券', '🏆 排行榜', '📚 知识挑战'],
+                url: null,
+                disabled: true,
+                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/quiz.jpg'
+            },
+            'special': {
+                icon: '🎉',
+                title: '限时活动',
+                status: 'coming',
+                statusText: '敬请期待',
+                desc: '不定期的特别活动，更多惊喜等你发现！节日庆典、周年活动等精彩内容即将登场~',
+                rewards: ['🎊 节日庆典', '🎁 限定奖励', '⏰ 限时开放'],
+                url: null,
+                disabled: true,
+                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/special.jpg'
+            }
+        };
+
+        let currentActivity = 'lucky-wheel';
+
+        function switchActivity(activityId) {
+            const activity = ACTIVITIES[activityId];
+            if (!activity) return;
+
+            // 禁用的活动不允许切换
+            if (activity.disabled) return;
+
+            currentActivity = activityId;
+
+            // 更新导航高亮
+            document.querySelectorAll('.activity-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.activity === activityId) {
+                    item.classList.add('active');
+                }
+            });
+
+            // 更新详情区
+            const detail = document.getElementById('activityDetail');
+            detail.className = `activity-detail ${activityId}`;
+
+            // 更新背景图片
+            const bg = document.getElementById('detailBg');
+            bg.style.backgroundImage = `url('${activity.image}')`;
+
+            const content = detail.querySelector('.detail-content');
+            content.querySelector('.detail-icon').textContent = activity.icon;
+            content.querySelector('.detail-title').textContent = activity.title;
+            content.querySelector('.detail-status').textContent = activity.statusText;
+            content.querySelector('.detail-desc').textContent = activity.desc;
+
+            // 更新奖励标签
+            const rewardsContainer = content.querySelector('.detail-rewards');
+            rewardsContainer.innerHTML = activity.rewards.map(r => `<span class="reward-tag">${r}</span>`).join('');
+
+            // 更新按钮
+            const btn = document.getElementById('detailBtn');
+            if (activity.disabled) {
+                btn.classList.add('disabled');
+                btn.textContent = '敬请期待';
+            } else {
+                btn.classList.remove('disabled');
+                btn.textContent = '立即前往';
+            }
+        }
+
+        function goToActivity() {
+            const activity = ACTIVITIES[currentActivity];
+            if (activity && activity.url) {
+                window.location.href = activity.url;
+            }
+        }
+
+        // 绑定导航点击事件
+        document.querySelectorAll('.activity-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const activityId = this.dataset.activity;
+                const activity = ACTIVITIES[activityId];
+                if (activity && !activity.disabled) {
+                    switchActivity(activityId);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
