@@ -40,34 +40,80 @@
             overflow: auto;
         }
         
-        /* 标题栏 */
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            position: relative;
+        /* 顶部导航栏 */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
         }
         
-        .header h1 {
-            color: #e74c3c;
-            font-size: 2.6rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-            padding: 12px 25px;
-            border-radius: 50px;
-            display: inline-block;
-            background: linear-gradient(to right, #ffd166, #ff9e7d);
-            font-family: 'Comic Sans MS', cursive;
+        .nav-brand {
+            flex: 1;
         }
         
-        .header::after {
-            content: "";
-            position: absolute;
-            bottom: -8px;
-            left: 25%;
-            width: 50%;
-            height: 4px;
-            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-            border-radius: 2px;
+        .brand-text {
+            background: linear-gradient(135deg, #ff6b00 0%, #ffa500 30%, #ffd700 70%, #ff8c00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: Arial, Helvetica, 黑体;
+            letter-spacing: 1px;
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(135deg, #06d6a0 0%, #118ab2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(6, 214, 160, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(6, 214, 160, 0.6);
+            background: linear-gradient(135deg, #05c191 0%, #0f7a9c 100%);
+        }
+        
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+        
+        .btn-text {
+            font-family: Arial, Helvetica, 黑体;
+        }
+        
+        .home-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ef476f 100%);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+        
+        .home-btn:hover {
+            background: linear-gradient(135deg, #ff5252 0%, #e63946 100%);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
         }
         
         /* 奖励项目网格布局 */
@@ -145,32 +191,51 @@
         /* 标签页样式 */
         .tabs {
             display: flex;
-            background: #f8f9fa;
-            border-radius: 25px;
-            padding: 5px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
         }
         
         .tab {
             flex: 1;
-            padding: 12px 20px;
+            padding: 14px 20px;
             text-align: center;
             background: transparent;
             border: none;
-            border-radius: 20px;
+            border-radius: 12px;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: 'Comic Sans MS', cursive;
+            font-family: Arial, Helvetica, 黑体;
+            position: relative;
+            overflow: hidden;
         }
         
         .tab.active {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background: linear-gradient(135deg, #06d6a0 0%, #118ab2 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .tab:hover::before {
+            left: 100%;
         }
         
         .tab-content {
@@ -184,59 +249,86 @@
         
         /* 公告样式 */
         .announcement-item {
-            background: white;
-            border-radius: 15px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border-left: 5px solid #06d6a0;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .announcement-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 6px;
+            height: 100%;
+            background: linear-gradient(135deg, #06d6a0, #118ab2);
+        }
+        
+        .announcement-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
         
         .announcement-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            padding-left: 10px;
         }
         
         .announcement-title {
             font-size: 1.3rem;
-            font-weight: bold;
+            font-weight: 600;
             color: #333;
+            font-family: Arial, Helvetica, 黑体;
+            margin: 0;
         }
         
         .announcement-tag {
-            padding: 4px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: Arial, Helvetica, 黑体;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .tag-penalty {
-            background: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b, #ef476f);
             color: white;
         }
         
         .tag-activity {
-            background: #4ecdc4;
+            background: linear-gradient(135deg, #4ecdc4, #118ab2);
             color: white;
         }
         
         .tag-other {
-            background: #ffd166;
+            background: linear-gradient(135deg, #ffd166, #ff9e7d);
             color: #333;
         }
         
         .announcement-content {
-            color: #666;
-            line-height: 1.5;
+            color: #555;
+            line-height: 1.6;
             margin-bottom: 15px;
+            padding-left: 10px;
+            font-size: 1rem;
         }
         
         .announcement-date {
-            font-size: 0.9rem;
-            color: #999;
+            font-size: 0.85rem;
+            color: #888;
             text-align: right;
+            font-family: Arial, Helvetica, 黑体;
+            font-weight: 500;
         }
         
         /* 管理界面样式 */
@@ -273,13 +365,18 @@
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-family: Arial, Helvetica, 黑体;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         
         .btn-primary {
@@ -298,8 +395,23 @@
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         /* 模态框样式 */
@@ -505,32 +617,51 @@
         /* 标签页样式 */
         .tabs {
             display: flex;
-            background: #f8f9fa;
-            border-radius: 25px;
-            padding: 5px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 8px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
         }
         
         .tab {
             flex: 1;
-            padding: 12px 20px;
+            padding: 14px 20px;
             text-align: center;
             background: transparent;
             border: none;
-            border-radius: 20px;
+            border-radius: 12px;
             font-size: 1.1rem;
-            font-weight: bold;
+            font-weight: 600;
             color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: 'Comic Sans MS', cursive;
+            font-family: Arial, Helvetica, 黑体;
+            position: relative;
+            overflow: hidden;
         }
         
         .tab.active {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            background: linear-gradient(135deg, #06d6a0 0%, #118ab2 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(255, 154, 158, 0.3);
+            box-shadow: 0 4px 15px rgba(6, 214, 160, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .tab:hover::before {
+            left: 100%;
         }
         
         .tab-content {
@@ -633,13 +764,18 @@
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 1rem;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-family: Arial, Helvetica, 黑体;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         
         .btn-primary {
@@ -658,8 +794,23 @@
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         /* 模态框样式 */
@@ -710,11 +861,17 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>欢乐奖励公告栏</h1>
-    </div>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <button class="btn" onclick="window.location.href='/xiaoan'">🏠 返回主页</button>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+        <div class="nav-brand">
+            <span class="brand-text">欢乐奖励公告栏</span>
+        </div>
+        <div class="nav-actions">
+            <button class="nav-btn home-btn" onclick="window.location.href='/xiaoan'">
+                <span class="btn-icon">🏠</span>
+                <span class="btn-text">返回主页</span>
+            </button>
+        </div>
     </div>
     
     <div class="container">
@@ -745,28 +902,28 @@
                     </div>
                     
                     <div class="reward-item">
-                        <div class="reward-action">考试单科≤89分</div>
-                        <div class="reward-amount">-100-50/分 兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
                         <div class="reward-action">考试单科≥90分</div>
-                        <div class="reward-amount">50+300/分 兑换券</div>
+                        <div class="reward-amount">800+50/分 兑换券</div>
                     </div>
                     
                     <div class="reward-item">
                         <div class="reward-action">考试单科≥96分</div>
-                        <div class="reward-amount">300+666/分兑换券</div>
+                        <div class="reward-amount">1600+300/分 兑换券</div>
+                    </div>
+                    
+                    <div class="reward-item">
+                        <div class="reward-action">考试单科=100分</div>
+                        <div class="reward-amount">3000兑换券</div>
                     </div>
                     
                     <div class="reward-item">
                         <div class="reward-action">考试双科≥193分</div>
-                        <div class="reward-amount">1666+500/分 兑换券</div>
+                        <div class="reward-amount">1666+900/分 兑换券</div>
                     </div>
                     
                     <div class="reward-item">
                         <div class="reward-action">考试双科≥197分</div>
-                        <div class="reward-amount">5666+1000/分 兑换券</div>
+                        <div class="reward-amount">4666+2000/分 兑换券</div>
                     </div>
                 </div>
                 
@@ -778,82 +935,26 @@
                     </div>
                     
                     <div class="reward-item">
-                        <div class="reward-action">初级里程碑(持有1288兑换券)【已达成✅】</div>
-                        <div class="reward-amount">100兑换券+5抽奖券</div>
+                        <div class="reward-action">初级里程碑(持有2500兑换券)</div>
+                        <div class="reward-amount">5银行券+8抽奖券</div>
                     </div>
                     
                     <div class="reward-item">
-                        <div class="reward-action">中级里程碑(持有3488兑换券)</div>
-                        <div class="reward-amount">200兑换券+10抽奖券+5高级抽奖券</div>
+                        <div class="reward-action">中级里程碑(持有6000兑换券)</div>
+                        <div class="reward-amount">10银行券+10抽奖券+1高级抽奖券</div>
                     </div>
                     
                     <div class="reward-item">
-                        <div class="reward-action">高级里程碑(持有6988兑换券)</div>
-                        <div class="reward-amount">1888兑换券+20抽奖券+10高级抽奖券</div>
+                        <div class="reward-action">高级里程碑(持有10000兑换券)</div>
+                        <div class="reward-amount">18银行券+40抽奖券+5高级抽奖券</div>
                     </div>
                     
                     <div class="reward-item">
-                        <div class="reward-action">终极里程碑(持有12888兑换券)</div>
-                        <div class="reward-amount">2888兑换券+40抽奖券+20高级抽奖券</div>
+                        <div class="reward-action">终极里程碑(持有50000兑换券)</div>
+                        <div class="reward-amount">30银行券+60抽奖券+10高级抽奖券</div>
                     </div>
                     
                     <div class="reward-note">每学期仅可获得一次里程碑奖励</div>
-                </div>
-                
-                <!-- 阅读奖励 -->
-                <div class="reward-category">
-                    <div class="category-header">
-                        <div class="category-title">阅读奖励</div>
-                        <div class="category-icon">📚</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">阅读10分钟</div>
-                        <div class="reward-amount">30兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">阅读20分钟</div>
-                        <div class="reward-amount">100兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">阅读≥30分钟</div>
-                        <div class="reward-amount">160+2/min兑换券</div>
-                    </div>
-                    
-                    <div class="reward-note">当日有效，次日重置进度。连续阅读可累计奖励</div>
-                </div>
-                
-                <!-- 运动奖励 -->
-                <div class="reward-category">
-                    <div class="category-header">
-                        <div class="category-title">运动奖励</div>
-                        <div class="category-icon">⚽</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">400m跑步</div>
-                        <div class="reward-amount">60兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">1000m走路</div>
-                        <div class="reward-amount">60兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">下楼骑车(≥30min)</div>
-                        <div class="reward-amount">60+1/min 兑换券</div>
-                    </div>
-                    
-                    <div class="reward-item">
-                        <div class="reward-action">/</div>
-                        <div class="reward-amount">/</div>
-                    </div>
-                    
-                    <div class="reward-note">仅周五及节假日有效，任务可能不定期调整</div>
-                </div>
             </div>
         </div>
         
@@ -991,6 +1092,8 @@
             
             announcements.unshift(newAnnouncement);
             saveAnnouncements();
+            
+            // 立即更新显示
             renderAnnouncementsView();
             renderSettingsAnnouncements();
             
@@ -999,7 +1102,8 @@
             document.getElementById('announcementContent').value = '';
             document.getElementById('announcementTag').value = 'penalty';
             
-            alert('公告添加成功！');
+            // 显示成功反馈
+            showStatus('🎉 公告添加成功！', 'success');
         }
         
         // 删除公告
@@ -1035,14 +1139,25 @@
             const container = document.getElementById('announcementsList');
             const noAnnouncements = document.getElementById('noAnnouncements');
             
-            if (announcements.length === 0) {
-                noAnnouncements.style.display = 'block';
-                container.innerHTML = '';
-                container.appendChild(noAnnouncements);
+            if (!container) {
+                console.error('公告容器未找到');
                 return;
             }
             
-            noAnnouncements.style.display = 'none';
+            if (announcements.length === 0) {
+                if (noAnnouncements) {
+                    noAnnouncements.style.display = 'block';
+                    container.innerHTML = '';
+                    container.appendChild(noAnnouncements);
+                } else {
+                    container.innerHTML = '<div class="empty-state"><p>暂无公告</p></div>';
+                }
+                return;
+            }
+            
+            if (noAnnouncements) {
+                noAnnouncements.style.display = 'none';
+            }
             
             let html = '';
             
@@ -1063,6 +1178,7 @@
             });
             
             container.innerHTML = html;
+            console.log('公告查看页已更新，公告数量:', announcements.length);
         }
         
         // 渲染公告设置页
@@ -1070,14 +1186,25 @@
             const container = document.getElementById('settingsAnnouncementsList');
             const noAnnouncements = document.getElementById('noSettingsAnnouncements');
             
-            if (announcements.length === 0) {
-                noAnnouncements.style.display = 'block';
-                container.innerHTML = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>';
-                container.appendChild(noAnnouncements);
+            if (!container) {
+                console.error('公告设置容器未找到');
                 return;
             }
             
-            noAnnouncements.style.display = 'none';
+            if (announcements.length === 0) {
+                if (noAnnouncements) {
+                    noAnnouncements.style.display = 'block';
+                    container.innerHTML = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>';
+                    container.appendChild(noAnnouncements);
+                } else {
+                    container.innerHTML = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3><div class="empty-state"><p>暂无公告，请添加第一条公告</p></div>';
+                }
+                return;
+            }
+            
+            if (noAnnouncements) {
+                noAnnouncements.style.display = 'none';
+            }
             
             let html = '<h3 style="margin-bottom: 20px;">📋 现有公告列表</h3>';
             
@@ -1102,12 +1229,80 @@
             });
             
             container.innerHTML = html;
+            console.log('公告设置页已更新，公告数量:', announcements.length);
         }
         
         // 保存公告到本地存储
         function saveAnnouncements() {
             localStorage.setItem('announcements', JSON.stringify(announcements));
         }
+        
+        // 显示状态消息
+        function showStatus(message, type = 'info') {
+            // 移除现有的状态消息
+            const existingStatus = document.getElementById('status-message');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+            
+            // 创建新的状态消息
+            const statusDiv = document.createElement('div');
+            statusDiv.id = 'status-message';
+            statusDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease-out;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            // 根据类型设置背景色
+            if (type === 'success') {
+                statusDiv.style.background = 'linear-gradient(135deg, #06d6a0, #48dbfb)';
+            } else if (type === 'error') {
+                statusDiv.style.background = 'linear-gradient(135deg, #ef476f, #ff6b6b)';
+            } else if (type === 'warning') {
+                statusDiv.style.background = 'linear-gradient(135deg, #ffd166, #ff9e7d)';
+            } else {
+                statusDiv.style.background = 'linear-gradient(135deg, #118ab2, #073b4c)';
+            }
+            
+            statusDiv.textContent = message;
+            document.body.appendChild(statusDiv);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                if (statusDiv.parentNode) {
+                    statusDiv.style.animation = 'slideOut 0.3s ease-in';
+                    setTimeout(() => {
+                        if (statusDiv.parentNode) {
+                            statusDiv.remove();
+                        }
+                    }, 300);
+                }
+            }, 3000);
+        }
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `
+        document.head.appendChild(style);
         
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
