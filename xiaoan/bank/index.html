@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>超级兑换券银行 - 理财中心</title>
+    <meta name="description" content="专业的兑换券理财系统，提供活期存款、定期存款和投资理财服务">
+    
     <style>
-        /* 基础样式 - 与主页面保持一致 */
+        /* ===== 基础样式与主题系统 ===== */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,6 +15,7 @@
             font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
         }
         
+        /* 默认主题配色 */
         :root {
             --primary-color: #06d6a0;
             --secondary-color: #ff6b6b;
@@ -23,6 +26,7 @@
             --border-color: #ffd166;
         }
         
+        /* 暗黑主题 */
         [data-theme="dark"] {
             --primary-color: #00c896;
             --secondary-color: #ff5252;
@@ -33,6 +37,7 @@
             --border-color: #ffb74d;
         }
         
+        /* 粉色主题 */
         [data-theme="pink"] {
             --primary-color: #ff6b9d;
             --secondary-color: #ff9a9e;
@@ -43,6 +48,7 @@
             --border-color: #ffd1dc;
         }
         
+        /* 蓝色主题 */
         [data-theme="blue"] {
             --primary-color: #4fc3f7;
             --secondary-color: #29b6f6;
@@ -53,7 +59,7 @@
             --border-color: #81d4fa;
         }
 
-        /* 主题选择器样式 */
+        /* ===== 主题选择器 ===== */
         .theme-selector {
             position: fixed;
             top: 20px;
@@ -92,6 +98,7 @@
             color: white;
         }
         
+        /* ===== 页面布局 ===== */
         body {
             background: var(--background-gradient);
             color: var(--text-color);
@@ -115,6 +122,7 @@
             transition: all 0.3s ease;
         }
         
+        /* ===== 页面头部 ===== */
         .header {
             text-align: center;
             margin-bottom: 25px;
@@ -145,6 +153,7 @@
             border-radius: 2px;
         }
         
+        /* ===== 标题样式 ===== */
         h2 {
             color: var(--primary-color);
             margin: 20px 0 15px;
@@ -755,12 +764,23 @@
             <button class="btn" onclick="simulateNextDay()" style="background: var(--secondary-color); color: white;">🚀 超级快进</button>
         </div>
 
-        <!-- 当前兑换券余额 -->
-        <div class="bank-card savings">
-            <div class="bank-icon">🎫</div>
-            <div class="bank-title">当前兑换券余额</div>
-            <div class="bank-amount" id="currentVoucherAmount">0</div>
-            <div class="bank-info">这是您可以用于存储和消费的兑换券数量</div>
+        <!-- 货币余额 -->
+        <div class="bank-grid" style="margin-bottom: 25px;">
+            <!-- 当前兑换券余额 -->
+            <div class="bank-card savings">
+                <div class="bank-icon">🎫</div>
+                <div class="bank-title">当前兑换券余额</div>
+                <div class="bank-amount" id="currentVoucherAmount">0</div>
+                <div class="bank-info">这是您可以用于存储和消费的兑换券数量</div>
+            </div>
+
+            <!-- 银行券余额 -->
+            <div class="bank-card savings">
+                <div class="bank-icon">🏦</div>
+                <div class="bank-title">银行券</div>
+                <div class="bank-amount" id="bankTicketAmount">0</div>
+                <div class="bank-info">用于超级快进功能</div>
+            </div>
         </div>
 
         <!-- 银行账户总览 -->
@@ -1121,28 +1141,52 @@
     </div>
 
     <script>
-        // 诊断代码 - 全局错误捕获
+        /* ===== 系统配置与常量定义 ===== */
+        
+        // 全局错误捕获
         window.addEventListener('error', function(e) {
             console.error("[全局错误] ", e.message, "发生在", e.filename, "行号:", e.lineno);
         });
 
-        // 银行配置
-        let BANK_CONFIG = {
-            savings: { name: '活期存款', rate: parseFloat(localStorage.getItem('bankSavingsRate') || '0.001'), key: 'bankSavings', period: 0, hasFluctuation: false },
-            deposit: { name: '定期存款', rate: parseFloat(localStorage.getItem('bankDepositRate') || '0.003'), key: 'bankDeposit', period: 7, hasFluctuation: false }, // 改回7天期限
-            investment: { name: '投资理财', rate: 0, key: 'bankInvestment', period: 1, hasFluctuation: true } // 投资理财基础收益率为0%，纯靠波动
+        // 银行账户配置
+        const BANK_CONFIG = {
+            savings: { 
+                name: '活期存款', 
+                rate: parseFloat(localStorage.getItem('bankSavingsRate') || '0.001'), 
+                key: 'bankSavings', 
+                period: 0, 
+                hasFluctuation: false 
+            },
+            deposit: { 
+                name: '定期存款', 
+                rate: parseFloat(localStorage.getItem('bankDepositRate') || '0.003'), 
+                key: 'bankDeposit', 
+                period: 7, 
+                hasFluctuation: false 
+            },
+            investment: { 
+                name: '投资理财', 
+                rate: 0, 
+                key: 'bankInvestment', 
+                period: 1, 
+                hasFluctuation: true 
+            }
         };
 
         // 风险波动配置
-        let RISK_CONFIG = {
-            minLoss: parseFloat(localStorage.getItem('riskMinLoss') || '-0.18'),  // 最小亏损比例
-            maxProfit: parseFloat(localStorage.getItem('riskMaxProfit') || '0.25'), // 最大盈利比例
-            lossProbability: 0.38,  // 亏损概率 38%
-            profitProbability: 0.57, // 盈利概率 57%
-            zeroProbability: 0.05    // 零收益概率 5%
+        const RISK_CONFIG = {
+            minLoss: parseFloat(localStorage.getItem('riskMinLoss') || '-0.18'),
+            maxProfit: parseFloat(localStorage.getItem('riskMaxProfit') || '0.25'),
+            lossProbability: 0.38,
+            profitProbability: 0.57,
+            zeroProbability: 0.05
         };
 
-        // 更新利率显示
+        /* ===== 核心业务函数 ===== */
+        
+        /**
+         * 更新利率显示
+         */
         function updateRateDisplays() {
             Object.entries(BANK_CONFIG).forEach(([type, config]) => {
                 const rateDisplay = document.getElementById(`${type}RateDisplay`);
@@ -1421,6 +1465,13 @@
                     localStorage.setItem('voucher', '0');
                 }
                 
+                // 初始化银行券（检查是否为有效数字）
+                const bankTicketValue = localStorage.getItem('bankTicket');
+                if (!bankTicketValue || bankTicketValue === 'NaN' || isNaN(parseInt(bankTicketValue))) {
+                    localStorage.setItem('bankTicket', '0');
+                    console.log("[初始化] 银行券值无效，已重置为0");
+                }
+                
                 // 初始化银行账户数据
                 Object.values(BANK_CONFIG).forEach(config => {
                     if (!localStorage.getItem(config.key)) {
@@ -1511,9 +1562,18 @@
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
             document.getElementById('currentVoucherAmount').textContent = currentVoucher;
             
+            // 更新银行券余额
+            const bankTicket = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
+            document.getElementById('bankTicketAmount').textContent = bankTicket;
+            
             // 同步到主页面（确保主页面也能看到最新数据）
-            if (window.parent && window.parent.updateVoucherDisplay) {
-                window.parent.updateVoucherDisplay();
+            // 只有在确实是被嵌入iframe时才尝试访问parent
+            try {
+                if (window.parent !== window && window.parent.updateVoucherDisplay) {
+                    window.parent.updateVoucherDisplay();
+                }
+            } catch (e) {
+                // 忽略跨域错误
             }
 
             // 更新银行账户余额
@@ -2369,22 +2429,22 @@
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log("[诊断] DOMContentLoaded 事件触发");
-            
+
             // 检查按钮绑定
             console.log("[诊断] 检查按钮绑定状态");
-            
+
             // 检查银行设置按钮
             const settingsBtn = document.querySelector('button[onclick*="openSettingsModal"]');
             console.log("[诊断] 银行设置按钮:", settingsBtn ? '找到' : '未找到');
-            
+
             // 检查存款按钮
             const depositBtns = document.querySelectorAll('button[onclick*="openDepositModal"]');
             console.log("[诊断] 存款按钮数量:", depositBtns.length);
-            
+
             // 检查取款按钮
             const withdrawBtns = document.querySelectorAll('button[onclick*="openWithdrawModal"]');
             console.log("[诊断] 取款按钮数量:", withdrawBtns.length);
-            
+
             // 检查模态框元素
             const depositModal = document.getElementById('depositModal');
             const withdrawModal = document.getElementById('withdrawModal');
@@ -2394,13 +2454,36 @@
                 withdrawModal: withdrawModal ? '找到' : '未找到',
                 settingsModal: settingsModal ? '找到' : '未找到'
             });
-            
+
             initializeData();
             updateUI(); // 更新UI显示最新数据（包含利息计算）
             updateRateDisplays();
-            
-            // 页面加载时更新一次UI
-            
+
+            // 监听storage事件，实现跨页面数据同步
+            window.addEventListener('storage', function(e) {
+                console.log("[Storage事件] 检测到localStorage变化:", e.key);
+
+                if (e.key === 'bankTicket') {
+                    // 银行券数量变化，更新显示
+                    const bankTicket = parseInt(e.newValue || '0') || 0;
+                    const bankTicketElement = document.getElementById('bankTicketAmount');
+                    if (bankTicketElement) {
+                        bankTicketElement.textContent = bankTicket;
+                        console.log("[Storage事件] 银行券已更新为:", bankTicket);
+                    }
+                } else if (e.key === 'voucher') {
+                    // 兑换券数量变化，更新显示
+                    const voucher = parseInt(e.newValue || '0') || 0;
+                    const voucherElement = document.getElementById('currentVoucherAmount');
+                    if (voucherElement) {
+                        voucherElement.textContent = voucher;
+                        console.log("[Storage事件] 兑换券已更新为:", voucher);
+                    }
+                    // 兑换券变化可能影响奖池，需要更新UI
+                    updateUI();
+                }
+            });
+
             console.log("[诊断] 页面初始化完成");
         });
 
@@ -2418,16 +2501,16 @@
         
         // 根据总余额计算超级快进费用
         function calculateSuperFastForwardCost(totalDeposits) {
-            if (totalDeposits < 1000) {
-                return { type: 'lottery', amount: 3, name: '抽奖券' };
-            } else if (totalDeposits < 2300) {
-                return { type: 'lottery', amount: 5, name: '抽奖券' };
-            } else if (totalDeposits < 3600) {
-                return { type: 'lottery', amount: 9, name: '抽奖券' };
-            } else if (totalDeposits < 6000) {
-                return { type: 'lottery', amount: 15, name: '抽奖券' };
+            if (totalDeposits < 2500) {
+                return { type: 'bankTicket', amount: 1, name: '银行券' };
+            } else if (totalDeposits < 5500) {
+                return { type: 'bankTicket', amount: 2, name: '银行券' };
+            } else if (totalDeposits < 10000) {
+                return { type: 'bankTicket', amount: 4, name: '银行券' };
+            } else if (totalDeposits < 15000) {
+                return { type: 'bankTicket', amount: 7, name: '银行券' };
             } else {
-                return { type: 'premium', amount: 5, name: '高级抽奖券' };
+                return { type: 'bankTicket', amount: 12, name: '银行券' };
             }
         }
         
@@ -2444,7 +2527,7 @@
             console.log("[超级快进] 费用计算:", cost);
             
             // 检查货币数量
-            const currentAmount = parseInt(localStorage.getItem(cost.type) || '0');
+            const currentAmount = parseInt(localStorage.getItem(cost.type) || '0') || 0;
             console.log("[超级快进] 当前货币数量:", currentAmount);
             
             const modal = document.getElementById('simulateNextDayModal');
@@ -2480,16 +2563,16 @@
                         <h3 style="color: #ff6b6b; margin-bottom: 15px;">${cost.name}不足</h3>
                         <p style="margin-bottom: 10px;">需要${cost.amount}张${cost.name}才能使用超级快进功能。</p>
                         <p style="color: #666; font-size: 14px;">当前剩余：<strong>${currentAmount}</strong> 张${cost.name}</p>
-                        <p style="color: #666; font-size: 14px; margin-top: 15px;">您可以在主页面或抽奖页面获取${cost.name}。</p>
+                        <p style="color: #666; font-size: 14px; margin-top: 15px;">银行券可通过完成特定任务或活动获取。</p>
                         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
                             <p style="margin: 5px 0;"><strong>当前总存款：</strong>${totalDeposits}兑换券</p>
                             <p style="margin: 5px 0;"><strong>费用阶梯：</strong></p>
                             <ul style="text-align: left; margin: 5px 0; font-size: 12px;">
-                                <li>总存款 &lt; 1000：3抽奖券/次</li>
-                                <li>1000 ≤ 总存款 &lt; 2300：5抽奖券/次</li>
-                                <li>2300 ≤ 总存款 &lt; 3600：9抽奖券/次</li>
-                                <li>3600 ≤ 总存款 &lt; 6000：15抽奖券/次</li>
-                                <li>总存款 ≥ 6000：5高级抽奖券/次</li>
+                                <li>总存款 &lt; 2500：1银行券/次</li>
+                                <li>2500 ≤ 总存款 &lt; 5500：2银行券/次</li>
+                                <li>5500 ≤ 总存款 &lt; 10000：4银行券/次</li>
+                                <li>10000 ≤ 总存款 &lt; 15000：7银行券/次</li>
+                                <li>总存款 ≥ 15000：12银行券/次</li>
                             </ul>
                         </div>
                     </div>
@@ -2511,11 +2594,11 @@
                         <div style="background: #f0f8ff; padding: 10px; border-radius: 8px; margin: 10px 0;">
                             <p style="font-size: 12px; color: #666; margin-bottom: 5px;"><strong>费用阶梯：</strong></p>
                             <ul style="text-align: left; margin: 0; font-size: 11px; padding-left: 15px;">
-                                <li>&lt;1000：3抽奖券</li>
-                                <li>1000-2299：5抽奖券</li>
-                                <li>2300-3599：9抽奖券</li>
-                                <li>3600-5999：15抽奖券</li>
-                                <li>≥6000：5高级抽奖券</li>
+                                <li>&lt;2500：1银行券</li>
+                                <li>2500-5499：2银行券</li>
+                                <li>5500-9999：4银行券</li>
+                                <li>10000-14999：7银行券</li>
+                                <li>≥15000：12银行券</li>
                             </ul>
                         </div>
                     </div>
