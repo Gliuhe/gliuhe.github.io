@@ -823,10 +823,11 @@
                 <select id="prizeRewardType">
                     <option value="item">实物奖品</option>
                     <option value="currency">兑换券</option>
+                    <option value="bankTicket">银行券</option>
                 </select>
             </div>
             <div class="form-group" id="currencyAmountGroup" style="display:none;">
-                <label for="currencyAmountInput">兑换券数量</label>
+                <label id="currencyAmountLabel">兑换券数量</label>
                 <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
             </div>
             <div class="form-group" id="usableGroup">
@@ -964,6 +965,13 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             if (!localStorage.getItem('voucher')) {
                 localStorage.setItem('voucher', '100');
             }
+
+            // 初始化银行券（检查是否为有效数字）
+            const bankTicketValue = localStorage.getItem('bankTicket');
+            if (!bankTicketValue || bankTicketValue === 'NaN' || isNaN(parseInt(bankTicketValue))) {
+                localStorage.setItem('bankTicket', '0');
+                console.log("[初始化] 银行券值无效，已重置为0");
+            }
             
             if (!localStorage.getItem('records')) {
                 localStorage.setItem('records', JSON.stringify([]));
@@ -983,7 +991,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             // 监听storage事件实现双向同步
             // 统一监听storage变化
             window.addEventListener('storage', function(e) {
-                if (e.key === 'lottery' || e.key === 'voucher') {
+                if (e.key === 'lottery' || e.key === 'voucher' || e.key === 'bankTicket') {
                     if (e.key === 'lottery') {
                         lotteryTickets = parseInt(e.newValue || '0');
                     }
@@ -1034,12 +1042,14 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 
                 // 显示库存信息
                 const stockText = prize.stock === -1 ? "无限库存" : `库存: ${prize.stock}`;
-                
+
                 let rewardTag = '';
                 if (prize.rewardType === 'currency') {
-                    rewardTag = `<div class="reward-tag">${prize.currencyAmount}兑换券</div>`;
+                    rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
+                } else if (prize.rewardType === 'bankTicket') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
                 }
-                
+
                 prizeCard.innerHTML = `
                     <div class="prize-icon">${prize.icon}</div>
                     <div class="prize-name">${prize.name}</div>
@@ -1065,12 +1075,14 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 
                 // 显示库存信息
                 const stockText = prize.stock === -1 ? "无限库存" : `库存: ${prize.stock}`;
-                
+
                 let rewardTag = '';
                 if (prize.rewardType === 'currency') {
-                    rewardTag = `<div class="reward-tag">${prize.currencyAmount}兑换券</div>`;
+                    rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
+                } else if (prize.rewardType === 'bankTicket') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
                 }
-                
+
                 // 创建确认删除层
                 prizeCard.innerHTML = `
                     <div class="prize-icon">${prize.icon}</div>
@@ -1132,11 +1144,14 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
 
                 // 检查是否可使用(如果记录没有usable属性，默认为true)
-                const isUsable = record.usable !== false;
+                // 银行券和兑换券是货币类型，不可使用
+                const isUsable = record.usable !== false && record.rewardType !== 'currency' && record.rewardType !== 'bankTicket';
 
                 let rewardTag = '';
                 if (record.rewardType === 'currency') {
                     rewardTag = `<div class="reward-tag">${record.currencyAmount}兑换券</div>`;
+                } else if (record.rewardType === 'bankTicket') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${record.currencyAmount || 0}银行券</div>`;
                 }
 
                 // 如果是奖品、可使用且未使用，显示使用按钮；否则显示已使用状态或不可使用不显示按钮
@@ -1434,10 +1449,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         function processPrizes(prizes) {
             const records = JSON.parse(localStorage.getItem('records'));
             let currencyEarned = 0;
-            
-            // 获取当前兑换券数量
-            const currentVoucher = parseInt(localStorage.getItem('voucher') || '100');
-            
+            let bankTicketEarned = 0;
+
             prizes.forEach(prize => {
                 records.push({
                     prize: prize.name,
@@ -1446,12 +1459,11 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     usable: prize.usable !== false, // 默认为true，如果奖品没有设置usable属性则默认可使用
                     date: new Date().toISOString()
                 });
-                
+
                 if (prize.rewardType === 'currency') {
                     currencyEarned += prize.currencyAmount;
-                    // 立即更新兑换券数量
-                    const newVoucher = currentVoucher + prize.currencyAmount;
-                    localStorage.setItem('voucher', newVoucher.toString());
+                } else if (prize.rewardType === 'bankTicket') {
+                    bankTicketEarned += prize.currencyAmount;
                 }
                 
                 // 减少库存
@@ -1469,14 +1481,42 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             
             // 更新记录
             localStorage.setItem('records', JSON.stringify(records));
-            
-            // 增加兑换券奖励
+
+            // 显示奖励消息
+            let rewardMessages = [];
             if (currencyEarned > 0) {
                 const voucher = parseInt(localStorage.getItem('voucher') || '100');
                 const newVoucher = voucher + currencyEarned;
                 localStorage.setItem('voucher', newVoucher.toString());
                 document.getElementById('currencyAmount').textContent = newVoucher;
-                showStatus(`成功获得${currencyEarned}兑换券！`, "success");
+
+                // 触发storage事件同步到其他页面
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'voucher',
+                    newValue: newVoucher.toString()
+                }));
+
+                rewardMessages.push(`${currencyEarned}兑换券`);
+            }
+            if (bankTicketEarned > 0) {
+                const bankTicket = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
+                const newBankTicket = bankTicket + bankTicketEarned;
+
+                // 安全检查：确保newBankTicket是有效数字
+                if (!isNaN(newBankTicket) && newBankTicket >= 0) {
+                    localStorage.setItem('bankTicket', newBankTicket.toString());
+
+                    // 触发storage事件同步到银行页面
+                    window.dispatchEvent(new StorageEvent('storage', {
+                        key: 'bankTicket',
+                        newValue: newBankTicket.toString()
+                    }));
+                }
+
+                rewardMessages.push(`${bankTicketEarned}银行券`);
+            }
+            if (rewardMessages.length > 0) {
+                showStatus(`成功获得${rewardMessages.join('、')}！`, "success");
             }
             
             // 触发UI更新
@@ -1511,8 +1551,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                             <div style="font-size: 1.1rem; font-weight:bold; color:#118ab2;">第${index+1}抽</div>
                             <div style="font-size: 1.5rem; margin:8px 0; text-align:center;">${prize.icon}</div>
                             <div style="font-size: 1.1rem; margin-bottom:5px; text-align:center;">${prize.name}</div>
-                            ${prize.rewardType === 'currency' ? 
-                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center;">${prize.currencyAmount}兑换券</div>` : ''}
+                            ${prize.rewardType === 'currency' ?
+                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center;">${prize.currencyAmount || 0}兑换券</div>` : ''}
+                            ${prize.rewardType === 'bankTicket' ?
+                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -1534,14 +1576,16 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 <div style="text-align: center; padding: 20px;">
                     <div style="font-size: 3rem; margin:20px 0;">${prize.icon}</div>
                     <div style="font-size: 1.5rem; margin-bottom:10px;">${prize.name}</div>
-                    ${prize.rewardType === 'currency' ? 
-                        `<div class="reward-tag">${prize.currencyAmount}兑换券</div>` : ''}
+                    ${prize.rewardType === 'currency' ?
+                        `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>` : ''}
                 </div>
             `;
-            
+
             rewardTags.innerHTML = '';
             if (prize.rewardType === 'currency') {
-                rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount}兑换券</div>`;
+                rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount || 0}兑换券</div>`;
+            } else if (prize.rewardType === 'bankTicket') {
+                rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
             } else {
                 rewardTags.innerHTML = `<div class="reward-tag">实物奖品</div>`;
             }
@@ -1554,7 +1598,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             // 显示通知
             let message = `恭喜获得：${prize.name}`;
             if (prize.rewardType === 'currency') {
-                message += ` (${prize.currencyAmount}兑换券)`;
+                message += ` (${prize.currencyAmount || 0}兑换券)`;
+            } else if (prize.rewardType === 'bankTicket') {
+                message += ` (${prize.currencyAmount || 0}银行券)`;
             }
             showStatus(message, "success");
         }
@@ -1618,7 +1664,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             const usable = document.getElementById('prizeUsable').value === 'true'; // 是否可使用
             let currencyAmount = 0;
 
-            if (rewardType === 'currency') {
+            if (rewardType === 'currency' || rewardType === 'bankTicket') {
                 currencyAmount = parseInt(document.getElementById('currencyAmountInput').value);
             }
 
@@ -1639,8 +1685,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 return;
             }
 
-            if (rewardType === 'currency' && (!currencyAmount || currencyAmount <= 0)) {
-                showStatus('请输入有效的兑换券数量！', "error");
+            if ((rewardType === 'currency' || rewardType === 'bankTicket') && (!currencyAmount || currencyAmount <= 0)) {
+                const currencyName = rewardType === 'currency' ? '兑换券' : '银行券';
+                showStatus(`请输入有效的${currencyName}数量！`, "error");
                 return;
             }
 
@@ -1791,8 +1838,19 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             
             // 奖励类型变更事件
             document.getElementById('prizeRewardType').addEventListener('change', function() {
-                document.getElementById('currencyAmountGroup').style.display = 
-                    this.value === 'currency' ? 'block' : 'none';
+                const isCurrency = this.value === 'currency' || this.value === 'bankTicket';
+                document.getElementById('currencyAmountGroup').style.display = isCurrency ? 'block' : 'none';
+                
+                // 动态更新标签文本
+                const label = document.getElementById('currencyAmountLabel');
+                const input = document.getElementById('currencyAmountInput');
+                if (this.value === 'currency') {
+                    label.textContent = '兑换券数量';
+                    input.placeholder = '请输入兑换券数量';
+                } else if (this.value === 'bankTicket') {
+                    label.textContent = '银行券数量';
+                    input.placeholder = '请输入银行券数量';
+                }
             });
             
             // 点击模态框外部关闭模态框
