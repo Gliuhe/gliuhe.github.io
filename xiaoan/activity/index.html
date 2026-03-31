@@ -727,11 +727,6 @@
             gap: 12px;
         }
 
-        /* 第五个里程碑独占一行 */
-        .milestone:nth-child(5) {
-            grid-column: 2;
-        }
-
         .milestone {
             background: rgba(255,255,255,0.1);
             border-radius: 12px;
@@ -1018,49 +1013,58 @@
                                 <span class="total-days" id="totalDays">0</span>
                                 <span class="total-label">天</span>
                             </div>
+                    </div>
                         </div>
 
                         <!-- 累计签到奖励里程碑 -->
                         <div class="leiQian-milestones">
-                            <div class="milestone" data-days="7">
+                            <div class="milestone" data-days="5">
                                 <div class="milestone-icon">🎁</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">7天</span>
-                                    <span class="milestone-reward">抽奖券x5</span>
+                                    <span class="milestone-days">5天</span>
+                                    <span class="milestone-reward">抽奖券x3</span>
                                 </div>
-                                <div class="milestone-status" id="milestone7">未达成</div>
+                                <div class="milestone-status" id="milestone5">未达成</div>
                             </div>
-                            <div class="milestone" data-days="15">
+                            <div class="milestone" data-days="10">
                                 <div class="milestone-icon">🎀</div>
                                 <div class="milestone-info">
+                                    <span class="milestone-days">10天</span>
+                                    <span class="milestone-reward">兑换券x300</span>
+                                </div>
+                                <div class="milestone-status" id="milestone10">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
                                     <span class="milestone-days">15天</span>
-                                    <span class="milestone-reward">抽奖券x5</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
                                 </div>
                                 <div class="milestone-status" id="milestone15">未达成</div>
                             </div>
-                            <div class="milestone" data-days="30">
-                                <div class="milestone-icon">💎</div>
+                            <div class="milestone" data-days="20">
+                                <div class="milestone-icon">🏦</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">30天</span>
-                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                    <span class="milestone-days">20天</span>
+                                    <span class="milestone-reward">银行券x6</span>
                                 </div>
-                                <div class="milestone-status" id="milestone30">未达成</div>
+                                <div class="milestone-status" id="milestone20">未达成</div>
                             </div>
-                            <div class="milestone" data-days="60">
+                            <div class="milestone" data-days="25">
                                 <div class="milestone-icon">🏆</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">60天</span>
-                                    <span class="milestone-reward">抽奖券x10</span>
+                                    <span class="milestone-days">25天</span>
+                                    <span class="milestone-reward">兑换券x700</span>
                                 </div>
-                                <div class="milestone-status" id="milestone60">未达成</div>
+                                <div class="milestone-status" id="milestone25">未达成</div>
                             </div>
-                            <div class="milestone" data-days="100">
+                            <div class="milestone" data-days="30">
                                 <div class="milestone-icon">👑</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">100天</span>
-                                    <span class="milestone-reward">兑换券x2000</span>
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">兑换券x1000</span>
                                 </div>
-                                <div class="milestone-status" id="milestone100">未达成</div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
                             </div>
                         </div>
                     </div>
@@ -1289,6 +1293,9 @@
             data.totalCheckins++;
             data.weekCheckins = Math.min(data.weekCheckins + 1, 7);
             data.lastCheckinDate = today;
+            
+            // 周期制累计签到
+            data.cycleCheckins = (data.cycleCheckins || 0) + 1;
 
             // 添加签到日期到数组
             if (!data.checkinDates) data.checkinDates = [];
@@ -1316,11 +1323,11 @@
                 }
             }
 
-            // 检查累计签到里程碑奖励
+            // 检查周期制累计签到里程碑奖励
             let milestoneReward = null;
             if (!data.claimedMilestones) data.claimedMilestones = [];
             for (const lr of LEIQIAN_REWARDS) {
-                if (data.totalCheckins >= lr.days && !data.claimedMilestones.includes(lr.days)) {
+                if (data.cycleCheckins >= lr.days && !data.claimedMilestones.includes(lr.days)) {
                     milestoneReward = lr;
                     data.claimedMilestones.push(lr.days);
                     addReward(lr.type, lr.amount);
@@ -1413,21 +1420,22 @@
 
         // 渲染累计签到页面
         function renderLeiQianPage(data) {
-            const totalDays = data.totalCheckins || 0;
+            const cycleDays = data.cycleCheckins || 0;
 
-            // 更新累计天数
+            // 更新累计天数（显示周期内的天数）
             const totalDaysEl = document.getElementById('totalDays');
             if (totalDaysEl) {
-                totalDaysEl.textContent = totalDays;
+                totalDaysEl.textContent = cycleDays;
             }
 
             // 更新里程碑状态
             const milestones = [
-                { id: 'milestone7', days: 7 },
+                { id: 'milestone5', days: 5 },
+                { id: 'milestone10', days: 10 },
                 { id: 'milestone15', days: 15 },
-                { id: 'milestone30', days: 30 },
-                { id: 'milestone60', days: 60 },
-                { id: 'milestone100', days: 100 }
+                { id: 'milestone20', days: 20 },
+                { id: 'milestone25', days: 25 },
+                { id: 'milestone30', days: 30 }
             ];
 
             const claimedMilestones = data.claimedMilestones || [];
@@ -1438,11 +1446,11 @@
                     if (claimedMilestones.includes(m.days)) {
                         el.textContent = '已领取';
                         el.closest('.milestone').classList.add('achieved');
-                    } else if (totalDays >= m.days) {
+                    } else if (cycleDays >= m.days) {
                         el.textContent = '已达成';
                         el.closest('.milestone').classList.add('achieved');
                     } else {
-                        el.textContent = `还差${m.days - totalDays}天`;
+                        el.textContent = `还差${m.days - cycleDays}天`;
                         el.closest('.milestone').classList.remove('achieved');
                     }
                 }
@@ -1555,45 +1563,53 @@
 
                         <!-- 累计签到奖励里程碑 -->
                         <div class="leiQian-milestones">
-                            <div class="milestone" data-days="7">
+                            <div class="milestone" data-days="5">
                                 <div class="milestone-icon">🎁</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">7天</span>
-                                    <span class="milestone-reward">抽奖券x5</span>
+                                    <span class="milestone-days">5天</span>
+                                    <span class="milestone-reward">抽奖券x3</span>
                                 </div>
-                                <div class="milestone-status" id="milestone7">未达成</div>
+                                <div class="milestone-status" id="milestone5">未达成</div>
                             </div>
-                            <div class="milestone" data-days="15">
+                            <div class="milestone" data-days="10">
                                 <div class="milestone-icon">🎀</div>
                                 <div class="milestone-info">
+                                    <span class="milestone-days">10天</span>
+                                    <span class="milestone-reward">兑换券x300</span>
+                                </div>
+                                <div class="milestone-status" id="milestone10">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
                                     <span class="milestone-days">15天</span>
-                                    <span class="milestone-reward">抽奖券x5</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
                                 </div>
                                 <div class="milestone-status" id="milestone15">未达成</div>
                             </div>
-                            <div class="milestone" data-days="30">
-                                <div class="milestone-icon">💎</div>
+                            <div class="milestone" data-days="20">
+                                <div class="milestone-icon">🏦</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">30天</span>
-                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                    <span class="milestone-days">20天</span>
+                                    <span class="milestone-reward">银行券x6</span>
                                 </div>
-                                <div class="milestone-status" id="milestone30">未达成</div>
+                                <div class="milestone-status" id="milestone20">未达成</div>
                             </div>
-                            <div class="milestone" data-days="60">
+                            <div class="milestone" data-days="25">
                                 <div class="milestone-icon">🏆</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">60天</span>
-                                    <span class="milestone-reward">抽奖券x10</span>
+                                    <span class="milestone-days">25天</span>
+                                    <span class="milestone-reward">兑换券x700</span>
                                 </div>
-                                <div class="milestone-status" id="milestone60">未达成</div>
+                                <div class="milestone-status" id="milestone25">未达成</div>
                             </div>
-                            <div class="milestone" data-days="100">
+                            <div class="milestone" data-days="30">
                                 <div class="milestone-icon">👑</div>
                                 <div class="milestone-info">
-                                    <span class="milestone-days">100天</span>
-                                    <span class="milestone-reward">兑换券x2000</span>
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">兑换券x1000</span>
                                 </div>
-                                <div class="milestone-status" id="milestone100">未达成</div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
                             </div>
                         </div>
                     </div>
