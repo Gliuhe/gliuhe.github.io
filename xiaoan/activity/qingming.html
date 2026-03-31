@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>清明时节雨纷纷 - 超级兑换券乐园</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        :root {
+            --primary-color: #00b894;
+            --secondary-color: #55efc4;
+            --accent-color: #81ecec;
+            --rain-color: #74b9ff;
+        }
+
+        body {
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景大图 */
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -2;
+        }
+
+        /* 渐变遮罩层 */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(0, 184, 148, 0.3) 0%,
+                rgba(85, 239, 196, 0.5) 50%,
+                rgba(0, 0, 0, 0.7) 100%
+            );
+            z-index: -1;
+        }
+
+        /* 雨滴效果 */
+        .rain-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .raindrop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, rgba(116, 185, 255, 0.6));
+            animation: fall linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(100vh); }
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #00b894;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 2;
+            padding: 100px 20px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 活动标题区 */
+        .event-header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding: 40px 20px;
+        }
+
+        .event-title {
+            font-size: 3.5rem;
+            color: white;
+            text-shadow: 
+                -2px -2px 0 rgba(0,0,0,0.5),
+                2px -2px 0 rgba(0,0,0,0.5),
+                -2px 2px 0 rgba(0,0,0,0.5),
+                2px 2px 0 rgba(0,0,0,0.5),
+                0 5px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 20px;
+            animation: titleFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .event-subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .event-period {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            display: inline-block;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 进度条 */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 25px 35px;
+            margin-bottom: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .progress-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
+            border-radius: 25px;
+            z-index: -1;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-title {
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-count {
+            color: #ffd166;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            height: 14px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00b894, #55efc4, #ffd166);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+        }
+
+        /* 模块网格布局 - 超分散布局 */
+        .modules-grid {
+            display: block;
+            position: relative;
+            min-height: 550px;
+            margin-top: 50px;
+        }
+
+        /* 单个模块 - 大卡片 */
+        .module-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 35px 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            width: 250px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 超分散排版 - 三个模块分别在不同位置 */
+        .module-card:nth-child(1) {
+            /* 踏京沐青 - 左上方 */
+            left: 8%;
+            top: 0px;
+            transform: rotate(-5deg);
+        }
+
+        .module-card:nth-child(2) {
+            /* 青清健体 - 右上方 */
+            right: 8%;
+            top: 60px;
+            transform: rotate(4deg);
+        }
+
+        .module-card:nth-child(3) {
+            /* 诗学共晴 - 下方中央偏左 */
+            left: 35%;
+            transform: translateX(-50%) rotate(-2deg);
+            top: 300px;
+        }
+
+        .module-card:nth-child(1):hover {
+            transform: rotate(0deg) scale(1.08);
+        }
+
+        .module-card:nth-child(2):hover {
+            transform: rotate(0deg) scale(1.08);
+        }
+
+        .module-card:nth-child(3):hover {
+            transform: translateX(-50%) rotate(0deg) scale(1.08);
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+            border-radius: 30px;
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .module-card.expanded {
+            position: relative !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
+            transform: none !important;
+            width: 100%;
+            min-height: 400px;
+            cursor: default;
+            margin-bottom: 30px;
+        }
+
+        /* 展开时其他模块 */
+        .module-card.minimized {
+            opacity: 0.15;
+            transform: scale(0.7) !important;
+            pointer-events: none;
+        }
+
+        .modules-grid.has-expanded .module-card:not(.expanded) {
+            position: absolute;
+        }
+
+        .module-icon-large {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.2));
+            transition: all 0.5s ease;
+        }
+
+        .module-card.expanded .module-icon-large {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .module-title-large {
+            font-size: 1.8rem;
+            color: white;
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.5),
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5);
+            text-align: center;
+            margin-bottom: 10px;
+            transition: all 0.5s ease;
+        }
+
+        .module-card.expanded .module-title-large {
+            font-size: 2rem;
+        }
+
+        .module-subtitle {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+        }
+
+        .module-card.expanded .module-subtitle {
+            opacity: 0;
+        }
+
+        /* 展开按钮 */
+        .expand-hint {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .module-card:hover .expand-hint {
+            opacity: 1;
+        }
+
+        .module-card.expanded .expand-hint {
+            display: none;
+        }
+
+        /* 任务区域 */
+        .tasks-container {
+            width: 100%;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 0;
+        }
+
+        .module-card.expanded .tasks-container {
+            max-height: 1000px;
+            opacity: 1;
+            margin-top: 30px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* 收起按钮 */
+        .collapse-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .module-card.expanded .collapse-btn {
+            opacity: 1;
+        }
+
+        .collapse-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        /* 任务卡片样式 */
+        .task-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+            border-radius: 25px;
+            z-index: -1;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px) rotate(-1deg);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .task-card.completed {
+            background: rgba(0, 184, 148, 0.2);
+            border-color: rgba(0, 184, 148, 0.5);
+        }
+
+        .task-card.completed::before {
+            background: linear-gradient(135deg, rgba(0, 184, 148, 0.3), rgba(85, 239, 196, 0.1));
+        }
+
+        .task-card.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(0, 184, 148, 0.4);
+        }
+
+        .task-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .task-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-desc {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .task-reward {
+            background: linear-gradient(135deg, #ffd166, #ffb347);
+            color: #333;
+            padding: 8px 18px;
+            border-radius: 15px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(255, 209, 102, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .task-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 18px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-btn:hover:not(:disabled) {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .task-btn:disabled {
+            background: rgba(255, 255, 255, 0.15);
+            cursor: not-allowed;
+            box-shadow: none;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 45px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            border: 3px solid rgba(0, 184, 148, 0.5);
+            animation: modalIn 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.8) rotate(-5deg); opacity: 0; }
+            to { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        .modal-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 0.6s ease;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            color: #00b894;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 1.15rem;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #2d3436;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .modules-grid {
+                min-height: auto;
+                position: relative;
+            }
+
+            .module-card {
+                position: relative !important;
+                left: auto !important;
+                right: auto !important;
+                top: auto !important;
+                transform: none !important;
+                width: 100%;
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 80px 15px 30px;
+            }
+
+            .event-title {
+                font-size: 2.2rem;
+            }
+
+            .module-card {
+                min-height: 200px;
+                padding: 30px 20px;
+            }
+
+            .module-icon-large {
+                font-size: 3.5rem;
+            }
+
+            .module-title-large {
+                font-size: 1.8rem;
+            }
+
+            .module-card.expanded .module-title-large {
+                font-size: 1.5rem;
+            }
+
+            .back-btn {
+                top: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景大图 -->
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+
+    <!-- 雨滴效果 -->
+    <div class="rain-container" id="rainContainer"></div>
+
+    <!-- 返回按钮 -->
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='/xiaoan/activity/'">🏠 返回活动</button>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 活动标题区 -->
+        <div class="event-header">
+            <h1 class="event-title">🌧️ 清明时节雨纷纷 🌸</h1>
+            <p class="event-subtitle">踏青寻春，雨中漫步，完成趣味任务赢取丰厚奖励</p>
+            <div class="event-period">📅 限时活动：4月1日 - 4月6日</div>
+        </div>
+
+        <!-- 活动进度 -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-title">🎯 活动进度</span>
+                <span class="progress-count"><span id="completedTasks">0</span>/6 任务</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 模块网格 -->
+        <div class="modules-grid" id="modulesGrid">
+            <!-- 模块由 JS 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 成功弹窗 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="modal-icon">🎊</div>
+            <h2 class="modal-title">任务完成！</h2>
+            <div class="modal-text" id="rewardText">恭喜获得奖励！</div>
+            <button class="btn btn-primary" onclick="closeModal()">太棒了！</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 任务配置 =====
+        const MODULES = [
+            {
+                id: 'tajing',
+                icon: '🏯',
+                title: '踏京沐青',
+                subtitle: '共赴春日之约',
+                tasks: [
+                    {
+                        id: 'taqing',
+                        icon: '🌿',
+                        name: '踏青',
+                        desc: '与朋友们共沐春风',
+                        reward: { type: 'bankTicket', amount: 5, icon: '🏦', name: '银行券x5' },
+                        action: 'taqing'
+                    },
+                    {
+                        id: 'luqing',
+                        icon: '📸',
+                        name: '录青',
+                        desc: '记录下你最喜欢的那缕春光',
+                        reward: { type: 'lottery', amount: 5, icon: '🎰', name: '抽奖券x5' },
+                        action: 'luqing'
+                    }
+                ]
+            },
+            {
+                id: 'qingjing',
+                icon: '🏃',
+                title: '青清健体',
+                subtitle: '挥洒青春汗水',
+                tasks: [
+                    {
+                        id: 'badminton',
+                        icon: '🏸',
+                        name: '羽毛球运动',
+                        desc: '挥拍如风，在球场上绽放青春活力，让汗水见证运动的快乐',
+                        reward: { type: 'voucher', amount: 300, icon: '🎫', name: '兑换券x300' },
+                        action: 'badminton'
+                    },
+                    {
+                        id: 'steps20k',
+                        icon: '👣',
+                        name: '总步数超2w',
+                        desc: '丈量大地，用脚步书写春日诗篇，两万步程见证坚持的力量',
+                        reward: { type: 'voucher', amount: 500, icon: '🎫', name: '兑换券x500' },
+                        action: 'steps20k'
+                    }
+                ]
+            },
+            {
+                id: 'shixue',
+                icon: '📖',
+                title: '诗学共晴',
+                subtitle: '以诗会友，学海泛舟',
+                tasks: [
+                    {
+                        id: 'recitePoem',
+                        icon: '📜',
+                        name: '背诵古诗',
+                        desc: '背诵一首清明的古诗',
+                        reward: { type: 'premiumLottery', amount: 1, icon: '💎', name: '高级抽奖券x1' },
+                        action: 'recitePoem'
+                    },
+                    {
+                        id: 'finishHomework',
+                        icon: '📚',
+                        name: '完成作业',
+                        desc: '完成所有作业',
+                        reward: { type: 'voucher', amount: 200, icon: '🎫', name: '兑换券x200' },
+                        action: 'finishHomework'
+                    }
+                ]
+            }
+        ];
+
+        let expandedModule = null;
+
+        // ===== 数据管理 =====
+        function getEventData() {
+            const data = localStorage.getItem('qingmingEventData');
+            return data ? JSON.parse(data) : {
+                completedTasks: [],
+                lastResetDate: null
+            };
+        }
+
+        function saveEventData(data) {
+            localStorage.setItem('qingmingEventData', JSON.stringify(data));
+        }
+
+        function getDateString() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // ===== 初始化 =====
+        function init() {
+            checkDailyReset();
+            renderModules();
+            updateProgress();
+            createRaindrops();
+        }
+
+        function checkDailyReset() {
+            const data = getEventData();
+            const today = getDateString();
+            
+            if (data.lastResetDate !== today) {
+                data.completedTasks = [];
+                data.lastResetDate = today;
+                saveEventData(data);
+            }
+        }
+
+        // ===== 渲染模块 =====
+        function renderModules() {
+            const grid = document.getElementById('modulesGrid');
+            let html = '';
+            
+            MODULES.forEach(module => {
+                html += `
+                    <div class="module-card" id="module-${module.id}" onclick="toggleModule('${module.id}')">
+                        <div class="collapse-btn" onclick="event.stopPropagation(); collapseModule('${module.id}')">×</div>
+                        <div class="module-icon-large">${module.icon}</div>
+                        <h2 class="module-title-large">${module.title}</h2>
+                        <p class="module-subtitle">${module.subtitle}</p>
+                        <p class="expand-hint">点击展开任务 ↓</p>
+                        <div class="tasks-container">
+                            <div class="tasks-grid" id="tasks-${module.id}">
+                                ${renderTasks(module.tasks)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function renderTasks(tasks) {
+            const data = getEventData();
+            let html = '';
+            
+            tasks.forEach(task => {
+                const isCompleted = data.completedTasks.includes(task.id);
+                
+                html += `
+                    <div class="task-card ${isCompleted ? 'completed' : ''}">
+                        <div class="task-icon">${task.icon}</div>
+                        <div class="task-name">${task.name}</div>
+                        <div class="task-desc">${task.desc}</div>
+                        <div class="task-reward">${task.reward.icon} ${task.reward.name}</div>
+                        <button class="task-btn" onclick="event.stopPropagation(); doTask('${task.id}')" ${isCompleted ? 'disabled' : ''}>
+                            ${isCompleted ? '已完成' : '去完成'}
+                        </button>
+                    </div>
+                `;
+            });
+            
+            return html;
+        }
+
+        // ===== 模块展开/收起 =====
+        function toggleModule(moduleId) {
+            const moduleCard = document.getElementById(`module-${moduleId}`);
+            
+            if (expandedModule === moduleId) {
+                // 收起当前模块
+                collapseModule(moduleId);
+            } else {
+                // 展开新模块
+                if (expandedModule) {
+                    collapseModule(expandedModule);
+                }
+                expandModule(moduleId);
+            }
+        }
+
+        function expandModule(moduleId) {
+            const moduleCard = document.getElementById(`module-${moduleId}`);
+            const allModules = document.querySelectorAll('.module-card');
+            const modulesGrid = document.getElementById('modulesGrid');
+            
+            moduleCard.classList.add('expanded');
+            modulesGrid.classList.add('has-expanded');
+            expandedModule = moduleId;
+            
+            // 其他模块最小化
+            allModules.forEach(m => {
+                if (m.id !== `module-${moduleId}`) {
+                    m.classList.add('minimized');
+                }
+            });
+            
+            // 滚动到展开的模块
+            setTimeout(() => {
+                moduleCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 300);
+        }
+
+        function collapseModule(moduleId) {
+            const moduleCard = document.getElementById(`module-${moduleId}`);
+            const allModules = document.querySelectorAll('.module-card');
+            const modulesGrid = document.getElementById('modulesGrid');
+            
+            moduleCard.classList.remove('expanded');
+            modulesGrid.classList.remove('has-expanded');
+            expandedModule = null;
+            
+            // 恢复所有模块
+            allModules.forEach(m => {
+                m.classList.remove('minimized');
+            });
+        }
+
+        function updateProgress() {
+            const data = getEventData();
+            const totalTasks = MODULES.reduce((sum, m) => sum + m.tasks.length, 0);
+            const completed = data.completedTasks.length;
+            const percentage = (completed / totalTasks) * 100;
+            
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.querySelector('.progress-count').innerHTML = `<span id="completedTasks">${completed}</span>/${totalTasks} 任务`;
+        }
+
+        // ===== 任务执行 =====
+        function doTask(taskId) {
+            let task = null;
+            MODULES.forEach(m => {
+                const found = m.tasks.find(t => t.id === taskId);
+                if (found) task = found;
+            });
+            
+            if (!task) return;
+
+            const data = getEventData();
+            if (data.completedTasks.includes(taskId)) {
+                alert('该任务今日已完成！');
+                return;
+            }
+
+            switch (task.action) {
+                case 'taqing':
+                    if (confirm('今天和朋友一起踏青了吗？点击确定领取奖励')) {
+                        completeTask(taskId, task.reward);
+                    }
+                    break;
+                    
+                case 'luqing':
+                    const springMoment = prompt('记录下你最喜欢的那缕春光：');
+                    if (springMoment && springMoment.trim()) {
+                        completeTask(taskId, task.reward);
+                    }
+                    break;
+                    
+                case 'badminton':
+                    if (confirm('今天打了羽毛球吗？挥拍如风，点击确定领取奖励')) {
+                        completeTask(taskId, task.reward);
+                    }
+                    break;
+                    
+                case 'steps20k':
+                    const steps = prompt('请输入今日步数：');
+                    if (steps && parseInt(steps) >= 20000) {
+                        completeTask(taskId, task.reward);
+                    } else {
+                        alert('步数未达到20000，继续加油！');
+                    }
+                    break;
+                    
+                case 'recitePoem':
+                    const poem = prompt('请输入你背诵的清明古诗（任意清明相关诗句即可）：');
+                    if (poem && poem.trim().length >= 4) {
+                        completeTask(taskId, task.reward);
+                    } else {
+                        alert('请输入有效的诗句内容');
+                    }
+                    break;
+                    
+                case 'finishHomework':
+                    if (confirm('作业都完成了吗？点击确定领取奖励')) {
+                        completeTask(taskId, task.reward);
+                    }
+                    break;
+            }
+        }
+
+        function completeTask(taskId, reward) {
+            const data = getEventData();
+            if (!data.completedTasks.includes(taskId)) {
+                data.completedTasks.push(taskId);
+                saveEventData(data);
+                
+                addReward(reward.type, reward.amount);
+                showSuccessModal(reward);
+                
+                // 重新渲染任务卡片
+                renderModules();
+                updateProgress();
+                
+                // 保持当前模块展开状态
+                if (expandedModule) {
+                    setTimeout(() => {
+                        expandModule(expandedModule);
+                    }, 100);
+                }
+            }
+        }
+
+        function addReward(type, amount) {
+            const keys = {
+                'voucher': 'voucher',
+                'lottery': 'lottery',
+                'premiumLottery': 'premium',
+                'bankTicket': 'bankTicket'
+            };
+            
+            const key = keys[type];
+            if (key) {
+                const current = parseInt(localStorage.getItem(key) || '0');
+                localStorage.setItem(key, current + amount);
+                console.log(`[清明活动] ${type}: +${amount}, 当前余额: ${current + amount}`);
+            }
+        }
+
+        // ===== 雨滴效果 =====
+        function createRaindrops() {
+            const container = document.getElementById('rainContainer');
+            
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'raindrop';
+                    drop.style.left = Math.random() * 100 + '%';
+                    drop.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
+                    drop.style.animationDelay = Math.random() * 2 + 's';
+                    container.appendChild(drop);
+                    
+                    setTimeout(() => drop.remove(), 3000);
+                }, i * 100);
+            }
+            
+            setTimeout(createRaindrops, 3000);
+        }
+
+        // ===== 弹窗 =====
+        function showSuccessModal(reward) {
+            document.getElementById('rewardText').innerHTML = 
+                `恭喜获得 <strong>${reward.icon} ${reward.name}</strong>`;
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ===== 页面加载 =====
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
