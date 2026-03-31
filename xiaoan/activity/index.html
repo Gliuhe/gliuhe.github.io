@@ -442,20 +442,12 @@
             font-size: 1.4rem;
         }
 
-        .activity-nav-item.lucky-wheel .nav-icon {
-            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        .activity-nav-item.leiQian .nav-icon {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
         }
 
-        .activity-nav-item.bank .nav-icon {
-            background: linear-gradient(135deg, #54a0ff, #5f27cd);
-        }
-
-        .activity-nav-item.quiz .nav-icon {
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
-        }
-
-        .activity-nav-item.special .nav-icon {
-            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        .activity-nav-item.qingming .nav-icon {
+            background: linear-gradient(135deg, #55efc4, #00b894);
         }
 
         .nav-label {
@@ -485,6 +477,16 @@
             color: #576574;
         }
 
+        .nav-status.limited {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+
+        .nav-status.permanent {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+        }
+
         /* 右侧详情区 - 图片背景渐变透底 */
         .activity-detail {
             flex: 1;
@@ -508,43 +510,51 @@
             right: 0;
             bottom: 0;
             z-index: 0;
-            background-size: cover;
-            background-position: center;
-            transition: background-image 0.5s ease;
+            --theme-color: #6c5ce7;
+            background: linear-gradient(to bottom, 
+                transparent 0%,
+                transparent 33%,
+                var(--theme-color) 100%
+            );
         }
 
-        /* 从上到下透明度渐变遮罩 */
-        .detail-bg::after {
+        /* 图片层：显示卡片75%高度，最高透明度75%，向下渐变消失 */
+        .detail-bg::before {
             content: "";
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(to bottom,
-                rgba(0, 0, 0, 0.1) 0%,
-                rgba(0, 0, 0, 0.2) 30%,
-                rgba(0, 0, 0, 0.5) 60%,
-                var(--card-bg) 100%
+            height: 75%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.75;
+            transition: background-image 0.5s ease;
+            mask-image: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 0.4) 70%,
+                rgba(0, 0, 0, 0) 100%
+            );
+            -webkit-mask-image: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 0.4) 70%,
+                rgba(0, 0, 0, 0) 100%
             );
         }
 
         /* 活动对应的背景图片 */
-        .activity-detail.lucky-wheel .detail-bg {
-            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/lucky-wheel.jpg');
+        /* 累签活动使用暗黑主题，无背景图片 */
+        .activity-detail.leiQian .detail-bg::before {
+            display: none;
         }
 
-        .activity-detail.bank .detail-bg {
-            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/bank.jpg');
+        .activity-detail.qingming .detail-bg::before {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg');
         }
 
-        .activity-detail.quiz .detail-bg {
-            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/quiz.jpg');
-        }
 
-        .activity-detail.special .detail-bg {
-            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/special.jpg');
-        }
 
         /* 内容层 */
         .detail-content {
@@ -555,6 +565,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
         }
 
         /* 底部渐变遮罩 */
@@ -595,7 +606,12 @@
             font-size: 2.2rem;
             margin-bottom: 12px;
             color: white;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.5),
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5),
+                0 3px 10px rgba(0, 0, 0, 0.3);
             font-weight: bold;
         }
 
@@ -614,35 +630,166 @@
 
         .detail-desc {
             font-size: 1.05rem;
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
             line-height: 1.8;
             max-width: 420px;
             margin-bottom: 25px;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.4),
+                1px -1px 0 rgba(0,0,0,0.4),
+                -1px 1px 0 rgba(0,0,0,0.4),
+                1px 1px 0 rgba(0,0,0,0.4),
+                0 2px 5px rgba(0, 0, 0, 0.2);
         }
 
-        .detail-rewards {
+        .detail-footer {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 28px;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: auto;
+            padding-top: 20px;
         }
 
-        .reward-tag {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(5px);
+        .detail-rewards-hint {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            text-shadow:
+                -1px -1px 0 rgba(0,0,0,0.4),
+                1px -1px 0 rgba(0,0,0,0.4),
+                -1px 1px 0 rgba(0,0,0,0.4),
+                1px 1px 0 rgba(0,0,0,0.4);
+        }
+
+        /* 累签活动内嵌页面样式 */
+        .leiQian-content {
+            width: 100%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .leiQian-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .leiQian-icon {
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .leiQian-info h2 {
+            font-size: 1.8rem;
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
+            margin: 0;
+            text-shadow:
+                -1px -1px 0 rgba(0,0,0,0.5),
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5);
+        }
+
+        .leiQian-info p {
+            color: rgba(255,255,255,0.7);
+            margin: 5px 0 0;
             font-size: 0.9rem;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .leiQian-total {
+            margin-left: auto;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            padding: 15px 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .total-days {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            display: block;
+        }
+
+        .total-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .leiQian-milestones {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        /* 第五个里程碑独占一行 */
+        .milestone:nth-child(5) {
+            grid-column: 2;
+        }
+
+        .milestone {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
             transition: all 0.3s ease;
         }
 
-        .reward-tag:hover {
-            background: rgba(255, 255, 255, 0.3);
+        .milestone:hover {
+            background: rgba(255,255,255,0.15);
             transform: translateY(-2px);
+        }
+
+        .milestone.achieved {
+            background: rgba(6, 214, 160, 0.2);
+            border-color: rgba(6, 214, 160, 0.5);
+        }
+
+        .milestone-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .milestone-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .milestone-days {
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .milestone-reward {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+        }
+
+        .milestone-status {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .milestone.achieved .milestone-status {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
         }
 
         .detail-btn {
@@ -798,13 +945,7 @@
     </style>
 </head>
 <body>
-    <!-- 主题选择器 -->
-    <div class="theme-selector">
-        <button class="theme-btn active" onclick="setTheme('light')">☀️ 默认</button>
-        <button class="theme-btn" onclick="setTheme('dark')">🌙 暗黑</button>
-        <button class="theme-btn" onclick="setTheme('pink')">🌸 粉色</button>
-        <button class="theme-btn" onclick="setTheme('blue')">💎 蓝色</button>
-    </div>
+    <!-- 主题选择器（已隐藏，根据活动自动切换） -->
 
     <!-- 返回按钮 -->
     <div class="back-btn">
@@ -850,43 +991,78 @@
             <div class="activities-layout">
                 <!-- 左侧导航 -->
                 <div class="activity-nav">
-                    <div class="activity-nav-item lucky-wheel active" data-activity="lucky-wheel">
-                        <div class="nav-icon">🎰</div>
-                        <div class="nav-label">轮盘</div>
-                        <div class="nav-status hot">🔥</div>
+                    <div class="activity-nav-item leiQian active" data-activity="leiQian">
+                        <div class="nav-icon">📅</div>
+                        <div class="nav-label">累签</div>
+                        <div class="nav-status permanent">常驻</div>
                     </div>
-                    <div class="activity-nav-item bank" data-activity="bank">
-                        <div class="nav-icon">🏦</div>
-                        <div class="nav-label">银行</div>
-                        <div class="nav-status new">✨</div>
-                    </div>
-                    <div class="activity-nav-item quiz disabled" data-activity="quiz">
-                        <div class="nav-icon">❓</div>
-                        <div class="nav-label">答题</div>
-                        <div class="nav-status coming">即将</div>
-                    </div>
-                    <div class="activity-nav-item special disabled" data-activity="special">
-                        <div class="nav-icon">🎉</div>
-                        <div class="nav-label">活动</div>
-                        <div class="nav-status coming">敬请期待</div>
+                    <div class="activity-nav-item qingming" data-activity="qingming">
+                        <div class="nav-icon">🌧️</div>
+                        <div class="nav-label">清明</div>
+                        <div class="nav-status limited">限时</div>
                     </div>
                 </div>
 
                 <!-- 右侧详情 -->
-                <div class="activity-detail lucky-wheel" id="activityDetail">
+                <div class="activity-detail leiQian" id="activityDetail">
                     <div class="detail-bg" id="detailBg"></div>
-                    <div class="detail-content">
-                        <div class="detail-icon">🎰</div>
-                        <h2 class="detail-title">幸运轮盘</h2>
-                        <div class="detail-status">🔥 热门活动</div>
-                        <p class="detail-desc">消耗抽奖券转动幸运轮盘，赢取丰厚奖励！每天来试试手气，大奖等你来拿~</p>
-                        <div class="detail-rewards">
-                            <span class="reward-tag">🎫 兑换券</span>
-                            <span class="reward-tag">🎰 抽奖券</span>
-                            <span class="reward-tag">💎 高级券</span>
-                            <span class="reward-tag">🎁 神秘奖励</span>
+                    <div class="detail-content leiQian-content">
+                        <!-- 累计签到头部 -->
+                        <div class="leiQian-header">
+                            <div class="leiQian-icon">📅</div>
+                            <div class="leiQian-info">
+                                <h2>长风逐波</h2>
+                                <p>累计签到，逐浪前行</p>
+                            </div>
+                            <div class="leiQian-total">
+                                <span class="total-days" id="totalDays">0</span>
+                                <span class="total-label">天</span>
+                            </div>
                         </div>
-                        <button class="detail-btn" id="detailBtn" onclick="goToActivity()">立即前往</button>
+
+                        <!-- 累计签到奖励里程碑 -->
+                        <div class="leiQian-milestones">
+                            <div class="milestone" data-days="7">
+                                <div class="milestone-icon">🎁</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">7天</span>
+                                    <span class="milestone-reward">抽奖券x5</span>
+                                </div>
+                                <div class="milestone-status" id="milestone7">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">🎀</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">15天</span>
+                                    <span class="milestone-reward">抽奖券x5</span>
+                                </div>
+                                <div class="milestone-status" id="milestone15">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="30">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                </div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="60">
+                                <div class="milestone-icon">🏆</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">60天</span>
+                                    <span class="milestone-reward">抽奖券x10</span>
+                                </div>
+                                <div class="milestone-status" id="milestone60">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="100">
+                                <div class="milestone-icon">👑</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">100天</span>
+                                    <span class="milestone-reward">兑换券x2000</span>
+                                </div>
+                                <div class="milestone-status" id="milestone100">未达成</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -906,13 +1082,13 @@
     <script>
         // ===== 签到奖励配置 =====
         const WEEKLY_REWARDS = [
-            { day: '周一', type: 'voucher', amount: 5, icon: '🎫', name: '兑换券' },
-            { day: '周二', type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券' },
-            { day: '周三', type: 'bankTicket', amount: 3, icon: '🏦', name: '银行券' },
-            { day: '周四', type: 'voucher', amount: 8, icon: '🎫', name: '兑换券' },
-            { day: '周五', type: 'lottery', amount: 5, icon: '🎰', name: '抽奖券' },
-            { day: '周六', type: 'premiumLottery', amount: 1, icon: '💎', name: '高级抽奖券' },
-            { day: '周日', type: 'voucher', amount: 15, icon: '🎫', name: '兑换券' }
+            { day: '周一', type: 'voucher', amount: 50, icon: '🎫', name: '兑换券' },
+            { day: '周二', type: 'lottery', amount: 1, icon: '🎰', name: '抽奖券' },
+            { day: '周三', type: 'bankTicket', amount: 1, icon: '🏦', name: '银行券' },
+            { day: '周四', type: 'voucher', amount: 80, icon: '🎫', name: '兑换券' },
+            { day: '周五', type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券' },
+            { day: '周六', type: 'voucher', amount: 120, icon: '🎫', name: '兑换券' },
+            { day: '周日', type: 'bankTicket', amount: 3, icon: '🏦', name: '银行券' }
         ];
 
         // 连续签到奖励
@@ -923,11 +1099,33 @@
             { days: 30, type: 'voucher', amount: 10, icon: '🎫', name: '+10兑换券' }
         ];
 
+        // 累计签到里程碑奖励（周期制，每月重置）
+        const LEIQIAN_REWARDS = [
+            { days: 5, type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券x3' },
+            { days: 10, type: 'voucher', amount: 300, icon: '🎫', name: '兑换券x300' },
+            { days: 15, type: 'premiumLottery', amount: 1, icon: '💎', name: '高级抽奖券x1' },
+            { days: 20, type: 'bankTicket', amount: 6, icon: '🏦', name: '银行券x6' },
+            { days: 25, type: 'voucher', amount: 700, icon: '🎫', name: '兑换券x700' },
+            { days: 30, type: 'voucher', amount: 1000, icon: '🎫', name: '兑换券x1000' }
+        ];
+
         // ===== 初始化 =====
         function init() {
             loadTheme();
             loadCheckinData();
             updateUI();
+            // 初始化默认活动的主题色
+            const defaultActivity = ACTIVITIES[currentActivity];
+            if (defaultActivity) {
+                const bg = document.getElementById('detailBg');
+                bg.style.setProperty('--theme-color', defaultActivity.bgColor);
+                // 根据默认活动设置主题并渲染页面
+                if (currentActivity === 'leiQian') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    // 使用switchActivity渲染累签页面
+                    switchActivity('leiQian');
+                }
+            }
         }
 
         // ===== 主题功能 =====
@@ -963,14 +1161,50 @@
         // ===== 签到数据管理 =====
         function getCheckinData() {
             const data = localStorage.getItem('checkinData');
-            return data ? JSON.parse(data) : {
+            const defaultData = {
                 lastCheckinDate: null,
                 checkinLog: [],
+                checkinDates: [],
                 streakDays: 0,
                 totalCheckins: 0,
                 weekCheckins: 0,
-                lastStreakReward: 0
+                lastStreakReward: 0,
+                // 周期制相关字段
+                cycleStartDate: null,  // 当前周期开始日期
+                cycleCheckins: 0,      // 当前周期签到天数
+                claimedMilestones: []  // 当前周期已领取的里程碑
             };
+            
+            const savedData = data ? JSON.parse(data) : defaultData;
+            
+            // 检查是否需要重置周期（每月1号重置）
+            const today = new Date();
+            const todayStr = getDateString();
+            
+            if (!savedData.cycleStartDate) {
+                // 首次初始化，设置周期开始日期为当月1号
+                const cycleStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                savedData.cycleStartDate = cycleStart.toISOString().split('T')[0];
+                savedData.cycleCheckins = 0;
+                savedData.claimedMilestones = [];
+            } else {
+                // 检查周期是否过期
+                const cycleStart = new Date(savedData.cycleStartDate);
+                const cycleMonth = cycleStart.getMonth();
+                const currentMonth = today.getMonth();
+                const cycleYear = cycleStart.getFullYear();
+                const currentYear = today.getFullYear();
+                
+                // 如果月份或年份不同，重置周期
+                if (cycleMonth !== currentMonth || cycleYear !== currentYear) {
+                    const newCycleStart = new Date(currentYear, currentMonth, 1);
+                    savedData.cycleStartDate = newCycleStart.toISOString().split('T')[0];
+                    savedData.cycleCheckins = 0;
+                    savedData.claimedMilestones = [];
+                }
+            }
+            
+            return savedData;
         }
 
         function saveCheckinData(data) {
@@ -1055,6 +1289,13 @@
             data.totalCheckins++;
             data.weekCheckins = Math.min(data.weekCheckins + 1, 7);
             data.lastCheckinDate = today;
+
+            // 添加签到日期到数组
+            if (!data.checkinDates) data.checkinDates = [];
+            if (!data.checkinDates.includes(today)) {
+                data.checkinDates.push(today);
+            }
+
             data.checkinLog.push({
                 date: today,
                 dayOfWeek: dayIndex,
@@ -1075,25 +1316,38 @@
                 }
             }
 
+            // 检查累计签到里程碑奖励
+            let milestoneReward = null;
+            if (!data.claimedMilestones) data.claimedMilestones = [];
+            for (const lr of LEIQIAN_REWARDS) {
+                if (data.totalCheckins >= lr.days && !data.claimedMilestones.includes(lr.days)) {
+                    milestoneReward = lr;
+                    data.claimedMilestones.push(lr.days);
+                    addReward(lr.type, lr.amount);
+                    break;
+                }
+            }
+
             saveCheckinData(data);
             updateUI();
 
             // 显示成功弹窗
-            showSuccessModal(reward, streakReward);
+            showSuccessModal(reward, streakReward, milestoneReward);
         }
 
         function addReward(type, amount) {
             const keys = {
-                'voucher': 'voucherCount',
-                'lottery': 'lotteryTicketCount',
-                'premiumLottery': 'premiumLotteryTicketCount',
-                'bankTicket': 'bankTicketCount'
+                'voucher': 'voucher',
+                'lottery': 'lottery',
+                'premiumLottery': 'premium',
+                'bankTicket': 'bankTicket'
             };
             
             const key = keys[type];
             if (key) {
                 const current = parseInt(localStorage.getItem(key) || '0');
                 localStorage.setItem(key, current + amount);
+                console.log(`[奖励发放] ${type}: +${amount}, 当前余额: ${current + amount}`);
             }
         }
 
@@ -1157,12 +1411,56 @@
             calendar.innerHTML = html;
         }
 
+        // 渲染累计签到页面
+        function renderLeiQianPage(data) {
+            const totalDays = data.totalCheckins || 0;
+
+            // 更新累计天数
+            const totalDaysEl = document.getElementById('totalDays');
+            if (totalDaysEl) {
+                totalDaysEl.textContent = totalDays;
+            }
+
+            // 更新里程碑状态
+            const milestones = [
+                { id: 'milestone7', days: 7 },
+                { id: 'milestone15', days: 15 },
+                { id: 'milestone30', days: 30 },
+                { id: 'milestone60', days: 60 },
+                { id: 'milestone100', days: 100 }
+            ];
+
+            const claimedMilestones = data.claimedMilestones || [];
+
+            milestones.forEach(m => {
+                const el = document.getElementById(m.id);
+                if (el) {
+                    if (claimedMilestones.includes(m.days)) {
+                        el.textContent = '已领取';
+                        el.closest('.milestone').classList.add('achieved');
+                    } else if (totalDays >= m.days) {
+                        el.textContent = '已达成';
+                        el.closest('.milestone').classList.add('achieved');
+                    } else {
+                        el.textContent = `还差${m.days - totalDays}天`;
+                        el.closest('.milestone').classList.remove('achieved');
+                    }
+                }
+            });
+
+            // 渲染签到日历（最近30天）
+        }
+
         // ===== 弹窗 =====
-        function showSuccessModal(reward, streakReward) {
+        function showSuccessModal(reward, streakReward, milestoneReward) {
             let text = `获得 <strong>${reward.icon} ${reward.amount} ${reward.name}</strong>`;
 
             if (streakReward) {
                 text += `<br><small style="opacity:0.8">连续签到 ${streakReward.days} 天，额外获得 ${streakReward.icon} ${streakReward.name}</small>`;
+            }
+
+            if (milestoneReward) {
+                text += `<br><small style="opacity:0.8; color: #ffeaa7;">🎉 累计签到 ${milestoneReward.days} 天里程碑！获得 ${milestoneReward.icon} ${milestoneReward.name}</small>`;
             }
 
             document.getElementById('rewardText').innerHTML = text;
@@ -1180,58 +1478,35 @@
             }
         });
 
-        // 初始化
-        init();
-
         // ===== 活动切换 =====
         const ACTIVITIES = {
-            'lucky-wheel': {
-                icon: '🎰',
-                title: '幸运轮盘',
-                status: 'hot',
-                statusText: '🔥 热门活动',
-                desc: '消耗抽奖券转动幸运轮盘，赢取丰厚奖励！每天来试试手气，大奖等你来拿~',
-                rewards: ['🎫 兑换券', '🎰 抽奖券', '💎 高级券', '🎁 神秘奖励'],
-                url: '/xiaoan/choujiang/',
-                disabled: false,
-                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/lucky-wheel.jpg'
-            },
-            'bank': {
-                icon: '🏦',
-                title: '超级银行',
-                status: 'new',
-                statusText: '✨ 新功能',
-                desc: '安全存储你的财富！存入兑换券获取银行券，享受便捷的资产管理服务。',
-                rewards: ['🏦 银行券', '📊 存取记录', '🔒 安全存储'],
-                url: '/xiaoan/bank/',
-                disabled: false,
-                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/bank.jpg'
-            },
-            'quiz': {
-                icon: '❓',
-                title: '每日答题',
-                status: 'coming',
-                statusText: '即将上线',
-                desc: '挑战你的知识储备！答对题目获得抽奖券奖励，知识就是力量~',
-                rewards: ['🎰 抽奖券', '🏆 排行榜', '📚 知识挑战'],
+            'leiQian': {
+                icon: '📅',
+                title: '长风逐波',
+                status: 'permanent',
+                statusText: '常驻活动',
+                desc: '',
+                rewardsHint: '可能获得的奖励：🎫🎲💎',
                 url: null,
-                disabled: true,
-                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/quiz.jpg'
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/leiQian.jpg',
+                bgColor: '#6c5ce7'
             },
-            'special': {
-                icon: '🎉',
-                title: '限时活动',
-                status: 'coming',
-                statusText: '敬请期待',
-                desc: '不定期的特别活动，更多惊喜等你发现！节日庆典、周年活动等精彩内容即将登场~',
-                rewards: ['🎊 节日庆典', '🎁 限定奖励', '⏰ 限时开放'],
-                url: null,
-                disabled: true,
-                image: 'https://cdn.jsdelivr.net/gh/gliuhe/gliuhe.github.io@main/xiaoan/assets/special.jpg'
+            'qingming': {
+                icon: '🌧️',
+                title: '清明时节雨纷纷',
+                status: 'limited',
+                statusText: '限时活动 4.1-4.6',
+                desc: '',
+                rewardsHint: '可能获得的奖励：🎫🎲💎',
+                url: '/xiaoan/activity/qingming.html',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg',
+                bgColor: '#00b894'
             }
         };
 
-        let currentActivity = 'lucky-wheel';
+        let currentActivity = 'leiQian';
 
         function switchActivity(activityId) {
             const activity = ACTIVITIES[activityId];
@@ -1254,28 +1529,94 @@
             const detail = document.getElementById('activityDetail');
             detail.className = `activity-detail ${activityId}`;
 
-            // 更新背景图片
+            // 更新主题色背景
             const bg = document.getElementById('detailBg');
-            bg.style.backgroundImage = `url('${activity.image}')`;
+            bg.style.setProperty('--theme-color', activity.bgColor);
 
-            const content = detail.querySelector('.detail-content');
-            content.querySelector('.detail-icon').textContent = activity.icon;
-            content.querySelector('.detail-title').textContent = activity.title;
-            content.querySelector('.detail-status').textContent = activity.statusText;
-            content.querySelector('.detail-desc').textContent = activity.desc;
+            // 根据活动自动切换主题
+            if (activityId === 'leiQian') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                // 累签活动是内嵌页面，替换详情区域内容
+                detail.innerHTML = `
+                    <div class="detail-bg" id="detailBg" style="--theme-color: ${activity.bgColor}"></div>
+                    <div class="detail-content leiQian-content">
+                        <!-- 累计签到头部 -->
+                        <div class="leiQian-header">
+                            <div class="leiQian-icon">📅</div>
+                            <div class="leiQian-info">
+                                <h2>长风逐波</h2>
+                                <p>累计签到，逐浪前行</p>
+                            </div>
+                            <div class="leiQian-total">
+                                <span class="total-days" id="totalDays">0</span>
+                                <span class="total-label">天</span>
+                            </div>
+                        </div>
 
-            // 更新奖励标签
-            const rewardsContainer = content.querySelector('.detail-rewards');
-            rewardsContainer.innerHTML = activity.rewards.map(r => `<span class="reward-tag">${r}</span>`).join('');
-
-            // 更新按钮
-            const btn = document.getElementById('detailBtn');
-            if (activity.disabled) {
-                btn.classList.add('disabled');
-                btn.textContent = '敬请期待';
+                        <!-- 累计签到奖励里程碑 -->
+                        <div class="leiQian-milestones">
+                            <div class="milestone" data-days="7">
+                                <div class="milestone-icon">🎁</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">7天</span>
+                                    <span class="milestone-reward">抽奖券x5</span>
+                                </div>
+                                <div class="milestone-status" id="milestone7">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">🎀</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">15天</span>
+                                    <span class="milestone-reward">抽奖券x5</span>
+                                </div>
+                                <div class="milestone-status" id="milestone15">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="30">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                </div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="60">
+                                <div class="milestone-icon">🏆</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">60天</span>
+                                    <span class="milestone-reward">抽奖券x10</span>
+                                </div>
+                                <div class="milestone-status" id="milestone60">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="100">
+                                <div class="milestone-icon">👑</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">100天</span>
+                                    <span class="milestone-reward">兑换券x2000</span>
+                                </div>
+                                <div class="milestone-status" id="milestone100">未达成</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // 渲染累签数据
+                renderLeiQianPage(getCheckinData());
             } else {
-                btn.classList.remove('disabled');
-                btn.textContent = '立即前往';
+                document.documentElement.removeAttribute('data-theme');
+
+                // 普通活动使用卡片展示，替换详情区域内容
+                detail.innerHTML = `
+                    <div class="detail-bg" id="detailBg" style="--theme-color: ${activity.bgColor}"></div>
+                    <div class="detail-content">
+                        <div class="detail-icon">${activity.icon}</div>
+                        <h2 class="detail-title">${activity.title}</h2>
+                        <div class="detail-status">${activity.statusText}</div>
+                        <p class="detail-desc">${activity.desc || ''}</p>
+                        <div class="detail-footer">
+                            <div class="detail-rewards-hint">${activity.rewardsHint || ''}</div>
+                            <button class="detail-btn${activity.disabled ? ' disabled' : ''}" id="detailBtn" onclick="goToActivity()">${activity.disabled ? '敬请期待' : '立即前往'}</button>
+                        </div>
+                    </div>
+                `;
             }
         }
 
@@ -1296,6 +1637,9 @@
                 }
             });
         });
+
+        // 初始化
+        init();
     </script>
 </body>
 </html>
