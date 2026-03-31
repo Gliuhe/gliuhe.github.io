@@ -682,6 +682,11 @@
     </style>
 </head>
 <body>
+    <!-- 背景音乐 -->
+    <audio id="bgMusic" autoplay loop>
+        <source src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.mp3" type="audio/mpeg">
+    </audio>
+
     <!-- 背景大图 -->
     <div class="bg-image"></div>
     <div class="bg-overlay"></div>
@@ -832,6 +837,21 @@
             renderModules();
             updateProgress();
             createRaindrops();
+            
+            // 自动播放背景音乐
+            const bgMusic = document.getElementById('bgMusic');
+            if (bgMusic) {
+                bgMusic.volume = 0.5; // 设置音量为50%
+                const playPromise = bgMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // 如果自动播放被阻止，监听用户点击后播放
+                        document.addEventListener('click', () => {
+                            bgMusic.play();
+                        }, { once: true });
+                    });
+                }
+            }
         }
 
         function checkDailyReset() {
