@@ -55,32 +55,6 @@
             z-index: -1;
         }
 
-        /* 雨滴效果 */
-        .rain-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        .raindrop {
-            position: absolute;
-            width: 2px;
-            height: 20px;
-            background: linear-gradient(to bottom, transparent, rgba(116, 185, 255, 0.6));
-            animation: fall linear infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(-100px); }
-            100% { transform: translateY(100vh); }
-        }
-
         /* 返回按钮 */
         .back-btn {
             position: fixed;
@@ -173,7 +147,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 25px;
-            padding: 25px 35px;
+            padding: 25px 35px 25px 35px;
             margin-bottom: 50px;
             border: 2px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
@@ -190,6 +164,10 @@
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
             border-radius: 25px;
             z-index: -1;
+        }
+
+        .progress-left {
+            padding-right: 200px;
         }
 
         .progress-header {
@@ -225,6 +203,56 @@
             border-radius: 10px;
             transition: width 0.5s ease;
             box-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+        }
+
+        /* 最终大奖 - 图层断层效果 */
+        .grand-prize {
+            position: absolute;
+            right: -10px;
+            top: -70px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .grand-prize-image {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            animation: glow 2s ease-in-out infinite, float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+        }
+
+        .grand-prize-label {
+            margin-top: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8),
+                         0 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.1));
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+            }
+            50% {
+                filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1)) drop-shadow(0 15px 40px rgba(0, 0, 0, 0.5));
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         /* 模块网格布局 - 超分散布局 */
@@ -683,7 +711,7 @@
 </head>
 <body>
     <!-- 背景音乐 -->
-    <audio id="bgMusic" autoplay loop>
+    <audio id="bgMusic" loop preload="none">
         <source src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.mp3" type="audio/mpeg">
     </audio>
 
@@ -692,8 +720,6 @@
     <div class="bg-overlay"></div>
 
     <!-- 雨滴效果 -->
-    <div class="rain-container" id="rainContainer"></div>
-
     <!-- 返回按钮 -->
     <div class="back-btn">
         <button class="btn btn-primary" onclick="window.location.href='/xiaoan/activity/'">🏠 返回活动</button>
@@ -710,12 +736,21 @@
 
         <!-- 活动进度 -->
         <div class="progress-section">
-            <div class="progress-header">
-                <span class="progress-title">🎯 活动进度</span>
-                <span class="progress-count"><span id="completedTasks">0</span>/6 任务</span>
+            <div class="progress-left">
+                <div class="progress-header">
+                    <span class="progress-title">🎯 活动进度</span>
+                    <span class="progress-count"><span id="completedTasks">0</span>/6 任务</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            
+            <!-- 最终大奖 -->
+            <div class="grand-prize">
+                <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_qingming.png" 
+                     alt="最终大奖" class="grand-prize-image">
+                <div class="grand-prize-label">✨ 完成全部任务可得 ✨</div>
             </div>
         </div>
 
@@ -779,8 +814,8 @@
                     {
                         id: 'steps20k',
                         icon: '👣',
-                        name: '总步数超2w',
-                        desc: '丈量大地，用脚步书写春日诗篇，两万步程见证坚持的力量',
+                        name: '总步数超3w',
+                        desc: '丈量大地，用脚步书写春日诗篇，三万步程见证坚持的力量',
                         reward: { type: 'voucher', amount: 500, icon: '🎫', name: '兑换券x500' },
                         action: 'steps20k'
                     }
@@ -836,22 +871,31 @@
             checkDailyReset();
             renderModules();
             updateProgress();
-            createRaindrops();
             
-            // 自动播放背景音乐
-            const bgMusic = document.getElementById('bgMusic');
-            if (bgMusic) {
-                bgMusic.volume = 0.5; // 设置音量为50%
-                const playPromise = bgMusic.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // 如果自动播放被阻止，监听用户点击后播放
-                        document.addEventListener('click', () => {
-                            bgMusic.play();
-                        }, { once: true });
-                    });
+            // 异步加载背景音乐，不阻塞主流程
+            setTimeout(() => {
+                const bgMusic = document.getElementById('bgMusic');
+                if (bgMusic) {
+                    bgMusic.volume = 0.5;
+                    bgMusic.load(); // 开始加载音频
+                    
+                    bgMusic.addEventListener('canplaythrough', () => {
+                        bgMusic.play().catch(() => {
+                            // 如果自动播放被阻止，监听用户点击后播放
+                            document.addEventListener('click', () => {
+                                bgMusic.play();
+                            }, { once: true });
+                        });
+                    }, { once: true });
+                    
+                    // 设置加载超时，避免长时间等待
+                    setTimeout(() => {
+                        if (bgMusic.readyState === 0) {
+                            console.log('音乐加载超时');
+                        }
+                    }, 5000);
                 }
-            }
+            }, 100); // 延迟100ms，让主要内容先渲染
         }
 
         function checkDailyReset() {
@@ -1015,10 +1059,10 @@
                     
                 case 'steps20k':
                     const steps = prompt('请输入今日步数：');
-                    if (steps && parseInt(steps) >= 20000) {
+                    if (steps && parseInt(steps) >= 30000) {
                         completeTask(taskId, task.reward);
                     } else {
-                        alert('步数未达到20000，继续加油！');
+                        alert('步数未达到30000，继续加油！');
                     }
                     break;
                     
@@ -1075,26 +1119,6 @@
                 localStorage.setItem(key, current + amount);
                 console.log(`[清明活动] ${type}: +${amount}, 当前余额: ${current + amount}`);
             }
-        }
-
-        // ===== 雨滴效果 =====
-        function createRaindrops() {
-            const container = document.getElementById('rainContainer');
-            
-            for (let i = 0; i < 30; i++) {
-                setTimeout(() => {
-                    const drop = document.createElement('div');
-                    drop.className = 'raindrop';
-                    drop.style.left = Math.random() * 100 + '%';
-                    drop.style.animationDuration = (Math.random() * 1 + 0.5) + 's';
-                    drop.style.animationDelay = Math.random() * 2 + 's';
-                    container.appendChild(drop);
-                    
-                    setTimeout(() => drop.remove(), 3000);
-                }, i * 100);
-            }
-            
-            setTimeout(createRaindrops, 3000);
         }
 
         // ===== 弹窗 =====
