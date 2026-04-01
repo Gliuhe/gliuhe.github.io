@@ -459,7 +459,24 @@
             margin-bottom: 15px;
             min-height: 40px;
         }
-        
+
+        .prize-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(135deg, #06d6a0, #05b384);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(6, 214, 160, 0.4);
+        }
+
         .record-item {
             background: white;
             border-radius: 15px;
@@ -842,7 +859,7 @@
     <!-- 添加奖品模态框 -->
     <div class="modal" id="addPrizeModal">
         <div class="modal-content">
-            <h2>添加新奖品</h2>
+            <h2 id="prizeModalTitle">添加新奖品</h2>
             <div class="form-group">
                 <label for="prizeName">奖品名称</label>
                 <input type="text" id="prizeName" placeholder="例如：豪华玩具">
@@ -1307,7 +1324,7 @@
         // 渲染管理奖品
         function renderManagePrizes() {
             managePrizesContainer.innerHTML = "";
-            
+
             prizes.forEach(prize => {
                 const prizeCard = document.createElement("div");
                 prizeCard.classList.add("prize-card");
@@ -1317,11 +1334,19 @@
                     <div class="prize-weight">权重: ${prize.weight}</div>
                     <div class="prize-stock">库存: ${prize.stock === -1 ? "无限" : prize.stock}</div>
                     <div class="prize-description">${prize.description || ""}</div>
-                    <button class="btn btn-danger" data-id="${prize.id}">删除</button>
+                    <div class="prize-actions">
+                        <button class="btn btn-edit" data-id="${prize.id}">编辑</button>
+                        <button class="btn btn-danger" data-id="${prize.id}">删除</button>
+                    </div>
                 `;
-                
+
                 managePrizesContainer.appendChild(prizeCard);
-                
+
+                const editBtn = prizeCard.querySelector(".btn-edit");
+                editBtn.addEventListener("click", () => {
+                    openEditPrizeModal(prize.id);
+                });
+
                 const deleteBtn = prizeCard.querySelector(".btn-danger");
                 deleteBtn.addEventListener("click", () => {
                     if (confirm(`确定要删除奖品"${prize.name}"吗？`)) {
@@ -1491,10 +1516,17 @@
                 }
             });
             
-            confirmAddPrizeBtn.addEventListener("click", addPrize);
+            confirmAddPrizeBtn.addEventListener("click", function() {
+                if (editingPrizeId !== null) {
+                    editPrize();
+                } else {
+                    addPrize();
+                }
+            });
             cancelAddPrizeBtn.addEventListener("click", () => {
                 const modal = document.getElementById('addPrizeModal');
                 if (modal) modal.style.display = 'none';
+                editingPrizeId = null; // 重置编辑状态
             });
             
             clearRecordsBtn.addEventListener("click", clearRecordsWithPassword);
@@ -2021,6 +2053,10 @@
         
         // 显示添加奖品模态框
         function showAddPrizeModal() {
+            editingPrizeId = null; // 重置编辑状态
+            document.getElementById('prizeModalTitle').textContent = '添加新奖品';
+            document.getElementById('confirmAddPrizeBtn').textContent = '添加奖品';
+
             // 重置表单
             prizeName.value = "";
             prizeWeight.value = "10";
@@ -2029,7 +2065,7 @@
             currencyAmountInput.value = "";
             prizeDescription.value = "";
             currencyAmountGroup.style.display = "none";
-            
+
             // 显示模态框并设置居中样式
             const modal = document.getElementById('addPrizeModal');
             if (modal) {
@@ -2042,7 +2078,7 @@
                 modal.style.height = '100%';
                 modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // 半透明背景
                 modal.style.zIndex = '1000';
-                
+
                 // 设置内层内容区域样式
                 const modalContent = modal.querySelector('.modal-content');
                 if (modalContent) {
@@ -2052,7 +2088,7 @@
                     modalContent.style.transitionProperty = 'none !important';
                     modalContent.style.animationDuration = '0s !important';
                     modalContent.style.transitionDuration = '0s !important';
-                    
+
                     modalContent.style.position = 'fixed';
                     modalContent.style.left = '50%';
                     modalContent.style.top = '50%';
@@ -2123,9 +2159,98 @@
             const icons = ["🎁", "🧸", "🚗", "🎮", "🎨", "📱", "🎧", "🎭", "🎪", "🎯", "🎲", "🎫", "🏆", "🎖️", "🎟️", "💎", "👑", "🧩", "🎠", "🎡"];
             return icons[Math.floor(Math.random() * icons.length)];
         }
-        
 
-        
+        // 编辑奖品相关
+        let editingPrizeId = null; // 当前编辑的奖品ID
+
+        // 打开编辑奖品模态框
+        function openEditPrizeModal(prizeId) {
+            const prize = prizes.find(p => p.id === prizeId);
+
+            if (!prize) {
+                showNotification("奖品不存在", "error");
+                return;
+            }
+
+            editingPrizeId = prizeId;
+
+            // 设置模态框标题和按钮文本
+            document.getElementById('prizeModalTitle').textContent = '编辑奖品';
+            document.getElementById('confirmAddPrizeBtn').textContent = '保存修改';
+
+            // 填充奖品信息
+            prizeName.value = prize.name;
+            prizeWeight.value = prize.weight;
+            prizeStock.value = prize.stock;
+            prizeRewardType.value = prize.rewardType;
+            prizeDescription.value = prize.description || "";
+            prizePool.value = prize.pool || "normal";
+
+            // 显示货币数量输入框（如果需要）
+            if (prize.rewardType === "currency" || prize.rewardType === "bankTicket") {
+                currencyAmountGroup.style.display = "block";
+                currencyAmountInput.value = prize.currencyAmount || 0;
+            } else {
+                currencyAmountGroup.style.display = "none";
+            }
+
+            // 显示模态框
+            addPrizeModal.style.display = "block";
+        }
+
+        // 编辑奖品
+        function editPrize() {
+            if (!prizeName.value) {
+                showNotification("请输入奖品名称", "error");
+                return;
+            }
+
+            if ((prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") && (!currencyAmountInput.value || parseInt(currencyAmountInput.value) <= 0)) {
+                const currencyName = prizeRewardType.value === "currency" ? "兑换券" : "银行券";
+                showNotification(`请输入有效的${currencyName}数量`, "error");
+                return;
+            }
+
+            const prizeIndex = prizes.findIndex(p => p.id === editingPrizeId);
+
+            if (prizeIndex === -1) {
+                showNotification("奖品不存在", "error");
+                return;
+            }
+
+            // 更新奖品信息（保留原来的图标）
+            prizes[prizeIndex] = {
+                ...prizes[prizeIndex],
+                name: prizeName.value,
+                rewardType: prizeRewardType.value,
+                weight: parseInt(prizeWeight.value),
+                stock: parseInt(prizeStock.value),
+                description: prizeDescription.value,
+                pool: prizePool.value || "normal"
+            };
+
+            // 如果是兑换券或银行券奖励，更新对应数量
+            if (prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") {
+                prizes[prizeIndex].currencyAmount = parseInt(currencyAmountInput.value);
+            }
+
+            // 保存数据
+            saveData();
+
+            // 更新界面
+            renderPrizes();
+            renderManagePrizes();
+
+            // 关闭模态框
+            addPrizeModal.style.display = "none";
+
+            editingPrizeId = null;
+
+            // 显示通知
+            showNotification("奖品修改成功", "success");
+        }
+
+
         // 显示通知
         function showNotification(message, type) {
             const notification = document.getElementById("statusNotification");
