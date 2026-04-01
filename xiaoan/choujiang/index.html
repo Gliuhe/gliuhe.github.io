@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>儿童抽奖乐园 - 完整版</title>
+    <title>活动中心 - 超级兑换券乐园</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,175 +11,303 @@
             padding: 0;
             font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
         }
-        
+
+        /* 主题变量 */
+        :root {
+            --primary-color: #06d6a0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #ffd166;
+            --background-gradient: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd166;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #00c896;
+            --secondary-color: #ff5252;
+            --accent-color: #ffb74d;
+            --background-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --card-bg: rgba(52, 73, 94, 0.95);
+            --text-color: #ecf0f1;
+            --border-color: #ffb74d;
+        }
+
+        [data-theme="pink"] {
+            --primary-color: #ff6b9d;
+            --secondary-color: #ff9a9e;
+            --accent-color: #ffd1dc;
+            --background-gradient: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #ffd1dc;
+        }
+
+        [data-theme="blue"] {
+            --primary-color: #4fc3f7;
+            --secondary-color: #29b6f6;
+            --accent-color: #81d4fa;
+            --background-gradient: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #333;
+            --border-color: #81d4fa;
+        }
+
         body {
-            background: linear-gradient(135deg, #83a4d4 0%, #b6fbff 100%);
-            color: #333;
+            background: var(--background-gradient);
+            color: var(--text-color);
             min-height: 100vh;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: all 0.5s ease;
         }
-        
+
+        /* 主题选择器 */
+        .theme-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--border-color);
+        }
+
+        .theme-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        .theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .theme-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 主容器 */
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-bg);
             border-radius: 25px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-            width: 90%;
-            max-width: 1000px;
+            width: 95%;
+            max-width: 900px;
             padding: 30px;
-            margin-top: 20px;
-            border: 3px solid #ffd166;
-            position: relative;
+            margin-top: 70px;
+            border: 3px solid var(--border-color);
+            transition: all 0.3s ease;
         }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            position: relative;
-        }
-        
-        .header h1 {
-            color: #e74c3c;
-            font-size: 2.8rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-            padding: 10px 20px;
-            border-radius: 50px;
-            display: inline-block;
-            background: linear-gradient(to right, #ffd166, #ff9e7d);
-        }
-        
-        .header::after {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 25%;
-            width: 50%;
-            height: 4px;
-            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
-            border-radius: 2px;
-        }
-        
-        h2 {
-            color: #06d6a0;
-            margin: 20px 0 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed #ffd166;
-            font-size: 1.8rem;
-        }
-        
-        .btn {
-            background: #06d6a0;
+
+        /* 签到横幅 - 精简版 */
+        .checkin-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 25px 30px;
             color: white;
-            border: none;
-            padding: 14px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: bold;
-            transition: all 0.3s;
-            margin: 8px;
-            box-shadow: 0 6px 12px rgba(6, 214, 160, 0.3);
             position: relative;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.3);
         }
-        
-        .btn:hover {
-            background: #05c191;
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
-        }
-        
-        .btn::after {
+
+        .checkin-banner::before {
             content: "";
             position: absolute;
             top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(30deg);
-            transition: all 0.5s;
+            right: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
         }
-        
-        .btn:hover::after {
-            transform: rotate(30deg) translate(10%, 10%);
+
+        .banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
         }
-        
-        .btn-danger {
-            background: #ff6b6b;
-            box-shadow: 0 6px 12px rgba(255, 107, 107, 0.3);
+
+        .banner-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
-        
-        .btn-danger:hover {
-            background: #ff5252;
-            box-shadow: 0 8px 16px rgba(255, 107, 107, 0.4);
+
+        .banner-icon {
+            font-size: 2rem;
         }
-        
-        .btn-warning {
-            background: #ffd166;
-            box-shadow: 0 6px 12px rgba(255, 209, 102, 0.3);
-            color: #333;
+
+        .banner-title h1 {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
         }
-        
-        .btn-warning:hover {
-            background: #ffc745;
-            box-shadow: 0 8px 16px rgba(255, 209, 102, 0.4);
+
+        .banner-title p {
+            font-size: 0.8rem;
+            opacity: 0.9;
         }
-        
-        .btn-premium {
-            background: linear-gradient(135deg, #9b59b6, #8e44ad);
-            box-shadow: 0 6px 12px rgba(155, 89, 182, 0.3);
-        }
-        
-        .btn-premium:hover {
-            background: linear-gradient(135deg, #8e44ad, #6c3483);
-            box-shadow: 0 8px 16px rgba(155, 89, 182, 0.4);
-        }
-        
-        .btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .form-group {
-            margin: 18px 0;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 10px;
+
+        .banner-status {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
             font-weight: bold;
-            color: #555;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            backdrop-filter: blur(5px);
         }
-        
-        input, textarea, select {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #ddd;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-            background: #f8f9fa;
+
+        .banner-status.checked {
+            background: rgba(40, 167, 69, 0.8);
         }
-        
-        textarea {
-            min-height: 150px;
-            resize: vertical;
+
+        .checkin-btn {
+            background: linear-gradient(135deg, #ffd166 0%, #ffb347 100%);
+            color: #333;
+            font-size: 1rem;
+            padding: 12px 30px;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 209, 102, 0.4);
+            position: relative;
+            z-index: 1;
+            margin-left: 15px;
         }
-        
-        input:focus, textarea:focus, select:focus {
-            border-color: #06d6a0;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
+
+        .checkin-btn:hover:not(:disabled) {
+            transform: scale(1.05);
         }
-        
+
+        .checkin-btn:disabled {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            cursor: default;
+        }
+
+        /* 本周签到日历 - 精简版 */
+        .week-calendar {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .day-cell {
+            flex: 1;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 8px 5px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .day-cell.today {
+            background: rgba(255,255,255,0.25);
+            border: 2px solid #ffd166;
+        }
+
+        .day-cell.checked {
+            background: rgba(40, 167, 69, 0.6);
+        }
+
+        .day-cell .day-name {
+            font-size: 0.7rem;
+            opacity: 0.9;
+            margin-bottom: 3px;
+        }
+
+        .day-cell .day-icon {
+            font-size: 1rem;
+        }
+
+        .day-cell .day-reward {
+            font-size: 0.65rem;
+            margin-top: 3px;
+            opacity: 0.85;
+        }
+
+        /* 签到统计 - 精简版 */
+        .stats-mini {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+            font-size: 0.8rem;
+        }
+
+        .stats-mini span {
+            opacity: 0.9;
+        }
+
+        .stats-mini strong {
+            color: #ffd166;
+        }
+
+        /* 弹窗 */
         .modal {
             display: none;
             position: fixed;
@@ -187,1702 +315,1352 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            backdrop-filter: blur(5px);
         }
-        
+
+        .modal.active {
+            display: flex;
+        }
+
         .modal-content {
-            background: white;
-            padding: 30px;
+            background: var(--card-bg);
             border-radius: 25px;
+            padding: 40px;
+            max-width: 420px;
             width: 90%;
-            max-width: 500px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-            border: 3px solid #ffd166;
-            position: relative;
+            text-align: center;
+            border: 3px solid var(--border-color);
+            animation: modalIn 0.3s ease;
         }
-        
-        .modal-content::before {
-            content: "";
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            border: 2px solid #06d6a0;
-            border-radius: 30px;
-            z-index: -1;
-            opacity: 0.5;
+
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
-        
-        .rules-container {
-            background: #f8f9fa;
-            border-radius: 20px;
-            padding: 25px;
-            margin: 25px 0;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            border: 2px solid #ffd166;
+
+        .modal-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
         }
-        
-        .prize-item {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 15px 0;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            border-left: 5px solid #06d6a0;
-            position: relative;
-            transition: all 0.3s;
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
         }
-        
-        .prize-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .prize-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .prize-title {
-            font-size: 1.4rem;
-            color: #118ab2;
-            font-weight: bold;
-        }
-        
-        .prize-reward {
-            background: #ffd166;
-            color: #333;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
+
+        .modal-text {
             font-size: 1.1rem;
-        }
-        
-        .prize-content {
-            line-height: 1.6;
-            color: #555;
-            font-size: 1.1rem;
-        }
-        
-        .prize-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 15px;
-        }
-        
-        .prize-actions .btn {
-            padding: 8px 15px;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
-        
-        .status-notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 18px 25px;
-            border-radius: 15px;
-            color: white;
-            font-weight: bold;
-            font-size: 1.1rem;
-            z-index: 1000;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: all 0.3s;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-        
-        .status-success {
-            background: #06d6a0;
-        }
-        
-        .status-error {
-            background: #ff6b6b;
-        }
-        
-        .status-warning {
-            background: #ffd166;
-            color: #333;
-        }
-        
-        .nav-tabs {
-            display: flex;
-            border-bottom: 3px solid #ffd166;
             margin-bottom: 25px;
-            justify-content: center;
-            flex-wrap: wrap;
+            line-height: 1.6;
         }
-        
-        .nav-tab {
-            padding: 15px 25px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #777;
-            font-size: 1.2rem;
-            position: relative;
-            transition: all 0.3s;
-            margin: 0 5px;
-            border-radius: 15px 15px 0 0;
+
+        /* 活动入口区域 - 左右分栏 */
+        .activities-section {
+            margin-top: 25px;
         }
-        
-        .nav-tab.active {
-            color: #118ab2;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 -5px 10px rgba(0, 0, 0, 0.05);
-        }
-        
-        .nav-tab.active::after {
-            content: "";
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: #06d6a0;
-            border-radius: 2px;
-            display: block;
-        }
-        
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .action-buttons {
+
+        .section-title {
             display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed var(--border-color);
         }
-        
-        .today-summary {
-            background: #ffd166;
-            border-radius: 15px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #ffb703;
+
+        .section-title h2 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
         }
-        
-        .today-summary span {
-            color: #ff6b6b;
+
+        .section-title span {
             font-size: 1.5rem;
-            margin: 0 5px;
         }
-        
-        .prizes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+
+        /* 左右分栏布局 */
+        .activities-layout {
+            display: flex;
             gap: 20px;
-            margin: 25px 0;
+            min-height: 380px;
         }
-        
-        .prize-card {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            border: 2px solid #ffd166;
-            transition: all 0.3s;
-            position: relative;
-            min-height: 220px;
-        }
-        
-        .prize-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .prize-icon {
-            font-size: 3.5rem;
-            margin-bottom: 10px;
-        }
-        
-        .prize-name {
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #118ab2;
-            margin-bottom: 8px;
-            min-height: 40px;
+
+        /* 左侧导航 */
+        .activity-nav {
+            width: 140px;
+            flex-shrink: 0;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
         }
-        
-        .prize-weight {
-            background: #06d6a0;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 8px;
-        }
-        
-        .prize-stock {
-            background: #ffd166;
-            color: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
-        .prize-description {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            min-height: 40px;
-        }
-        
-        .record-item {
-            background: white;
+
+        .activity-nav-item {
+            background: var(--card-bg);
+            border: 2px solid transparent;
             border-radius: 15px;
-            padding: 15px;
-            margin: 10px 0;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            padding: 12px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            gap: 6px;
         }
-        
-        .record-prize {
-            font-weight: bold;
-            color: #118ab2;
-            font-size: 1.2rem;
+
+        .activity-nav-item:hover {
+            border-color: var(--border-color);
+            transform: translateX(3px);
         }
-        
-        .record-date {
-            color: #777;
-            font-size: 0.9rem;
+
+        .activity-nav-item.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.1), rgba(6, 214, 160, 0.05));
         }
-        
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #ff6b6b;
-            border-radius: 50%;
-            animation: confetti-fall 1.5s ease-in-out forwards;
+
+        .activity-nav-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        
-        .result-card {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            margin: 20px auto;
-            text-align: center;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
-            border: 3px solid #ffd166;
-            max-width: 850px;
-            width: 90%;
+
+        .activity-nav-item.disabled:hover {
+            transform: none;
+            border-color: transparent;
         }
-        
-        .result-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ff6b6b;
-            margin-bottom: 15px;
-        }
-        
-        .result-content {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #118ab2;
-            margin: 20px 0;
-        }
-        
-        .reward-tag {
-            background: #ffd166;
-            color: #333;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            display: inline-block;
-            margin: 5px;
-            box-shadow: 0 3px 8px rgba(255, 209, 102, 0.3);
-        }
-        
-        .action-message {
-            font-size: 1.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            padding: 15px;
-            border-radius: 15px;
-            background: rgba(6, 214, 160, 0.1);
-            color: #06d6a0;
-        }
-        
-        @keyframes confetti-fall {
-            0% {
-                transform: translateY(-100px) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        @keyframes prizeUsed {
-            0% { 
-                transform: scale(1);
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-            }
-            50% { 
-                transform: scale(1.05);
-                box-shadow: 0 8px 20px rgba(6, 214, 160, 0.4);
-                background: linear-gradient(135deg, #ffd166, #ff9e7d);
-            }
-            100% { 
-                transform: scale(1);
-                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-            }
-        }
-        
-        @keyframes buttonBounce {
-            0%, 20%, 60%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            80% { transform: translateY(-5px); }
-        }
-        
-        .pulse {
-            animation: pulse 1.5s infinite;
-        }
-        
-        .bounce {
-            animation: buttonBounce 0.6s ease;
-        }
-        
-        .prize-delete {
-            position: absolute;
-            top: -10px;
-            right: -10px;
+
+        .nav-icon {
             width: 40px;
             height: 40px;
-            border-radius: 50%;
-            background: #ff6b6b;
-            color: white;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
+            font-size: 1.4rem;
+        }
+
+        .activity-nav-item.leiQian .nav-icon {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+        }
+
+        .activity-nav-item.qingming .nav-icon {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+        }
+
+        .nav-label {
+            font-size: 0.85rem;
             font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s;
-            z-index: 10;
+            color: var(--text-color);
         }
-        
-        .prize-delete:hover {
-            transform: scale(1.1);
-            background: #ff4040;
+
+        .nav-status {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
         }
-        
-        .stock-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ff6b6b;
+
+        .nav-status.hot {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
             color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            z-index: 1;
         }
-        
-        .delete-confirm {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 15px;
+
+        .nav-status.new {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            color: white;
+        }
+
+        .nav-status.coming {
+            background: #c8d6e5;
+            color: #576574;
+        }
+
+        .nav-status.limited {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+        }
+
+        .nav-status.permanent {
+            background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+            color: white;
+        }
+
+        /* 右侧详情区 - 图片背景渐变透底 */
+        .activity-detail {
+            flex: 1;
+            border-radius: 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 5;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 360px;
         }
-        
-        .prize-card:hover .delete-confirm {
-            opacity: 1;
+
+        /* 背景图片层 */
+        .detail-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            --theme-color: #6c5ce7;
+            background: linear-gradient(to bottom, 
+                transparent 0%,
+                transparent 33%,
+                var(--theme-color) 100%
+            );
         }
-        
-        .delete-buttons {
+
+        /* 图片层：显示卡片75%高度，最高透明度75%，向下渐变消失 */
+        .detail-bg::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 75%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.75;
+            transition: background-image 0.5s ease;
+            mask-image: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 0.4) 70%,
+                rgba(0, 0, 0, 0) 100%
+            );
+            -webkit-mask-image: linear-gradient(to bottom, 
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 1) 30%,
+                rgba(0, 0, 0, 0.4) 70%,
+                rgba(0, 0, 0, 0) 100%
+            );
+        }
+
+        /* 活动对应的背景图片 */
+        /* 累签活动使用暗黑主题，无背景图片 */
+        .activity-detail.leiQian .detail-bg::before {
+            display: none;
+        }
+
+        .activity-detail.qingming .detail-bg::before {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg');
+        }
+
+
+
+        /* 内容层 */
+        .detail-content {
+            position: relative;
+            z-index: 2;
+            padding: 40px 30px;
+            width: 100%;
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
-        
+
+        /* 底部渐变遮罩 */
+        .detail-content::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(0,0,0,0.15), transparent);
+            z-index: -1;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .detail-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .detail-title {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            color: white;
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.5),
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5),
+                0 3px 10px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+        }
+
+        .detail-status {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .detail-desc {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+            max-width: 420px;
+            margin-bottom: 25px;
+            text-shadow: 
+                -1px -1px 0 rgba(0,0,0,0.4),
+                1px -1px 0 rgba(0,0,0,0.4),
+                -1px 1px 0 rgba(0,0,0,0.4),
+                1px 1px 0 rgba(0,0,0,0.4),
+                0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: auto;
+            padding-top: 20px;
+        }
+
+        .detail-rewards-hint {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+            text-shadow:
+                -1px -1px 0 rgba(0,0,0,0.4),
+                1px -1px 0 rgba(0,0,0,0.4),
+                -1px 1px 0 rgba(0,0,0,0.4),
+                1px 1px 0 rgba(0,0,0,0.4);
+        }
+
+        /* 累签活动内嵌页面样式 */
+        .leiQian-content {
+            width: 100%;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .leiQian-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .leiQian-icon {
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .leiQian-info h2 {
+            font-size: 1.8rem;
+            color: white;
+            margin: 0;
+            text-shadow:
+                -1px -1px 0 rgba(0,0,0,0.5),
+                1px -1px 0 rgba(0,0,0,0.5),
+                -1px 1px 0 rgba(0,0,0,0.5),
+                1px 1px 0 rgba(0,0,0,0.5);
+        }
+
+        .leiQian-info p {
+            color: rgba(255,255,255,0.7);
+            margin: 5px 0 0;
+            font-size: 0.9rem;
+        }
+
+        .leiQian-total {
+            margin-left: auto;
+            text-align: center;
+            background: rgba(255,255,255,0.15);
+            padding: 15px 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .total-days {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            display: block;
+        }
+
+        .total-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .leiQian-milestones {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .milestone {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .milestone:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .milestone.achieved {
+            background: rgba(6, 214, 160, 0.2);
+            border-color: rgba(6, 214, 160, 0.5);
+        }
+
+        .milestone-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        .milestone-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .milestone-days {
+            font-weight: bold;
+            color: white;
+            font-size: 1rem;
+            display: block;
+            white-space: nowrap;
+        }
+
+        .milestone-reward {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.8rem;
+        }
+
+        .milestone-status {
+            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .milestone.achieved .milestone-status {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .detail-btn {
+            padding: 16px 50px;
+            font-size: 1.15rem;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: white;
+            color: #333;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .detail-btn:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .detail-btn.disabled {
+            background: rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.5);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .detail-btn.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 响应式 */
         @media (max-width: 768px) {
+            .theme-selector {
+                top: 10px;
+                right: 10px;
+                padding: 8px;
+            }
+
+            .theme-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+
+            .back-btn {
+                top: 10px;
+                left: 10px;
+            }
+
             .container {
                 padding: 20px;
-                width: 95%;
+                margin-top: 80px;
             }
-            
-            .header h1 {
-                font-size: 2.2rem;
+
+            .checkin-banner {
+                padding: 25px 20px;
             }
-            
-            .nav-tabs {
-                flex-wrap: wrap;
-            }
-            
-            .nav-tab {
-                flex: 1;
-                text-align: center;
-                padding: 12px 8px;
-                font-size: 1rem;
-                margin: 3px;
-            }
-            
-            .action-buttons {
+
+            .banner-header {
                 flex-direction: column;
-                align-items: center;
+                gap: 15px;
+                text-align: center;
             }
-            
-            .btn {
-                width: 90%;
-                margin: 8px 0;
-            }
-            
-            .prizes-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            #resultContent > div {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
 
-        @media (max-width: 768px) {
-            #resultContent > div {
-                grid-template-columns: repeat(2, 1fr);
+            .banner-title h1 {
+                font-size: 1.5rem;
             }
-        }
 
-        @media (max-width: 480px) {
-            .prizes-grid {
-                grid-template-columns: 1fr;
+            .banner-icon {
+                font-size: 2.5rem;
             }
-            
-            .header h1 {
-                font-size: 1.8rem;
+
+            .today-reward {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+                padding: 20px;
             }
-            
-            .prize-card {
+
+            .reward-amount {
+                font-size: 2rem;
+            }
+
+            .checkin-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .week-calendar {
+                gap: 5px;
+            }
+
+            .day-cell {
+                padding: 6px 3px;
+            }
+
+            .day-cell .day-icon {
+                font-size: 0.85rem;
+            }
+
+            /* 移动端改为上下布局 */
+            .activities-layout {
+                flex-direction: column;
                 min-height: auto;
             }
-            
-            .prize-delete {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
+
+            .activity-nav {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .activity-nav-item {
+                min-width: 80px;
+                padding: 10px 8px;
+            }
+
+            .nav-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 1.2rem;
+            }
+
+            .nav-label {
+                font-size: 0.75rem;
+            }
+
+            .activity-detail {
+                padding: 0;
+                min-height: 320px;
+            }
+
+            .detail-content {
+                padding: 30px 20px;
+            }
+
+            .detail-icon {
+                width: 90px;
+                height: 90px;
+                font-size: 3rem;
+            }
+
+            .detail-title {
+                font-size: 1.7rem;
+            }
+
+            .detail-desc {
+                font-size: 0.95rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎪 儿童抽奖乐园 🎪</h1>
-        <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap;">
-            <button class="btn btn-warning" id="homeBtn">返回主页</button>
-            <button class="btn btn-premium" id="advancedBtn">✨ 前往高级抽奖</button>
-        </div>
+    <!-- 主题选择器（已隐藏，根据活动自动切换） -->
+
+    <!-- 返回按钮 -->
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='/xiaoan'">🏠 返回主页</button>
     </div>
-    
+
+    <!-- 主容器 -->
     <div class="container">
-        <div class="nav-tabs">
-            <div class="nav-tab active" data-tab="lottery">🎡 欢乐抽奖</div>
-            <div class="nav-tab" data-tab="records">📝 抽奖记录</div>
-            <div class="nav-tab" data-tab="management">⚙️ 设置</div>
-        </div>
-        
-        <!-- 抽奖界面 -->
-        <div id="lottery" class="tab-content active">
-            <h2>欢乐抽奖</h2>
-            
-            <!-- 兑换券显示 -->
-            <div class="today-summary" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>当前兑换券: <span id="currencyAmount">100</span></div>
-                <div>当前抽奖券: <span id="ticketAmount">0</span></div>
-            </div>
-            
-            <p>每次抽奖消耗 1 抽奖券，试试你的手气吧！</p>
-            
-            <!-- 奖品展示 -->
-            <div class="prizes-grid" id="prizesContainer">
-                <!-- 奖品将通过JavaScript动态添加 -->
-            </div>
-            
-            <div class="action-buttons">
-                <div class="action-message" id="actionMessage"></div>
-                <div class="lottery-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%;">
-                    <button class="btn btn-warning pulse" id="singleLotteryBtn">🎟️ 1抽奖券抽1次</button>
-                    <button class="btn btn-premium pulse" id="multiLotteryBtn">🎟️🎟️ 10抽奖券抽10次</button>
+        <!-- 签到横幅 -->
+        <div class="checkin-banner">
+            <div class="banner-header">
+                <div class="banner-title">
+                    <span class="banner-icon">📅</span>
+                    <div>
+                        <h1>每日签到</h1>
+                        <p id="todayInfo">加载中...</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div class="banner-status" id="bannerStatus">未签到</div>
+                    <button class="checkin-btn" id="checkinBtn" onclick="doCheckin()">签到</button>
                 </div>
             </div>
-            
-            <!-- 兑换券购买确认模态框 -->
-            <div class="modal" id="exchangeModal">
-                <div class="modal-content">
-                    <h2 id="exchangeModalTitle">兑换券购买确认</h2>
-                    <p id="exchangeModalText">确定要用200兑换券购买1张抽奖券吗？</p>
-                    <div class="action-buttons">
-                        <button class="btn" id="confirmExchangeBtn">确认购买</button>
-                        <button class="btn btn-danger" id="cancelExchangeBtn">取消</button>
+
+            <!-- 本周签到日历 -->
+            <div class="week-calendar" id="weekCalendar"></div>
+
+            <!-- 统计 -->
+            <div class="stats-mini">
+                <span>累计签到 <strong id="totalCheckins">0</strong> 天</span>
+                <span>连续 <strong id="streakDays">0</strong> 天</span>
+                <span>本周 <strong id="weekCheckins">0</strong>/7</span>
+            </div>
+        </div>
+
+        <!-- 活动入口区域 -->
+        <div class="activities-section">
+            <div class="section-title">
+                <span>🎮</span>
+                <h2>精彩活动</h2>
+            </div>
+
+            <div class="activities-layout">
+                <!-- 左侧导航 -->
+                <div class="activity-nav">
+                    <div class="activity-nav-item leiQian active" data-activity="leiQian">
+                        <div class="nav-icon">📅</div>
+                        <div class="nav-label">累签</div>
+                        <div class="nav-status permanent">常驻</div>
+                    </div>
+                    <div class="activity-nav-item qingming" data-activity="qingming">
+                        <div class="nav-icon">🌧️</div>
+                        <div class="nav-label">清明</div>
+                        <div class="nav-status limited">限时</div>
+                    </div>
+                </div>
+
+                <!-- 右侧详情 -->
+                <div class="activity-detail leiQian" id="activityDetail">
+                    <div class="detail-bg" id="detailBg"></div>
+                    <div class="detail-content leiQian-content">
+                        <!-- 累计签到头部 -->
+                        <div class="leiQian-header">
+                            <div class="leiQian-icon">📅</div>
+                            <div class="leiQian-info">
+                                <h2>长风逐波</h2>
+                                <p>累计签到，逐浪前行</p>
+                            </div>
+                            <div class="leiQian-total">
+                                <span class="total-days" id="totalDays">0</span>
+                                <span class="total-label">天</span>
+                            </div>
+                    </div>
+                        </div>
+
+                        <!-- 累计签到奖励里程碑 -->
+                        <div class="leiQian-milestones">
+                            <div class="milestone" data-days="5">
+                                <div class="milestone-icon">🎁</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">5天</span>
+                                    <span class="milestone-reward">抽奖券x3</span>
+                                </div>
+                                <div class="milestone-status" id="milestone5">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="10">
+                                <div class="milestone-icon">🎀</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">10天</span>
+                                    <span class="milestone-reward">兑换券x300</span>
+                                </div>
+                                <div class="milestone-status" id="milestone10">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">15天</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                </div>
+                                <div class="milestone-status" id="milestone15">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="20">
+                                <div class="milestone-icon">🏦</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">20天</span>
+                                    <span class="milestone-reward">银行券x6</span>
+                                </div>
+                                <div class="milestone-status" id="milestone20">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="25">
+                                <div class="milestone-icon">🏆</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">25天</span>
+                                    <span class="milestone-reward">兑换券x700</span>
+                                </div>
+                                <div class="milestone-status" id="milestone25">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="30">
+                                <div class="milestone-icon">👑</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">兑换券x1000</span>
+                                </div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- 抽奖记录 -->
-        <div id="records" class="tab-content">
-            <h2>抽奖记录</h2>
-            <div class="action-buttons">
-                <button class="btn btn-danger" id="clearRecordsBtn">清空记录</button>
-            </div>
-            
-            <div class="rules-container" id="recordsList">
-                <!-- 抽奖记录将通过JavaScript动态添加 -->
-            </div>
-        </div>
-        
-        <!-- 设置 -->
-        <div id="management" class="tab-content">
-            <h2>设置</h2>
-            <button class="btn pulse" id="addPrizeBtn">➕ 添加新奖品</button>
-            
-            <div class="prizes-grid" id="managePrizesContainer">
-                <!-- 管理奖品将通过JavaScript动态添加 -->
-            </div>
-        </div>
-        
-        <!-- 抽奖结果卡片 -->
-        <div class="result-card" id="resultCard" style="display:none;">
-            <div class="result-title">恭喜你获得了</div>
-            <div class="result-content" id="resultContent"></div>
-            <div id="rewardTags"></div>
-            <button class="btn" id="confirmResultBtn">确定</button>
-        </div>
     </div>
-    
-    <!-- 模态框部分 -->
-    <!-- 添加奖品模态框 -->
-    <div class="modal" id="addPrizeModal">
+
+    <!-- 签到成功弹窗 -->
+    <div class="modal" id="successModal">
         <div class="modal-content">
-            <h2>添加新奖品</h2>
-            <div class="form-group">
-                <label for="prizeName">奖品名称</label>
-                <input type="text" id="prizeName" placeholder="例如：玩具小熊">
-            </div>
-            <div class="form-group">
-                <label for="prizeWeight">奖品权重</label>
-                <input type="number" id="prizeWeight" min="1" value="10" placeholder="权重越高，中奖概率越大">
-            </div>
-            <div class="form-group">
-                <label for="prizeStock">库存（-1为无限）</label>
-                <input type="number" id="prizeStock" min="-1" value="-1">
-            </div>
-            <div class="form-group">
-                <label for="prizeRewardType">奖励类型</label>
-                <select id="prizeRewardType">
-                    <option value="item">实物奖品</option>
-                    <option value="currency">兑换券</option>
-                    <option value="bankTicket">银行券</option>
-                </select>
-            </div>
-            <div class="form-group" id="currencyAmountGroup" style="display:none;">
-                <label id="currencyAmountLabel">兑换券数量</label>
-                <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
-            </div>
-            <div class="form-group" id="usableGroup">
-                <label for="prizeUsable">是否可使用</label>
-                <select id="prizeUsable">
-                    <option value="true">✅ 可使用（中奖后显示使用按钮）</option>
-                    <option value="false">❌ 不可使用（仅记录，无使用按钮）</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="prizeDescription">奖品描述</label>
-                <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
-            </div>
-            <button class="btn" id="confirmAddPrizeBtn">添加奖品</button>
-            <button class="btn btn-danger" id="cancelAddPrizeBtn">取消</button>
+            <div class="modal-icon">🎊</div>
+            <h2 class="modal-title">签到成功！</h2>
+            <div class="modal-text" id="rewardText">恭喜获得奖励！</div>
+            <button class="btn btn-primary" onclick="closeModal()" style="padding: 15px 40px; font-size: 1.1rem;">太棒了！</button>
         </div>
     </div>
-    
-    <!-- 密码验证模态框 -->
-    <div class="modal" id="passwordModal">
-        <div class="modal-content">
-            <h2>密码验证</h2>
-            <div class="form-group">
-                <label for="passwordInput">请输入密码</label>
-                <input type="password" id="passwordInput" placeholder="请输入密码">
-            </div>
-            <button class="btn" id="confirmPasswordBtn">验证</button>
-            <button class="btn btn-danger" id="cancelPasswordBtn">取消</button>
-        </div>
-    </div>
-    
-    <!-- 清空记录密码验证模态框 -->
-    <div class="modal" id="clearRecordsModal">
-        <div class="modal-content">
-            <h2>密码验证</h2>
-            <div class="form-group">
-                <label for="clearRecordsPassword">请输入密码</label>
-                <input type="password" id="clearRecordsPassword" placeholder="请输入密码">
-            </div>
-            <button class="btn" id="confirmClearRecordsBtn">确认清空</button>
-            <button class="btn btn-danger" id="cancelClearRecordsBtn">取消</button>
-        </div>
-    </div>
-    
-    <!-- 状态通知 -->
-    <div class="status-notification" id="statusNotification"></div>
 
     <script>
-        // 常量定义
-        const DEFAULT_PASSWORD = "1234";
-const LOTTERY_COST = 10;  // 抽奖消耗的兑换券
-const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
-        let lotteryTickets = 0;   // 当前抽奖券数量
-        
-        // 默认奖品
-        const defaultPrizes = [
-            {
-                id: 1,
-                name: "玩具小熊",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "可爱的毛绒小熊玩具",
-                icon: "🧸",
-                weight: 10,
-                stock: 10
-            },
-            {
-                id: 2,
-                name: "兑换券奖励",
-                rewardType: "currency",
-                currencyAmount: 20,
-                description: "20张兑换券",
-                icon: "🎟️",
-                weight: 20,
-                stock: -1  // 无限库存
-            },
-            {
-                id: 3,
-                name: "故事书",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "精美绘本故事书",
-                icon: "📚",
-                weight: 15,
-                stock: 5
-            },
-            {
-                id: 4,
-                name: "兑换券奖励",
-                rewardType: "currency",
-                currencyAmount: 50,
-                description: "50张兑换券",
-                icon: "🎟️",
-                weight: 5,
-                stock: -1  // 无限库存
-            },
-            {
-                id: 5,
-                name: "拼图",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "100片精美拼图",
-                icon: "🧩",
-                weight: 15,
-                stock: 8
-            },
-            {
-                id: 6,
-                name: "贴纸包",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "卡通主题贴纸包",
-                icon: "🎗️",
-                weight: 20,
-                stock: 15
-            }
+        // ===== 签到奖励配置 =====
+        const WEEKLY_REWARDS = [
+            { day: '周一', type: 'voucher', amount: 50, icon: '🎫', name: '兑换券' },
+            { day: '周二', type: 'lottery', amount: 1, icon: '🎰', name: '抽奖券' },
+            { day: '周三', type: 'bankTicket', amount: 1, icon: '🏦', name: '银行券' },
+            { day: '周四', type: 'voucher', amount: 80, icon: '🎫', name: '兑换券' },
+            { day: '周五', type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券' },
+            { day: '周六', type: 'voucher', amount: 120, icon: '🎫', name: '兑换券' },
+            { day: '周日', type: 'bankTicket', amount: 3, icon: '🏦', name: '银行券' }
         ];
-        
-        // 初始化数据
-        function initializeData() {
-            if (!localStorage.getItem('prizes')) {
-                localStorage.setItem('prizes', JSON.stringify(defaultPrizes));
-            }
-            
-            if (!localStorage.getItem('password')) {
-                localStorage.setItem('password', DEFAULT_PASSWORD);
-            }
-            
-            // 数据兼容处理：将旧版currency数据迁移到voucher
-            if (localStorage.getItem('currency') && !localStorage.getItem('voucher')) {
-                localStorage.setItem('voucher', localStorage.getItem('currency'));
-            }
-            
-            // 确保有默认兑换券数据
-            if (!localStorage.getItem('voucher')) {
-                localStorage.setItem('voucher', '100');
-            }
 
-            // 初始化银行券（检查是否为有效数字）
-            const bankTicketValue = localStorage.getItem('bankTicket');
-            if (!bankTicketValue || bankTicketValue === 'NaN' || isNaN(parseInt(bankTicketValue))) {
-                localStorage.setItem('bankTicket', '0');
-                console.log("[初始化] 银行券值无效，已重置为0");
+        // 连续签到奖励
+        const STREAK_REWARDS = [
+            { days: 3, type: 'voucher', amount: 5, icon: '🎫', name: '+5兑换券' },
+            { days: 7, type: 'lottery', amount: 2, icon: '🎰', name: '+2抽奖券' },
+            { days: 14, type: 'premiumLottery', amount: 1, icon: '💎', name: '+1高级券' },
+            { days: 30, type: 'voucher', amount: 10, icon: '🎫', name: '+10兑换券' }
+        ];
+
+        // 累计签到里程碑奖励（周期制，每月重置）
+        const LEIQIAN_REWARDS = [
+            { days: 5, type: 'lottery', amount: 3, icon: '🎰', name: '抽奖券x3' },
+            { days: 10, type: 'voucher', amount: 300, icon: '🎫', name: '兑换券x300' },
+            { days: 15, type: 'premiumLottery', amount: 1, icon: '💎', name: '高级抽奖券x1' },
+            { days: 20, type: 'bankTicket', amount: 6, icon: '🏦', name: '银行券x6' },
+            { days: 25, type: 'voucher', amount: 700, icon: '🎫', name: '兑换券x700' },
+            { days: 30, type: 'voucher', amount: 1000, icon: '🎫', name: '兑换券x1000' }
+        ];
+
+        // ===== 初始化 =====
+        function init() {
+            loadTheme();
+            loadCheckinData();
+            updateUI();
+            // 初始化默认活动的主题色
+            const defaultActivity = ACTIVITIES[currentActivity];
+            if (defaultActivity) {
+                const bg = document.getElementById('detailBg');
+                bg.style.setProperty('--theme-color', defaultActivity.bgColor);
+                // 根据默认活动设置主题并渲染页面
+                if (currentActivity === 'leiQian') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    // 使用switchActivity渲染累签页面
+                    switchActivity('leiQian');
+                }
             }
-            
-            if (!localStorage.getItem('records')) {
-                localStorage.setItem('records', JSON.stringify([]));
+        }
+
+        // ===== 主题功能 =====
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', theme);
             }
+            localStorage.setItem('xiaoanTheme', theme);
             
-            // 兼容处理：将旧版lotteryTickets数据迁移到lottery
-            if (localStorage.getItem('lotteryTickets')) {
-                localStorage.setItem('lottery', localStorage.getItem('lotteryTickets'));
-                localStorage.removeItem('lotteryTickets');
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('xiaoanTheme') || 'light';
+            if (savedTheme !== 'light') {
+                document.documentElement.setAttribute('data-theme', savedTheme);
             }
-            
-            if (!localStorage.getItem('lottery')) {
-                localStorage.setItem('lottery', '0');
-            }
-            lotteryTickets = parseInt(localStorage.getItem('lottery'));
-            
-            // 监听storage事件实现双向同步
-            // 统一监听storage变化
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'lottery' || e.key === 'voucher' || e.key === 'bankTicket') {
-                    if (e.key === 'lottery') {
-                        lotteryTickets = parseInt(e.newValue || '0');
-                    }
-                    updateUI();
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                const btnTheme = btn.textContent.includes('默认') ? 'light' : 
+                                 btn.textContent.includes('暗黑') ? 'dark' :
+                                 btn.textContent.includes('粉色') ? 'pink' : 'blue';
+                if (btnTheme === savedTheme) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
                 }
             });
         }
-        
-        // 显示状态通知
-        function showStatus(message, type = "success") {
-            const notification = document.getElementById('statusNotification');
-            notification.textContent = message;
-            notification.className = `status-notification status-${type}`;
-            notification.style.opacity = "1";
-            notification.style.transform = "translateY(0)";
+
+        // ===== 签到数据管理 =====
+        function getCheckinData() {
+            const data = localStorage.getItem('checkinData');
+            const defaultData = {
+                lastCheckinDate: null,
+                checkinLog: [],
+                checkinDates: [],
+                streakDays: 0,
+                totalCheckins: 0,
+                weekCheckins: 0,
+                lastStreakReward: 0,
+                // 周期制相关字段
+                cycleStartDate: null,  // 当前周期开始日期
+                cycleCheckins: 0,      // 当前周期签到天数
+                claimedMilestones: []  // 当前周期已领取的里程碑
+            };
             
-            setTimeout(() => {
-                notification.style.opacity = "0";
-                notification.style.transform = "translateY(-20px)";
-            }, 3000);
+            const savedData = data ? JSON.parse(data) : defaultData;
+            
+            // 检查是否需要重置周期（每月1号重置）
+            const today = new Date();
+            const todayStr = getDateString();
+            
+            if (!savedData.cycleStartDate) {
+                // 首次初始化，设置周期开始日期为当月1号
+                const cycleStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                savedData.cycleStartDate = cycleStart.toISOString().split('T')[0];
+                savedData.cycleCheckins = 0;
+                savedData.claimedMilestones = [];
+            } else {
+                // 检查周期是否过期
+                const cycleStart = new Date(savedData.cycleStartDate);
+                const cycleMonth = cycleStart.getMonth();
+                const currentMonth = today.getMonth();
+                const cycleYear = cycleStart.getFullYear();
+                const currentYear = today.getFullYear();
+                
+                // 如果月份或年份不同，重置周期
+                if (cycleMonth !== currentMonth || cycleYear !== currentYear) {
+                    const newCycleStart = new Date(currentYear, currentMonth, 1);
+                    savedData.cycleStartDate = newCycleStart.toISOString().split('T')[0];
+                    savedData.cycleCheckins = 0;
+                    savedData.claimedMilestones = [];
+                }
+            }
+            
+            return savedData;
         }
-        
-        // 更新界面显示
+
+        function saveCheckinData(data) {
+            localStorage.setItem('checkinData', JSON.stringify(data));
+        }
+
+        function loadCheckinData() {
+            const data = getCheckinData();
+            const today = getDateString();
+            
+            // 检查连续签到（如果超过一天没签，重置连续天数）
+            if (data.lastCheckinDate) {
+                const lastDate = new Date(data.lastCheckinDate);
+                const todayDate = new Date(today);
+                const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays > 1) {
+                    data.streakDays = 0;
+                    data.weekCheckins = 0;
+                    saveCheckinData(data);
+                }
+            }
+        }
+
+        function getDateString(date = new Date()) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function getDayOfWeek(date = new Date()) {
+            const day = date.getDay();
+            return day === 0 ? 6 : day - 1; // 0=周一, 6=周日
+        }
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function hasCheckedInToday() {
+            const data = getCheckinData();
+            return data.lastCheckinDate === getDateString();
+        }
+
+        function hasCheckedInDay(dayIndex) {
+            const data = getCheckinData();
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            
+            return data.checkinLog.some(log => {
+                const logDate = new Date(log.date);
+                const logWeek = getWeekNumber(logDate);
+                return log.dayOfWeek === dayIndex && logWeek === currentWeek;
+            });
+        }
+
+        // ===== 签到逻辑 =====
+        function doCheckin() {
+            if (hasCheckedInToday()) {
+                alert('今天已经签到过了！');
+                return;
+            }
+
+            const data = getCheckinData();
+            const today = getDateString();
+            const dayIndex = getDayOfWeek();
+            const reward = { ...WEEKLY_REWARDS[dayIndex] };
+
+            // 更新签到数据
+            const lastDate = data.lastCheckinDate ? new Date(data.lastCheckinDate) : null;
+            const todayDate = new Date(today);
+            const diffDays = lastDate ? Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24)) : 999;
+
+            if (diffDays === 1) {
+                data.streakDays++;
+            } else {
+                data.streakDays = 1;
+            }
+            
+            data.totalCheckins++;
+            data.weekCheckins = Math.min(data.weekCheckins + 1, 7);
+            data.lastCheckinDate = today;
+            
+            // 周期制累计签到
+            data.cycleCheckins = (data.cycleCheckins || 0) + 1;
+
+            // 添加签到日期到数组
+            if (!data.checkinDates) data.checkinDates = [];
+            if (!data.checkinDates.includes(today)) {
+                data.checkinDates.push(today);
+            }
+
+            data.checkinLog.push({
+                date: today,
+                dayOfWeek: dayIndex,
+                reward: reward
+            });
+
+            // 发放奖励
+            addReward(reward.type, reward.amount);
+
+            // 检查连续签到奖励
+            let streakReward = null;
+            for (const sr of STREAK_REWARDS) {
+                if (data.streakDays >= sr.days && data.lastStreakReward < sr.days) {
+                    streakReward = sr;
+                    data.lastStreakReward = sr.days;
+                    addReward(sr.type, sr.amount);
+                    break;
+                }
+            }
+
+            // 检查周期制累计签到里程碑奖励
+            let milestoneReward = null;
+            if (!data.claimedMilestones) data.claimedMilestones = [];
+            for (const lr of LEIQIAN_REWARDS) {
+                if (data.cycleCheckins >= lr.days && !data.claimedMilestones.includes(lr.days)) {
+                    milestoneReward = lr;
+                    data.claimedMilestones.push(lr.days);
+                    addReward(lr.type, lr.amount);
+                    break;
+                }
+            }
+
+            saveCheckinData(data);
+            updateUI();
+
+            // 显示成功弹窗
+            showSuccessModal(reward, streakReward, milestoneReward);
+        }
+
+        function addReward(type, amount) {
+            const keys = {
+                'voucher': 'voucher',
+                'lottery': 'lottery',
+                'premiumLottery': 'premium',
+                'bankTicket': 'bankTicket'
+            };
+            
+            const key = keys[type];
+            if (key) {
+                const current = parseInt(localStorage.getItem(key) || '0');
+                localStorage.setItem(key, current + amount);
+                console.log(`[奖励发放] ${type}: +${amount}, 当前余额: ${current + amount}`);
+            }
+        }
+
+        // ===== UI更新 =====
         function updateUI() {
-            // 更新兑换券显示（使用voucher键名）
-            const voucher = parseInt(localStorage.getItem('voucher') || '100');
-            lotteryTickets = parseInt(localStorage.getItem('lottery') || '0');
-            document.getElementById('currencyAmount').textContent = voucher;
-            document.getElementById('ticketAmount').textContent = lotteryTickets;
-            
-            // 更新奖品显示
-            updatePrizesContainer();
-            updateManagePrizesContainer();
-            
-            // 更新抽奖记录
-            updateRecords();
+            const data = getCheckinData();
+            const dayIndex = getDayOfWeek();
+            const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
+            const today = new Date();
+
+            // 更新今日信息
+            document.getElementById('todayInfo').textContent =
+                `${today.getMonth() + 1}月${today.getDate()}日 星期${dayNames[today.getDay()]}`;
+
+            // 更新签到按钮和状态
+            const btn = document.getElementById('checkinBtn');
+            const status = document.getElementById('bannerStatus');
+
+            if (hasCheckedInToday()) {
+                btn.disabled = true;
+                btn.textContent = '已签到';
+                status.textContent = '已签到';
+                status.classList.add('checked');
+            } else {
+                btn.disabled = false;
+                btn.textContent = '签到';
+                status.textContent = '未签到';
+                status.classList.remove('checked');
+            }
+
+            // 更新统计
+            document.getElementById('totalCheckins').textContent = data.totalCheckins || 0;
+            document.getElementById('streakDays').textContent = data.streakDays || 0;
+            document.getElementById('weekCheckins').textContent = data.weekCheckins || 0;
+
+            // 渲染本周日历
+            renderWeekCalendar(dayIndex);
+
+            // 如果当前在累签页面，重新渲染累签数据
+            if (currentActivity === 'leiQian') {
+                renderLeiQianPage(data);
+            }
         }
-        
-        // 更新抽奖奖品容器
-        function updatePrizesContainer() {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
-            const container = document.getElementById('prizesContainer');
-            container.innerHTML = '';
-            
-            prizes.forEach(prize => {
-                const prizeCard = document.createElement('div');
-                prizeCard.className = 'prize-card';
-                
-                // 显示库存信息
-                const stockText = prize.stock === -1 ? "无限库存" : `库存: ${prize.stock}`;
 
-                let rewardTag = '';
-                if (prize.rewardType === 'currency') {
-                    rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
-                } else if (prize.rewardType === 'bankTicket') {
-                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
-                }
+        function renderWeekCalendar(todayIndex) {
+            const calendar = document.getElementById('weekCalendar');
+            let html = '';
 
-                prizeCard.innerHTML = `
-                    <div class="prize-icon">${prize.icon}</div>
-                    <div class="prize-name">${prize.name}</div>
-                    <div class="prize-weight">权重: ${prize.weight}</div>
-                    <div class="prize-stock">${stockText}</div>
-                    <div class="prize-description">${prize.description}</div>
-                    ${rewardTag}
-                `;
-                container.appendChild(prizeCard);
-            });
-        }
-        
-        // 更新管理奖品容器
-        function updateManagePrizesContainer() {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
-            const container = document.getElementById('managePrizesContainer');
-            container.innerHTML = '';
-            
-            prizes.forEach(prize => {
-                const prizeCard = document.createElement('div');
-                prizeCard.className = 'prize-card';
-                prizeCard.dataset.id = prize.id;
-                
-                // 显示库存信息
-                const stockText = prize.stock === -1 ? "无限库存" : `库存: ${prize.stock}`;
+            WEEKLY_REWARDS.forEach((reward, index) => {
+                const isToday = index === todayIndex;
+                const isChecked = hasCheckedInDay(index);
 
-                let rewardTag = '';
-                if (prize.rewardType === 'currency') {
-                    rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
-                } else if (prize.rewardType === 'bankTicket') {
-                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
-                }
+                let classes = 'day-cell';
+                if (isToday) classes += ' today';
+                if (isChecked) classes += ' checked';
 
-                // 创建确认删除层
-                prizeCard.innerHTML = `
-                    <div class="prize-icon">${prize.icon}</div>
-                    <div class="prize-name">${prize.name}</div>
-                    <div class="prize-weight">权重: ${prize.weight}</div>
-                    <div class="prize-stock">${stockText}</div>
-                    <div class="prize-description">${prize.description}</div>
-                    ${rewardTag}
-                    
-                    <div class="delete-confirm">
-                        <p>确定删除该奖品？</p>
-                        <div class="delete-buttons">
-                            <button class="btn btn-danger delete-yes" data-id="${prize.id}">删除</button>
-                            <button class="btn delete-cancel">取消</button>
-                        </div>
+                html += `
+                    <div class="${classes}">
+                        <div class="day-name">${reward.day}</div>
+                        <div class="day-icon">${isChecked ? '✅' : reward.icon}</div>
+                        <div class="day-reward">${reward.amount}</div>
                     </div>
-                    
-                    <div class="prize-delete">X</div>
                 `;
-                container.appendChild(prizeCard);
-                
-                // 直接绑定删除确认按钮
-                const deleteBtn = prizeCard.querySelector('.prize-delete');
-                deleteBtn.addEventListener('click', function() {
-                    prizeCard.querySelector('.delete-confirm').style.display = 'flex';
-                });
-                
-                // 绑定确认删除按钮
-                const deleteYes = prizeCard.querySelector('.delete-yes');
-                deleteYes.addEventListener('click', function() {
-                    deletePrize(prize.id);
-                });
-                
-                // 绑定取消删除按钮
-                const deleteCancel = prizeCard.querySelector('.delete-cancel');
-                deleteCancel.addEventListener('click', function() {
-                    prizeCard.querySelector('.delete-confirm').style.display = 'none';
-                });
             });
+
+            calendar.innerHTML = html;
         }
-        
-        // 更新抽奖记录
-        function updateRecords() {
-            const records = JSON.parse(localStorage.getItem('records'));
-            const recordsList = document.getElementById('recordsList');
-            recordsList.innerHTML = '';
-            
-            if (records.length === 0) {
-                recordsList.innerHTML = '<p style="text-align: center; padding: 20px;">暂无抽奖记录</p>';
-                return;
-            }
-            
-            records.slice().reverse().forEach((record, index) => {
-                const recordElement = document.createElement('div');
-                recordElement.className = 'record-item';
 
-                // 检查是否已使用
-                const isUsed = record.used || false;
-                const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
+        // 渲染累计签到页面
+        function renderLeiQianPage(data) {
+            const cycleDays = data.cycleCheckins || 0;
 
-                // 检查是否可使用(如果记录没有usable属性，默认为true)
-                // 银行券和兑换券是货币类型，不可使用
-                const isUsable = record.usable !== false && record.rewardType !== 'currency' && record.rewardType !== 'bankTicket';
-
-                let rewardTag = '';
-                if (record.rewardType === 'currency') {
-                    rewardTag = `<div class="reward-tag">${record.currencyAmount}兑换券</div>`;
-                } else if (record.rewardType === 'bankTicket') {
-                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${record.currencyAmount || 0}银行券</div>`;
-                }
-
-                // 如果是奖品、可使用且未使用，显示使用按钮；否则显示已使用状态或不可使用不显示按钮
-                let useButton = '';
-                if (isUsable && !isUsed) {
-                    // 可使用且未使用
-                    useButton = `
-                        <button class="btn use-btn" data-index="${index}" style="padding: 10px 20px; font-size: 1rem; background: linear-gradient(135deg, #06d6a0, #48dbfb); border: 2px solid #06d6a0; box-shadow: 0 4px 8px rgba(6, 214, 160, 0.3);">
-                            🎁 使用奖品
-                        </button>
-                    `;
-                } else if (isUsed) {
-                    // 已使用
-                    useButton = `
-                        <div class="used-status" style="background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; text-align: center; box-shadow: 0 4px 8px rgba(127, 140, 141, 0.3);">
-                            已使用<br><small style="font-size: 0.7rem;">${usedTime}</small>
-                        </div>
-                    `;
-                }
-                // 不可使用的奖品不显示任何按钮(useButton为空字符串)
-
-                recordElement.innerHTML = `
-                    <div style="flex: 1;">
-                        <div class="record-prize" style="${isUsed ? 'text-decoration: line-through; color: #95a5a6;' : ''}">${record.prize}</div>
-                        ${rewardTag}
-                        <div class="record-date">${new Date(record.date).toLocaleString()}</div>
-                    </div>
-                    ${useButton}
-                `;
-                recordsList.appendChild(recordElement);
-            });
-            
-            // 使用事件委托绑定使用按钮事件 - 更可靠的方式
-            bindUseButtonEvents();
-        }
-        
-        // 绑定使用按钮事件（使用事件委托）
-        function bindUseButtonEvents() {
-            const recordsList = document.getElementById('recordsList');
-            
-            // 移除之前的事件监听器（避免重复绑定）
-            recordsList.removeEventListener('click', handleUseButtonClick);
-            
-            // 添加新的事件监听器
-            recordsList.addEventListener('click', handleUseButtonClick);
-        }
-        
-        // 处理使用按钮点击事件
-        function handleUseButtonClick(event) {
-            const useButton = event.target.closest('.use-btn');
-            if (useButton) {
-                event.preventDefault();
-                const recordIndex = parseInt(useButton.dataset.index);
-                console.log('检测到使用按钮点击，索引:', recordIndex);
-                markAsUsed(recordIndex);
-            }
-        }
-        
-        // 标记奖品为已使用
-        function markAsUsed(recordIndex) {
-            console.log('markAsUsed called with display index:', recordIndex);
-
-            const records = JSON.parse(localStorage.getItem('records'));
-            console.log('Total records:', records.length);
-
-            // recordIndex是反向显示的索引，需要转换为正向索引
-            // 反向显示：index 0 = 最后一条记录，index 1 = 倒数第二条...
-            // 正向索引：index 0 = 第一条记录，index 1 = 第二条...
-            const actualIndex = records.length - 1 - recordIndex;
-            console.log('Converted to actual index:', actualIndex);
-
-            // 检查记录是否存在
-            if (!records[actualIndex]) {
-                console.log('记录不存在，索引:', actualIndex);
-                showStatus('记录不存在，无法使用此奖品', "error");
-                return;
+            // 更新累计天数（显示周期内的天数）
+            const totalDaysEl = document.getElementById('totalDays');
+            if (totalDaysEl) {
+                totalDaysEl.textContent = cycleDays;
             }
 
-            const record = records[actualIndex];
-
-            // 调试信息：显示记录详情
-            console.log('当前记录详情:', record);
-            console.log('rewardType值:', record.rewardType);
-            console.log('rewardType类型:', typeof record.rewardType);
-
-            // 检查是否已经使用过
-            if (record.used) {
-                console.log('奖品已经使用过:', record);
-                return; // 直接返回，不显示任何提示
-            }
-
-            const prizeName = record.prize;
-
-            // 直接标记为已使用，不再询问确认（确保基础功能可用）
-            record.used = true;
-            record.usedTime = new Date().toISOString();
-
-            localStorage.setItem('records', JSON.stringify(records));
-
-            // 局部更新当前记录，不重新渲染整个列表
-            updateSingleRecord(actualIndex);
-
-            // 添加庆祝效果（不显示提示消息）
-            createConfetti();
-        }
-
-        // 局部更新单个记录（避免重新渲染整个列表）
-        function updateSingleRecord(actualIndex) {
-            const records = JSON.parse(localStorage.getItem('records'));
-            const record = records[actualIndex];
-            if (!record) return;
-
-            const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
-
-            // actualIndex是正向索引，需要转换为反向显示的索引
-            const displayIndex = records.length - 1 - actualIndex;
-            const recordElements = document.querySelectorAll('.record-item');
-            const recordElement = recordElements[displayIndex];
-
-            if (recordElement) {
-                // 更新奖品名称样式（添加删除线和灰色）
-                const prizeElement = recordElement.querySelector('.record-prize');
-                if (prizeElement) {
-                    prizeElement.style.textDecoration = 'line-through';
-                    prizeElement.style.color = '#95a5a6';
-                }
-
-                // 找到按钮并替换为已使用状态
-                const useButton = recordElement.querySelector('.use-btn');
-                if (useButton) {
-                    // 创建已使用状态的div
-                    const usedStatus = document.createElement('div');
-                    usedStatus.className = 'used-status';
-                    usedStatus.style.cssText = 'background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; text-align: center; box-shadow: 0 4px 8px rgba(127, 140, 141, 0.3);';
-                    usedStatus.innerHTML = `已使用<br><small style="font-size: 0.7rem;">${usedTime}</small>`;
-
-                    // 替换按钮
-                    useButton.parentNode.replaceChild(usedStatus, useButton);
-                }
-            }
-        }
-
-        // 创建彩色纸屑效果
-        function createConfetti() {
-            const container = document.querySelector('.container');
-            for (let i = 0; i < 100; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.backgroundColor = getRandomColor();
-                confetti.style.width = `${Math.random() * 10 + 5}px`;
-                confetti.style.height = `${Math.random() * 10 + 5}px`;
-                container.appendChild(confetti);
-                
-                // 移除动画结束后元素
-                setTimeout(() => {
-                    confetti.remove();
-                }, 1500);
-            }
-        }
-        
-        // 获取随机颜色
-        function getRandomColor() {
-            const colors = [
-                '#ff6b6b', '#48dbfb', '#1dd1a1', '#ff9ff3', 
-                '#feca57', '#ff9f43', '#00d2d3'
+            // 更新里程碑状态
+            const milestones = [
+                { id: 'milestone5', days: 5 },
+                { id: 'milestone10', days: 10 },
+                { id: 'milestone15', days: 15 },
+                { id: 'milestone20', days: 20 },
+                { id: 'milestone25', days: 25 },
+                { id: 'milestone30', days: 30 }
             ];
-            return colors[Math.floor(Math.random() * colors.length)];
-        }
-        
-        // 切换标签页
-        function switchTab(tabId) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // 取消所有标签的激活状态
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // 显示选中的标签内容
-            document.getElementById(tabId).classList.add('active');
-            
-            // 激活选中的标签
-            document.querySelector(`.nav-tab[data-tab="${tabId}"]`).classList.add('active');
-            
-            // 如果切换到抽奖记录标签页，更新记录
-            if (tabId === 'records') {
-                updateRecords();
-            }
-        }
-        
-        // 打开添加奖品模态框
-        function openAddPrizeModal() {
-            document.getElementById('addPrizeModal').style.display = 'flex';
-            document.getElementById('prizeName').value = '';
-            document.getElementById('prizeWeight').value = '10';
-            document.getElementById('prizeStock').value = '-1';
-            document.getElementById('prizeRewardType').value = 'item';
-            document.getElementById('currencyAmountInput').value = '';
-            document.getElementById('currencyAmountGroup').style.display = 'none';
-            document.getElementById('prizeUsable').value = 'true'; // 默认可使用
-            document.getElementById('prizeDescription').value = '';
-        }
-        
-        // 关闭添加奖品模态框
-        function closeAddPrizeModal() {
-            document.getElementById('addPrizeModal').style.display = 'none';
-        }
-        
-        // 单次抽奖
-        function startSingleLottery() {
-            if (lotteryTickets >= 1) {
-                // 直接使用抽奖券
-                lotteryTickets--;
-                localStorage.setItem('lottery', lotteryTickets.toString());
-                updateUI();
-                performLottery(1);
-            } else {
-                // 询问是否用兑换券购买
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                if (voucher >= EXCHANGE_RATE) {
-                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
-                    document.getElementById('exchangeModalText').textContent = 
-                        '抽奖券不足！确定要用200兑换券购买1张抽奖券吗？';
-                    document.getElementById('exchangeModal').style.display = 'flex';
-                } else {
-                    showStatus('抽奖券不足且兑换券也不足！', "error");
-                }
-            }
-        }
 
-        // 多次抽奖
-        function startMultiLottery() {
-            if (lotteryTickets >= 10) {
-                // 直接使用抽奖券
-                lotteryTickets -= 10;
-                localStorage.setItem('lottery', lotteryTickets.toString());
-                updateUI();
-                performLottery(10);
-            } else {
-                // 计算需要补充的抽奖券数量
-                const neededTickets = 10 - lotteryTickets;
-                const totalCost = neededTickets * EXCHANGE_RATE;
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                
-                if (voucher >= totalCost) {
-                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
-                    document.getElementById('exchangeModalText').textContent = 
-                        `抽奖券不足！需要补充${neededTickets}张抽奖券，确定要用${totalCost}兑换券购买吗？`;
-                    document.getElementById('exchangeModal').style.display = 'flex';
-                } else {
-                    showStatus(`抽奖券不足且兑换券不足（需要${totalCost}兑换券）！`, "error");
-                }
-            }
-        }
+            const claimedMilestones = data.claimedMilestones || [];
 
-        // 执行抽奖
-        function performLottery(times) {
-            const actionMessage = document.getElementById('actionMessage');
-            actionMessage.textContent = `正在抽奖中（${times}次），请稍候...`;
-            actionMessage.style.display = 'block';
-            
-            // 禁用按钮
-            document.getElementById('singleLotteryBtn').disabled = true;
-            document.getElementById('multiLotteryBtn').disabled = true;
-            
-            // 抽奖动画效果（5秒后显示结果）
-            setTimeout(() => {
-                const prizes = [];
-                for (let i = 0; i < times; i++) {
-                    prizes.push(getRandomPrize());
-                }
-                
-                // 处理奖品
-                processPrizes(prizes);
-                
-                // 根据抽奖次数显示对应结果
-                if (times === 1) {
-                    showSingleLotteryResult(prizes[0]);
-                } else {
-                    showMultiLotteryResult(prizes);
-                }
-                
-                // 启用按钮
-                document.getElementById('singleLotteryBtn').disabled = false;
-                document.getElementById('multiLotteryBtn').disabled = false;
-                actionMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        // 处理奖品结果
-        function processPrizes(prizes) {
-            const records = JSON.parse(localStorage.getItem('records'));
-            let currencyEarned = 0;
-            let bankTicketEarned = 0;
-
-            prizes.forEach(prize => {
-                records.push({
-                    prize: prize.name,
-                    rewardType: prize.rewardType,
-                    currencyAmount: prize.currencyAmount,
-                    usable: prize.usable !== false, // 默认为true，如果奖品没有设置usable属性则默认可使用
-                    date: new Date().toISOString()
-                });
-
-                if (prize.rewardType === 'currency') {
-                    currencyEarned += prize.currencyAmount;
-                } else if (prize.rewardType === 'bankTicket') {
-                    bankTicketEarned += prize.currencyAmount;
-                }
-                
-                // 减少库存
-                if (prize.stock !== -1) {
-                    const allPrizes = JSON.parse(localStorage.getItem('prizes'));
-                    const updatedPrizes = allPrizes.map(p => {
-                        if (p.id === prize.id && p.stock > 0) {
-                            return {...p, stock: p.stock - 1};
-                        }
-                        return p;
-                    });
-                    localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
-                }
-            });
-            
-            // 更新记录
-            localStorage.setItem('records', JSON.stringify(records));
-
-            // 显示奖励消息
-            let rewardMessages = [];
-            if (currencyEarned > 0) {
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                const newVoucher = voucher + currencyEarned;
-                localStorage.setItem('voucher', newVoucher.toString());
-                document.getElementById('currencyAmount').textContent = newVoucher;
-
-                // 触发storage事件同步到其他页面
-                window.dispatchEvent(new StorageEvent('storage', {
-                    key: 'voucher',
-                    newValue: newVoucher.toString()
-                }));
-
-                rewardMessages.push(`${currencyEarned}兑换券`);
-            }
-            if (bankTicketEarned > 0) {
-                const bankTicket = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
-                const newBankTicket = bankTicket + bankTicketEarned;
-
-                // 安全检查：确保newBankTicket是有效数字
-                if (!isNaN(newBankTicket) && newBankTicket >= 0) {
-                    localStorage.setItem('bankTicket', newBankTicket.toString());
-
-                    // 触发storage事件同步到银行页面
-                    window.dispatchEvent(new StorageEvent('storage', {
-                        key: 'bankTicket',
-                        newValue: newBankTicket.toString()
-                    }));
-                }
-
-                rewardMessages.push(`${bankTicketEarned}银行券`);
-            }
-            if (rewardMessages.length > 0) {
-                showStatus(`成功获得${rewardMessages.join('、')}！`, "success");
-            }
-            
-            // 触发UI更新
-            updateUI();
-            
-            // 显示结果
-            showMultiLotteryResult(prizes);
-            updateUI();
-        }
-
-        // 显示十连抽结果
-        function showMultiLotteryResult(prizes) {
-            const resultCard = document.getElementById('resultCard');
-            const resultContent = document.getElementById('resultContent');
-            const rewardTags = document.getElementById('rewardTags');
-            
-            resultContent.innerHTML = `
-                <div style="font-size: 2rem; margin-bottom:15px; text-align:center;">🎉 十连抽结果 🎉</div>
-                <div style="display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 12px; max-height: 500px; overflow-y: auto; padding: 10px; max-width: 800px; margin: 0 auto;">
-                    ${prizes.map((prize, index) => `
-                        <div style="
-                            border: 2px solid #ffd166;
-                            border-radius: 15px;
-                            padding: 12px;
-                            background: rgba(255, 255, 255, 0.9);
-                            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-                            min-height: 140px;
-                            display: flex;
-                            flex-direction: column;
-                            justify-content: space-between;
-                        ">
-                            <div style="font-size: 1.1rem; font-weight:bold; color:#118ab2;">第${index+1}抽</div>
-                            <div style="font-size: 1.5rem; margin:8px 0; text-align:center;">${prize.icon}</div>
-                            <div style="font-size: 1.1rem; margin-bottom:5px; text-align:center;">${prize.name}</div>
-                            ${prize.rewardType === 'currency' ?
-                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center;">${prize.currencyAmount || 0}兑换券</div>` : ''}
-                            ${prize.rewardType === 'bankTicket' ?
-                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            
-            rewardTags.innerHTML = '';
-            resultCard.style.display = 'block';
-            createConfetti();
-        }
-        
-        // 显示单次抽奖结果
-        function showSingleLotteryResult(prize) {
-            const resultCard = document.getElementById('resultCard');
-            const resultContent = document.getElementById('resultContent');
-            const rewardTags = document.getElementById('rewardTags');
-            
-            resultContent.innerHTML = `
-                <div style="font-size: 2rem; margin-bottom:15px; text-align:center;">🎉 抽奖结果 🎉</div>
-                <div style="text-align: center; padding: 20px;">
-                    <div style="font-size: 3rem; margin:20px 0;">${prize.icon}</div>
-                    <div style="font-size: 1.5rem; margin-bottom:10px;">${prize.name}</div>
-                    ${prize.rewardType === 'currency' ?
-                        `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>` : ''}
-                </div>
-            `;
-
-            rewardTags.innerHTML = '';
-            if (prize.rewardType === 'currency') {
-                rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount || 0}兑换券</div>`;
-            } else if (prize.rewardType === 'bankTicket') {
-                rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
-            } else {
-                rewardTags.innerHTML = `<div class="reward-tag">实物奖品</div>`;
-            }
-            
-            resultCard.style.display = 'block';
-            
-            // 创建五彩纸屑效果
-            createConfetti();
-            
-            // 显示通知
-            let message = `恭喜获得：${prize.name}`;
-            if (prize.rewardType === 'currency') {
-                message += ` (${prize.currencyAmount || 0}兑换券)`;
-            } else if (prize.rewardType === 'bankTicket') {
-                message += ` (${prize.currencyAmount || 0}银行券)`;
-            }
-            showStatus(message, "success");
-        }
-        
-        // 确认抽奖结果
-        function confirmResult() {
-            document.getElementById('resultCard').style.display = 'none';
-        }
-        
-        // 随机获取奖品
-        function getRandomPrize() {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
-            
-            // 过滤掉库存为0的奖品
-            const availablePrizes = prizes.filter(prize => 
-                prize.stock === -1 || prize.stock > 0
-            );
-            
-            if (availablePrizes.length === 0) {
-                return {
-                    id: 0,
-                    name: "无奖品",
-                    rewardType: "item",
-                    currencyAmount: 0,
-                    description: "暂无可用奖品",
-                    icon: "❓",
-                    weight: 100,
-                    stock: -1
-                };
-            }
-            
-            let totalWeight = 0;
-            
-            // 计算总权重
-            availablePrizes.forEach(prize => {
-                totalWeight += prize.weight;
-            });
-            
-            // 生成随机数
-            const random = Math.random() * totalWeight;
-            
-            // 选择奖品
-            let currentWeight = 0;
-            for (const prize of availablePrizes) {
-                currentWeight += prize.weight;
-                if (random <= currentWeight) {
-                    return prize;
-                }
-            }
-            
-            // 默认返回第一个奖品
-            return availablePrizes[0];
-        }
-        
-        // 添加奖品
-        function addPrize() {
-            const name = document.getElementById('prizeName').value;
-            const weight = parseInt(document.getElementById('prizeWeight').value);
-            const stock = parseInt(document.getElementById('prizeStock').value);
-            const rewardType = document.getElementById('prizeRewardType').value;
-            const usable = document.getElementById('prizeUsable').value === 'true'; // 是否可使用
-            let currencyAmount = 0;
-
-            if (rewardType === 'currency' || rewardType === 'bankTicket') {
-                currencyAmount = parseInt(document.getElementById('currencyAmountInput').value);
-            }
-
-            const description = document.getElementById('prizeDescription').value;
-
-            if (!name) {
-                showStatus('请输入奖品名称！', "error");
-                return;
-            }
-
-            if (!weight || weight <= 0) {
-                showStatus('请输入有效的权重值！', "error");
-                return;
-            }
-
-            if (isNaN(stock) || stock < -1) {
-                showStatus('请输入有效的库存值（-1或大于0）！', "error");
-                return;
-            }
-
-            if ((rewardType === 'currency' || rewardType === 'bankTicket') && (!currencyAmount || currencyAmount <= 0)) {
-                const currencyName = rewardType === 'currency' ? '兑换券' : '银行券';
-                showStatus(`请输入有效的${currencyName}数量！`, "error");
-                return;
-            }
-
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
-            const newId = prizes.length > 0 ? Math.max(...prizes.map(p => p.id)) + 1 : 1;
-
-            // 默认图标
-            const icons = ["🎁", "🏆", "🏅", "🥇", "🎗️", "🧸", "🪀", "🧩", "🎮", "📱"];
-            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-
-            prizes.push({
-                id: newId,
-                name: name,
-                weight: weight,
-                stock: stock,
-                rewardType: rewardType,
-                currencyAmount: currencyAmount,
-                description: description,
-                icon: randomIcon,
-                usable: usable // 添加可使用属性
-            });
-            
-            localStorage.setItem('prizes', JSON.stringify(prizes));
-            closeAddPrizeModal();
-            updateUI();
-            showStatus('奖品添加成功！', "success");
-        }
-        
-        // 删除奖品
-        function deletePrize(prizeId) {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
-            const updatedPrizes = prizes.filter(prize => prize.id !== prizeId);
-            
-            localStorage.setItem('prizes', JSON.stringify(updatedPrizes));
-            updateUI();
-            showStatus('奖品已删除！', "success");
-        }
-        
-        // 验证密码
-        function verifyPassword() {
-            const password = document.getElementById('passwordInput').value;
-            const storedPassword = localStorage.getItem('password');
-            
-            if (password === storedPassword) {
-                document.getElementById('passwordModal').style.display = 'none';
-                switchTab('management');
-                document.getElementById('passwordInput').value = '';
-            } else {
-                showStatus('密码错误！', "error");
-                document.getElementById('passwordInput').value = '';
-            }
-        }
-        
-        // 清空抽奖记录
-        function clearRecords() {
-            const password = document.getElementById('clearRecordsPassword').value;
-            const storedPassword = localStorage.getItem('password');
-            
-            if (password === storedPassword) {
-                localStorage.setItem('records', JSON.stringify([]));
-                document.getElementById('clearRecordsModal').style.display = 'none';
-                document.getElementById('clearRecordsPassword').value = '';
-                updateRecords();
-                showStatus('抽奖记录已清空！', "success");
-            } else {
-                showStatus('密码错误！', "error");
-                document.getElementById('clearRecordsPassword').value = '';
-            }
-        }
-        
-        // 初始化应用
-        function initApp() {
-            initializeData();
-            updateUI();
-            updateRecords();
-            
-            // 事件绑定
-            document.getElementById('singleLotteryBtn').addEventListener('click', startSingleLottery);
-            document.getElementById('multiLotteryBtn').addEventListener('click', startMultiLottery);
-            document.getElementById('confirmResultBtn').addEventListener('click', confirmResult);
-            document.getElementById('addPrizeBtn').addEventListener('click', openAddPrizeModal);
-            document.getElementById('confirmAddPrizeBtn').addEventListener('click', addPrize);
-            document.getElementById('cancelAddPrizeBtn').addEventListener('click', closeAddPrizeModal);
-            document.getElementById('clearRecordsBtn').addEventListener('click', function() {
-                document.getElementById('clearRecordsModal').style.display = 'flex';
-                document.getElementById('clearRecordsPassword').value = '';
-            });
-            document.getElementById('confirmClearRecordsBtn').addEventListener('click', clearRecords);
-            document.getElementById('cancelClearRecordsBtn').addEventListener('click', function() {
-                document.getElementById('clearRecordsModal').style.display = 'none';
-            });
-            document.getElementById('confirmPasswordBtn').addEventListener('click', verifyPassword);
-            document.getElementById('cancelPasswordBtn').addEventListener('click', function() {
-                document.getElementById('passwordModal').style.display = 'none';
-            });
-            document.getElementById('confirmExchangeBtn').addEventListener('click', function() {
-                const modalText = document.getElementById('exchangeModalText').textContent;
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                
-                // 解析需要购买的抽奖券数量
-                let ticketsToBuy = 1;
-                if (modalText.includes('补充')) {
-                    const match = modalText.match(/需要补充(\d+)张/);
-                    if (match) ticketsToBuy = parseInt(match[1]);
-                }
-                
-                const totalCost = ticketsToBuy * EXCHANGE_RATE;
-                
-                if (voucher >= totalCost) {
-                    // 扣除兑换券
-                    const newVoucher = voucher - totalCost;
-                    localStorage.setItem('voucher', newVoucher.toString());
-                    
-                    // 增加抽奖券
-                    lotteryTickets += ticketsToBuy;
-                    localStorage.setItem('lottery', lotteryTickets.toString());
-                    
-                    // 更新UI
-                    updateUI();
-                    document.getElementById('exchangeModal').style.display = 'none';
-                    showStatus(`成功购买${ticketsToBuy}张抽奖券！`, "success");
-                    
-                    // 自动开始抽奖
-                    if (modalText.includes('1张抽奖券')) {
-                        startSingleLottery();
-                    } else if (modalText.includes('10抽奖券') || modalText.includes('补充')) {
-                        startMultiLottery();
-                    }
-                } else {
-                    showStatus('兑换券不足！', "error");
-                }
-            });
-            document.getElementById('cancelExchangeBtn').addEventListener('click', function() {
-                document.getElementById('exchangeModal').style.display = 'none';
-            });
-            
-            // 标签页切换事件
-            document.querySelector('.nav-tabs').addEventListener('click', function(e) {
-                const tab = e.target.closest('.nav-tab');
-                if (tab) {
-                    if (tab.dataset.tab === 'management') {
-                        document.getElementById('passwordModal').style.display = 'flex';
+            milestones.forEach(m => {
+                const el = document.getElementById(m.id);
+                if (el) {
+                    if (claimedMilestones.includes(m.days)) {
+                        el.textContent = '已领取';
+                        el.closest('.milestone').classList.add('achieved');
+                    } else if (cycleDays >= m.days) {
+                        el.textContent = '已达成';
+                        el.closest('.milestone').classList.add('achieved');
                     } else {
-                        switchTab(tab.dataset.tab);
+                        el.textContent = `还差${m.days - cycleDays}天`;
+                        el.closest('.milestone').classList.remove('achieved');
                     }
                 }
             });
-            
-            // 奖励类型变更事件
-            document.getElementById('prizeRewardType').addEventListener('change', function() {
-                const isCurrency = this.value === 'currency' || this.value === 'bankTicket';
-                document.getElementById('currencyAmountGroup').style.display = isCurrency ? 'block' : 'none';
-                
-                // 动态更新标签文本
-                const label = document.getElementById('currencyAmountLabel');
-                const input = document.getElementById('currencyAmountInput');
-                if (this.value === 'currency') {
-                    label.textContent = '兑换券数量';
-                    input.placeholder = '请输入兑换券数量';
-                } else if (this.value === 'bankTicket') {
-                    label.textContent = '银行券数量';
-                    input.placeholder = '请输入银行券数量';
-                }
-            });
-            
-            // 点击模态框外部关闭模态框
-            window.addEventListener('click', function(event) {
-                const modals = document.querySelectorAll('.modal');
-                modals.forEach(modal => {
-                    if (event.target === modal) {
-                        modal.style.display = 'none';
-                        if (modal.id === 'passwordModal') {
-                            document.getElementById('passwordInput').value = '';
-                        } else if (modal.id === 'addPrizeModal') {
-                            document.getElementById('prizeName').value = '';
-                            document.getElementById('prizeWeight').value = '';
-                        }
-                    }
-                });
-            });
+
+            // 渲染签到日历（最近30天）
         }
-        
-        // 返回主页功能
-        document.getElementById('homeBtn').addEventListener('click', function() {
-            window.location.href = '/xiaoan';
+
+        // ===== 弹窗 =====
+        function showSuccessModal(reward, streakReward, milestoneReward) {
+            let text = `获得 <strong>${reward.icon} ${reward.amount} ${reward.name}</strong>`;
+
+            if (streakReward) {
+                text += `<br><small style="opacity:0.8">连续签到 ${streakReward.days} 天，额外获得 ${streakReward.icon} ${streakReward.name}</small>`;
+            }
+
+            if (milestoneReward) {
+                text += `<br><small style="opacity:0.8; color: #ffeaa7;">🎉 累计签到 ${milestoneReward.days} 天里程碑！获得 ${milestoneReward.icon} ${milestoneReward.name}</small>`;
+            }
+
+            document.getElementById('rewardText').innerHTML = text;
+            document.getElementById('successModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
         });
 
-        // 前往高级抽奖功能
-        document.getElementById('advancedBtn').addEventListener('click', function() {
-            window.location.href = 'advanced_choujiang.html';
+        // ===== 活动切换 =====
+        const ACTIVITIES = {
+            'leiQian': {
+                icon: '📅',
+                title: '长风逐波',
+                status: 'permanent',
+                statusText: '常驻活动',
+                desc: '',
+                rewardsHint: '可能获得的奖励：🎫🎲💎',
+                url: null,
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/leiQian.jpg',
+                bgColor: '#6c5ce7'
+            },
+            'qingming': {
+                icon: '🌧️',
+                title: '清明时节雨纷纷',
+                status: 'limited',
+                statusText: '限时活动 4.1-4.6',
+                desc: '',
+                rewardsHint: '可能获得的奖励：🎫🎲💎',
+                url: '/xiaoan/activity/qingming.html',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg',
+                bgColor: '#00b894'
+            }
+        };
+
+        let currentActivity = 'leiQian';
+
+        function switchActivity(activityId) {
+            const activity = ACTIVITIES[activityId];
+            if (!activity) return;
+
+            // 禁用的活动不允许切换
+            if (activity.disabled) return;
+
+            currentActivity = activityId;
+
+            // 更新导航高亮
+            document.querySelectorAll('.activity-nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.activity === activityId) {
+                    item.classList.add('active');
+                }
+            });
+
+            // 更新详情区
+            const detail = document.getElementById('activityDetail');
+            detail.className = `activity-detail ${activityId}`;
+
+            // 更新主题色背景
+            const bg = document.getElementById('detailBg');
+            bg.style.setProperty('--theme-color', activity.bgColor);
+
+            // 根据活动自动切换主题
+            if (activityId === 'leiQian') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                // 累签活动是内嵌页面，替换详情区域内容
+                detail.innerHTML = `
+                    <div class="detail-bg" id="detailBg" style="--theme-color: ${activity.bgColor}"></div>
+                    <div class="detail-content leiQian-content">
+                        <!-- 累计签到头部 -->
+                        <div class="leiQian-header">
+                            <div class="leiQian-icon">📅</div>
+                            <div class="leiQian-info">
+                                <h2>长风逐波</h2>
+                                <p>累计签到，逐浪前行</p>
+                            </div>
+                            <div class="leiQian-total">
+                                <span class="total-days" id="totalDays">0</span>
+                                <span class="total-label">天</span>
+                            </div>
+                        </div>
+
+                        <!-- 累计签到奖励里程碑 -->
+                        <div class="leiQian-milestones">
+                            <div class="milestone" data-days="5">
+                                <div class="milestone-icon">🎁</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">5天</span>
+                                    <span class="milestone-reward">抽奖券x3</span>
+                                </div>
+                                <div class="milestone-status" id="milestone5">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="10">
+                                <div class="milestone-icon">🎀</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">10天</span>
+                                    <span class="milestone-reward">兑换券x300</span>
+                                </div>
+                                <div class="milestone-status" id="milestone10">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="15">
+                                <div class="milestone-icon">💎</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">15天</span>
+                                    <span class="milestone-reward">高级抽奖券x1</span>
+                                </div>
+                                <div class="milestone-status" id="milestone15">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="20">
+                                <div class="milestone-icon">🏦</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">20天</span>
+                                    <span class="milestone-reward">银行券x6</span>
+                                </div>
+                                <div class="milestone-status" id="milestone20">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="25">
+                                <div class="milestone-icon">🏆</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">25天</span>
+                                    <span class="milestone-reward">兑换券x700</span>
+                                </div>
+                                <div class="milestone-status" id="milestone25">未达成</div>
+                            </div>
+                            <div class="milestone" data-days="30">
+                                <div class="milestone-icon">👑</div>
+                                <div class="milestone-info">
+                                    <span class="milestone-days">30天</span>
+                                    <span class="milestone-reward">兑换券x1000</span>
+                                </div>
+                                <div class="milestone-status" id="milestone30">未达成</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                // 渲染累签数据
+                renderLeiQianPage(getCheckinData());
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+
+                // 普通活动使用卡片展示，替换详情区域内容
+                detail.innerHTML = `
+                    <div class="detail-bg" id="detailBg" style="--theme-color: ${activity.bgColor}"></div>
+                    <div class="detail-content">
+                        <div class="detail-icon">${activity.icon}</div>
+                        <h2 class="detail-title">${activity.title}</h2>
+                        <div class="detail-status">${activity.statusText}</div>
+                        <p class="detail-desc">${activity.desc || ''}</p>
+                        <div class="detail-footer">
+                            <div class="detail-rewards-hint">${activity.rewardsHint || ''}</div>
+                            <button class="detail-btn${activity.disabled ? ' disabled' : ''}" id="detailBtn" onclick="goToActivity()">${activity.disabled ? '敬请期待' : '立即前往'}</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function goToActivity() {
+            const activity = ACTIVITIES[currentActivity];
+            if (activity && activity.url) {
+                window.location.href = activity.url;
+            }
+        }
+
+        // 绑定导航点击事件
+        document.querySelectorAll('.activity-nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const activityId = this.dataset.activity;
+                const activity = ACTIVITIES[activityId];
+                if (activity && !activity.disabled) {
+                    switchActivity(activityId);
+                }
+            });
         });
 
-        // 当DOM加载完成后启动应用
-        document.addEventListener('DOMContentLoaded', initApp);
-
+        // 初始化
+        init();
     </script>
 </body>
 </html>
