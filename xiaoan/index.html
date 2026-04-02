@@ -605,7 +605,41 @@
             transform: translateY(-5px) scale(1.05);
             box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
         }
-        
+
+        /* 活动中心按钮包装器 */
+        .activity-btn-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* 活动标识徽章 */
+        .activity-badge {
+            position: absolute;
+            top: -5px;
+            right: -12px;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 12px;
+            box-shadow: 0 3px 8px rgba(255, 107, 107, 0.4);
+            z-index: 10;
+            animation: badge-pulse 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 3px 8px rgba(255, 107, 107, 0.4);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 5px 15px rgba(255, 107, 107, 0.6);
+            }
+        }
+
         .btn:hover::after {
             transform: rotate(30deg) translate(10%, 10%);
         }
@@ -1371,6 +1405,18 @@
                 width: 90%;
                 margin: 8px 0;
             }
+
+            .activity-btn-wrapper {
+                width: 90%;
+                display: block;
+            }
+
+            .activity-badge {
+                font-size: 0.65rem;
+                padding: 3px 6px;
+                top: -6px;
+                right: 5%;
+            }
             
         /* 音乐播放器在小屏幕上的响应式调整 */
         .music-player {
@@ -1559,7 +1605,10 @@
                 <button class="btn" onclick="window.location.href='rule/index.html'">📝 任务中心</button>
                 <button class="btn" onclick="window.location.href='rule/announcement.html'">📢 公告栏</button>
                 <button class="btn" onclick="window.location.href='bank/index.html'">🏦 银行理财</button>
-                <button class="btn" onclick="window.location.href='activity/index.html'">🎉 活动中心</button>
+                <div class="activity-btn-wrapper">
+                    <button class="btn" onclick="window.location.href='activity/index.html'">🎉 活动中心</button>
+                    <span class="activity-badge">【新】清明活动开启！</span>
+                </div>
             </div>
         </div>
         
