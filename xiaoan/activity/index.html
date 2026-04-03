@@ -450,6 +450,10 @@
             background: linear-gradient(135deg, #55efc4, #00b894);
         }
 
+        .activity-nav-item.jiYuan .nav-icon {
+            background: linear-gradient(135deg, #55efc4, #00b894);
+        }
+
         .nav-label {
             font-size: 0.85rem;
             font-weight: bold;
@@ -552,6 +556,10 @@
 
         .activity-detail.qingming .detail-bg::before {
             background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg');
+        }
+
+        .activity-detail.jiYuan .detail-bg::before {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png');
         }
 
 
@@ -996,6 +1004,11 @@
                         <div class="nav-label">清明</div>
                         <div class="nav-status limited">限时</div>
                     </div>
+                    <div class="activity-nav-item jiYuan" data-activity="jiYuan">
+                        <div class="nav-icon">🎯</div>
+                        <div class="nav-label">纪远</div>
+                        <div class="nav-status limited">限时</div>
+                    </div>
                 </div>
 
                 <!-- 右侧详情 -->
@@ -1186,25 +1199,68 @@
             const todayStr = getDateString();
             
             if (!savedData.cycleStartDate) {
-                // 首次初始化，设置周期开始日期为当月1号
+                // 首次初始化或老用户数据迁移
                 const cycleStart = new Date(today.getFullYear(), today.getMonth(), 1);
-                savedData.cycleStartDate = cycleStart.toISOString().split('T')[0];
-                savedData.cycleCheckins = 0;
-                savedData.claimedMilestones = [];
+                // 使用本地日期格式化，避免时区问题
+                savedData.cycleStartDate = getDateString(cycleStart);
+                
+                // 如果是老用户（缺少cycleCheckins字段），根据签到日期计算周期内天数
+                if (!('cycleCheckins' in savedData)) {
+                    if (savedData.checkinDates && savedData.checkinDates.length > 0) {
+                        // 根据签到日期数组计算当前周期内的天数
+                        savedData.cycleCheckins = savedData.checkinDates.filter(date => date >= savedData.cycleStartDate).length;
+                    } else {
+                        // 没有签到日期记录时，使用总签到数
+                        savedData.cycleCheckins = savedData.totalCheckins || 0;
+                    }
+                }
+                if (!('claimedMilestones' in savedData)) {
+                    savedData.claimedMilestones = [];
+                }
+                // 保存初始化数据
+                localStorage.setItem('checkinData', JSON.stringify(savedData));
             } else {
                 // 检查周期是否过期
-                const cycleStart = new Date(savedData.cycleStartDate);
+                console.log('[DEBUG] cycleStartDate原始值:', savedData.cycleStartDate);
+                const cycleStart = new Date(savedData.cycleStartDate + 'T00:00:00'); // 强制本地时间解析
+                console.log('[DEBUG] cycleStart解析后:', cycleStart);
                 const cycleMonth = cycleStart.getMonth();
                 const currentMonth = today.getMonth();
                 const cycleYear = cycleStart.getFullYear();
                 const currentYear = today.getFullYear();
-                
+                console.log('[DEBUG] cycleMonth:', cycleMonth, 'currentMonth:', currentMonth);
+
                 // 如果月份或年份不同，重置周期
                 if (cycleMonth !== currentMonth || cycleYear !== currentYear) {
+                    console.log('[DEBUG] 触发周期重置');
                     const newCycleStart = new Date(currentYear, currentMonth, 1);
-                    savedData.cycleStartDate = newCycleStart.toISOString().split('T')[0];
+                    savedData.cycleStartDate = getDateString(newCycleStart);
+                    console.log('[DEBUG] 新cycleStartDate:', savedData.cycleStartDate);
                     savedData.cycleCheckins = 0;
                     savedData.claimedMilestones = [];
+                    // 保存重置后的数据
+                    localStorage.setItem('checkinData', JSON.stringify(savedData));
+                } else {
+                    console.log('[DEBUG] 同一周期，不重置');
+                    // 老数据迁移：如果缺少cycleCheckins字段，根据签到日期计算
+                    if (!('cycleCheckins' in savedData) || savedData.cycleCheckins === undefined) {
+                        if (savedData.checkinDates && savedData.checkinDates.length > 0) {
+                            const cycleStartStr = savedData.cycleStartDate;
+                            savedData.cycleCheckins = savedData.checkinDates.filter(date => date >= cycleStartStr).length;
+                        } else {
+                            savedData.cycleCheckins = savedData.totalCheckins || 0;
+                        }
+                        localStorage.setItem('checkinData', JSON.stringify(savedData));
+                    }
+                    // 数据一致性检查：周期内签到数不应少于签到日期记录中的天数
+                    if (savedData.checkinDates && savedData.checkinDates.length > 0) {
+                        const cycleStartStr = savedData.cycleStartDate;
+                        const expectedDays = savedData.checkinDates.filter(date => date >= cycleStartStr).length;
+                        if ((savedData.cycleCheckins || 0) < expectedDays) {
+                            savedData.cycleCheckins = expectedDays;
+                            localStorage.setItem('checkinData', JSON.stringify(savedData));
+                        }
+                    }
                 }
             }
             
@@ -1227,14 +1283,49 @@
                 
                 if (diffDays > 1) {
                     data.streakDays = 0;
-                    data.weekCheckins = 0;
                     saveCheckinData(data);
                 }
             }
         }
 
+        // ===== 本周签到计数（独立存储，周一自动重置）=====
+        function getWeekCheckinCount() {
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            const currentYear = today.getFullYear();
+            const weekKey = `${currentYear}-W${currentWeek}`;
+            
+            const stored = localStorage.getItem('weekCheckinCount');
+            if (stored) {
+                const data = JSON.parse(stored);
+                // 周数匹配则返回计数，否则重置
+                if (data.weekKey === weekKey) {
+                    return data.count;
+                }
+            }
+            // 新的一周或首次使用，重置为0
+            localStorage.setItem('weekCheckinCount', JSON.stringify({ weekKey, count: 0 }));
+            return 0;
+        }
+
+        function incrementWeekCheckinCount() {
+            const today = new Date();
+            const currentWeek = getWeekNumber(today);
+            const currentYear = today.getFullYear();
+            const weekKey = `${currentYear}-W${currentWeek}`;
+            
+            const currentCount = getWeekCheckinCount();
+            const newCount = Math.min(currentCount + 1, 7);
+            localStorage.setItem('weekCheckinCount', JSON.stringify({ weekKey, count: newCount }));
+            return newCount;
+        }
+
         function getDateString(date = new Date()) {
-            return date.toISOString().split('T')[0];
+            // 使用本地日期，避免时区问题
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         function getDayOfWeek(date = new Date()) {
@@ -1291,7 +1382,7 @@
             }
             
             data.totalCheckins++;
-            data.weekCheckins = Math.min(data.weekCheckins + 1, 7);
+            incrementWeekCheckinCount(); // 本周签到计数（独立存储，周一自动重置）
             data.lastCheckinDate = today;
             
             // 周期制累计签到
@@ -1336,7 +1427,7 @@
             }
 
             saveCheckinData(data);
-            updateUI();
+            updateUI(data);
 
             // 显示成功弹窗
             showSuccessModal(reward, streakReward, milestoneReward);
@@ -1359,8 +1450,8 @@
         }
 
         // ===== UI更新 =====
-        function updateUI() {
-            const data = getCheckinData();
+        function updateUI(passedData = null) {
+            const data = passedData || getCheckinData();
             const dayIndex = getDayOfWeek();
             const dayNames = ['日', '一', '二', '三', '四', '五', '六'];
             const today = new Date();
@@ -1388,10 +1479,15 @@
             // 更新统计
             document.getElementById('totalCheckins').textContent = data.totalCheckins || 0;
             document.getElementById('streakDays').textContent = data.streakDays || 0;
-            document.getElementById('weekCheckins').textContent = data.weekCheckins || 0;
+            document.getElementById('weekCheckins').textContent = getWeekCheckinCount();
 
             // 渲染本周日历
             renderWeekCalendar(dayIndex);
+
+            // 如果当前在累签页面，重新渲染累签数据
+            if (currentActivity === 'leiQian') {
+                renderLeiQianPage(data);
+            }
         }
 
         function renderWeekCalendar(todayIndex) {
@@ -1510,6 +1606,18 @@
                 url: '/xiaoan/activity/qingming.html',
                 disabled: false,
                 image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg',
+                bgColor: '#00b894'
+            },
+            'jiYuan': {
+                icon: '🎯',
+                title: '砺行纪远 · 第一期',
+                status: 'limited',
+                statusText: '限时活动 4.5-4.29',
+                desc: '连续多日完成每日任务，兑换超级大奖！',
+                rewardsHint: '可能获得的奖励：🏆👑💎',
+                url: '/xiaoan/activity/jiyuan.html',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png',
                 bgColor: '#00b894'
             }
         };
