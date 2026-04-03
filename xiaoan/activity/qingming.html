@@ -853,8 +853,7 @@
         function getEventData() {
             const data = localStorage.getItem('qingmingEventData');
             return data ? JSON.parse(data) : {
-                completedTasks: [],
-                lastResetDate: null
+                completedTasks: []
             };
         }
 
@@ -868,7 +867,6 @@
 
         // ===== 初始化 =====
         function init() {
-            checkDailyReset();
             renderModules();
             updateProgress();
             
@@ -896,17 +894,6 @@
                     }, 5000);
                 }
             }, 100); // 延迟100ms，让主要内容先渲染
-        }
-
-        function checkDailyReset() {
-            const data = getEventData();
-            const today = getDateString();
-            
-            if (data.lastResetDate !== today) {
-                data.completedTasks = [];
-                data.lastResetDate = today;
-                saveEventData(data);
-            }
         }
 
         // ===== 渲染模块 =====
