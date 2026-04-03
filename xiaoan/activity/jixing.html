@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沐春望景 - 纪行活动</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #66BB6A;
+            --accent-color: #81C784;
+            --spring-green: #a8e6cf;
+        }
+
+        body {
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景大图 */
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            z-index: -2;
+        }
+
+        /* 渐变遮罩层 */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(76, 175, 80, 0.2) 0%,
+                rgba(102, 187, 106, 0.3) 40%,
+                rgba(0, 0, 0, 0.6) 100%
+            );
+            z-index: -1;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.95);
+            color: #4CAF50;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-reward {
+            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+        }
+
+        .btn-reward:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 187, 106, 0.5);
+        }
+
+        .btn-reward:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 主容器 */
+        .container {
+            position: relative;
+            z-index: 2;
+            padding: 100px 20px 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* 活动标题区 */
+        .event-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+        }
+
+        .event-icon {
+            font-size: 5rem;
+            margin-bottom: 15px;
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .event-title {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 
+                -2px -2px 0 rgba(0,0,0,0.5),
+                2px -2px 0 rgba(0,0,0,0.5),
+                -2px 2px 0 rgba(0,0,0,0.5),
+                2px 2px 0 rgba(0,0,0,0.5),
+                0 5px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .event-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .event-badge {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        /* 进度区域 */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-title {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-count {
+            color: #81C784;
+            font-weight: bold;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(129, 199, 132, 0.5);
+        }
+
+        .progress-bar-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #66BB6A, #81C784, #a8e6cf);
+            border-radius: 15px;
+            transition: width 0.8s ease;
+            box-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* 日期格子 */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .day-cell {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .day-cell.completed {
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.4), rgba(255, 209, 102, 0.4));
+            border-color: #a8e6cf;
+        }
+
+        .day-cell.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            color: #a8e6cf;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(168, 230, 207, 0.8);
+        }
+
+        .day-cell.today {
+            border-color: #81C784;
+            box-shadow: 0 0 15px rgba(129, 199, 132, 0.5);
+            animation: todayPulse 2s infinite;
+        }
+
+        @keyframes todayPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(129, 199, 132, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(129, 199, 132, 0.8); }
+        }
+
+        .day-number {
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .day-status {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+        }
+
+        .day-cell.completed .day-status {
+            color: #a8e6cf;
+            font-weight: bold;
+        }
+
+        /* 纪行券显示 */
+        .currency-section {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .currency-icon {
+            font-size: 3rem;
+            animation: coinRotate 3s ease-in-out infinite;
+        }
+
+        @keyframes coinRotate {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(180deg); }
+        }
+
+        .currency-label {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .currency-amount {
+            font-size: 2.5rem;
+            color: #81C784;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+        }
+
+        .currency-tip {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+
+        /* 纪行商店 */
+        .shop-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .shop-title {
+            font-size: 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .shop-desc {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .shop-item.sold-out {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .item-image {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-info {
+            padding: 20px;
+        }
+
+        .item-name {
+            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .item-desc {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .item-price {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 10px;
+        }
+
+        .price-icon {
+            font-size: 1.5rem;
+        }
+
+        .price-amount {
+            font-size: 1.5rem;
+            color: #81C784;
+            font-weight: bold;
+        }
+
+        .btn-buy {
+            width: 100%;
+            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-buy:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-buy:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .shop-item.sold-out .btn-buy {
+            background: #999;
+        }
+
+        .shop-item.sold-out .btn-buy::after {
+            content: ' ✓ 已兑换';
+        }
+
+        .choice-wide {
+            max-width: 500px;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .choice-tier {
+            font-size: 0.75rem;
+            color: #FFD700;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .choice-option.sold-out {
+            opacity: 0.4;
+            pointer-events: none;
+            background: rgba(100, 100, 100, 0.3);
+        }
+
+        .choice-option.sold-out::after {
+            content: ' ✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.8rem;
+            color: #4CAF50;
+        }
+
+        /* 规则说明 */
+        .rules-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .rules-title {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rules-list {
+            list-style: none;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.8;
+        }
+
+        .rules-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .rules-list li::before {
+            content: '🌸';
+            position: absolute;
+            left: 0;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .event-title {
+                font-size: 2.2rem;
+            }
+
+            .days-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .progress-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .shop-items {
+                grid-template-columns: 1fr;
+            }
+
+            .currency-amount {
+                font-size: 2rem;
+            }
+
+            .item-image {
+                height: 180px;
+            }
+
+            .choice-message {
+                padding: 25px 20px;
+                margin: 20px;
+            }
+
+            .choice-options {
+                gap: 12px;
+            }
+
+            .choice-option {
+                padding: 15px;
+            }
+
+            .choice-icon {
+                font-size: 2.5rem;
+            }
+
+            .choice-info h3 {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 完成动画 */
+        .complete-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .complete-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .success-message {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            animation: popup 0.5s ease-out;
+        }
+
+        @keyframes popup {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-message h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        /* 彩带动画 */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: confetti-fall 2s ease-in-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* 选择弹窗样式 */
+        .choice-message {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            animation: popup 0.5s ease-out;
+        }
+
+        .choice-message h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .choice-desc {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .choice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .choice-option {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9f1, #e8f5e9);
+            border: 2px solid #c8e6c9;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+        }
+
+        .choice-icon {
+            font-size: 3rem;
+        }
+
+        .choice-info h3 {
+            color: #4CAF50;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .choice-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='/xiaoan/activity/'">🏠 返回活动</button>
+    </div>
+
+    <div class="container">
+        <!-- 活动标题 -->
+        <div class="event-header">
+            <div class="event-icon">🌸</div>
+            <h1 class="event-title">沐春望景</h1>
+            <p class="event-subtitle">春日纪行，每日完成任务，收集纪行券兑换大奖</p>
+            <span class="event-badge">🎯 纪行活动</span>
+        </div>
+
+        <!-- 进度区域 -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <div class="progress-title">📅 累计完成进度</div>
+                <div class="progress-count" id="progressCount">0 / 18 天</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 日期格子 -->
+            <div class="days-grid" id="daysGrid">
+                <!-- 动态生成 -->
+            </div>
+        </div>
+
+        <!-- 纪行券显示 -->
+        <div class="currency-section">
+            <div class="currency-display">
+                <span class="currency-icon">🎫</span>
+                <span class="currency-label">纪行券</span>
+                <span class="currency-amount" id="jixingCurrency">0</span>
+            </div>
+            <p class="currency-tip">每日完成"每日任务奖励"可获得1张纪行券</p>
+        </div>
+
+        <!-- 纪行商店 -->
+        <div class="shop-section">
+            <h2 class="shop-title">🏪 纪行商店</h2>
+            <p class="shop-desc">使用纪行券兑换实物奖品和虚拟奖励</p>
+            
+            <div class="shop-items">
+                <!-- 奖品1 -->
+                <div class="shop-item" id="reward1">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward1_jixing.png" alt="奖品1">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">Klee 联动立牌 【赠吧唧及镭射票】</h3>
+                        <p class="item-desc">Klee 联动立牌 赠送对应角色吧唧及角色镭射票</p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(1)">兑换</button>
+                    </div>
+                </div>
+
+                <!-- 奖品2 -->
+                <div class="shop-item" id="reward2">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward2_jixing.png" alt="奖品2">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">角色镭射票 【赠对应吧唧】</h3>
+                        <p class="item-desc">任意角色镭射票，赠送对应角色吧唧</p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(2)">兑换</button>
+                    </div>
+                </div>
+
+                <!-- 奖品3 -->
+                <div class="shop-item" id="reward3">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward3_jixing.png" alt="奖品3">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">Klee 联动鲨鱼头套（小）</h3>
+                        <p class="item-desc">14*12(cm) 适合给小手办佩戴，你不可以佩戴！</p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(3)">兑换</button>
+                    </div>
+                </div>
+
+
+                <!-- 虚拟奖励礼包 -->
+                <div class="shop-item" id="reward4">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward4_jixing.png" alt="虚拟奖励礼包">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">虚拟奖励礼包</h3>
+                        <p class="item-desc">
+                            🎫 15券：10高级抽奖券 或 12888兑换券<br>
+                            🎫 3券：2高级抽奖券 或 2488兑换券
+                        </p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">3/15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="showReward4Select()">兑换</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 规则说明 -->
+        <div class="rules-section">
+            <h3 class="rules-title">📜 活动规则</h3>
+            <ul class="rules-list">
+                <li>活动期间，完成任务中心的"每日任务奖励"可获得1张纪行券</li>
+                <li>累计获得纪行券可在纪行商店兑换奖品</li>
+                <li>实物奖品1-3每个需要15张纪行券</li>
+                <li>虚拟奖励礼包分两档（15券/3券），每档二选一</li>
+                <li>每个奖品限兑换一次，不可重复购买</li>
+                <li>虚拟奖励立即到账，实物奖品将在活动结束后统一发放</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 完成动画 -->
+    <div class="complete-animation" id="completeAnimation">
+        <div class="success-message">
+            <h2>🎉 恭喜你！</h2>
+            <p id="successText">成功领取纪行大奖！</p>
+            <button class="btn btn-primary" onclick="closeAnimation()">确定</button>
+        </div>
+    </div>
+
+    <!-- 虚拟奖励选择弹窗 -->
+    <div class="complete-animation" id="choiceModal">
+        <div class="choice-message choice-wide">
+            <h2>🎁 选择你的奖励</h2>
+            <p class="choice-desc">每个档位限兑一次，请选择：</p>
+            <div class="choice-options choice-grid">
+                <div class="choice-option" onclick="selectReward4('4A', 'premiumLottery')" id="choice4A-lottery">
+                    <div class="choice-tier">🎫 15券</div>
+                    <div class="choice-icon">💎</div>
+                    <div class="choice-info">
+                        <h3>高级抽奖券 × 10</h3>
+                        <p>豪华版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4A', 'voucher')" id="choice4A-voucher">
+                    <div class="choice-tier">🎫 15券</div>
+                    <div class="choice-icon">🎫</div>
+                    <div class="choice-info">
+                        <h3>兑换券 × 12888</h3>
+                        <p>豪华版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4B', 'premiumLottery')" id="choice4B-lottery">
+                    <div class="choice-tier">🎫 3券</div>
+                    <div class="choice-icon">💎</div>
+                    <div class="choice-info">
+                        <h3>高级抽奖券 × 2</h3>
+                        <p>标准版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4B', 'voucher')" id="choice4B-voucher">
+                    <div class="choice-tier">🎫 3券</div>
+                    <div class="choice-icon">🎫</div>
+                    <div class="choice-info">
+                        <h3>兑换券 × 2488</h3>
+                        <p>标准版</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="closeChoiceModal()">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 纪行数据键名
+        const JIXING_KEY = 'jixing_muchun_progress';
+        const CURRENCY_KEY = 'jixing_muchun_currency';
+        const BOUGHT_KEY = 'jixing_muchun_bought';
+        const INIT_KEY = 'jixing_muchun_initialized';
+        const TOTAL_DAYS = 18;
+        const PRICE_PER_ITEM = 15;
+
+        // 获取纪行进度
+        function getJixingProgress() {
+            const data = localStorage.getItem(JIXING_KEY);
+            return data ? JSON.parse(data) : {
+                completedDays: [],
+                lastClaimDate: null
+            };
+        }
+
+        // 保存纪行进度
+        function saveJixingProgress(data) {
+            localStorage.setItem(JIXING_KEY, JSON.stringify(data));
+        }
+
+        // 获取纪行券数量
+        function getJixingCurrency() {
+            return parseInt(localStorage.getItem(CURRENCY_KEY) || '0');
+        }
+
+        // 保存纪行券
+        function saveJixingCurrency(amount) {
+            localStorage.setItem(CURRENCY_KEY, amount.toString());
+        }
+
+        // 获取已购买的奖品
+        function getBoughtRewards() {
+            const data = localStorage.getItem(BOUGHT_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 保存已购买记录
+        function saveBoughtRewards(data) {
+            localStorage.setItem(BOUGHT_KEY, JSON.stringify(data));
+        }
+
+        // 初始化默认进度（新用户默认完成2天）
+        function initializeDefaultProgress() {
+            if (localStorage.getItem(INIT_KEY) === 'true') {
+                return;
+            }
+
+            // 用任意不重复的日期占位，仅用于防止同一天重复签到
+            const completedDays = ['init-1', 'init-2'];
+
+            saveJixingProgress({
+                completedDays: completedDays,
+                lastClaimDate: null
+            });
+
+            saveJixingCurrency(2);
+            localStorage.setItem(INIT_KEY, 'true');
+        }
+
+        // 获取今天的日期字符串
+        function getTodayStr() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 检查今天是否可以签到（检查每日任务奖励是否完成）
+        function canCheckInToday() {
+            const today = getTodayStr();
+            const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
+            
+            // 检查每日任务奖励是否已领取
+            if (localStorage.getItem(dailyRewardKey) === 'true') {
+                return true;
+            }
+            return false;
+        }
+
+        // 检查今天是否已经签到
+        function hasCheckedInToday() {
+            const progress = getJixingProgress();
+            const today = getTodayStr();
+            return progress.completedDays.includes(today);
+        }
+
+        // 今日签到
+        function checkInToday() {
+            if (hasCheckedInToday()) {
+                return false;
+            }
+
+            if (!canCheckInToday()) {
+                alert('请先完成今日的"每日任务奖励"任务！');
+                return false;
+            }
+
+            const progress = getJixingProgress();
+            const today = getTodayStr();
+            progress.completedDays.push(today);
+            progress.lastClaimDate = today;
+            saveJixingProgress(progress);
+
+            // 增加1张纪行券
+            const currentCurrency = getJixingCurrency();
+            saveJixingCurrency(currentCurrency + 1);
+
+            return true;
+        }
+
+        // 渲染进度
+        function renderProgress() {
+            const progress = getJixingProgress();
+            const completedCount = progress.completedDays.length;
+            const percentage = Math.min((completedCount / TOTAL_DAYS) * 100, 100);
+
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressCount').textContent = `${completedCount} / ${TOTAL_DAYS} 天`;
+
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
+            const todayStr = getTodayStr();
+            const alreadyCheckedToday = progress.completedDays.includes(todayStr);
+            const isCurrentDay = completedCount < TOTAL_DAYS && !alreadyCheckedToday;
+
+            for (let i = 1; i <= TOTAL_DAYS; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'day-cell';
+
+                const isCompleted = i <= completedCount;
+                const isToday = isCurrentDay && i === completedCount + 1;
+
+                if (isCompleted) cell.classList.add('completed');
+                if (isToday) cell.classList.add('today');
+
+                cell.innerHTML = `
+                    <div class="day-number">${i}</div>
+                    <div class="day-status">${isCompleted ? '已完成' : (isToday ? '今日' : '未完成')}</div>
+                `;
+
+                if (isToday) {
+                    cell.style.cursor = 'pointer';
+                    cell.onclick = function() {
+                        if (checkInToday()) {
+                            showSuccess('签到成功！获得1张纪行券！');
+                            renderProgress();
+                            updateCurrencyDisplay();
+                            updateShopItems();
+                        }
+                    };
+                }
+
+                daysGrid.appendChild(cell);
+            }
+        }
+
+        // 购买奖品
+        function buyReward(rewardId) {
+            const boughtRewards = getBoughtRewards();
+            
+            // 检查是否已购买
+            if (boughtRewards.includes(rewardId)) {
+                alert('您已经兑换过这个奖品了！');
+                return;
+            }
+
+            // 获取奖品价格
+            const price = getRewardPrice(rewardId);
+            const currentCurrency = getJixingCurrency();
+
+            // 检查纪行券是否足够
+            if (currentCurrency < price) {
+                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
+                return;
+            }
+
+            // 确认购买
+            if (!confirm(`确定使用${price}张纪行券兑换此奖品吗？`)) {
+                return;
+            }
+
+            // 扣除纪行券
+            saveJixingCurrency(currentCurrency - price);
+
+            // 记录已购买
+            boughtRewards.push(rewardId);
+            saveBoughtRewards(boughtRewards);
+
+            // 更新界面
+            updateCurrencyDisplay();
+            updateShopItems();
+            showCompleteAnimation('兑换成功！奖品将在活动结束后统一发放~');
+        }
+
+        // 获取奖品价格
+        function getRewardPrice(rewardId) {
+            if (rewardId === '4A') {
+                return 15;
+            }
+            if (rewardId === '4B') {
+                return 3;
+            }
+            return PRICE_PER_ITEM;
+        }
+
+        // 显示虚拟奖励选择弹窗
+        function showReward4Select() {
+            const boughtRewards = getBoughtRewards();
+            const currentCurrency = getJixingCurrency();
+
+            // 检查是否全部已兑换
+            if (boughtRewards.includes('4A') && boughtRewards.includes('4B')) {
+                alert('您已兑换过所有档位！');
+                return;
+            }
+
+            // 更新弹窗选项状态
+            const options = [
+                { id: 'choice4A-lottery', tier: '4A', price: 15 },
+                { id: 'choice4A-voucher', tier: '4A', price: 15 },
+                { id: 'choice4B-lottery', tier: '4B', price: 3 },
+                { id: 'choice4B-voucher', tier: '4B', price: 3 }
+            ];
+
+            options.forEach(opt => {
+                const el = document.getElementById(opt.id);
+                if (boughtRewards.includes(opt.tier)) {
+                    el.classList.add('sold-out');
+                } else if (currentCurrency < opt.price) {
+                    el.classList.add('sold-out');
+                    el.style.opacity = '0.5';
+                } else {
+                    el.classList.remove('sold-out');
+                    el.style.opacity = '1';
+                }
+            });
+
+            document.getElementById('choiceModal').classList.add('active');
+        }
+
+        // 选择虚拟奖励
+        function selectReward4(tier, type) {
+            const boughtRewards = getBoughtRewards();
+            if (boughtRewards.includes(tier)) {
+                alert('您已经兑换过这个档位了！');
+                return;
+            }
+
+            const currentCurrency = getJixingCurrency();
+            const price = tier === '4A' ? 15 : 3;
+
+            if (currentCurrency < price) {
+                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
+                return;
+            }
+
+            const amounts = {
+                '4A': { premiumLottery: 10, voucher: 12888 },
+                '4B': { premiumLottery: 2, voucher: 2488 }
+            };
+            const amount = amounts[tier][type];
+
+            // 扣除纪行券
+            saveJixingCurrency(currentCurrency - price);
+
+            // 记录已购买
+            boughtRewards.push(tier);
+            saveBoughtRewards(boughtRewards);
+
+            // 发放奖励
+            if (type === 'premiumLottery') {
+                const premiumLottery = parseInt(localStorage.getItem('premiumLottery') || '0');
+                localStorage.setItem('premiumLottery', premiumLottery + amount);
+                
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: amount,
+                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
+                    type: 'add',
+                    currencyType: 'premiumLottery',
+                    currencyName: '高级抽奖券'
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+
+                showCompleteAnimation(`兑换成功！获得 ${amount} 张高级抽奖券！`);
+            } else {
+                const voucher = parseInt(localStorage.getItem('voucher') || '0');
+                localStorage.setItem('voucher', voucher + amount);
+                
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: amount,
+                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
+                    type: 'add',
+                    currencyType: 'voucher',
+                    currencyName: '兑换券'
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+
+                showCompleteAnimation(`兑换成功！获得 ${amount} 张兑换券！`);
+            }
+
+            // 关闭选择弹窗
+            closeChoiceModal();
+
+            // 更新界面
+            updateCurrencyDisplay();
+            updateShopItems();
+        }
+
+        // 关闭选择弹窗
+        function closeChoiceModal() {
+            document.getElementById('choiceModal').classList.remove('active');
+        }
+
+        // 更新纪行券显示
+        function updateCurrencyDisplay() {
+            const currency = getJixingCurrency();
+            document.getElementById('jixingCurrency').textContent = currency;
+        }
+
+        // 更新商店物品状态
+        function updateShopItems() {
+            const boughtRewards = getBoughtRewards();
+            const currentCurrency = getJixingCurrency();
+
+            // 奖品1-3
+            for (let i = 1; i <= 3; i++) {
+                const item = document.getElementById(`reward${i}`);
+                const btn = item.querySelector('.btn-buy');
+                const price = getRewardPrice(i);
+                
+                if (boughtRewards.includes(i)) {
+                    item.classList.add('sold-out');
+                    btn.disabled = true;
+                    btn.textContent = '已兑换';
+                } else if (currentCurrency < price) {
+                    btn.disabled = true;
+                    btn.textContent = `需要${price}券`;
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = '兑换';
+                }
+            }
+
+            // 虚拟奖励礼包
+            const item4 = document.getElementById('reward4');
+            const btn4 = item4.querySelector('.btn-buy');
+            const allBought = boughtRewards.includes('4A') && boughtRewards.includes('4B');
+            
+            if (allBought) {
+                item4.classList.add('sold-out');
+                btn4.disabled = true;
+                btn4.textContent = '已兑换';
+            } else {
+                btn4.disabled = false;
+                btn4.textContent = '兑换';
+            }
+        }
+
+        // 显示完成动画
+        function showCompleteAnimation(text) {
+            document.getElementById('successText').textContent = text;
+            document.getElementById('completeAnimation').classList.add('active');
+            createConfetti();
+        }
+
+        // 关闭动画
+        function closeAnimation() {
+            document.getElementById('completeAnimation').classList.remove('active');
+        }
+
+        // 创建彩带
+        function createConfetti() {
+            const colors = ['#4CAF50', '#66BB6A', '#81C784', '#a8e6cf', '#c8e6c9'];
+            const container = document.getElementById('completeAnimation');
+
+            for (let i = 0; i < 80; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        // 显示成功提示
+        function showSuccess(message) {
+            const animation = document.getElementById('completeAnimation');
+            document.getElementById('successText').textContent = message;
+            animation.classList.add('active');
+            
+            setTimeout(() => {
+                animation.classList.remove('active');
+            }, 2000);
+        }
+
+        // 初始化
+        function init() {
+            // 初始化默认进度（首次访问）
+            initializeDefaultProgress();
+            
+            renderProgress();
+            updateCurrencyDisplay();
+            updateShopItems();
+        }
+
+        init();
+    </script>
+</body>
+</html>
