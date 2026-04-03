@@ -1199,7 +1199,16 @@
             // 筛选每日系列任务（isDaily为true的任务）
             const dailyRules = rules.filter(rule => rule.isDaily === true);
 
-            if (dailyRules.length > 0) {
+            // 检查是否所有每日任务都处于显示状态
+            const allDailyVisible = dailyRules.every(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                const days = rule.days || [];
+                // 和任务显示逻辑一致：空数组每天显示，或在指定日期显示，或已完成
+                return days.length === 0 || days.includes(today) || taskStatus.status === 'completed';
+            });
+
+            // 只有当有每日任务且全部可见时才显示每日奖励
+            if (dailyRules.length > 0 && allDailyVisible) {
                 // 检查是否所有每日系列任务都已完成
                 const allDailyCompleted = dailyRules.every(rule => {
                     const taskStatus = activeTasks[rule.id] || {};
