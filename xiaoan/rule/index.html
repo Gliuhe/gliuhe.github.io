@@ -755,6 +755,16 @@
             </div>
 
             <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="ruleIsDaily" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>📌 设为每日系列任务</span>
+                </label>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px; margin-left: 30px;">
+                    勾选后，此任务将作为每日任务奖励的一部分
+                </p>
+            </div>
+
+            <div class="form-group">
                 <label>显示星期 (留空表示每天显示)</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
@@ -829,6 +839,16 @@
                     </select>
                     <input type="number" id="editRuleRewardAmount2" min="0" value="0" style="flex: 1">
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="editRuleIsDaily" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>📌 设为每日系列任务</span>
+                </label>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px; margin-left: 30px;">
+                    勾选后，此任务将作为每日任务奖励的一部分
+                </p>
             </div>
 
             <div class="form-group">
@@ -950,7 +970,8 @@
                 rewardType2: "none",
                 rewardAmount2: 0,
                 content: "每天按时完成所有家庭作业，字迹工整，正确率高。完成后请家长检查并签字确认。",
-                days: []
+                days: [],
+                isDaily: true
             },
             {
                 id: 2,
@@ -959,8 +980,20 @@
                 rewardAmount1: 5,
                 rewardType2: "none",
                 rewardAmount2: 0,
-                content: "保持房间整洁，书桌整齐，床铺整理好，玩具归位。每天睡前完成整理工作。",
-                days: []
+                content: "整理自己的房间，包括叠被子、收拾书桌、整理衣物等，保持房间整洁。",
+                days: [],
+                isDaily: true
+            },
+            {
+                id: 2,
+                title: "整理房间",
+                rewardType1: "voucher",
+                rewardAmount1: 5,
+                rewardType2: "none",
+                rewardAmount2: 0,
+                content: "整理自己的房间，包括叠被子、收拾书桌、整理衣物等，保持房间整洁。",
+                days: [],
+                isDaily: true
             },
             {
                 id: 3,
@@ -1004,8 +1037,22 @@
         function initializeData() {
             if (!localStorage.getItem('rules')) {
                 localStorage.setItem('rules', JSON.stringify(defaultRules));
+            } else {
+                // 数据迁移：给旧规则添加isDaily属性
+                const rules = JSON.parse(localStorage.getItem('rules'));
+                let migrated = false;
+                rules.forEach(rule => {
+                    if (rule.isDaily === undefined) {
+                        // 旧数据：days为空的任务视为每日系列任务
+                        rule.isDaily = (rule.days || []).length === 0;
+                        migrated = true;
+                    }
+                });
+                if (migrated) {
+                    localStorage.setItem('rules', JSON.stringify(rules));
+                }
             }
-            
+
             if (!localStorage.getItem('xiaoan_rule_password')) {
                 localStorage.setItem('xiaoan_rule_password', DEFAULT_PASSWORD);
             }
@@ -1106,6 +1153,19 @@
             } else {
                 console.log('无需更新任务状态');
             }
+
+            // 清理旧的每日任务奖励领取状态（保留今天的）
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('dailyReward_') && key !== `dailyReward_${todayStr}`) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            if (keysToRemove.length > 0) {
+                console.log('已清理旧每日奖励状态:', keysToRemove);
+            }
         }
         
         // 显示状态通知
@@ -1134,6 +1194,59 @@
 
             // 获取活动任务
             const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+
+            // ===== 固定任务：每日任务奖励 =====
+            // 筛选每日系列任务（isDaily为true的任务）
+            const dailyRules = rules.filter(rule => rule.isDaily === true);
+
+            if (dailyRules.length > 0) {
+                // 检查是否所有每日系列任务都已完成
+                const allDailyCompleted = dailyRules.every(rule => {
+                    const taskStatus = activeTasks[rule.id] || {};
+                    return taskStatus.status === 'completed';
+                });
+
+                // 检查每日任务奖励是否已领取
+                const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
+                const dailyRewardClaimed = localStorage.getItem(dailyRewardKey) === 'true';
+
+                const dailyRewardElement = document.createElement('div');
+                dailyRewardElement.className = 'rule-item';
+                dailyRewardElement.style.borderLeftColor = '#8338ec';
+
+                let dailyRewardButton = '';
+                let dailyRewardStatus = '';
+
+                if (dailyRewardClaimed) {
+                    dailyRewardButton = `<button class="btn" disabled>✅ 已领取</button>`;
+                    dailyRewardStatus = `<div class="task-status status-completed">奖励已领取</div>`;
+                } else if (allDailyCompleted) {
+                    dailyRewardButton = `<button class="btn" onclick="claimDailyReward()">🎁 领取奖励</button>`;
+                    dailyRewardStatus = `<div class="task-status status-completed">所有每日系列任务已完成</div>`;
+                } else {
+                    const completedCount = dailyRules.filter(rule => {
+                        const taskStatus = activeTasks[rule.id] || {};
+                        return taskStatus.status === 'completed';
+                    }).length;
+                    dailyRewardButton = `<button class="btn" disabled>🔒 未完成</button>`;
+                    dailyRewardStatus = `<div class="task-status status-in-progress">已完成 ${completedCount}/${dailyRules.length} 个每日系列任务</div>`;
+                }
+
+                dailyRewardElement.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-title" style="color: #8338ec;">🎁 每日任务奖励</div>
+                        <div class="rule-reward" style="background: #8338ec; color: white;">
+                            奖励: 300 兑换券 + 1 抽奖券
+                        </div>
+                    </div>
+                    <div class="rule-content">完成所有【每日】系列任务即可领取300兑换券+1抽奖券！</div>
+                    ${dailyRewardStatus}
+                    <div class="rule-actions">
+                        ${dailyRewardButton}
+                    </div>
+                `;
+                rulesList.appendChild(dailyRewardElement);
+            }
 
             rules.forEach(rule => {
                 const taskStatus = activeTasks[rule.id] || {};
@@ -1166,7 +1279,7 @@
 
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}</div>
                         <div class="rule-reward">
                     ${getRewardDisplayText(rule)}
                 </div>
@@ -1197,12 +1310,12 @@
 
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}</div>
                         <div class="rule-reward">${getRewardDisplayText(rule)}</div>
                     </div>
                     <div class="rule-content">${rule.content}</div>
                     <div class="rule-content" style="color: #ff6b6b; font-size: 0.95rem;">
-                        📅 显示: ${daysText}
+                        📅 显示: ${daysText}${rule.isDaily ? ' | 📌 每日系列任务' : ''}
                     </div>
                     <div class="rule-actions">
                         <button class="btn" onclick="openEditRuleModal(${rule.id})">编辑</button>
@@ -1328,6 +1441,17 @@
         // 关闭添加规则模态框
         function closeAddRuleModal() {
             document.getElementById('addRuleModal').style.display = 'none';
+            // 清除表单
+            document.getElementById('ruleTitle').value = '';
+            document.getElementById('ruleContent').value = '';
+            document.getElementById('ruleRewardType1').value = 'voucher';
+            document.getElementById('ruleRewardAmount1').value = '0';
+            document.getElementById('ruleRewardType2').value = 'none';
+            document.getElementById('ruleRewardAmount2').value = '0';
+            document.getElementById('ruleIsDaily').checked = false;
+            for (let i = 0; i <= 6; i++) {
+                document.getElementById(`day${i}`).checked = false;
+            }
         }
         
         // 打开编辑规则模态框 - 修复版
@@ -1361,6 +1485,9 @@
             for (let i = 0; i <= 6; i++) {
                 document.getElementById(`editDay${i}`).checked = days.includes(i);
             }
+
+            // 填充是否为每日系列任务
+            document.getElementById('editRuleIsDaily').checked = rule.isDaily || false;
 
             // 显示模态框
             document.getElementById('editRuleModal').style.display = 'flex';
@@ -1465,6 +1592,9 @@
             const rules = JSON.parse(localStorage.getItem('rules'));
             const newId = rules.length > 0 ? Math.max(...rules.map(r => r.id)) + 1 : 1;
 
+            // 获取是否为每日系列任务
+            const isDaily = document.getElementById('ruleIsDaily').checked;
+
             rules.push({
                 id: newId,
                 title: title,
@@ -1473,7 +1603,8 @@
                 rewardType2: document.getElementById('ruleRewardType2').value,
                 rewardAmount2: parseInt(document.getElementById('ruleRewardAmount2').value) || 0,
                 content: content,
-                days: days
+                days: days,
+                isDaily: isDaily
             });
 
             localStorage.setItem('rules', JSON.stringify(rules));
@@ -1520,6 +1651,9 @@
                 return;
             }
 
+            // 获取是否为每日系列任务
+            const isDaily = document.getElementById('editRuleIsDaily').checked;
+
             rules[ruleIndex] = {
                 id: id,
                 title: title,
@@ -1528,7 +1662,8 @@
                 rewardType2: document.getElementById('editRuleRewardType2').value,
                 rewardAmount2: parseInt(document.getElementById('editRuleRewardAmount2').value) || 0,
                 content: content,
-                days: days
+                days: days,
+                isDaily: isDaily
             };
 
             localStorage.setItem('rules', JSON.stringify(rules));
@@ -1806,7 +1941,77 @@
                 }
             });
         }
-        
+
+        // 领取每日任务奖励
+        function claimDailyReward() {
+            const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
+
+            // 检查是否已领取
+            if (localStorage.getItem(dailyRewardKey) === 'true') {
+                showStatus('今日奖励已领取！', "warning");
+                return;
+            }
+
+            const rules = JSON.parse(localStorage.getItem('rules'));
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks'));
+
+            // 筛选每日系列任务（isDaily为true的任务）
+            const dailyRules = rules.filter(rule => rule.isDaily === true);
+
+            // 检查是否所有每日系列任务都已完成
+            const allDailyCompleted = dailyRules.every(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                return taskStatus.status === 'completed';
+            });
+
+            if (!allDailyCompleted) {
+                showStatus('请先完成所有每日系列任务！', "error");
+                return;
+            }
+
+            // 发放奖励：300兑换券 + 1抽奖券
+            const voucherAmount = 300;
+            const lotteryAmount = 1;
+
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            const currentLottery = parseInt(localStorage.getItem('lottery') || '0');
+
+            localStorage.setItem('voucher', currentVoucher + voucherAmount);
+            localStorage.setItem('lottery', currentLottery + lotteryAmount);
+
+            // 记录历史
+            const history = JSON.parse(localStorage.getItem('history'));
+            history.push({
+                date: new Date().toISOString(),
+                amount: voucherAmount,
+                reason: '每日任务奖励',
+                type: 'add',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                status: 'completed'
+            });
+            history.push({
+                date: new Date().toISOString(),
+                amount: lotteryAmount,
+                reason: '每日任务奖励',
+                type: 'add',
+                currencyType: 'lottery',
+                currencyName: '抽奖券',
+                status: 'completed'
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+
+            // 标记已领取
+            localStorage.setItem(dailyRewardKey, 'true');
+
+            // 显示动画
+            document.getElementById('rewardAmount').textContent = '300 兑换券 和 1 抽奖券';
+            showCompleteAnimation();
+
+            updateUI();
+            showStatus('每日任务奖励领取成功！');
+        }
+
         // 启动应用
         initApp();
     </script>
