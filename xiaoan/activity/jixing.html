@@ -737,6 +737,56 @@
         .btn-secondary:hover {
             background: #d0d0d0;
         }
+
+        /* 新手礼包样式 */
+        .gift-section {
+            margin-top: 20px;
+        }
+
+        .gift-content {
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.3), rgba(255, 152, 0, 0.2));
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .gift-content.claimed {
+            background: linear-gradient(135deg, rgba(200, 200, 200, 0.3), rgba(150, 150, 150, 0.2));
+            border-color: #999;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .gift-icon {
+            font-size: 2.5rem;
+            animation: iconFloat 2s ease-in-out infinite;
+        }
+
+        .gift-info {
+            flex: 1;
+        }
+
+        .gift-title {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .gift-desc {
+            color: #FFD700;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .gift-content.claimed .gift-desc {
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
@@ -782,7 +832,18 @@
                 <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
             <p class="currency-tip">每日完成"每日任务奖励"可获得1张纪行券</p>
-        </div>
+            
+            <!-- 新手礼包 -->
+            <div class="gift-section" id="giftSection">
+                <div class="gift-content">
+                    <div class="gift-icon">🎁</div>
+                    <div class="gift-info">
+                        <h3 class="gift-title">新手礼包</h3>
+                        <p class="gift-desc">纪行券 × 3</p>
+                    </div>
+                    <button class="btn btn-reward" id="claimGiftBtn" onclick="claimGift()">立即领取</button>
+                </div>
+            </div>
 
         <!-- 纪行商店 -->
         <div class="shop-section">
@@ -932,6 +993,7 @@
         const CURRENCY_KEY = 'jixing_muchun_currency';
         const BOUGHT_KEY = 'jixing_muchun_bought';
         const INIT_KEY = 'jixing_muchun_initialized';
+        const GIFT_CLAIMED_KEY = 'jixing_muchun_gift_claimed';
         const TOTAL_DAYS = 18;
         const PRICE_PER_ITEM = 15;
 
@@ -1332,6 +1394,44 @@
             }, 2000);
         }
 
+        // 领取新手礼包
+        function claimGift() {
+            if (localStorage.getItem(GIFT_CLAIMED_KEY) === 'true') {
+                alert('您已经领取过新手礼包了！');
+                return;
+            }
+
+            // 发放3张纪行券
+            const currentCurrency = getJixingCurrency();
+            saveJixingCurrency(currentCurrency + 3);
+
+            // 标记已领取
+            localStorage.setItem(GIFT_CLAIMED_KEY, 'true');
+
+            // 更新界面
+            updateCurrencyDisplay();
+            updateGiftSection();
+
+            showCompleteAnimation('领取成功！获得 3 张纪行券！');
+        }
+
+        // 更新礼包显示状态
+        function updateGiftSection() {
+            const section = document.getElementById('giftSection');
+            const btn = document.getElementById('claimGiftBtn');
+            const claimed = localStorage.getItem(GIFT_CLAIMED_KEY) === 'true';
+
+            if (claimed) {
+                section.querySelector('.gift-content').classList.add('claimed');
+                btn.disabled = true;
+                btn.textContent = '✓ 已领取';
+                btn.style.background = '#999';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '立即领取';
+            }
+        }
+
         // 初始化
         function init() {
             // 初始化默认进度（首次访问）
@@ -1340,6 +1440,7 @@
             renderProgress();
             updateCurrencyDisplay();
             updateShopItems();
+            updateGiftSection();
         }
 
         init();
