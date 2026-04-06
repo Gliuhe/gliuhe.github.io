@@ -678,7 +678,7 @@
                 icon: '⚡',
                 title: '速度之王',
                 difficulty: '挑战',
-                desc: '在15分钟内尽可能多地完成计算题，速度越快奖励越多！<br><small style="opacity:0.7;">基础：n/12抽奖券 + n/22高级券<br>🔸 >16道额外+100兑换券<br>🔥 >32道后每道+0.1抽奖券</small>',
+                desc: '在15分钟内尽可能多地完成计算题，速度越快奖励越多！<br><small style="opacity:0.7;">基础：前32道按n/12+n/22计算<br>🔸 >16道额外+100兑换券<br>🔥 >32道的超出部分每道+0.1抽奖券</small>',
                 reward: null, // 动态计算
                 timeLimit: 15,
                 hasTimeCondition: true,
@@ -1109,9 +1109,10 @@
 
             // ===== 奖励计算规则 =====
             
-            // 基础奖励：n/12 抽奖券（四舍五入）+ n/22 高级抽奖券（四舍五入）
-            let lotteryCount = Math.round(count / 12);
-            let premiumCount = Math.round(count / 22);
+            // 基础奖励：按min(题数, 32)计算（超过32道的部分不享受基础奖励）
+            const baseCount = Math.min(count, 32);
+            let lotteryCount = Math.round(baseCount / 12);
+            let premiumCount = Math.round(baseCount / 22);
             
             // 至少给1个基础奖励
             lotteryCount = Math.max(lotteryCount, 1);
@@ -1126,12 +1127,12 @@
                 bonusText += ' 🎉 超16道额外+100兑换券';
             }
 
-            // 额外条件2：大于32道，后面每道+(n-16)/10 抽奖券
+            // 额外条件2：大于32道，超出部分每道+0.1抽奖券
             if (count > 32) {
-                const extraLottery = Math.round((count - 16) / 10);
+                const extraLottery = Math.round((count - 32) / 10);
                 if (extraLottery > 0) {
                     lotteryCount += extraLottery;
-                    bonusText += ` 🔥 超32道额外+${extraLottery}抽奖券(每道+0.1)`;
+                    bonusText += ` 🔥 超32道的${count - 32}道额外+${extraLottery}抽奖券(每道+0.1)`;
                 }
             }
 
