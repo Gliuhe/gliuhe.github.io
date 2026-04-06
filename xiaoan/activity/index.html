@@ -454,6 +454,10 @@
             background: linear-gradient(135deg, #55efc4, #00b894);
         }
 
+        .activity-nav-item.jisuan .nav-icon {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+        }
+
         .nav-label {
             font-size: 0.85rem;
             font-weight: bold;
@@ -560,6 +564,10 @@
 
         .activity-detail.jiYuan .detail-bg::before {
             background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png');
+        }
+
+        .activity-detail.jisuan .detail-bg::before {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jisuan.png');
         }
 
 
@@ -999,14 +1007,15 @@
                         <div class="nav-label">累签</div>
                         <div class="nav-status permanent">常驻</div>
                     </div>
-                    <div class="activity-nav-item qingming" data-activity="qingming">
-                        <div class="nav-icon">🌧️</div>
-                        <div class="nav-label">清明</div>
+                    
+<div class="activity-nav-item jiYuan" data-activity="jiYuan">
+                        <div class="nav-icon">🎯</div>
+                        <div class="nav-label">纪远</div>
                         <div class="nav-status limited">限时</div>
                     </div>
-                    <div class="activity-nav-item jiYuan" data-activity="jiYuan">
-                        <div class="nav-icon">🎯</div>
-                        <div class="nav-label">纪行</div>
+                    <div class="activity-nav-item jisuan" data-activity="jisuan">
+                        <div class="nav-icon">🎲</div>
+                        <div class="nav-label">计算</div>
                         <div class="nav-status limited">限时</div>
                     </div>
                 </div>
@@ -1596,29 +1605,29 @@
                 image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/leiQian.jpg',
                 bgColor: '#6c5ce7'
             },
-            'qingming': {
-                icon: '🌧️',
-                title: '清明时节雨纷纷',
-                status: 'limited',
-                statusText: '限时活动 4.1-4.6',
-                desc: '',
-                rewardsHint: '可能获得的奖励：🎫🎲💎',
-                url: '/xiaoan/activity/qingming.html',
-                disabled: false,
-                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/qingming.jpg',
-                bgColor: '#00b894'
-            },
             'jiYuan': {
                 icon: '🎯',
                 title: '砺行纪远 · 第一期',
                 status: 'limited',
                 statusText: '限时活动 4.5-4.29',
                 desc: '连续多日完成每日任务，兑换超级大奖！',
-                rewardsHint: '可能获得的奖励：🎁🎫💎',
-                url: '/xiaoan/activity/jixing.html',
+                rewardsHint: '可能获得的奖励：🏆👑💎',
+                url: '/xiaoan/activity/jiyuan.html',
                 disabled: false,
                 image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png',
                 bgColor: '#00b894'
+            },
+            'jisuan': {
+                icon: '🎲',
+                title: '命运之骰：计算大作战',
+                status: 'limited',
+                statusText: '限时活动 4.6-4.12',
+                desc: '每日掷骰子，接受命运的计算挑战！6种不同任务，概率各不相同~',
+                rewardsHint: '可能获得的奖励：🎫🎰💎🃏',
+                url: '/xiaoan/activity/jisuan.html',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jisuan.png',
+                bgColor: '#e53e3e'
             }
         };
 
