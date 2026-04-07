@@ -542,6 +542,111 @@
                 width: 100%;
             }
         }
+
+        /* ===== 超时倒计时警告框 ===== */
+        .overtime-countdown-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #e94560;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin: 12px 0;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .overtime-label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #f8f8f8;
+            margin-bottom: 8px;
+        }
+
+        .overtime-timer {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 3px;
+            margin: 6px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        #overtimeCountdown {
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .overtime-hint {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* 警告状态（≤3分钟） */
+        .overtime-warning {
+            background: linear-gradient(135deg, #1a1a2e, #2d1810) !important;
+            border-color: #f6ad55 !important;
+            box-shadow: 0 0 20px rgba(246, 173, 85, 0.4), inset 0 0 20px rgba(246, 173, 85, 0.05);
+        }
+
+        .overtime-warning .overtime-label {
+            color: #fbd38d;
+        }
+
+        .overtime-warning .overtime-timer {
+            color: #f6ad55;
+            text-shadow: 0 0 12px rgba(246, 173, 85, 0.5);
+        }
+
+        .overtime-warning .overtime-hint {
+            color: rgba(251, 211, 141, 0.7);
+        }
+
+        /* 紧急状态（≤1分钟） */
+        .overtime-critical {
+            background: linear-gradient(135deg, #1a0000, #300000) !important;
+            border-color: #fc8181 !important;
+            box-shadow: 0 0 30px rgba(252, 129, 129, 0.6), inset 0 0 20px rgba(252, 129, 129, 0.08) !important;
+            animation: overtimeShake 0.5s ease-in-out infinite !important;
+        }
+
+        .overtime-critical .overtime-label {
+            color: #fff5f5;
+            font-size: 1.08rem;
+        }
+
+        .overtime-critical .overtime-timer {
+            color: #fc8181;
+            text-shadow: 0 0 14px rgba(252, 129, 129, 0.7);
+        }
+
+        .overtime-critical .overtime-hint {
+            color: rgba(255, 200, 200, 0.9);
+            font-weight: bold;
+        }
+
+        /* 已过期 */
+        .overtime-expired {
+            background: linear-gradient(135deg, #171923, #1a202c) !important;
+            border-color: #4a5568 !important;
+            box-shadow: none !important;
+            animation: none !important;
+        }
+
+        .overtime-icon { font-size: 2rem; margin-bottom: 4px; }
+        .overtime-expired .overtime-label { color: #a0aec0; }
+        .overtime-expired .overtime-hint { color: #718096; }
+
+        @keyframes overtimePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.65; transform: scale(1.06); }
+        }
+
+        @keyframes overtimeShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            60% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+        }
     </style>
 </head>
 <body>
@@ -678,9 +783,9 @@
                 icon: '⚡',
                 title: '速度之王',
                 difficulty: '挑战',
-                desc: '在15分钟内尽可能多地完成计算题，速度越快奖励越多！<br><small style="opacity:0.7;">基础：前32道按n/12+n/22计算<br>🔸 >16道额外+100兑换券<br>🔥 >32道的超出部分每道+0.1抽奖券</small>',
+                desc: '在21点前尽可能多地完成计算题，速度越快奖励越多！<br><small style="opacity:0.7;">基础：前32道按n/12+n/22计算<br>🔸 ≥32道额外+100兑换券<br>💎 39~53道每道+0.1高级抽奖券<br>🔥 ≥54道每道+0.1抽奖券</small>',
                 reward: null, // 动态计算
-                timeLimit: 15,
+                timeLimit: 21,
                 hasTimeCondition: true,
                 isSpeedChallenge: true
             },
@@ -688,13 +793,14 @@
                 icon: '🎯',
                 title: '黄昏冲刺',
                 difficulty: '中等',
-                desc: '在18点前完成1篇计算题，把握黄金时间！',
+                desc: '在18点前完成1篇计算题，把握黄金时间！若超过18点才掷到，将开启10分钟倒计时窗口，在倒计时内完成即可获得奖励。',
                 reward: [
-                    { type: 'lottery', amount: 5, name: '抽奖券' },
-                    { type: 'voucher', amount: 300, name: '兑换券' }
+                    { type: 'premium', amount: 1, name: '高级抽奖券' },
+                    { type: 'lottery', amount: 1, name: '抽奖券' }
                 ],
                 timeLimit: 18,
-                hasTimeCondition: true
+                hasTimeCondition: true,
+                hasOvertimeCountdown: true
             },
             6: {
                 icon: '🃏',
@@ -816,6 +922,73 @@
             document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-CN', options);
         }
 
+        // 超时倒计时定时器
+        let overtimeTimer = null;
+        let overtimeDeadline = null; // 倒计时截止时间（用于rollTime缺失时的兼容）
+
+        function startOvertimeCountdown() {
+            if (overtimeTimer) clearInterval(overtimeTimer);
+
+            const update = () => {
+                const el = document.getElementById('overtimeCountdown');
+                if (!el) { if (overtimeTimer) clearInterval(overtimeTimer); return; }
+
+                const now = new Date();
+                
+                // 确定倒计时截止时间
+                if (!overtimeDeadline) {
+                    if (todayData && todayData.rollTime) {
+                        overtimeDeadline = new Date(todayData.rollTime).getTime() + 10 * 60 * 1000;
+                    } else {
+                        overtimeDeadline = now.getTime() + 10 * 60 * 1000;
+                    }
+                }
+
+                const remainingSec = Math.max(0, Math.floor((overtimeDeadline - now.getTime()) / 1000));
+
+                if (remainingSec > 0) {
+                    const min = Math.floor(remainingSec / 60);
+                    const sec = remainingSec % 60;
+                    el.textContent = `${min}:${String(sec).padStart(2, '0')}`;
+                    
+                    // 更新紧急程度提示文字
+                    const hintEl = el.closest('.overtime-countdown-box')?.querySelector('.overtime-hint');
+                    if (hintEl) hintEl.textContent = `剩余 ${min} 分 ${sec} 秒后窗口关闭`;
+
+                    // 动态切换紧急样式
+                    const box = el.closest('.overtime-countdown-box');
+                    if (box) {
+                        box.classList.remove('overtime-warning', 'overtime-critical');
+                        if (remainingSec <= 60) {
+                            box.classList.add('overtime-critical');
+                            // 最后60秒脉冲闪烁效果
+                            el.style.animation = 'overtimePulse 1s ease-in-out infinite';
+                        } else if (remainingSec <= 180) {
+                            box.classList.add('overtime-warning');
+                            el.style.animation = '';
+                        } else {
+                            el.style.animation = '';
+                        }
+                    }
+                } else {
+                    el.textContent = '00:00';
+                    const box = el.closest('.overtime-countdown-box');
+                    if (box) {
+                        box.className = 'overtime-countdown-box overtime-expired';
+                        box.innerHTML = '<div class="overtime-icon">❌</div><div class="overtime-label">10分钟补救窗口已关闭</div><div class="overtime-hint">任务已失效，请明天再来</div>';
+                    }
+                    clearInterval(overtimeTimer);
+                    overtimeTimer = null;
+                    setTimeout(() => renderTaskArea(), 2000);
+                }
+            };
+
+            // 重置截止时间（每次重新渲染时重新计算）
+            overtimeDeadline = null;
+            update();
+            overtimeTimer = setInterval(update, 1000);
+        }
+
         // ===== 掷骰子 =====
         function rollDice() {
             if (!todayData || todayData.rolled) {
@@ -851,6 +1024,7 @@
                         // 更新数据
                         todayData.rolled = true;
                         todayData.diceResult = result;
+                        todayData.rollTime = new Date().toISOString();
                         saveTodayData();
                         
                         // 如果是6号，直接发放奖励
@@ -921,10 +1095,32 @@
             let timeStatusText = '';
             
             if (task.hasTimeCondition && task.timeLimit !== null) {
-                const currentHour = getCurrentHour();
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
                 if (currentHour >= task.timeLimit) {
-                    canComplete = false;
-                    timeStatusText = `⏰ 当前 ${currentHour}:00，需要在 ${task.timeLimit}:00 前启动`;
+                    // 规则5特殊处理：超过18点后有10分钟倒计时窗口
+                    if (task.hasOvertimeCountdown) {
+                        // 如果没有记录掷骰时间，以当前页面加载时刻为起点
+                        const startTime = todayData.rollTime ? new Date(todayData.rollTime) : now;
+                        // 确保截止时间不早于当前时间（给用户至少10分钟窗口）
+                        const deadline = new Date(Math.max(startTime.getTime(), now.getTime()) + 10 * 60 * 1000);
+                        const remainingSec = Math.max(0, Math.floor((deadline - now) / 1000));
+                        
+                        if (remainingSec > 0) {
+                            const min = Math.floor(remainingSec / 60);
+                            const sec = remainingSec % 60;
+                            const urgencyClass = remainingSec <= 60 ? 'overtime-critical' : remainingSec <= 180 ? 'overtime-warning' : '';
+                            timeStatusText = `<div class="overtime-countdown-box ${urgencyClass}"><div class="overtime-label">⚠️ 超时补救窗口 — 请尽快完成！</div><div class="overtime-timer"><span id="overtimeCountdown">${min}:${String(sec).padStart(2, '0')}</span></div><div class="overtime-hint">剩余 ${min} 分 ${sec} 秒后窗口关闭</div></div>`;
+                        } else {
+                            canComplete = false;
+                            timeStatusText = '❌ 10分钟倒计时已结束';
+                        }
+                    } else {
+                        canComplete = false;
+                        timeStatusText = `⏰ 当前 ${currentTimeStr}，需要在 ${task.timeLimit}:00 前启动`;
+                    }
                 } else {
                     const remainingHours = task.timeLimit - currentHour;
                     timeStatusText = `⏰ 还有 ${remainingHours} 小时截止`;
@@ -974,6 +1170,11 @@
                     </div>
                 </div>
             `;
+            
+            // 如果规则5处于超时倒计时窗口，启动倒计时自动更新
+            if (task.hasOvertimeCountdown) {
+                startOvertimeCountdown();
+            }
         }
 
         function renderCompletedTask(taskArea) {
@@ -1006,9 +1207,22 @@
             if (task.hasTimeCondition && task.timeLimit !== null) {
                 const currentHour = getCurrentHour();
                 if (currentHour >= task.timeLimit) {
-                    showToast(`已超过 ${task.timeLimit}:00 截止时间！`, 'error');
-                    renderTaskArea();
-                    return;
+                    // 规则5特殊处理：检查10分钟倒计时窗口
+                    if (task.hasOvertimeCountdown) {
+                        const now = new Date();
+                        const startTime = todayData.rollTime ? new Date(todayData.rollTime) : now;
+                        const deadline = new Date(Math.max(startTime.getTime(), now.getTime()) + 10 * 60 * 1000);
+                        
+                        if (now > deadline) {
+                            showToast('10分钟倒计时已结束！', 'error');
+                            renderTaskArea();
+                            return;
+                        }
+                    } else {
+                        showToast(`已超过 ${task.timeLimit}:00 截止时间！`, 'error');
+                        renderTaskArea();
+                        return;
+                    }
                 }
             }
 
@@ -1121,18 +1335,30 @@
             const rewards = [];
             let bonusText = '';
 
-            // 额外条件1：大于16道，获得100兑换券
-            if (count > 16) {
+            // 额外条件1：达到32道，获得100兑换券
+            if (count >= 32) {
                 rewards.push({ type: 'voucher', amount: 100, name: '兑换券' });
-                bonusText += ' 🎉 超16道额外+100兑换券';
+                bonusText += ' 🎉 达32道额外+100兑换券';
             }
 
-            // 额外条件2：大于32道，超出部分每道+0.1抽奖券
-            if (count > 32) {
-                const extraLottery = Math.round((count - 32) / 10);
+            // 额外条件2：39~53道的部分，每道+0.1高级抽奖券
+            if (count >= 39) {
+                const premiumEnd = Math.min(count, 53);
+                const premiumQs = premiumEnd - 38;
+                const extraPremium = Math.round(premiumQs * 0.1);
+                if (extraPremium > 0) {
+                    premiumCount += extraPremium;
+                    bonusText += ` 💎 39~53道额外+${extraPremium}高级券`;
+                }
+            }
+
+            // 额外条件3：54道及以上，每道+0.1抽奖券
+            if (count >= 54) {
+                const over54Qs = count - 53;
+                const extraLottery = Math.round(over54Qs * 0.1);
                 if (extraLottery > 0) {
                     lotteryCount += extraLottery;
-                    bonusText += ` 🔥 超32道的${count - 32}道额外+${extraLottery}抽奖券(每道+0.1)`;
+                    bonusText += ` 🔥 54道以上额外+${extraLottery}抽奖券`;
                 }
             }
 
@@ -1158,7 +1384,7 @@
             showModal(
                 '⚡',
                 '速度挑战完成！',
-                `太厉害了！你在15分钟内完成了 ${count} 道计算题！${bonusText}`,
+                `太厉害了！你在21点前完成了 ${count} 道计算题！${bonusText}`,
                 rewards
             );
 
