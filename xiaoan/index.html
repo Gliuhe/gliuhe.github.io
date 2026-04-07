@@ -1553,6 +1553,19 @@
         </div>
     </div>
     
+    <!-- 计算骰子提醒横幅 -->
+    <div id="diceBanner" class="fine-banner" style="display: none; background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);">
+        <div class="fine-banner-content">
+            <div class="fine-banner-text">
+                <span id="bannerText">🎲 今日尚未掷骰！完成挑战赢高级抽奖券~</span>
+            </div>
+            <div class="fine-banner-actions">
+                <button class="fine-banner-btn primary" onclick="window.location.href='activity/jisuan.html'">一键直达</button>
+                <button class="fine-banner-btn secondary" onclick="document.getElementById('diceBanner').style.display='none'">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('dashboard')">🏠 控制面板</div>
@@ -1607,7 +1620,6 @@
                 <button class="btn" onclick="window.location.href='bank/index.html'">🏦 银行理财</button>
                 <div class="activity-btn-wrapper">
                     <button class="btn" onclick="window.location.href='activity/index.html'">🎉 活动中心</button>
-                    <span class="activity-badge">【新】清明活动开启！</span>
                 </div>
             </div>
         </div>
@@ -2896,6 +2908,47 @@
             banner.style.display = 'none';
             showStatus('已隐藏罚款提醒，请记得及时缴纳罚款！', "warning");
         }
+
+        // 检查今日是否已掷计算骰
+        function checkDiceStatus() {
+            const diceBanner = document.getElementById('diceBanner');
+            if (!diceBanner) return;
+
+            // 获取今日日期
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            // 读取今日数据
+            const todayDataStr = localStorage.getItem('jisuan_today');
+            if (!todayDataStr) {
+                // 从未访问过，显示提醒
+                diceBanner.style.display = 'block';
+                return;
+            }
+
+            let todayData;
+            try {
+                todayData = JSON.parse(todayDataStr);
+            } catch (e) {
+                diceBanner.style.display = 'block';
+                return;
+            }
+
+            // 如果今天的数据日期不是今天，说明是新的一天
+            if (todayData.date !== dateStr) {
+                diceBanner.style.display = 'block';
+                return;
+            }
+
+            // 如果尚未掷骰，显示提醒
+            if (!todayData.rolled || !todayData.diceResult) {
+                diceBanner.style.display = 'block';
+                return;
+            }
+
+            // 已掷过骰，隐藏提醒
+            diceBanner.style.display = 'none';
+        }
         
         // 更新罚款摘要
         function updateFineSummary() {
@@ -3377,6 +3430,9 @@
             
             // 更新罚款横幅显示
             updateFineBanner();
+            
+            // 检查今日是否已掷骰
+            checkDiceStatus();
             
             // 添加页面加载动画
             setTimeout(() => {
