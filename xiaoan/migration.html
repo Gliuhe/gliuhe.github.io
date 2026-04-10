@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据迁移工具 - localStorage → Supabase</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        .status-box.warning { border-left-color: #ffc107; }
+        .status-box.success { border-left-color: #28a745; }
+        .status-box.error { border-left-color: #dc3545; }
+        .status-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .log-area {
+            background: #1e1e1e;
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.85rem;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(102,126,234,0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(40,167,69,0.4); }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .data-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .data-item {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .data-item label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .data-item value {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+        .config-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .config-section h3 { margin-bottom: 15px; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 50px;
+            right: 50px;
+            height: 3px;
+            background: #e9ecef;
+            z-index: 0;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+        .step.active .step-num {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .step.completed .step-num {
+            background: #28a745;
+            color: white;
+        }
+        .step-label { font-size: 0.8rem; color: #666; }
+        .hidden { display: none !important; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .summary-card .num {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .summary-card .label {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        /* 导入导出区域样式 */
+        .import-export-section {
+            background: linear-gradient(135deg, #f0f4ff, #e8f0fe);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4285f4;
+        }
+        .import-export-section h3 { color: #333; margin-bottom: 15px; }
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0; top: 0; opacity: 0;
+            width: 100%; height: 100%;
+            cursor: pointer;
+        }
+        .drop-zone {
+            border: 2px dashed #4285f4;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: rgba(255,255,255,0.7);
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            background: rgba(66,133,244,0.1);
+            border-color: #1a73e8;
+        }
+        .drop-zone-text {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .drop-zone-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔄 数据迁移工具</h1>
+    <p class="subtitle">将 xiaoan 系统数据从 localStorage 迁移到 Supabase 云端数据库</p>
+
+    <div class="step-indicator">
+        <div class="step active" id="step1">
+            <div class="step-num">1</div>
+            <span class="step-label">配置连接</span>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-num">2</div>
+            <span class="step-label">预览数据</span>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-num">3</div>
+            <span class="step-label">执行迁移</span>
+        </div>
+        <div class="step" id="step4">
+            <div class="step-num">4</div>
+            <span class="step-label">完成</span>
+        </div>
+    </div>
+
+    <!-- Step 1: 配置 -->
+    <div id="configSection" class="config-section">
+        <h3>📡 Supabase 连接配置</h3>
+        <p style="color:#666;font-size:0.85rem;margin-bottom:15px">配置已预填，直接点击"测试连接"即可 👇</p>
+        <div class="form-group">
+            <label>Supabase URL</label>
+            <input type="text" id="supabaseUrl" value="https://qhnudlhpwmdzdxufcqjc.supabase.co">
+        </div>
+        <div class="form-group">
+            <label>Anon Key（公开密钥）</label>
+            <input type="text" id="anonKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I">
+        </div>
+        <div class="form-group">
+            <label>User ID（留空自动检测/生成）</label>
+            <input type="text" id="userId" placeholder="连接成功后自动填充">
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="testConnection()">🔗 测试连接</button>
+            <button class="btn btn-secondary" onclick="autoFillConfig()">📋 从 .env 自动填充</button>
+        </div>
+    </div>
+
+    <!-- 导入/导出 JSON 区域 -->
+    <div id="importExportSection" class="import-export-section">
+        <h3>📦 数据导出 / 导入（JSON 文件）</h3>
+        <p style="color:#666;font-size:0.85rem;margin-bottom:12px">适用于：在不同设备/域名间迁移数据，或手动备份数据</p>
+        
+        <div class="btn-group" style="justify-content:flex-start;gap:10px;">
+            <button class="btn btn-primary" style="padding:10px 20px;font-size:0.9rem" onclick="exportToJSON()">📥 导出为 JSON 文件</button>
+            
+            <div class="file-input-wrapper">
+                <button class="btn btn-success" style="padding:10px 20px;font-size:0.9rem;background:#34a853">📤 从 JSON 文件导入</button>
+                <input type="file" id="fileInput" accept=".json" onchange="importFromJSON(event)">
+            </div>
+        </div>
+
+        <!-- 拖放区域 -->
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="drop-zone-icon">📁</div>
+            <div class="drop-zone-text">
+                拖拽 JSON 文件到此处，或点击选择文件<br>
+                <span style="font-size:0.8rem;color:#999">支持 xiaoan-backup-*.json 格式</span>
+            </div>
+        </div>
+        
+        <p id="importStatus" style="margin-top:10px;font-size:0.85rem;color:#666"></p>
+    </div>
+
+    <!-- Step 2: 数据预览 -->
+    <div id="previewSection" class="status-box">
+        <h3>📦 检测到的 localStorage 数据</h3>
+        <p style="font-size:0.85rem;color:#666;margin-bottom:10px">当前域名: <code id="currentOrigin"></code></p>
+        <button class="btn btn-warning" style="margin-bottom:10px;padding:6px 15px;font-size:0.8rem" onclick="debugLocalStorage()">🔍 显示所有 localStorage Key</button>
+        <div id="allKeysDebug" style="display:none;background:#f0f0f0;padding:10px;border-radius:8px;font-size:0.75rem;overflow-x:auto;margin-bottom:10px;white-space:pre-wrap"></div>
+        <div class="data-preview" id="dataPreview"></div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <!-- 日志区域 -->
+    <div class="log-area" id="logArea">[就绪] 等待开始迁移...\n请先配置 Supabase 连接信息，然后点击"测试连接"</div>
+
+    <!-- 操作按钮 -->
+    <div class="btn-group">
+        <button class="btn btn-primary" id="migrateBtn" onclick="startMigration()" disabled>🚀 开始迁移</button>
+        <button class="btn btn-warning" id="previewBtn" onclick="previewData()" disabled>👁️ 预览数据</button>
+        <button class="btn btn-danger" id="clearBtn" onclick="clearLocalStorage()" disabled>🗑️ 迁移后清除localStorage</button>
+    </div>
+
+    <!-- 完成摘要 -->
+    <div id="summarySection" class="status-box success hidden">
+        <h3>✅ 迁移完成！</h3>
+        <div class="summary-grid" id="summaryGrid"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+// 注意：避免与 window.supabase (SDK) 变量名冲突
+let sb = null;
+let currentUserId = null;
+let migrationResults = {};
+
+// ========== 页面加载自动初始化 + 自动连接 ==========
+window.addEventListener('DOMContentLoaded', async () => {
+    // 显示当前域名
+    document.getElementById('currentOrigin').textContent = window.location.origin;
+    
+    log(`页面加载完成 | 域名: ${window.location.origin}`, 'info');
+    log(`localStorage 项目数: ${localStorage.length}`, 'info');
+    
+    // 检查 Supabase 是否加载成功
+    if (typeof window.supabase === 'undefined') {
+        log('❌ Supabase SDK 加载失败！检查网络连接', 'error');
+        return;
+    }
+    
+    log('✓ Supabase SDK 加载成功', 'success');
+    
+    // 自动执行测试连接
+    setTimeout(() => testConnection(), 500);
+});
+function log(msg, type = 'info') {
+    const area = document.getElementById('logArea');
+    const timestamp = new Date().toLocaleTimeString();
+    const colors = { info: '#00ff00', warn: '#ffc107', error: '#ff4444', success: '#44ff44' };
+    const prefix = { info: '[INFO]', warn: '[WARN]', error: '[ERROR]', success: '[OK]' };
+    area.innerHTML += `<span style="color:#888">[${timestamp}]</span> <span style="color:${colors[type]}">${prefix[type]}</span> ${msg}\n`;
+    area.scrollTop = area.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('logArea').innerHTML = '';
+}
+
+// ========== 步骤控制 ==========
+function setStep(stepNum) {
+    for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById(`step${i}`);
+        el.classList.remove('active', 'completed');
+        if (i < stepNum) el.classList.add('completed');
+        else if (i === stepNum) el.classList.add('active');
+    }
+}
+
+// ========== 配置相关 ==========
+function autoFillConfig() {
+    // 尝试从常见位置获取配置
+    const url = document.getElementById('supabaseUrl');
+    const key = document.getElementById('anonKey');
+    
+    // 默认值提示
+    if (!url.value) {
+        url.value = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+    }
+    if (!key.value) {
+        key.value = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I';
+    }
+    log('已自动填充 Supabase 配置', 'success');
+}
+
+async function testConnection() {
+    const url = document.getElementById('supabaseUrl').value.trim();
+    const key = document.getElementById('anonKey').value.trim();
+
+    log('正在连接 Supabase...', 'info');
+    log(`URL: ${url.substring(0, 30)}...`, 'info');
+
+    if (!url || !key) {
+        log('❌ 错误：请填写完整的 URL 和 Anon Key', 'error');
+        return;
+    }
+
+    // 检查 SDK 是否存在
+    if (typeof window.supabase === 'undefined') {
+        log('❌ Supabase SDK 未加载！', 'error');
+        return;
+    }
+
+    try {
+        sb = window.supabase.createClient(url, key);
+        log('✓ 客户端创建成功', 'success');
+        
+        // 使用更简单的查询测试
+        const { data, error, count } = await sb
+            .from('products')
+            .select('*', { count: 'exact', head: true });
+        
+        if (error) throw error;
+
+        log(`✓ 数据库连接成功！products 表有 ${count} 条数据`, 'success');
+
+        // 获取或设置用户ID
+        let userId = document.getElementById('userId').value.trim();
+        if (!userId) {
+            userId = localStorage.getItem('xiaoan_user_id') || crypto.randomUUID();
+        }
+        currentUserId = userId;
+        document.getElementById('userId').value = userId;
+        localStorage.setItem('xiaoan_user_id', userId);
+
+        log(`用户 ID: ${userId}`, 'info');
+        setStep(2);
+        
+        document.getElementById('previewBtn').disabled = false;
+        document.getElementById('migrateBtn').disabled = false;
+        document.getElementById('clearBtn').disabled = false;
+        
+        // 自动预览数据
+        previewData();
+
+    } catch (err) {
+        log(`连接失败: ${err.message}`, 'error');
+        log('可能原因:', 'warn');
+        log('1. URL 或 Key 不正确', 'warn');  
+        log('2. 网络问题或 CORS 错误', 'warn');
+        log('3. 数据库表不存在', 'warn');
+        console.error('Supabase 连接错误详情:', err);
+    }
+}
+
+// ========== 调试功能 ==========
+function debugLocalStorage() {
+    const debugDiv = document.getElementById('allKeysDebug');
+    if (debugDiv.style.display === 'none') {
+        // 显示所有 localStorage keys
+        const allKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const value = localStorage.getItem(key);
+            const displayValue = value.length > 50 ? value.substring(0, 50) + '...' : value;
+            allKeys.push(`${key} = ${displayValue}`);
+        }
+        
+        document.getElementById('currentOrigin').textContent = window.location.origin;
+        debugDiv.textContent = `共 ${localStorage.length} 个 key:\n\n${allKeys.join('\n')}`;
+        debugDiv.style.display = 'block';
+        log(`发现 ${localStorage.length} 个 localStorage 项目`, 'info');
+    } else {
+        debugDiv.style.display = 'none';
+    }
+}
+
+// ========== 数据预览 ==========
+function previewData() {
+    const preview = document.getElementById('dataPreview');
+    
+    // 收集所有相关的 localStorage 数据
+    const dataMap = [
+        { key: 'voucher', label: '兑换券', format: 'number' },
+        { key: 'lottery', label: '抽奖券', format: 'number' },
+        { key: 'premium', label: '高级抽奖券', format: 'number' },
+        { key: 'bankTicket', label: '银行券', format: 'number' },
+        { key: 'products', label: '商品列表', format: 'count' },
+        { key: 'history', label: '历史记录', format: 'count' },
+        { key: 'fineItems', label: '罚款项目', format: 'count' },
+        { key: 'dailyExchange', label: '每日兑换', format: 'keys' },
+        { key: 'xiaoan_password', label: '主密码', format: 'mask' },
+    ];
+
+    let html = '';
+    let hasData = false;
+    
+    dataMap.forEach(item => {
+        const raw = localStorage.getItem(item.key);
+        let displayValue = '❌ 无数据';
+        let valueClass = '#999';
+        
+        if (raw !== null) {
+            hasData = true;
+            switch (item.format) {
+                case 'number':
+                    displayValue = parseInt(raw) || 0;
+                    valueClass = '#667eea';
+                    break;
+                case 'count':
+                    try { 
+                        const arr = JSON.parse(raw); 
+                        displayValue = Array.isArray(arr) ? arr.length : 'N/A'; 
+                        valueClass = '#28a745';
+                    } catch { displayValue = '解析失败'; }
+                    break;
+                case 'keys':
+                    try { 
+                        const obj = JSON.parse(raw); 
+                        displayValue = typeof obj === 'object' ? Object.keys(obj).length + ' 项' : 'N/A'; 
+                        valueClass = '#ffc107';
+                    } catch { displayValue = '解析失败'; }
+                    break;
+                case 'mask':
+                    displayValue = '*'.repeat(Math.min(raw.length, 8));
+                    valueClass = '#dc3545';
+                    break;
+            }
+        }
+        
+        html += `
+            <div class="data-item">
+                <label>${item.key}</label>
+                <value style="color:${valueClass}">${displayValue}</value>
+            </div>
+        `;
+    });
+
+    // 额外检查其他页面的数据
+    const extraKeys = [
+        'rule_password', 'lottery_password', 'advanced_password', 'bank_password',
+        'announcement_password', 'checkinData', 'checkinDates', 'streakDays',
+        'weekCheckinCounts', 'savingsBalance', 'depositBalance', 'depositStartDate',
+        'investmentBalance', 'investmentStartDate', 'bankHistory',
+        'lotteryRecords', 'advancedLotteryRecords',
+        'jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory',
+        'jixingCompletedDays', 'jixingCurrency', 'jixingInitialized', 'jixingGiftClaimed',
+        'jixingBoughtRewards', 'qingmingTasks', 'announcements'
+    ];
+
+    let extraHtml = '';
+    let extraCount = 0;
+    extraKeys.forEach(key => {
+        const val = localStorage.getItem(key);
+        if (val !== null) {
+            extraCount++;
+            const display = val.length > 50 ? val.substring(0, 50) + '...' : (val.length > 20 ? `[${val.length}字符]` : val);
+            extraHtml += `
+                <div class="data-item">
+                    <label>${key}</label>
+                    <value style="color:#888;font-size:0.85rem">${display}</value>
+                </div>
+            `;
+        }
+    });
+
+    if (extraCount > 0) {
+        html += `<div style="grid-column:1/-1;margin-top:10px;padding-top:10px;border-top:1px dashed #ddd"><strong style="font-size:0.85rem;color:#666">其他模块数据 (${extraCount}项)</strong></div>` + extraHtml;
+    }
+
+    preview.innerHTML = html || '<p style="color:#999;padding:20px;text-align:center">未检测到任何 xiaoan 相关数据</p>';
+    document.getElementById('previewSection').classList.remove('hidden');
+    
+    if (hasData || extraCount > 0) {
+        log(`检测到 ${hasData ? dataMap.filter(d => localStorage.getItem(d.key)).length : 0} 项核心数据 + ${extraCount} 项扩展数据`, 'success');
+    } else {
+        log('未在 localStorage 中检测到 xiaoan 数据', 'warn');
+    }
+}
+
+// ========== 核心迁移逻辑 ==========
+async function startMigration() {
+    if (!confirm('确定要开始迁移吗？\n\n这将把 localStorage 中的数据导入到 Supabase。\n建议先备份重要数据！')) {
+        return;
+    }
+
+    clearLog();
+    log('========== 开始数据迁移 ==========', 'info');
+    log(`目标用户: ${currentUserId}`, 'info');
+    log(`时间: ${new Date().toLocaleString()}`, 'info');
+
+    document.getElementById('progressBar').style.display = 'block';
+    document.getElementById('migrateBtn').disabled = true;
+
+    const steps = [
+        { name: '初始化用户配置', fn: migrateSystemConfig },
+        { name: '核心货币余额', fn: migrateCurrencies },
+        { name: '历史记录', fn: migrateHistories },
+        { name: '商品列表', fn: migrateProducts },
+        { name: '每日兑换记录', fn: migrateDailyExchange },
+        { name: '罚款项目', fn: migrateFineItems },
+        { name: '签到数据', fn: migrateCheckinData },
+        { name: '银行账户', fn: migrateBankData },
+        { name: '抽奖记录', fn: migrateLotteryData },
+        { name: '计算挑战', fn: migrateJisuanData },
+        { name: '纪行进度', fn: migrateJixingData },
+        { name: '清明活动', fn: migrateQingmingData },
+        { name: '公告数据', fn: migrateAnnouncements },
+    ];
+
+    let completed = 0;
+    let failed = 0;
+
+    for (let i = 0; i < steps.length; i++) {
+        const step = steps[i];
+        updateProgress((i / steps.length) * 100);
+        log(`[${i + 1}/${steps.length}] 迁移 ${step.name}...`, 'info');
+        
+        try {
+            const result = await step.fn();
+            migrationResults[step.name] = result;
+            log(`  ✓ ${step.name}: ${result}`, 'success');
+            completed++;
+        } catch (err) {
+            log(`  ✗ ${step.name} 失败: ${err.message}`, 'error');
+            migrationResults[step.name] = `错误: ${err.message}`;
+            failed++;
+        }
+
+        // 小延迟避免请求过快
+        await sleep(200);
+    }
+
+    updateProgress(100);
+    setStep(4);
+    
+    log('', 'info');
+    log('========== 迁移完成 ==========', 'success');
+    log(`成功: ${completed} 项 | 失败: ${failed} 项 | 总计: ${steps.length} 项`, failed === 0 ? 'success' : 'warn');
+    
+    showSummary(completed, failed, steps.length);
+    document.getElementById('migrateBtn').textContent = '✅ 迁移完成';
+    document.getElementById('clearBtn').disabled = false;
+}
+
+function updateProgress(percent) {
+    document.getElementById('progressFill').style.width = percent + '%';
+}
+
+function showSummary(success, fail, total) {
+    const summary = document.getElementById('summarySection');
+    const grid = document.getElementById('summaryGrid');
+    
+    grid.innerHTML = `
+        <div class="summary-card"><div class="num">${total}</div><div class="label">总模块数</div></div>
+        <div class="summary-card"><div class="num" style="color:#28a745">${success}</div><div class="label">成功</div></div>
+        <div class="summary-card"><div class="num" style="color:${fail > 0 ? '#dc3545' : '#28a745'}">${fail}</div><div class="label">失败</div></div>
+        <div class="summary-card"><div class="num">${currentUserId?.substring(0, 8)}...</div><div class="label">用户ID</div></div>
+    `;
+    summary.classList.remove('hidden');
+}
+
+// ========== 各模块迁移函数 ==========
+
+async function migrateSystemConfig() {
+    const config = {
+        user_id: currentUserId,
+        main_password: localStorage.getItem('xiaoan_password') || '123456',
+        rule_password: localStorage.getItem('rule_password') || '123456',
+        lottery_password: localStorage.getItem('lottery_password') || '123456',
+        advanced_password: localStorage.getItem('advanced_password') || '123456',
+        bank_password: localStorage.getItem('bank_password') || '123456',
+        announcement_password: localStorage.getItem('announcement_password') || '123456',
+        updated_at: new Date().toISOString()
+    };
+
+    const { error } = await sb.from('system_config').upsert(config, { onConflict: 'user_id' });
+    if (error) throw error;
+    return '系统配置已保存';
+}
+
+async function migrateCurrencies() {
+    const currencies = ['voucher', 'lottery', 'premium', 'bankTicket'];
+    let count = 0;
+
+    for (const type of currencies) {
+        const amount = parseInt(localStorage.getItem(type) || '0');
+        if (amount > 0) {
+            const { error } = await sb.from('user_currencies').upsert({
+                user_id: currentUserId,
+                currency_type: type,
+                amount: amount,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id,currency_type' });
+            
+            if (error) throw error;
+            count++;
+        }
+    }
+    return `${count} 种货币 (${currencies.join(', ')})`;
+}
+
+async function migrateHistories() {
+    const history = JSON.parse(localStorage.getItem('history') || '[]');
+    if (history.length === 0) return '无历史记录';
+
+    // 批量插入，每条添加 user_id
+    const records = history.map(h => ({
+        ...h,
+        user_id: currentUserId
+    }));
+
+    // 分批插入（每批50条）
+    const batchSize = 50;
+    let inserted = 0;
+    
+    for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        const { error } = await sb.from('histories').insert(batch);
+        if (error) throw error;
+        inserted += batch.length;
+    }
+    return `${inserted} 条记录`;
+}
+
+async function migrateProducts() {
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    if (products.length === 0) return '使用默认商品';
+
+    // 只更新商品数据（不删除已有的默认商品）
+    let updated = 0;
+    for (const p of products) {
+        if (p.id) {
+            const { error } = await sb.from('products').upsert({
+                id: p.id,
+                name: p.name,
+                price: p.price,
+                daily_limit: p.daily_limit || 0,
+                available_days: p.available_days || [],
+                description: p.description || '',
+                is_active: true
+            }, { onConflict: 'id' });
+            if (!error) updated++;
+        }
+    }
+    return `${updated} 个商品`;
+}
+
+async function migrateDailyExchange() {
+    const dailyExchange = JSON.parse(localStorage.getItem('dailyExchange') || '{}');
+    const keys = Object.keys(dailyExchange);
+    
+    if (keys.length === 0) return '无每日兑换记录';
+
+    let count = 0;
+    const today = new Date().toISOString().split('T')[0];
+
+    for (const [productId, exchangeCount] of Object.entries(dailyExchange)) {
+        const { error } = await sb.from('daily_exchanges').upsert({
+            user_id: currentUserId,
+            product_id: parseInt(productId) || null,
+            exchange_date: today,
+            count: parseInt(exchangeCount) || 1
+        }, { onConflict: 'user_id,product_id,exchange_date' });
+        if (!error) count++;
+    }
+    return `${count} 条兑换记录`;
+}
+
+async function migrateFineItems() {
+    const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+    if (fineItems.length === 0) return '无罚款项目';
+
+    const records = fineItems.map(f => ({
+        user_id: currentUserId,
+        reason: f.reason || '',
+        original_amount: f.originalAmount || f.amount || 0,
+        remaining: f.remaining || f.amount || 0,
+        due_date: f.dueDate || new Date().toISOString().split('T')[0],
+        penalty_applied: f.penaltyApplied || false,
+        penalty_amount: f.penaltyAmount || 0,
+        paid_amount: f.paidAmount || 0,
+        is_paid: f.isPaid || false
+    }));
+
+    const { error, count } = await sb.from('fine_items').insert(records);
+    if (error) throw error;
+    return `${records.length} 条罚款`;
+}
+
+async function migrateCheckinData() {
+    const checkinData = JSON.parse(localStorage.getItem('checkinData') || 'null');
+    const streakDays = parseInt(localStorage.getItem('streakDays') || '0');
+    const totalCheckins = parseInt(localStorage.getItem('totalCheckins') || '0');
+    
+    if (!checkinData && streakDays === 0) return '无签到数据';
+
+    const record = {
+        user_id: currentUserId,
+        last_checkin_date: checkinData?.lastCheckinDate || null,
+        checkin_log: checkinData?.log || [],
+        checkin_dates: JSON.parse(localStorage.getItem('checkinDates') || '[]'),
+        streak_days: streakDays,
+        total_checkins: totalCheckins,
+        cycle_start_date: checkinData?.cycleStartDate || new Date().toISOString().split('T')[0],
+        cycle_checkins: parseInt(checkinData?.cycleCheckins || '0'),
+        claimed_milestones: checkinData?.claimedMilestones || []
+    };
+
+    const { error } = await sb.from('checkin_data').upsert(record, { onConflict: 'user_id' });
+    if (error) throw error;
+    
+    // 迁移每周计数
+    const weekCounts = JSON.parse(localStorage.getItem('weekCheckinCounts') || '{}');
+    const weekKeys = Object.keys(weekCounts);
+    if (weekKeys.length > 0) {
+        const weekRecords = weekKeys.map(week => ({
+            user_id: currentUserId,
+            week_key: week,
+            count: weekCounts[week] || 0
+        }));
+        await sb.from('week_checkin_counts').upsert(weekRecords, { onConflict: 'user_id,week_key' });
+    }
+
+    return `签到: ${streakDays}天连续 | 周计数: ${weekKeys.length}周`;
+}
+
+async function migrateBankData() {
+    const savingsBalance = parseInt(localStorage.getItem('savingsBalance') || '0');
+    const depositBalance = parseInt(localStorage.getItem('depositBalance') || '0');
+    const investmentBalance = parseInt(localStorage.getItem('investmentBalance') || '0');
+    
+    if (savingsBalance === 0 && depositBalance === 0 && investmentBalance === 0) return '无银行数据';
+
+    // 创建三个账户
+    const accounts = [];
+    
+    if (savingsBalance > 0) {
+        accounts.push({
+            user_id: currentUserId,
+            account_type: 'savings',
+            balance: savingsBalance,
+            rate: 0.001
+        });
+    }
+    
+    if (depositBalance > 0) {
+        accounts.push({
+            user_id: currentUserId,
+            account_type: 'deposit',
+            balance: depositBalance,
+            rate: 0.003,
+            locked_until: localStorage.getItem('depositStartDate') ? 
+                new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() : null
+        });
+    }
+    
+    if (investmentBalance > 0) {
+        accounts.push({
+            user_id: currentUserId,
+            account_type: 'investment',
+            balance: investmentBalance,
+            rate: 0.02
+        });
+    }
+
+    if (accounts.length > 0) {
+        const { error } = await sb.from('bank_accounts').upsert(accounts, { onConflict: 'user_id,account_type' });
+        if (error) throw error;
+    }
+
+    // 迁移银行历史
+    const bankHistory = JSON.parse(localStorage.getItem('bankHistory') || '[]');
+    if (bankHistory.length > 0) {
+        const txns = bankHistory.map(h => ({
+            user_id: currentUserId,
+            type: h.type || 'deposit',
+            account_type: h.accountType || 'savings',
+            amount: h.amount || 0,
+            description: h.description || ''
+        }));
+        await sb.from('bank_transactions').insert(txns);
+    }
+
+    return `${accounts.length} 个账户, ${bankHistory.length} 条流水`;
+}
+
+async function migrateLotteryData() {
+    const lotteryRecords = JSON.parse(localStorage.getItem('lotteryRecords') || '[]');
+    const advancedRecords = JSON.parse(localStorage.getItem('advancedLotteryRecords') || '[]');
+    
+    if (lotteryRecords.length === 0 && advancedRecords.length === 0) return '无抽奖记录';
+
+    const allRecords = [
+        ...lotteryRecords.map(r => ({...r, user_id: currentUserId, pool_type: 'normal'})),
+        ...advancedRecords.map(r => ({...r, user_id: currentUserId, pool_type: 'advanced'}))
+    ];
+
+    const { error } = await sb.from('lottery_records').insert(allRecords);
+    if (error) throw error;
+    return `${allRecords.length} 条记录 (普通${lotteryRecords.length}+高级${advancedRecords.length})`;
+}
+
+async function migrateJisuanData() {
+    const completed = localStorage.getItem('jisuanCompleted') === 'true';
+    const score = parseInt(localStorage.getItem('jisuanScore') || '0');
+    const passCards = parseInt(localStorage.getItem('jisuanPassCards') || '0');
+    const history = JSON.parse(localStorage.getItem('jisuanHistory') || '[]');
+
+    if (!completed && score === 0) return '无计算挑战数据';
+
+    const { error } = await sb.from('jisuan_data').upsert({
+        user_id: currentUserId,
+        completed: completed,
+        score: score,
+        correct_answers: score,
+        pass_cards: passCards,
+        history: history
+    }, { onConflict: 'user_id' });
+    if (error) throw error;
+    return `得分: ${score}, 通行证: ${passCards}`;
+}
+
+async function migrateJixingData() {
+    const completedDays = JSON.parse(localStorage.getItem('jixingCompletedDays') || '[]');
+    const currency = parseInt(localStorage.getItem('jixingCurrency') || '0');
+    const initialized = localStorage.getItem('jixingInitialized') === 'true';
+    const giftClaimed = localStorage.getItem('jixingGiftClaimed') === 'true';
+    const boughtRewards = JSON.parse(localStorage.getItem('jixingBoughtRewards') || '[]');
+
+    if (!initialized && completedDays.length === 0) return '无纪行数据';
+
+    const { error } = await sb.from('jixing_progress').upsert({
+        user_id: currentUserId,
+        completed_days: completedDays,
+        currency: currency,
+        initialized: initialized,
+        gift_claimed: giftClaimed,
+        bought_rewards: boughtRewards
+    }, { onConflict: 'user_id' });
+    if (error) throw error;
+    return `${completedDays.length} 天完成, 纪行币: ${currency}`;
+}
+
+async function migrateQingmingData() {
+    const tasks = JSON.parse(localStorage.getItem('qingmingTasks') || '[]');
+    if (tasks.length === 0) return '无清明活动数据';
+
+    const { error } = await sb.from('qingming_data').upsert({
+        user_id: currentUserId,
+        completed_tasks: tasks
+    }, { onConflict: 'user_id' });
+    if (error) throw error;
+    return `${tasks.length} 项任务`;
+}
+
+async function migrateAnnouncements() {
+    const announcements = JSON.parse(localStorage.getItem('announcements') || '[]');
+    if (announcements.length === 0) return '使用默认公告';
+
+    // 公告通常不迁移，因为可能是管理员统一管理的
+    return `本地有 ${announcements.length} 条公告（保持云端版本）`;
+}
+
+// ========== 清除 localStorage ==========
+function clearLocalStorage() {
+    if (!confirm('⚠️ 警告！\n\n这将清除所有 xiaoan 相关的 localStorage 数据！\n\n确保迁移已完成且验证无误后再操作！\n\n此操作不可撤销！')) {
+        return;
+    }
+
+    const keysToRemove = [
+        'voucher', 'lottery', 'premium', 'bankTicket', 'currency',
+        'xiaoan_password', 'products', 'history', 'dailyExchange', 'lastResetDate',
+        'fineItems', 'rule_password', 'lottery_password', 'advanced_password',
+        'bank_password', 'announcement_password',
+        'checkinData', 'checkinDates', 'streakDays', 'totalCheckins',
+        'weekCheckinCounts',
+        'savingsBalance', 'depositBalance', 'depositStartDate',
+        'investmentBalance', 'investmentStartDate', 'bankHistory',
+        'lotteryRecords', 'advancedLotteryRecords',
+        'jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory',
+        'jixingCompletedDays', 'jixingCurrency', 'jixingInitialized', 
+        'jixingGiftClaimed', 'jixingBoughtRewards',
+        'qingmingTasks', 'announcements'
+    ];
+
+    let removed = 0;
+    keysToRemove.forEach(key => {
+        if (localStorage.getItem(key) !== null) {
+            localStorage.removeItem(key);
+            removed++;
+        }
+    });
+
+    log(`已清除 ${removed} 项 localStorage 数据`, removed === keysToRemove.length ? 'success' : 'warn');
+    alert(`清除完成！\n\n共移除 ${removed} 项数据。\n\n刷新页面后将从 Supabase 加载数据。`);
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ========== 导出/导入 JSON 功能 ==========
+
+// xiaoan 相关的所有 localStorage key 列表
+const XIAOAN_KEYS = [
+    // 核心货币
+    'voucher', 'lottery', 'premium', 'bankTicket', 'currency',
+    // 密码
+    'xiaoan_password', 'rule_password', 'lottery_password', 
+    'advanced_password', 'bank_password', 'announcement_password',
+    // 商品和历史
+    'products', 'history', 'dailyExchange', 'lastResetDate',
+    // 罚款
+    'fineItems',
+    // 签到
+    'checkinData', 'checkinDates', 'streakDays', 'totalCheckins',
+    'weekCheckinCounts', 'checkinMilestonesClaimed',
+    // 银行
+    'savingsBalance', 'depositBalance', 'depositStartDate',
+    'investmentBalance', 'investmentStartDate', 'bankHistory',
+    // 抽奖
+    'lotteryRecords', 'advancedLotteryRecords', 'lastLotteryDate', 'lastAdvancedLotteryDate',
+    // 计算挑战
+    'jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory',
+    'jisuanLastResetDate',
+    // 纪行
+    'jixingCompletedDays', 'jixingCurrency', 'jixingInitialized', 'jixingGiftClaimed',
+    'jixingBoughtRewards', 'jixingStartDate', 'jixingLastClaimDate',
+    // 清明活动
+    'qingmingTasks',
+    // 公告
+    'announcements',
+    // 用户标识
+    'xiaoan_user_id'
+];
+
+/**
+ * 导出 xiaoan 数据为 JSON 文件
+ */
+function exportToJSON() {
+    const exportData = {
+        version: '1.0',
+        exportTime: new Date().toISOString(),
+        sourceOrigin: window.location.origin,
+        data: {}
+    };
+    
+    let exportedCount = 0;
+    
+    // 收集所有 xiaoan 相关数据（包括非预定义的 key）
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        
+        // 导出所有 localStorage 数据，确保不遗漏任何自定义 key
+        const value = localStorage.getItem(key);
+        try {
+            exportData.data[key] = JSON.parse(value);
+            exportedCount++;
+        } catch (e) {
+            // 非JSON格式直接存储字符串
+            exportData.data[key] = value;
+            exportedCount++;
+        }
+    }
+
+    // 生成文件名：带时间戳
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    const filename = `xiaoan-backup-${timestamp}.json`;
+    
+    // 下载文件
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    log(`✓ 导出成功！共 ${exportedCount} 项数据`, 'success');
+    log(`  文件名: ${filename}`, 'info');
+    log(`  大小: ${(blob.size / 1024).toFixed(1)} KB`, 'info');
+    
+    alert(`导出成功！\n\n文件名: ${filename}\n项目数: ${exportedCount}\n大小: ${(blob.size / 1024).toFixed(1)} KB\n\n请保存好此备份文件！`);
+}
+
+/**
+ * 从 JSON 文件导入数据
+ */
+function importFromJSON(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    processImportFile(file);
+}
+
+/**
+ * 处理导入的文件
+ */
+async function processImportFile(file) {
+    const statusEl = document.getElementById('importStatus');
+    statusEl.innerHTML = `<span style="color:#4285f4">⏳ 正在读取 ${file.name}...</span>`;
+    
+    try {
+        const text = await file.text();
+        const importData = JSON.parse(text);
+        
+        // 验证文件格式
+        if (!importData || !importData.data) {
+            throw new Error('无效的备份文件格式');
+        }
+
+        const keys = Object.keys(importData.data);
+        let importedCount = 0;
+        
+        // 确认导入
+        if (!confirm(`即将导入以下数据：\n\n来源: ${importData.sourceOrigin || '未知'}\n时间: ${importData.exportTime || '未知'}\n项目数: ${keys.length}\n\n⚠️ 这将覆盖当前 localStorage 中同名数据！\n\n确定继续？`)) {
+            statusEl.innerHTML = `<span style="#666">已取消导入</span>`;
+            return;
+        }
+
+        // 执行导入 - 写入当前域名下的 localStorage
+        for (const [key, value] of Object.entries(importData.data)) {
+            if (typeof value === 'object') {
+                localStorage.setItem(key, JSON.stringify(value));
+            } else {
+                localStorage.setItem(key, String(value));
+            }
+            importedCount++;
+        }
+
+        statusEl.innerHTML = `<span style="color:#28a745">✅ 成功导入 ${importedCount} 项数据！</span>`;
+        
+        log(`========== 从文件导入 ==========`, 'success');
+        log(`文件: ${file.name}`, 'info');
+        log(`来源: ${importData.sourceOrigin}`, 'info');
+        log(`导入数量: ${importedCount} 项`, 'success');
+        log('', 'info');
+        log('💡 请点击"👁️ 预览数据"查看已导入的数据', 'warn');
+        log('   然后点击"🚀 开始迁移"上传到 Supabase', 'warn');
+
+        // 自动刷新预览
+        previewData();
+        
+        // 启用迁移按钮（如果连接已建立）
+        if (sb) {
+            document.getElementById('migrateBtn').disabled = false;
+        }
+
+    } catch (err) {
+        statusEl.innerHTML = `<span style="color:#dc3545">❌ 导入失败: ${err.message}</span>`;
+        log(`导入失败: ${err.message}`, 'error');
+    }
+}
+
+/**
+ * 拖放功能初始化
+ */
+(function initDropZone() {
+    const dropZone = document.getElementById('dropZone');
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.json')) {
+                processImportFile(file);
+            } else {
+                log('只支持 .json 文件', 'error');
+            }
+        }
+    });
+})();
+</script>
+</body>
+</html>
