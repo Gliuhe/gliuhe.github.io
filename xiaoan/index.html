@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate">
     <meta name="theme-color" content="#06d6a0">
-    <title>超级兑换券乐园 - v2.2</title>
+    <title>超级兑换券乐园 - v1.4.7</title>
     <style>
         * {
             box-sizing: border-box;
@@ -3400,15 +3400,26 @@
                 const isPaid = newRemaining <= 0;
                 const newPaid = (target.paid_amount || 0) + amount;
 
-                // 更新数据库
-                const { error: updateErr } = await sb.from('fine_items')
+                // 更新数据库（id 可能是整数或 UUID，尝试两种类型）
+                let updateQuery = sb.from('fine_items')
                     .update({
                         remaining: Math.max(0, newRemaining),
                         paid_amount: newPaid,
                         is_paid: isPaid,
                         updated_at: new Date().toISOString()
-                    })
-                    .eq('id', selectedId);
+                    });
+                
+                // 根据 id 类型选择匹配方式
+                const numericId = parseInt(selectedId, 10);
+                if (!isNaN(numericId) && String(numericId) === selectedId) {
+                    // id 是纯数字
+                    updateQuery = updateQuery.eq('id', numericId);
+                } else {
+                    // id 是 UUID 或其他字符串
+                    updateQuery = updateQuery.eq('id', selectedId);
+                }
+                
+                const { error: updateErr } = await updateQuery;
                 if (updateErr) throw updateErr;
 
                 // 扣本地兑换券
