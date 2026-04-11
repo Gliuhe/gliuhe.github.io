@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 超级兑换券乐园</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        :root {
+            --primary-color: #06d6a0;
+            --secondary-color: #ff6b6b;
+            --accent-color: #ffd166;
+            --left-bg-start: #667eea;
+            --left-bg-end: #764ba2;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --input-bg: #f5f7fa;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            background: #f0f2f5;
+        }
+
+        /* ========== 左侧图片区 ========== */
+        .left-panel {
+            flex: 1;
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--left-bg-start), var(--left-bg-end));
+            overflow: hidden;
+        }
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -30%;
+            width: 120%; height: 150%;
+            background: radial-gradient(circle at 20% 80%, rgba(255,209,102,0.25) 0%, transparent 60%),
+                        radial-gradient(circle at 80% 20%, rgba(6,214,160,0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 50% 50%, rgba(255,107,107,0.15) 0%, transparent 70%);
+            animation: bgFloat 12s ease-in-out infinite;
+        }
+        @keyframes bgFloat {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            33% { transform: translateX(-15px) translateY(-10px); }
+            66% { transform: translateX(10px) translateY(15px); }
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+        
+        /* 图片容器 */
+        .image-container {
+            width: 380px;
+            max-width: 85vw;
+            height: 340px;
+            max-height: 55vh;
+            margin: 0 auto 32px;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+            position: relative;
+            animation: imageFloat 6s ease-in-out infinite;
+        }
+        @keyframes imageFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        /* 如果没有图片，显示默认插画 */
+        .default-illustration {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 120px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+            user-select: none;
+        }
+        .default-illustration .emoji-stack {
+            text-align: center; line-height: 1.4;
+        }
+        .emoji-stack span { display: inline-block; animation: emojiBounce 3s ease-in-out infinite; }
+        .emoji-stack span:nth-child(1) { animation-delay: 0s; font-size:72px;}
+        .emoji-stack span:nth-child(2) { animation-delay: 0.3s; font-size:64px; margin-left:-8px;}
+        .emoji-stack span:nth-child(3) { animation-delay: 0.6s; font-size:56px; margin-left:-8px;}
+
+        @keyframes emojiBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            75% { transform: translateY(-8px) rotate(5deg); }
+        }
+
+        .left-text h1 {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+        .left-text p {
+            font-size: 14px;
+            opacity: 0.9;
+            line-height: 1.7;
+            letter-spacing: 1px;
+        }
+        .left-text .highlight {
+            display: inline-block;
+            padding: 4px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 13px;
+            margin-top: 14px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* 装饰圆圈 */
+        .deco-circle {
+            position: absolute;
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.15);
+            z-index: 0;
+        }
+        .deco-circle.c1 { width:200px;height:200px;top:8%;right:-40px;animation: circleFloat 10s ease-in-out infinite; }
+        .deco-circle.c2 { width:140px;height:140px;bottom:15%;left:10%;animation: circleFloat 8s ease-in-out infinite reverse; }
+        .deco-circle.c3 { width:90px;height:90px;top:45%;right:18%;animation: circleFloat 12s ease-in-out infinite 2s; }
+        @keyframes circleFloat {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.15); opacity: 0.6; }
+        }
+
+
+        /* ========== 右侧登录区 ========== */
+        .right-panel {
+            width: 520px;
+            min-width: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            padding: 40px;
+            position: relative;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            animation: slideInRight 0.6s ease-out;
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .login-logo {
+            display: none; /* 桌面端隐藏，移动端显示 */
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo .logo-icon { font-size: 44px; animation: bounce 2s infinite ease-in-out; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+        .login-logo .logo-title { font-size: 22px; color: var(--text-color); font-weight: bold; }
+        .login-logo .logo-subtitle { font-size: 13px; color:#888; margin-top:4px; }
+
+        .card-title {
+            font-size: 26px;
+            color: var(--text-color);
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .card-subtitle {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        /* 标签切换 */
+        .tab-container {
+            display: flex;
+            background: var(--input-bg);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
+        }
+        .tab-btn {
+            flex: 1; padding: 11px; border:none; background:transparent;
+            border-radius: 10px; cursor:pointer; font-size: 14px; font-weight:bold;
+            color:#888; transition:all 0.3s ease; font-family:inherit;
+        }
+        .tab-btn.active {
+            background:white; color:var(--primary-color);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        /* 表单 */
+        .form-panel { display: none; }
+        .form-panel.active { display:block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+        .input-group { margin-bottom: 16px; }
+        .input-group label {
+            display:block; font-size:13px; color:#555; margin-bottom:6px; font-weight:bold;
+        }
+        .input-group input {
+            width:100%; padding:14px 16px; border:2px solid #e8e8e8; border-radius:12px;
+            font-size:15px; background:var(--input-bg); color:var(--text-color);
+            transition:all 0.3s ease; font-family:inherit; outline:none;
+        }
+        .input-group input:focus { border-color:var(--primary-color); box-shadow:0 0 0 4px rgba(6,214,160,0.12); }
+        .input-group input::placeholder { color:#bbb; }
+
+        .password-wrapper { position:relative; }
+        .toggle-password {
+            position:absolute; right:14px; top:50%; transform:translateY(-50%);
+            background:none;border:none; cursor:pointer; font-size:18px; color:#aaa; padding:4px;
+        }
+        .toggle-password:hover { color:#555; }
+
+        .options-row {
+            display:flex; justify-content:space-between; align-items:center;
+            margin-bottom:20px; font-size:13px;
+        }
+        .remember-me label { display:flex; align-items:center; gap:6px; cursor:pointer; color:#666; }
+        .remember-me input[type="checkbox"] { accent-color:var(--primary-color); width:16px;height:16px; }
+        .forgot-link { color:var(--primary-color); text-decoration:none; font-weight:bold; }
+        .forgot-link:hover { text-decoration:underline; }
+
+        .btn-login {
+            width:100%; padding:15px; border:none; border-radius:12px;
+            background:linear-gradient(135deg, var(--primary-color), #00c896);
+            color:white; font-size:17px; font-weight:bold; cursor:pointer;
+            transition:all 0.3s ease; font-family:inherit; letter-spacing:2px;
+            position:relative; overflow:hidden;
+        }
+        .btn-login:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 25px rgba(6,214,160,0.35); }
+        .btn-login:disabled { opacity:0.7; cursor:not-allowed; }
+        .btn-login.loading::after {
+            content:''; position:absolute; top:0;left:-100%;width:100%;height:100%;
+            background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation:shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { to{left:100%;} }
+
+        .auth-links { margin-top:18px; text-align:center; font-size:13px; color:#888; }
+        .auth-links a { color:var(--primary-color); text-decoration:none; font-weight:bold; }
+        .auth-links a:hover { text-decoration:underline; }
+
+        .message {
+            margin-top:16px; padding:12px 16px; border-radius:10px; font-size:13px; display:none; line-height:1.5;
+        }
+        .message.error { display:block; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+        .message.success { display:block; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+        .message.info { display:block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+
+        .footer-info {
+            margin-top:28px; padding-top:18px; border-top:1px solid #eee;
+            font-size:11px; color:#ccc; text-align:center; line-height:1.6;
+        }
+
+        /* ========== 加载遮罩 ========== */
+        .loading-overlay {
+            position:fixed; top:0;left:0;right:0;bottom:0; z-index:9999;
+            background:rgba(102,126,234,0.92);
+            display:none; align-items:center; justify-content:center; flex-direction:column; color:white;
+        }
+        .spinner {
+            width:48px;height:48px; border:4px solid rgba(255,255,255,0.3);
+            border-top-color:white; border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:16px;
+        }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 900px) {
+            .left-panel { display: none; }
+            .right-panel { width:100%; min-width:auto; }
+            .login-logo { display: block; }
+            body { background: linear-gradient(135deg, #667eea, #764ba2); }
+            .right-panel { background: transparent; }
+            .login-card {
+                background: white;
+                border-radius: 24px;
+                padding: 36px 28px;
+                box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+                animation: slideUp 0.5s ease-out;
+            }
+            @keyframes slideUp { from{opacity:0;transform:translateY(30px);} to{opacity:1;transform:translateY(0)}}
+            .card-title { text-align:center; }
+            .card-subtitle { text-align:center; }
+        }
+
+        @media (max-width: 480px) {
+            .right-panel { padding: 20px; }
+            .login-card { padding:28px 20px; }
+            .image-container { height:260px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧展示区 -->
+    <div class="left-panel">
+        <div class="deco-circle c1"></div>
+        <div class="deco-circle c2"></div>
+        <div class="deco-circle c3"></div>
+        
+        <div class="left-content">
+            <!-- 图片区域 -->
+            <div class="image-container" id="heroImage">
+                <!-- 默认显示插画，可替换为 img 标签 -->
+                <div class="default-illustration">
+                    <div class="emoji-stack">
+                        <span>🎪</span><br>
+                        <span>✨</span><br>
+                        <span>🎟️</span>
+                    </div>
+                </div>
+                <!-- 如需使用真实图片，替换上方 div 为：
+                <img src="../assets/login-banner.jpg" alt="登录配图">
+                -->
+            </div>
+            
+            <div class="left-text">
+                <h1>超级兑换券乐园</h1>
+                <p>XiaoAn System · Cloud Edition</p>
+                <span class="highlight">🌟 数据云端同步，随时随地访问</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧登录区 -->
+    <div class="right-panel">
+        <div class="login-card">
+            <!-- 移动端Logo（桌面端隐藏）-->
+            <div class="login-logo">
+                <div class="logo-icon">🎪</div>
+                <div class="logo-title">超级兑换券乐园</div>
+                <div class="logo-subtitle">XiaoAn System v2.0</div>
+            </div>
+
+            <div class="card-title">欢迎回来 👋</div>
+            <div class="card-subtitle">请登录你的账户以继续</div>
+
+            <!-- 切换标签 -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('email')">👤 用户名登录</button>
+                <button class="tab-btn" onclick="switchTab('id')">🔑 用户ID登录</button>
+            </div>
+
+            <!-- 用户名密码表单 -->
+            <div class="form-panel active" id="emailPanel">
+                <div class="input-group">
+                    <label>用户名</label>
+                    <input type="text" id="emailInput" placeholder="请输入用户名" autocomplete="username">
+                </div>
+                <div class="input-group password-wrapper">
+                    <label>密码</label>
+                    <input type="password" id="passwordInput" placeholder="请输入密码" autocomplete="current-password">
+                    <button type="button" class="toggle-password" onclick="togglePassword('passwordInput', this)">👁️</button>
+                </div>
+                <div class="options-row">
+                    <div class="remember-me">
+                        <input type="checkbox" id="rememberMe" checked>
+                        <label for="rememberMe">记住登录状态</label>
+                    </div>
+                    <a href="#" class="forgot-link" onclick="alert('忘记密码请联系管理员重置');return false;">忘记密码？</a>
+                </div>
+                <button class="btn-login" id="emailLoginBtn" onclick="emailLogin()">🚀 登 录</button>
+                <div class="auth-links">
+                    没有账号？请联系管理员注册
+                </div>
+            </div>
+
+            <!-- 用户ID表单 -->
+            <div class="form-panel" id="idPanel">
+                <div class="input-group">
+                    <label>User ID</label>
+                    <input type="text" id="userIdInput" placeholder="输入你的用户ID（UUID格式）">
+                </div>
+                <p style="font-size:12px;color:#999;margin-bottom:18px;line-height:1.6;background:#f8fafc;padding:12px;border-radius:10px;border:1px dashed #ddd;">
+                    💡 使用用户ID直接进入，无需邮箱验证。<br>
+                    你的ID可在迁移工具或 localStorage 中查看。
+                </p>
+                <button class="btn-login" onclick="userIdLogin()">🔗 进入系统</button>
+            </div>
+
+            <!-- 消息提示 -->
+            <div class="message" id="msgBox"></div>
+
+            <!-- 底部信息 -->
+            <div class="footer-info">
+                数据存储于 Supabase 云端<br>
+                <a href="admin.html" style="color:#aaa;text-decoration:none;font-size:10px;">管理员入口</a><br>
+                Powered by XiaoAn System
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>正在连接服务器...</div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc';
+        let sb = null;
+
+        // ========== 初始化 ==========
+        window.addEventListener('DOMContentLoaded', async () => {
+            showLoading(true, '正在初始化...');
+
+            if (typeof window.supabase === 'undefined') {
+                showMessage('error', '❌ SDK 加载失败，请检查网络');
+                showLoading(false);
+                return;
+            }
+
+            sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            const savedUserId = sessionStorage.getItem('xiaoan_user_id') ||
+                                localStorage.getItem('xiaoan_user_id');
+            if (savedUserId) document.getElementById('userIdInput').value = savedUserId;
+
+            try {
+                await sb.from('products').select('count', { count: 'exact', head: true });
+                showMessage('info', '✅ 已连接到云端服务器');
+            } catch(e) {
+                showMessage('error', '⚠️ 连接失败：' + e.message);
+            }
+            showLoading(false);
+        });
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            if (tabName === 'email') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('emailPanel').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('idPanel').classList.add('active');
+            }
+            hideMessage();
+        }
+
+        // ========== 用户名登录（Supabase Auth 用邮箱字段存用户名） ==========
+        async function emailLogin() {
+            const username = document.getElementById('emailInput').value.trim();
+            const pwd = document.getElementById('passwordInput').value;
+            const btn = document.getElementById('emailLoginBtn');
+
+            if (!username || !pwd) { showMessage('error', '请填写完整的用户名和密码'); return; }
+
+            // 拼接为 @system.local 邮箱格式（与 Supabase Auth 中存储的格式一致）
+            const email = username.includes('@') ? username : username + '@system.local';
+
+            btn.disabled = true; btn.classList.add('loading'); btn.textContent = '⏳ 登录中...';
+
+            try {
+                const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
+                if (error) throw error;
+
+                saveUserInfo(data.user.id, data.user.email);
+                showMessage('success', `🎉 登录成功！正在跳转...`);
+                setTimeout(() => redirectToMain(data.user.id), 1200);
+
+            } catch(err) {
+                let errMsg = err.message || '未知错误';
+                if (errMsg.includes('Invalid')) errMsg = '用户名或密码错误 ❌';
+                else if (errMsg.includes('Email not confirmed')) errMsg = '账号未激活，请联系管理员 📧';
+                showMessage('error', errMsg);
+                btn.disabled=false; btn.classList.remove('loading'); btn.textContent='🚀 登 录';
+            }
+        }
+
+        // ========== 用户ID登录 ==========
+        async function userIdLogin() {
+            const userId = document.getElementById('userIdInput').value.trim();
+            if (!userId) { showMessage('error', '请输入用户ID'); return; }
+            if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+                showMessage('error', 'ID 格式不正确，应为 UUID\n例如：88cb2b03-0c6f-4778-a49b-01bed8a20426'); return;
+            }
+
+            showMessage('info', '🔍 正在查找用户数据...');
+            try {
+                const { data, error } = await sb.from('system_config')
+                    .select('user_id').eq('user_id', userId).single();
+
+                if (error && error.code === 'PGRST116') {
+                    showMessage('success', '✅ 新用户，正在进入...');
+                    saveUserInfo(userId, null);
+                    setTimeout(() => redirectToMain(userId), 800); return;
+                }
+                if (error) throw error;
+
+                showMessage('success', '🎉 验证通过！正在跳转...');
+                saveUserInfo(userId, null);
+                setTimeout(() => redirectToMain(userId), 800);
+            } catch(err) {
+                showMessage('error', '查询失败：' + err.message);
+            }
+        }
+
+        function saveUserInfo(userId, email) {
+            sessionStorage.setItem('xiaoan_user_id', userId);
+            localStorage.setItem('xiaoan_user_id', userId);
+            if (document.getElementById('rememberMe').checked) {
+                localStorage.setItem('xiaoan_login_email', email || '');
+                localStorage.setItem('xiaoan_login_time', new Date().toISOString());
+            }
+        }
+
+        function redirectToMain(userId) {
+            window.location.href = '../index.html?user=' + encodeURIComponent(userId);
+        }
+
+        // 注册已关闭，需联系管理员
+        function showRegister() {
+            alert('注册功能已关闭\n\n如需注册新账号，请联系管理员。\n\n管理员会为你创建账户并提供用户名。');
+        }
+
+        function showMessage(type, text) {
+            const el = document.getElementById('msgBox');
+            el.className = 'message ' + type;
+            el.textContent = text;
+        }
+        function hideMessage() { document.getElementById('msgBox').className = 'message'; }
+
+        function showLoading(show, text='') {
+            const el = document.getElementById('loadingOverlay');
+            el.style.display = show ? 'flex' : 'none';
+            if(el.querySelector('div:last-child')) el.querySelector('div:last-child').textContent = text||'正在连接服务器...';
+        }
+
+        function togglePassword(inputId, btn) {
+            const inp = document.getElementById(inputId);
+            if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+            else{inp.type='password';btn.textContent='👁️';}
+        }
+    </script>
+</body>
+</html>
