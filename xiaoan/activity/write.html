@@ -815,7 +815,7 @@
                 icon: '⏱️',
                 title: '时间竞速',
                 difficulty: '挑战',
-                desc: '在不同时间段完成所有每日任务，奖励随时间变化！<br><small style="opacity:0.7;">⏰ 18点前：500兑换券<br>⏰ 19点前：400兑换券<br>⏰ 20点前：250兑换券<br>⏰ 21点前：100兑换券<br>⏰ 22点前：-300兑换券</small>',
+                desc: '在不同时间段完成所有每日任务（含数学单元卷），奖励随时间变化！<br><small style="opacity:0.7;">⏰ 18点前：500兑换券<br>⏰ 19点前：400兑换券<br>⏰ 20点前：250兑换券<br>⏰ 21点前：100兑换券<br>⏰ 22点前：-300兑换券</small>',
                 reward: null,
                 timeLimit: null,
                 hasTimeCondition: false,
@@ -1072,7 +1072,13 @@
                     clearInterval(rollInterval);
                     
                     // 根据概率确定结果（排除已完成的）
-                    const result = getRandomDiceResult();
+                    let result = getRandomDiceResult();
+                    
+                    // 首次抽取必定为5（校园时光）
+                    if (!todayData.completedTasks || todayData.completedTasks.length === 0) {
+                        result = 5;
+                        console.log('[write] 首次抽取，强制结果=5');
+                    }
                     
                     if (result === null) {
                         showToast('所有任务都已抽取完毕！', 'warning');
