@@ -13,7 +13,7 @@
         }
 
         body {
-            background: url('write.png') center/cover no-repeat fixed;
+            background: linear-gradient(135deg, #1a4a3a 0%, #0d2818 50%, #1a3d2e 100%);
             color: #fff;
             min-height: 100vh;
             padding: 20px;
@@ -843,6 +843,26 @@
 
         // ===== 初始化 =====
         function init() {
+            // 背景图片加载检测：10秒超时则保持绿色渐变默认背景
+            const bgImage = new Image();
+            const bgTimeout = setTimeout(() => {
+                console.log('[write] 背景图片加载超时(10s)，使用默认绿色渐变背景');
+            }, 10000);
+            bgImage.onload = () => {
+                clearTimeout(bgTimeout);
+                document.body.style.backgroundImage = "url('write.png')";
+                document.body.style.backgroundPosition = 'center';
+                document.body.style.backgroundSize = 'cover';
+                document.body.style.backgroundRepeat = 'no-repeat';
+                document.body.style.backgroundAttachment = 'fixed';
+                console.log('[write] 背景图片加载成功');
+            };
+            bgImage.onerror = () => {
+                clearTimeout(bgTimeout);
+                console.warn('[write] 背景图片加载失败，使用默认绿色渐变背景');
+            };
+            bgImage.src = 'write.png';
+
             // 尝试自动播放背景音乐
             const bgm = document.getElementById('bgm');
             if (bgm) {
