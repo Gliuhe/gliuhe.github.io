@@ -458,6 +458,10 @@
             background: linear-gradient(135deg, #e53e3e, #c53030);
         }
 
+        .activity-nav-item.write .nav-icon {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+
         .nav-label {
             font-size: 0.85rem;
             font-weight: bold;
@@ -568,6 +572,10 @@
 
         .activity-detail.jisuan .detail-bg::before {
             background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jisuan.png');
+        }
+
+        .activity-detail.write .detail-bg::before {
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/write.png');
         }
 
 
@@ -1017,6 +1025,11 @@
                         <div class="nav-icon">🎲</div>
                         <div class="nav-label">计算</div>
                         <div class="nav-status limited">限时</div>
+                    </div>
+                    <div class="activity-nav-item write" data-activity="write">
+                        <div class="nav-icon">✍️</div>
+                        <div class="nav-label">练字</div>
+                        <div class="nav-status hot">热门</div>
                     </div>
                 </div>
 
@@ -1628,6 +1641,18 @@
                 disabled: false,
                 image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jisuan.png',
                 bgColor: '#e53e3e'
+            },
+            'write': {
+                icon: '🖋️',
+                title: '命运之骰：任务大作战',
+                status: 'limited',
+                statusText: '热门活动 进行中',
+                desc: '每日掷骰，接受练字任务的命运挑战！6种独特任务各不相同，三连骰抽取、时间竞速等丰富玩法等你体验~每个任务仅会抽取一次，全部完成后将不再可抽取。',
+                rewardsHint: '可能获得的奖励：🎫(兑换) 🎫(纪行) 🎲 💎',
+                url: '/xiaoan/activity/write.html',
+                disabled: false,
+                image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/write.png',
+                bgColor: '#38a169'
             }
         };
 
