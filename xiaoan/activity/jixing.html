@@ -35,7 +35,7 @@
             background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+            background-attachment: scroll;
             z-index: -2;
         }
 
@@ -123,12 +123,6 @@
         .event-icon {
             font-size: 5rem;
             margin-bottom: 15px;
-            animation: iconFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes iconFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
         }
 
         .event-title {
@@ -164,9 +158,9 @@
 
         /* 进度区域 */
         .progress-section {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 25px;
             padding: 30px;
             margin-bottom: 40px;
@@ -217,22 +211,6 @@
             position: relative;
         }
 
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
         /* 日期格子 */
         .days-grid {
             display: grid;
@@ -270,12 +248,6 @@
         .day-cell.today {
             border-color: #81C784;
             box-shadow: 0 0 15px rgba(129, 199, 132, 0.5);
-            animation: todayPulse 2s infinite;
-        }
-
-        @keyframes todayPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(129, 199, 132, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(129, 199, 132, 0.8); }
         }
 
         .day-number {
@@ -298,9 +270,9 @@
 
         /* 纪行券显示 */
         .currency-section {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 20px;
             padding: 25px;
             margin-bottom: 30px;
@@ -318,12 +290,6 @@
 
         .currency-icon {
             font-size: 3rem;
-            animation: coinRotate 3s ease-in-out infinite;
-        }
-
-        @keyframes coinRotate {
-            0%, 100% { transform: rotateY(0deg); }
-            50% { transform: rotateY(180deg); }
         }
 
         .currency-label {
@@ -346,9 +312,9 @@
 
         /* 纪行商店 */
         .shop-section {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-radius: 25px;
             padding: 30px;
             margin-bottom: 40px;
@@ -514,9 +480,9 @@
 
         /* 规则说明 */
         .rules-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-radius: 20px;
             padding: 25px;
             border: 2px solid rgba(255, 255, 255, 0.2);
@@ -738,55 +704,6 @@
             background: #d0d0d0;
         }
 
-        /* 新手礼包样式 */
-        .gift-section {
-            margin-top: 20px;
-        }
-
-        .gift-content {
-            background: linear-gradient(135deg, rgba(255, 209, 102, 0.3), rgba(255, 152, 0, 0.2));
-            border: 2px solid #FFD700;
-            border-radius: 15px;
-            padding: 18px 22px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .gift-content.claimed {
-            background: linear-gradient(135deg, rgba(200, 200, 200, 0.3), rgba(150, 150, 150, 0.2));
-            border-color: #999;
-            box-shadow: none;
-            opacity: 0.7;
-        }
-
-        .gift-icon {
-            font-size: 2.5rem;
-            animation: iconFloat 2s ease-in-out infinite;
-        }
-
-        .gift-info {
-            flex: 1;
-        }
-
-        .gift-title {
-            color: white;
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .gift-desc {
-            color: #FFD700;
-            font-size: 1rem;
-            font-weight: bold;
-        }
-
-        .gift-content.claimed .gift-desc {
-            color: #aaa;
-        }
     </style>
 </head>
 <body>
@@ -832,20 +749,7 @@
                 <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
             <p class="currency-tip">每日完成"每日任务奖励"可获得1张纪行券</p>
-            
-            <!-- 新手礼包 -->
-            <div class="gift-section" id="giftSection">
-                <div class="gift-content">
-                    <div class="gift-icon">🎁</div>
-                    <div class="gift-info">
-                        <h3 class="gift-title">新手礼包</h3>
-                        <p class="gift-desc">纪行券 × 3</p>
-                    </div>
-                    <button class="btn btn-reward" id="claimGiftBtn" onclick="claimGift()">立即领取</button>
-                </div>
-            </div>
-
-        <!-- 纪行商店 -->
+        </div>
         <div class="shop-section">
             <h2 class="shop-title">🏪 纪行商店</h2>
             <p class="shop-desc">使用纪行券兑换实物奖品和虚拟奖励</p>
@@ -857,8 +761,8 @@
                         <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward1_jixing.png" alt="奖品1">
                     </div>
                     <div class="item-info">
-                        <h3 class="item-name">Klee 联动立牌 【赠吧唧及镭射票】</h3>
-                        <p class="item-desc">Klee 联动立牌 赠送对应角色吧唧及角色镭射票</p>
+                        <h3 class="item-name">Klee 联动套装</h3>
+                        <p class="item-desc">Klee 鲨鱼头套+立牌+夜光徽章+纪念票+2个弹弹乐</p>
                         <div class="item-price">
                             <span class="price-icon">🎫</span>
                             <span class="price-amount">15</span>
@@ -873,8 +777,8 @@
                         <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward2_jixing.png" alt="奖品2">
                     </div>
                     <div class="item-info">
-                        <h3 class="item-name">角色镭射票 【赠对应吧唧】</h3>
-                        <p class="item-desc">任意角色镭射票，赠送对应角色吧唧</p>
+                        <h3 class="item-name">透明展示盒，带灯</h3>
+                        <p class="item-desc">中等大小的透明展示盒，带灯</p>
                         <div class="item-price">
                             <span class="price-icon">🎫</span>
                             <span class="price-amount">15</span>
@@ -889,8 +793,9 @@
                         <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward3_jixing.png" alt="奖品3">
                     </div>
                     <div class="item-info">
-                        <h3 class="item-name">Klee 联动鲨鱼头套（小）</h3>
-                        <p class="item-desc">14*12(cm) 适合给小手办佩戴，你不可以佩戴！</p>
+                        <h3 class="item-name">Klee 联动随机2件零食（不含周边，可指定）</h3>
+                        <p class="item-desc">包含：草莓爆米花味/红茶黑巧味/黄油饼干味/浓郁黑巧味...
+                        </p>
                         <div class="item-price">
                             <span class="price-icon">🎫</span>
                             <span class="price-amount">15</span>
@@ -993,7 +898,6 @@
         const CURRENCY_KEY = 'jixing_muchun_currency';
         const BOUGHT_KEY = 'jixing_muchun_bought';
         const INIT_KEY = 'jixing_muchun_initialized';
-        const GIFT_CLAIMED_KEY = 'jixing_muchun_gift_claimed';
         const TOTAL_DAYS = 18;
         const PRICE_PER_ITEM = 15;
 
@@ -1371,7 +1275,7 @@
             const colors = ['#4CAF50', '#66BB6A', '#81C784', '#a8e6cf', '#c8e6c9'];
             const container = document.getElementById('completeAnimation');
 
-            for (let i = 0; i < 80; i++) {
+            for (let i = 0; i < 30; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
                 confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
@@ -1394,44 +1298,6 @@
             }, 2000);
         }
 
-        // 领取新手礼包
-        function claimGift() {
-            if (localStorage.getItem(GIFT_CLAIMED_KEY) === 'true') {
-                alert('您已经领取过新手礼包了！');
-                return;
-            }
-
-            // 发放3张纪行券
-            const currentCurrency = getJixingCurrency();
-            saveJixingCurrency(currentCurrency + 3);
-
-            // 标记已领取
-            localStorage.setItem(GIFT_CLAIMED_KEY, 'true');
-
-            // 更新界面
-            updateCurrencyDisplay();
-            updateGiftSection();
-
-            showCompleteAnimation('领取成功！获得 3 张纪行券！');
-        }
-
-        // 更新礼包显示状态
-        function updateGiftSection() {
-            const section = document.getElementById('giftSection');
-            const btn = document.getElementById('claimGiftBtn');
-            const claimed = localStorage.getItem(GIFT_CLAIMED_KEY) === 'true';
-
-            if (claimed) {
-                section.querySelector('.gift-content').classList.add('claimed');
-                btn.disabled = true;
-                btn.textContent = '✓ 已领取';
-                btn.style.background = '#999';
-            } else {
-                btn.disabled = false;
-                btn.textContent = '立即领取';
-            }
-        }
-
         // 初始化
         function init() {
             // 初始化默认进度（首次访问）
@@ -1440,7 +1306,6 @@
             renderProgress();
             updateCurrencyDisplay();
             updateShopItems();
-            updateGiftSection();
         }
 
         init();
