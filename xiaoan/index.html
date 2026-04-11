@@ -3384,8 +3384,8 @@
             const uid = window.__cloudUserId;
             if (!sb || !uid) { showStatus('未连接云端', "error"); return; }
 
-            // 从缓存找目标罚款
-            const target = (_finesCache || []).find(f => f.id === selectedId);
+            // 从缓存找目标罚款（注意：selectedId 是字符串，需要类型匹配）
+            const target = (_finesCache || []).find(f => String(f.id) === String(selectedId));
             if (!target) { showStatus('罚款项不存在！', "error"); return; }
 
             const remaining = target.remaining || 0;
@@ -4400,12 +4400,14 @@
             // 4. 已登录：显示用户信息栏
             userBar.style.display = 'flex';
             
-            const shortId = userId.substring(0, 8) + '...';
-            document.getElementById('userName').textContent = shortId;
+            // 优先从 localStorage 读取用户名，否则显示 UUID 前8位
+            const savedUsername = localStorage.getItem('xiaoan_username');
+            const displayName = savedUsername || (userId.substring(0, 8) + '...');
+            document.getElementById('userName').textContent = displayName;
             document.getElementById('userAvatar').textContent = 
-                (userId.substring(0,1)).toUpperCase();
+                (savedUsername ? savedUsername.substring(0,1) : userId.substring(0,1)).toUpperCase();
             // 尝试加载用户头像
-            loadUserAvatar();
+            loadUserAvatar(userId);
             document.getElementById('userStatus').textContent = '☁️ 连接中...';
 
             // 5. 直接初始化云端连接（不再依赖 CloudStore 类的 init 方法）
@@ -4454,12 +4456,14 @@
                         }
                     }
 
-                    // 获取用户名
+                    // 尝试从 auth 获取用户名（如果使用 anon key），否则保持 localStorage 中的用户名
                     sbClient.auth.getUser().then(({ data: authUser }) => {
                         if (authUser?.user?.email) {
                             let name = authUser.user.email;
                             if (name.endsWith('@system.local')) name = name.replace('@system.local', '');
                             document.getElementById('userName').textContent = name;
+                            // 同时更新 localStorage
+                            localStorage.setItem('xiaoan_username', name);
                         }
                     }).catch(() => {});
 
@@ -4476,6 +4480,10 @@
                     // 用最新数据刷新UI（货币、银行等）
                     updateUI();
                     loadUserAvatar();
+                    
+                    // 更新罚款横幅（云连接成功后）
+                    updateFineBanner();
+                    
                     console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
                 }).catch(err => {
                     console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
@@ -5384,16 +5392,38 @@
         }
 
         // 加载已有头像（按用户区分缓存）
-        async function loadUserAvatar() {
+        async function loadUserAvatar(userIdParam) {
             const cached = localStorage.getItem(_avatarCacheKey());
             if (cached) { renderAvatar(cached); return; }
 
-            const sbClient = window.__cloudClient;
+            const sbClient = window.__cloudClient || window.__sbClient;
             if (!sbClient) return;
+            
+            const userId = userIdParam || window.__cloudUserId || localStorage.getItem('xiaoan_user_id');
+            if (!userId) return;
+            
             try {
+                // 方法1：尝试从 Storage 直接列出用户目录下的头像文件
+                const { data: files, error: listError } = await sbClient.storage.from('avatars').list(userId);
+                if (!listError && files && files.length > 0) {
+                    const avatarFile = files.find(f => f.name.startsWith('avatar'));
+                    if (avatarFile) {
+                        const { data } = sbClient.storage.from('avatars').getPublicUrl(`${userId}/${avatarFile.name}`);
+                        if (data?.publicUrl) {
+                            renderAvatar(data.publicUrl);
+                            localStorage.setItem(_avatarCacheKey(), data.publicUrl);
+                            return;
+                        }
+                    }
+                }
+                
+                // 方法2：备选方案，尝试从 auth.getUser 获取（如果使用 anon key）
                 const { data: { user } } = await sbClient.auth.getUser();
                 const url = user?.user_metadata?.avatar_url;
-                if (url) { renderAvatar(url); localStorage.setItem(_avatarCacheKey(), url); }
+                if (url) { 
+                    renderAvatar(url); 
+                    localStorage.setItem(_avatarCacheKey(), url); 
+                }
             } catch(e) { console.warn('[Avatar] 无法加载头像:', e.message); }
         }
 
