@@ -766,7 +766,7 @@
             <!-- 货币显示 -->
             <div class="currency-display-container" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
                 <div class="today-summary" style="flex: 1; min-width: 200px;">
-                    当前高级抽奖券: <span id="premiumAmount">2</span>
+                    当前高级抽奖券: <span id="premiumAmount">0</span>
                 </div>
                 <div class="today-summary" style="flex: 1; min-width: 200px;">
                     当前兑换券: <span id="voucherAmount">0</span>
@@ -822,6 +822,11 @@
         <div id="management" class="tab-content">
             <h2>高级设置</h2>
             <button class="btn pulse" id="addPrizeBtn">➕ 添加新奖品</button>
+            
+            <!-- 奖池筛选器 -->
+            <div id="managePoolFilter" style="margin: 20px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <!-- 奖池筛选按钮将通过JavaScript动态添加 -->
+            </div>
             
             <div class="prizes-grid" id="managePrizesContainer">
                 <!-- 管理奖品将通过JavaScript动态添加 -->
@@ -951,6 +956,9 @@
 
         // 当前选中的奖池(用户可主动降级)
         let selectedPool = null;
+        
+        // 管理页奖池筛选状态（"all"表示全部）
+        let managePoolFilter = "all";
 
         // 初始化奖池选择器
         function initPoolSelector() {
@@ -1241,7 +1249,7 @@
         function loadData() {
             prizes = localStorage.getItem("advancedPrizes") ? JSON.parse(localStorage.getItem("advancedPrizes")) : defaultPrizes;
             records = localStorage.getItem("advancedRecords") ? JSON.parse(localStorage.getItem("advancedRecords")) : [];
-            currencyAmount = localStorage.getItem("premium") ? parseInt(localStorage.getItem("premium")) : 85;
+            currencyAmount = parseInt(localStorage.getItem("premium")) || 0;
             counterA = localStorage.getItem("advancedCounterA") ? parseInt(localStorage.getItem("advancedCounterA")) : 0;
             counterB = localStorage.getItem("advancedCounterB") ? parseInt(localStorage.getItem("advancedCounterB")) : 0;
 
@@ -1321,16 +1329,105 @@
             });
         }
         
+        // 初始化管理页奖池筛选器
+        function initManagePoolFilter() {
+            const filterContainer = document.getElementById('managePoolFilter');
+            if (!filterContainer) return;
+            
+            filterContainer.innerHTML = '';
+            
+            // 统计各奖池奖品数量
+            const poolCounts = {
+                all: prizes.length,
+                normal: prizes.filter(p => (p.pool || "normal") === "normal").length,
+                gold: prizes.filter(p => p.pool === "gold").length,
+                diamond: prizes.filter(p => p.pool === "diamond").length
+            };
+            
+            // 创建"全部"按钮
+            const allBtn = document.createElement('button');
+            allBtn.className = `pool-filter-btn ${managePoolFilter === 'all' ? 'selected' : ''}`;
+            allBtn.dataset.pool = 'all';
+            allBtn.style.cssText = `
+                padding: 12px 20px;
+                border-radius: 15px;
+                border: 2px solid #9c27b0;
+                background: ${managePoolFilter === 'all' ? 'linear-gradient(135deg, #9c27b0, #673ab7)' : 'white'};
+                color: ${managePoolFilter === 'all' ? 'white' : '#9c27b0'};
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+                min-width: 120px;
+            `;
+            allBtn.innerHTML = `📋 全部<br><span style="font-size: 0.85rem; opacity: 0.9;">(${poolCounts.all}个)</span>`;
+            allBtn.addEventListener('click', () => {
+                managePoolFilter = 'all';
+                initManagePoolFilter();
+                renderManagePrizes();
+            });
+            filterContainer.appendChild(allBtn);
+            
+            // 创建各奖池筛选按钮
+            Object.entries(POOL_CONFIG).forEach(([poolType, config]) => {
+                const btn = document.createElement('button');
+                btn.className = `pool-filter-btn ${managePoolFilter === poolType ? 'selected' : ''}`;
+                btn.dataset.pool = poolType;
+                btn.style.cssText = `
+                    padding: 12px 20px;
+                    border-radius: 15px;
+                    border: 2px solid ${config.color};
+                    background: ${managePoolFilter === poolType ? `linear-gradient(135deg, ${config.color}, ${config.color}88)` : 'white'};
+                    color: ${managePoolFilter === poolType ? 'white' : config.color};
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    min-width: 120px;
+                `;
+                
+                const icon = poolType === 'diamond' ? '💎' : poolType === 'gold' ? '🥇' : '🥉';
+                btn.innerHTML = `${icon} ${config.name}<br><span style="font-size: 0.85rem; opacity: 0.9;">(${poolCounts[poolType]}个)</span>`;
+                btn.addEventListener('click', () => {
+                    managePoolFilter = poolType;
+                    initManagePoolFilter();
+                    renderManagePrizes();
+                });
+                filterContainer.appendChild(btn);
+            });
+        }
+
         // 渲染管理奖品
         function renderManagePrizes() {
             managePrizesContainer.innerHTML = "";
+            
+            // 初始化筛选器
+            initManagePoolFilter();
 
-            prizes.forEach(prize => {
+            // 根据筛选条件过滤奖品
+            let filteredPrizes = prizes;
+            if (managePoolFilter !== 'all') {
+                filteredPrizes = prizes.filter(prize => (prize.pool || "normal") === managePoolFilter);
+            }
+
+            if (filteredPrizes.length === 0) {
+                managePrizesContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px; grid-column: 1/-1;">暂无奖品，请添加</p>';
+                return;
+            }
+
+            filteredPrizes.forEach(prize => {
+                const prizePool = prize.pool || "normal";
+                const poolConfig = POOL_CONFIG[prizePool];
+                
                 const prizeCard = document.createElement("div");
                 prizeCard.classList.add("prize-card");
+                prizeCard.style.borderLeftColor = poolConfig.color;
                 prizeCard.innerHTML = `
                     <div class="prize-icon">${prize.icon || "🎁"}</div>
                     <div class="prize-name">${prize.name}</div>
+                    <div style="margin: 5px 0;">
+                        <span style="background: ${poolConfig.color}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.85rem;">
+                            ${poolConfig.name}
+                        </span>
+                    </div>
                     <div class="prize-weight">权重: ${prize.weight}</div>
                     <div class="prize-stock">库存: ${prize.stock === -1 ? "无限" : prize.stock}</div>
                     <div class="prize-description">${prize.description || ""}</div>
