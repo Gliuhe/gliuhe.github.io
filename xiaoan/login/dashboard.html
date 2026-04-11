@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员控制台 - 用户数据面板</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --admin-red: #ef4444;
+            --admin-dark: #1e1b4b;
+            --admin-purple: #312e81;
+            --green: #06d6a0;
+            --blue: #3b82f6;
+            --orange: #f59e0b;
+            --pink: #ec4899;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+        }
+        body { font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* ===== 顶部导航栏 ===== */
+        .navbar {
+            background: linear-gradient(135deg, var(--admin-dark), var(--admin-purple));
+            color: white; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+        }
+        .navbar-brand { font-size: 18px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        .navbar-brand span { opacity: 0.7; font-size: 13px; font-weight: normal; }
+        .navbar-actions { display: flex; gap: 10px; align-items: center; }
+        .btn-nav {
+            padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer;
+            font-size: 13px; font-weight: 600; transition: all 0.2s; text-decoration: none;
+            background: rgba(255,255,255,0.15); color: white; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-nav:hover { background: rgba(255,255,255,0.25); transform: translateY(-1px); }
+        .btn-nav.btn-logout { background: rgba(239,68,68,0.3); }
+        .btn-nav.btn-logout:hover { background: rgba(239,68,68,0.5); }
+
+        /* ===== 统计卡片 ===== */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px; padding: 24px; max-width: 1400px; margin: 0 auto;
+        }
+        .stat-card {
+            background: var(--card-bg); border-radius: 14px; padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06); position: relative; overflow: hidden;
+        }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        }
+        .stat-card.red::before { background: var(--admin-red); }
+        .stat-card.green::before { background: var(--green); }
+        .stat-card.blue::before { background: var(--blue); }
+        .stat-card.orange::before { background: var(--orange); }
+        .stat-card.pink::before { background: var(--pink); }
+        .stat-icon {
+            width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center;
+            justify-content: center; font-size: 20px; margin-bottom: 12px;
+        }
+        .red .stat-icon { background: #fef2f2; }
+        .green .stat-icon { background: #ecfdf5; }
+        .blue .stat-icon { background: #eff6ff; }
+        .orange .stat-icon { background: #fffbeb; }
+        .pink .stat-icon { background: #fdf2f8; }
+        .stat-value { font-size: 28px; font-weight: 800; line-height: 1.2; }
+        .stat-label { font-size: 13px; color: var(--text-light); margin-top: 4px; font-weight: 500; }
+
+        /* ===== 主内容区 ===== */
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 0 24px 32px; }
+
+        /* ===== 标签页 ===== */
+        .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--card-bg);
+                border-radius: 12px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+        .tab-btn {
+            padding: 10px 20px; border: none; border-radius: 9px; background: transparent;
+            cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-light);
+            transition: all 0.2s; font-family: inherit;
+        }
+        .tab-btn.active { background: var(--admin-dark); color: white; }
+        .tab-btn:hover:not(.active) { background: #f1f5f9; color: var(--text); }
+
+        .tab-panel { display: none; animation: fadeIn 0.25s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ===== 表格通用样式 ===== */
+        .data-table-container {
+            background: var(--card-bg); border-radius: 14px; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .data-table th {
+            background: #f8fafc; padding: 12px 14px; text-align: left; font-weight: 700;
+            color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border); white-space: nowrap;
+        }
+        .data-table td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .data-table tr:hover td { background: #fafbfc; }
+        .data-table tr:last-child td { border-bottom: none; }
+
+        /* 用户ID短格式 */
+        .user-id-short {
+            font-family: 'Courier New', monospace; font-size: 11px; background: #f1f5f9;
+            padding: 2px 8px; border-radius: 4px; color: #64748b; cursor: pointer;
+            user-select: all;
+        }
+        .user-id-short:hover { background: #e2e8f0; }
+
+        /* 状态标签 */
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+        }
+        .badge-green { background: #ecfdf5; color: #15803d; }
+        .badge-blue { background: #eff6ff; color: #1d4ed8; }
+        .badge-orange { background: #fffbeb; color: #b45309; }
+        .badge-red { background: #fef2f2; color: #dc2626; }
+        .badge-gray { background: #f1f5f9; color: #64748b; }
+
+        /* 货币标签 */
+        .currency-tag {
+            display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px;
+            border-radius: 6px; font-size: 12px; font-weight: 600; margin: 2px;
+        }
+        .cur-voucher { background: #dbeafe; color: #1e40af; }
+        cur-lottery { background: #fef3c7; color: #92400e; }
+        .cur-premium { background: #fce7f3; color: #be185d; }
+        .cur-bankTicket { background: #d1fae5; color: #047857; }
+
+        /* 搜索和筛选栏 */
+        .toolbar {
+            display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+        }
+        .search-input {
+            flex: 1; min-width: 220px; padding: 9px 14px; border: 1px solid var(--border);
+            border-radius: 9px; font-size: 13px; outline: none; transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .btn-sm {
+            padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+            font-size: 13px; font-weight: 600; transition: all 0.2s; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-primary { background: var(--blue); color: white; }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+
+        /* 详情展开区域 */
+        .detail-section {
+            margin-top: 8px; padding: 14px; background: #fafbfc; border-radius: 10px;
+            border-left: 3px solid var(--blue); display: none;
+        }
+        .detail-section.show { display: block; }
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .detail-item { }
+        .detail-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 3px; }
+        .detail-value { font-size: 15px; font-weight: 700; color: var(--text); }
+
+        /* 详情展开行 */
+        .detail-row td { padding: 0 !important; border-bottom: none !important; }
+
+        /* 加载状态 */
+        .loading-state {
+            text-align: center; padding: 60px 20px; color: var(--text-light);
+        }
+        .spinner { width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:var(--blue);
+                    border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 14px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        .empty-state { text-align: center; padding: 40px; color: var(--text-light); }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); padding: 16px; }
+            .main-content { padding: 0 12px 20px; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; }
+            .tab-btn { white-space: nowrap; padding: 8px 14px; font-size: 13px; }
+            .data-table { font-size: 12px; }
+            .data-table th, .data-table td { padding: 8px 10px; }
+            .navbar { padding: 12px 16px; }
+            .navbar-brand span { display: none; }
+        }
+        /* ===== 通知面板 ===== */
+        .notify-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .notify-card { background: var(--card-bg); border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .notify-history { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .notify-item { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size:13px; border-left:4px solid; background:#f8fafc; }
+        .notify-item.info { border-left-color:#3b82f6; }
+        .notify-item.success { border-left-color:#10b981; }
+        .notify-item.warning { border-left-color:#f59e0b; }
+        .notify-item.error { border-left-color:#ef4444; }
+        .notify-time { color:#94a3b8;font-size:11px;margin-top:4px; }
+        @media(max-width:768px){ .notify-container{grid-template-columns:1fr;} }
+
+    </style>
+</head>
+<body>
+
+<!-- 导航栏 -->
+<div class="navbar">
+    <div class="navbar-brand">🛡️ 管理员控制台 <span>/ User Data Dashboard</span></div>
+    <div class="navbar-actions">
+        <button class="btn-nav" onclick="refreshAllData()" title="刷新数据">🔄 刷新</button>
+        <a href="../index.html" class="btn-nav btn-logout" title="返回主页">🏠 返回主页</a>
+    </div>
+</div>
+
+<!-- 统计概览 -->
+<div class="stats-grid" id="statsGrid">
+    <div class="stat-card red"><div class="stat-icon">👥</div><div class="stat-value" id="statUsers">-</div><div class="stat-label">注册用户数</div></div>
+    <div class="stat-card green"><div class="stat-icon">💰</div><div class="stat-value" id="statTotalVoucher">-</div><div class="stat-label">总流通兑换券</div></div>
+    <div class="stat-card blue"><div class="stat-icon">🎰</div><div class="stat-value" id="statTotalLottery">-</div><div class="stat-label">总彩票数</div></div>
+    <div class="stat-card orange"><div class="stat-icon">⭐</div><div class="stat-value" id="statTotalPremium">-</div><div class="stat-label">总高级券</div></div>
+    <div class="stat-card pink"><div class="stat-icon">🏦</div><div class="stat-value" id="statBankTotal">-</div><div class="stat-label">银行总存款</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="statCheckins">-</div><div class="stat-label">总签到次数</div></div>
+    <div class="stat-card blue"><div class="stat-icon">🎁</div><div class="stat-value" id="statExchanges">-</div><div class="stat-label">总商品兑换</div></div>
+    <div class="stat-card orange"><div class="stat-icon">📋</div><div class="stat-value" id="statTasks">-</div><div class="stat-label">活跃任务</div></div>
+</div>
+
+<!-- 主内容 -->
+<div class="main-content">
+
+    <!-- 标签页 -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('users')">👤 用户列表</button>
+        <button class="tab-btn" onclick="switchTab('assets')">💰 资产明细</button>
+        <button class="tab-btn" onclick="switchTab('tasks')">✅ 任务/签到</button>
+        <button class="tab-btn" onclick="switchTab('bank')">🏦 银行数据</button>
+        <button class="tab-btn" onclick="switchTab('fines')">📝 罚款记录</button>
+        <button class="tab-btn" onclick="switchTab('jixing')">🗺️ 纪行进度</button>
+        <button class="tab-btn" onclick="switchTab('jisuan')">🧮 计算挑战</button>
+        <button class="tab-btn" onclick="switchTab('codes')">🎫 兑换码</button>
+        <button class="tab-btn" onclick="switchTab('notify')">📬 发送邮件</button>
+    </div>
+
+    <!-- 面板1：用户列表 -->
+    <div class="tab-panel active" id="panel-users">
+        <div class="toolbar">
+            <input type="text" class="search-input" placeholder="搜索用户ID..." id="searchUser"
+                   oninput="filterUserTable()">
+            <label style="font-size:13px;color:#64748b;display:flex;align-items:center;gap:5px;cursor:pointer;">
+                <input type="checkbox" id="activeOnly" onchange="filterUserTable()" checked> 仅活跃
+            </label>
+        </div>
+        <div class="data-table-container">
+            <table class="data-table" id="usersTable">
+                <thead><tr>
+                    <th>用户ID</th><th>兑换券</th><th>彩票</th><th>高级券</th><th>银行券</th>
+                    <th>银行存款</th><th>签到天数</th><th>连续签到</th><th>操作</th>
+                </tr></thead>
+                <tbody id="usersBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板2：资产明细 -->
+    <div class="tab-panel" id="panel-assets">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>货币类型</th><th>金额</th><th>最后更新</th>
+                </tr></thead>
+                <tbody id="assetsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板3：任务/签到 -->
+    <div class="tab-panel" id="panel-tasks">
+        <h3 style="margin-bottom:12px;font-size:16px;">签到数据</h3>
+        <div class="data-table-container" style="margin-bottom:20px;">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>最后签到</th><th>连续天数</th><th>总签到</th><th>周期签到</th>
+                </tr></thead>
+                <tbody id="checkinBody"></tbody>
+            </table>
+        </div>
+        <h3 style="margin-bottom:12px;font-size:16px;">活跃任务</h3>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>规则ID</th><th>状态</th><th>开始时间</th><th>结束时间</th><th>奖励</th>
+                </tr></thead>
+                <tbody id="tasksBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板4：银行数据 -->
+    <div class="tab-panel" id="panel-bank">
+        <h3 style="margin-bottom:12px;font-size:16px;">银行账户</h3>
+        <div class="data-table-container" style="margin-bottom:20px;">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>账户类型</th><th>余额</th><th>利率</th><th>锁定至</th>
+                </tr></thead>
+                <tbody id="bankAccountsBody"></tbody>
+            </table>
+        </div>
+        <h3 style="margin-bottom:12px;font-size:16px;">交易流水</h3>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>类型</th><th>账户</th><th>金额</th><th>描述</th><th>时间</th>
+                </tr></thead>
+                <tbody id="bankTransBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板7：罚款记录 -->
+    <div class="tab-panel" id="panel-fines">
+        <h3 style="margin-bottom:12px;">📝 新增罚款</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:14px;background:#fff8f0;border:2px solid #ffd166;border-radius:10px;">
+            <input type="text" id="fineTargetUserId" placeholder="目标用户ID" style="flex:1;min-width:140px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+            <input type="text" id="fineReason" placeholder="罚款原因" style="flex:1.5;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+            <input type="number" id="fineOriginalAmount" placeholder="金额（兑换券）" min="1" style="width:130px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+            <input type="date" id="fineDueDate" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+            <button onclick="createFine()" style="padding:8px 18px;background:#e11d48;color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">➕ 发布</button>
+        </div>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>原因</th><th>原金额</th><th>剩余</th><th>到期日</th>
+                    <th>已付</th><th>罚息</th><th>状态</th>
+                </tr></thead>
+                <tbody id="finesBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板8：纪行进度 -->
+    <div class="tab-panel" id="panel-jixing">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>已完成天数</th><th>货币</th><th>已初始化</th>
+                    <th>礼包领取</th><th>已购奖励</th><th>上次领取</th>
+                </tr></thead>
+                <tbody id="jixingBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板9：计算挑战 -->
+    <div class="tab-panel" id="panel-jisuan">
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>今日完成</th><th>分数</th><th>通过卡</th><th>历史记录数</th>
+                </tr></thead>
+                <tbody id="jisuanBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板10：兑换码管理 -->
+    <div class="tab-panel" id="panel-codes">
+        <div class="toolbar">
+            <p style="font-size:13px;color:#64748b;margin:0;">创建兑换码，用户可在背包页面输入兑换码获取奖励。</p>
+            <button class="btn-sm btn-primary" onclick="openAddCodeModal()">➕ 创建兑换码</button>
+        </div>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>兑换码</th><th>描述</th><th>奖励内容</th><th>状态</th><th>过期时间</th><th>使用时间</th><th>创建时间</th><th>操作</th>
+                </tr></thead>
+                <tbody id="codesBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板11：发送通知 -->
+    <div class="tab-panel" id="panel-notify">
+        <div class="notify-container">
+            <div class="notify-card">
+                <h3 style="margin-bottom:16px;">📬 发送邮件</h3>
+                <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
+                    邮件会实时推送到用户端邮箱（含附件奖励功能）。
+                </p>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">邮件内容</label>
+                <textarea id="notifyContent" rows="4" placeholder="输入邮件内容..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
+
+                <label style="display:block;font-size:13px;font-weight:600;margin-top:12px;margin-bottom:6px;">邮件类型</label>
+                <select id="notifyType" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;">
+                    <option value="info">ℹ️ 普通通知</option>
+                    <option value="success">✅ 奖励通知</option>
+                    <option value="warning">⚠️ 警告</option>
+                    <option value="error">❌ 重要/紧急</option>
+                </select>
+
+                <!-- ===== 附件奖励 ===== -->
+                <fieldset style="margin-top:14px;border:1px dashed #cbd5e1;border-radius:10px;padding:12px 14px;">
+                    <legend style="font-size:13px;font-weight:600;color:#3b82f6;">🎁 附件奖励（可选）</legend>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">奖励 1</label>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            <select id="mailAttType1" style="padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" onchange="toggleMailAttInput('1')">
+                                <option value="">无</option>
+                                <option value="voucher">兑换券</option>
+                                <option value="lottery">抽奖券</option>
+                                <option value="premium">高级抽奖券</option>
+                                <option value="jixing_muchun_currency">纪行券</option>
+                                <option value="item">实物奖励</option>
+                            </select>
+                            <input type="number" id="mailAttAmount1" placeholder="数量" min="0" style="width:70px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" />
+                            <input type="text" id="mailAttItem1" placeholder="物品名称" style="flex:1;min-width:120px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;display:none;" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display:block;font-size:12px;font-weight:600;margin-bottom:4px;">奖励 2</label>
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            <select id="mailAttType2" style="padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" onchange="toggleMailAttInput('2')">
+                                <option value="">无</option>
+                                <option value="voucher">兑换券</option>
+                                <option value="lottery">抽奖券</option>
+                                <option value="premium">高级抽奖券</option>
+                                <option value="jixing_muchun_currency">纪行券</option>
+                                <option value="item">实物奖励</option>
+                            </select>
+                            <input type="number" id="mailAttAmount2" placeholder="数量" min="0" style="width:70px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;" />
+                            <input type="text" id="mailAttItem2" placeholder="物品名称" style="flex:1;min-width:120px;padding:6px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;display:none;" />
+                        </div>
+                    </div>
+                </fieldset>
+
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#64748b;margin-top:12px;cursor:pointer;">
+                    <input type="checkbox" id="notifyBroadcast" checked> 全员广播
+                </label>
+                <input type="text" id="notifyTargetUser" placeholder="目标用户UUID（不填则广播）" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-top:6px;" />
+
+                <div style="margin-top:18px;display:flex;gap:10px;">
+                    <button class="btn-sm btn-primary" onclick="sendMail()" style="flex:1;padding:10px;font-size:15px;" id="sendNotifyBtn">📧 发送邮件</button>
+                </div>
+            </div>
+
+            <!-- 最近发送的邮件 -->
+            <div class="notify-history">
+                <h4 style="margin-bottom:10px;">📋 最近发送的邮件</h4>
+                <div id="notifyHistoryList" style="max-height:400px;overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc';
+let sb = null;
+let allData = {};
+
+// ===== 初始化 =====
+window.addEventListener('DOMContentLoaded', async () => {
+    if (typeof window.supabase === 'undefined') {
+        showError('SDK 未加载'); return;
+    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 验证管理员身份
+    const adminFlag = localStorage.getItem('xiaoan_is_admin');
+    if (adminFlag !== 'true') {
+        // 尝试用 session 验证
+        const { data: { user } } = await sb.auth.getUser();
+        if (!user || !user.email?.startsWith('admin@')) {
+            alert('未授权访问！请先登录管理员账户。');
+            location.href = 'admin.html';
+            return;
+        }
+    }
+
+    await refreshAllData();
+});
+
+// ===== 数据加载 =====
+async function refreshAllData() {
+    showLoading(true);
+    try {
+        // 用 Promise.allSettled 防止单个查询失败导致整体崩溃
+        const results = await Promise.allSettled([
+            sb.from('user_currencies').select('*'),
+            sb.from('bank_accounts').select('*'),
+            sb.from('checkin_data').select('*'),
+            sb.from('active_tasks').select('*'),
+            sb.from('fine_items').select('*'),
+            sb.from('jixing_progress').select('*'),
+            sb.from('jisuan_data').select('*'),
+            sb.from('bank_transactions').select('*'),
+            sb.from('exchange_codes').select('*')
+        ]);
+
+        // 安全提取结果
+        const get = (i) => results[i].status === 'fulfilled' ? results[i].value : { data: [], error: results[i].reason };
+
+        allData = { currencies: get(0), banks: get(1), checkins: get(2),
+                     tasks: get(3), fines: get(4), jixing: get(5), jisuan: get(6),
+                     bankTrans: get(7), codes: get(8) };
+
+        renderStats();
+        renderUsersTable();
+        renderAssetsTable();
+        renderCheckinTable(allData.tasks.data);
+        renderBankTable(allData.bankTrans.data);
+        renderFinesTable();
+        renderJixingTable();
+        renderJisuanTable();
+        renderCodesTable();
+
+        showLoading(false);
+    } catch(e) {
+        console.error('[Admin] 数据加载失败:', e);
+        showLoading(false);
+        showError('加载失败: ' + e.message);
+    }
+}
+
+// ===== 统计概览 =====
+function renderStats() {
+    const d = allData;
+
+    // 用户列表（从 currency 表去重）
+    const userIds = new Set((d.currencies.data || []).map(r => String(r.user_id)));
+    // 也加上其他表的用户
+    (d.banks.data||[]).forEach(r => userIds.add(String(r.user_id)));
+    (d.checkins.data||[]).forEach(r => userIds.add(String(r.user_id)));
+
+    // 标记有实际数据（非零资产或签到记录）的用户为"活跃"
+    const activeUsers = new Set();
+    (d.currencies.data||[]).forEach(r => { if (r.amount > 0) activeUsers.add(String(r.user_id)); });
+    (d.checkins.data||[]).forEach(c => { if ((c.total_checkins||0) > 0 || (c.streak_days||0) > 0) activeUsers.add(String(c.user_id)); });
+    window._activeUsers = activeUsers;
+
+    setStat('statUsers', `${userIds.size} (${activeUsers.size} 活跃)`);
+
+    // 货币汇总
+    const byType = {};
+    (d.currencies.data||[]).forEach(r => {
+        byType[r.currency_type] = (byType[r.currency_type]||0) + r.amount;
+    });
+    setStat('statTotalVoucher', byType['voucher']||0);
+    setStat('statTotalLottery', byType['lottery']||0);
+    setStat('statTotalPremium', byType['premium']||0);
+
+    // 银行存款汇总
+    let bankTotal = 0;
+    (d.banks.data||[]).forEach(a => { if(a.account_type==='savings') bankTotal += a.balance; });
+    setStat('statBankTotal', bankTotal);
+
+    // 签到汇总
+    let totalCheckins = 0;
+    (d.checkins.data||[]).forEach(c => { totalCheckins += c.total_checkins || 0; });
+    setStat('statCheckins', totalCheckins);
+
+    // 兑换码汇总
+    const codesData = d.codes?.data || [];
+    const totalCodes = codesData.length;
+    const redeemedCodes = codesData.filter(c => c.redeemed).length;
+    setStat('statExchanges', `${totalCodes} (${redeemedCodes} 已使用)`);
+}
+
+function setStat(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = typeof val === 'number' ? val.toLocaleString() : val;
+}
+
+// ===== 用户列表表格 =====
+function renderUsersTable() {
+    const d = allData;
+    // 汇聚每个用户的摘要数据
+    const users = {};
+
+    (d.currencies.data||[]).forEach(c => {
+        const uid = String(c.user_id);
+        if (!users[uid]) users[uid] = { uid, v:0,l:0,p:0,bt:0, bank:0, streak:0, totalCheckin:0 };
+        if (c.currency_type==='voucher') users[uid].v = c.amount;
+        if (c.currency_type==='lottery') users[uid].l = c.amount;
+        if (c.currency_type==='premium') users[uid].p = c.amount;
+        if (c.currency_type==='bankTicket') users[uid].bt = c.amount;
+    });
+
+    (d.banks.data||[]).forEach(b => {
+        const uid = String(b.user_id);
+        if (!users[uid]) users[uid] = { uid, v:0,l:0,p:0,bt:0, bank:0, streak:0, totalCheckin:0 };
+        if(b.account_type==='savings') users[uid].bank += b.balance;
+    });
+
+    (d.checkins.data||[]).forEach(c => {
+        const uid = String(c.user_id);
+        if(!users[uid]) users[uid]={uid,v:0,l:0,p:0,bt:0,bank:0,streak:0,totalCheckin:0};
+        users[uid].streak = c.streak_days||0;
+        users[uid].totalCheckin = c.total_checkins||0;
+    });
+
+    const rows = Object.values(users);
+    const isActive = window._activeUsers || new Set();
+    document.getElementById('usersBody').innerHTML = rows.map(u => {
+        const active = isActive.has(u.uid);
+        return `<tr data-userid="${u.uid}" data-active="${active}">
+            <td><span class="user-id-short">${shortId(u.uid)}</span>
+                ${active ? '<span class="badge badge-green" style="margin-left:6px;">活跃</span>' : '<span class="badge badge-gray" style="margin-left:6px;">静默</span>'}
+            </td>
+            <td>${u.v}</td><td>${u.l}</td><td>${u.p}</td><td>${u.bt}</td>
+            <td><strong>${u.bank}</strong></td>
+            <td><span class="badge badge-green">${u.totalCheckin}天</span></td>
+            <td><span class="badge badge-orange">${u.streak}天</span></td>
+            <td><button class="btn-sm btn-primary" onclick="showUserDetail('${u.uid}')">详情</button></td>
+        </tr>`;
+    }).join('');
+}
+
+function filterUserTable() {
+    const q = (document.getElementById('searchUser').value||'').toLowerCase().trim();
+    const activeOnly = document.getElementById('activeOnly').checked;
+    const trs = document.querySelectorAll('#usersBody tr');
+    trs.forEach(tr => {
+        const uid = tr.dataset.userid || '';
+        const isActive = tr.dataset.active === 'true';
+        let visible = true;
+        if (q !== '' && !uid.includes(q)) visible = false;
+        if (activeOnly && !isActive) visible = false;
+        tr.style.display = visible ? '' : 'none';
+    });
+}
+
+// ===== 资产明细 =====
+function renderAssetsTable() {
+    const rows = allData.currencies.data || [];
+    document.getElementById('assetsBody').innerHTML = rows.map(r => `
+        <tr>
+            <td><span class="user-id-short">${shortId(String(r.user_id))}</span></td>
+            <td><span class="currency-tag ${'cur-'+r.currency_type}">${currencyName(r.currency_type)}</span></td>
+            <td><strong>${r.amount}</strong></td>
+            <td style="color:#94a3b8;font-size:12px;">${fmtDate(r.updated_at)}</td>
+        </tr>`).join('');
+}
+
+// ===== 签到 & 任务 =====
+function renderCheckinTable() {
+    const rows = allData.checkins.data || [];
+    document.getElementById('checkinBody').innerHTML = rows.map(r => `
+        <tr>
+            <td><span class="user-id-short">${shortId(String(r.user_id))}</span></td>
+            <td>${r.last_checkin_date || '-'}</td>
+            <td><span class="badge badge-orange">${r.streak_days||0}</span></td>
+            <td>${r.total_checkins||0}</td>
+            <td>${r.cycle_checkins||0}</td>
+        </tr>`).join('');
+
+    const tasksRows = allData.tasks.data || [];
+    document.getElementById('tasksBody').innerHTML = tasksRows.length === 0 ?
+        '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">暂无活跃任务</td></tr>' :
+        tasksRows.map(t => `<tr>
+            <td><span class="user-id-short">${shortId(String(t.user_id))}</span></td>
+            <td>#${t.rule_id||'-'}</td>
+            <td><span class="badge ${t.status==='completed'?'badge-green':t.status==='failed'?'badge-red':'badge-blue'}">${t.status||'-'}</span></td>
+            <td style="font-size:12px;">${fmtDateTime(t.start_time)}</td>
+            <td style="font-size:12px;">${fmtDateTime(t.end_time)||'进行中'}</td>
+            <td>${t.reward_text||'-'}</td>
+        </tr>`).join('');
+}
+
+// ===== 银行数据 =====
+function renderBankTable(transRows) {
+    const accRows = allData.banks.data || [];
+    document.getElementById('bankAccountsBody').innerHTML = accRows.length === 0 ?
+        '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px;">暂无银行账户</td></tr>' :
+        accRows.map(a => `<tr>
+            <td><span class="user-id-short">${shortId(String(a.user_id))}</span></td>
+            <td><span class="badge ${accBadgeClass(a.account_type)}">${accTypeName(a.account_type)}</span></td>
+            <td><strong>${a.balance.toLocaleString()}</strong></td>
+            <td>${a.rate!=null? (a.rate*100).toFixed(3)+'%':'-'}</td>
+            <td style="font-size:12px;">${a.locked_until? fmtDate(a.locked_until):'-'}</td>
+        </tr>`).join('');
+
+    document.getElementById('bankTransBody').innerHTML = !transRows || transRows.length===0 ?
+        '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">暂无交易记录</td></tr>' :
+        transRows.sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date)).slice(0,150).map(t =>
+        `<tr>
+            <td><span class="user-id-short">${shortId(String(t.user_id))}</span></td>
+            <td><span class="badge ${t.type==='deposit'?'badge-green':t.type==='withdraw'?'badge-red':'badge-blue'}">${t.type}</span></td>
+            <td>${t.account_type||'-'}</td>
+            <td><strong>${t.amount>=0?'+':''}${t.amount}</strong></td>
+            <td style="font-size:12px;">${t.description||'-'}</td>
+            <td style="font-size:12px;">${fmtDateTime(t.transaction_date)}</td>
+        </tr>`).join('');
+}
+
+// ===== 罚款记录 =====
+function renderFinesTable() {
+    const rows = allData.fines.data || [];
+    document.getElementById('finesBody').innerHTML = rows.length === 0 ?
+        '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">暂无罚款记录</td></tr>' :
+        rows.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(f => `
+        <tr>
+            <td><span class="user-id-short">${shortId(String(f.user_id))}</span></td>
+            <td>${f.reason||'-'}</td>
+            <td><strong>${f.original_amount}</strong></td>
+            <td>${f.remaining}</td>
+            <td>${f.due_date||'-'}</td>
+            <td>${f.paid_amount||0}</td>
+            <td>${f.penalty_amount||0}</td>
+            <td><span class="badge ${f.is_paid?'badge-green':f.penalty_applied?'badge-orange':'badge-red'}">${
+                f.is_paid?'已付清':f.penalty_applied?'已罚息':'待处理'}</span></td>
+        </tr>`).join('');
+}
+
+/** 创建新罚款 */
+async function createFine() {
+    const targetUserId = document.getElementById('fineTargetUserId').value.trim();
+    const reason = document.getElementById('fineReason').value.trim();
+    const originalAmount = parseFloat(document.getElementById('fineOriginalAmount').value);
+    const dueDate = document.getElementById('fineDueDate').value;
+
+    if (!targetUserId) { alert('请输入目标用户ID'); return; }
+    if (!reason) { alert('请输入罚款原因'); return; }
+    if (!originalAmount || originalAmount <= 0) { alert('请输入有效金额'); return; }
+    if (!dueDate) { alert('请选择到期日'); return; }
+
+    try {
+        const { error } = await sb.from('fine_items').insert({
+            user_id: targetUserId,
+            reason: reason,
+            original_amount: originalAmount,
+            remaining: original_amount,
+            due_date: new Date(dueDate + 'T23:59:59').toISOString(),
+            paid_amount: 0,
+            penalty_amount: 0,
+            is_paid: false,
+            penalty_applied: false
+        });
+        if (error) throw error;
+
+        // 清空表单
+        document.getElementById('fineTargetUserId').value = '';
+        document.getElementById('fineReason').value = '';
+        document.getElementById('fineOriginalAmount').value = '';
+        document.getElementById('fineDueDate').value = '';
+
+        // 刷新数据
+        allData.fines = await sb.from('fine_items').select('*');
+        renderFinesTable();
+
+        alert(`✅ 罚款发布成功！用户 ${shortId(targetUserId)} 罚款 ${originalAmount} 兑换券，截止 ${dueDate}`);
+    } catch (e) {
+        console.error('创建罚款失败:', e);
+        alert('❌ 发布失败：' + (e.message || '未知错误'));
+    }
+}
+
+// ===== 纪行进度 =====
+function renderJixingTable() {
+    const rows = allData.jixing.data || [];
+    document.getElementById('jixingBody').innerHTML = rows.length === 0 ?
+        '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:30px;">暂无纪行数据</td></tr>' :
+        rows.map(j => `<tr>
+            <td><span class="user-id-short">${shortId(String(j.user_id))}</span></td>
+            <td>${Array.isArray(j.completed_days)?j.completed_days.length:0} / 30 天</td>
+            <td><strong>${j.currency||0}</strong></td>
+            <td><span class="badge ${j.initialized?'badge-green':'badge-gray'}">${j.initialized?'是':'否'}</span></td>
+            <td><span class="badge ${j.gift_claimed?'badge-green':'badge-gray'}">${j.gift_claimed?'已领':'未领'}</span></td>
+            <td style="font-size:12px;">${Array.isArray(j.bought_rewards)?JSON.stringify(j.bought_rewards):'-'}</td>
+            <td>${j.last_claim_date||'-'}</td>
+        </tr>`).join('');
+}
+
+// ===== 计算挑战 =====
+function renderJisuanTable() {
+    const rows = allData.jisuan.data || [];
+    document.getElementById('jisuanBody').innerHTML = rows.length === 0 ?
+        '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px;">暂无计算挑战数据</td></tr>' :
+        rows.map(j => `<tr>
+            <td><span class="user-id-short">${shortId(String(j.user_id))}</span></td>
+            <td><span class="badge ${j.completed?'badge-green':'badge-gray'}">${j.completed?'已完成':'未完成'}</span></td>
+            <td><strong>${j.score||0}</strong></td>
+            <td>${j.pass_cards||0}</td>
+            <td>${Array.isArray(j.history)?j.history.length:0} 条</td>
+        </tr>`).join('');
+}
+
+// ===== 工具函数 =====
+function shortId(uid) { return uid.substring(0,8)+'...'; }
+function currencyName(type) {
+    const m={voucher:'🎫兑换券',lottery:'🎰彩票',premium:'⭐高级券',bankTicket:'🎫银行券'};
+    return m[type]||type;
+}
+function fmtDate(d) { if(!d) return '-'; try{return new Date(d).toLocaleDateString('zh-CN')}catch{return d;} }
+function fmtDateTime(d) { if(!d) return '-'; try{return new Date(d).toLocaleString('zh-CN')}catch{return d;} }
+function accBadgeClass(t){return t==='savings'?'badge-green':t==='deposit'?'badge-blue':'badge-orange';}
+function accTypeName(t){return t==='savings'? '储蓄':t==='deposit'?'定期':'投资';}
+
+function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    if (event.target) event.target.classList.add('active');
+    const panel = document.getElementById('panel-'+name);
+    if (panel) {
+        panel.classList.add('active');
+        panel.style.display = '';  // 清除可能的内联 display
+    }
+    if (name === 'notify') loadNotifyHistory();
+}
+
+function showLoading(show) {
+    for (const panel of document.querySelectorAll('.tab-panel')) {
+        const tbody = panel.querySelector('tbody');
+        if (show && tbody && !tbody.innerHTML.includes('<tr')) continue;
+        if (show) {
+            panel.style.display = '';
+        } else {
+            if (!panel.classList.contains('active')) panel.style.display = 'none';
+        }
+    }
+}
+
+function showError(msg) {
+    document.getElementById('panel-users').innerHTML =
+        `<div class="error-state" style="text-align:center;padding:60px;color:#ef4444;">❌ ${msg}<br><br>
+         <button class="btn-sm btn-primary" onclick="location.reload()">重试</button></div>`;
+}
+
+// ===== 用户详情 =====
+function showUserDetail(userId) {
+    // 关闭之前打开的详情
+    document.querySelectorAll('.detail-row').forEach(el => el.remove());
+
+    const d = allData;
+    const uid = userId;
+
+    // 收集该用户所有数据
+    const currencies = (d.currencies.data||[]).filter(r => String(r.user_id) === uid);
+    const bankAccs = (d.banks.data||[]).filter(r => String(r.user_id) === uid);
+    const checkin = (d.checkins.data||[]).find(r => String(r.user_id) === uid);
+    const tasks = (d.tasks.data||[]).filter(r => String(r.user_id) === uid);
+    const fines = (d.fines.data||[]).filter(r => String(r.user_id) === uid);
+    const jixing = (d.jixing.data||[]).find(r => String(r.user_id) === uid);
+    const jisuan = (d.jisuan.data||[]).find(r => String(r.user_id) === uid);
+
+    // 货币详情
+    let curHtml = '';
+    currencies.forEach(c => {
+        curHtml += `<div class="detail-item"><div class="detail-label">${currencyName(c.currency_type)}</div><div class="detail-value">${c.amount}</div></div>`;
+    });
+
+    // 银行账户
+    let bankHtml = '';
+    if (bankAccs.length > 0) {
+        bankAccs.forEach(a => {
+            bankHtml += `<div class="detail-item"><div class="detail-label">${accTypeName(a.account_type)}账户</div><div class="detail-value">¥${a.balance.toLocaleString()}</div></div>`;
+        });
+    } else {
+        bankHtml = '<div class="detail-item"><div class="detail-label">银行</div><div class="detail-value">无账户</div></div>';
+    }
+
+    // 签到
+    const checkinHtml = checkin ?
+        `<div class="detail-item"><div class="detail-label">连续签到</div><div class="detail-value">${checkin.streak_days||0} 天</div></div>
+         <div class="detail-item"><div class="detail-label">总签到</div><div class="detail-value">${checkin.total_checkins||0} 天</div></div>
+         <div class="detail-item"><div class="detail-label">最后签到</div><div class="detail-value">${checkin.last_checkin_date||'-'}</div></div>` :
+        '<div class="detail-item"><div class="detail-label">签到</div><div class="detail-value">无记录</div></div>';
+
+    // 任务
+    let taskHtml = '';
+    if (tasks.length > 0) {
+        tasks.forEach(t => {
+            taskHtml += `<div class="detail-item"><div class="detail-label">任务 #${t.rule_id}</div>
+                <div class="detail-value"><span class="badge ${t.status==='completed'?'badge-green':t.status==='failed'?'badge-red':'badge-blue'}">${t.status}</span></div></div>`;
+        });
+    } else {
+        taskHtml = '<div class="detail-item"><div class="detail-label">任务</div><div class="detail-value">无活跃任务</div></div>';
+    }
+
+    // 纪行
+    const jixingHtml = jixing ?
+        `<div class="detail-item"><div class="detail-label">纪行完成天数</div><div class="detail-value">${Array.isArray(jixing.completed_days)?jixing.completed_days.length:0}/30</div></div>
+         <div class="detail-item"><div class="detail-label">纪行货币</div><div class="detail-value">${jixing.currency||0}</div></div>` :
+        '<div class="detail-item"><div class="detail-label">纪行</div><div class="detail-value">未开始</div></div>';
+
+    // 计算挑战
+    const jisuanHtml = jisuan ?
+        `<div class="detail-item"><div class="detail-label">计算分数</div><div class="detail-value">${jisuan.score||0}</div></div>
+         <div class="detail-item"><div class="detail-label">通过卡</div><div class="detail-value">${jisuan.pass_cards||0}</div></div>` :
+        '<div class="detail-item"><div class="detail-label">计算挑战</div><div class="detail-value">无记录</div></div>';
+
+    // 罚款
+    let fineHtml = '';
+    if (fines.length > 0) {
+        fines.forEach(f => {
+            fineHtml += `<div class="detail-item"><div class="detail-label">${f.reason||'罚款'}</div>
+                <div class="detail-value"><span class="badge ${f.is_paid?'badge-green':'badge-red'}">${f.is_paid?'已付':'待付'}</span> ¥${f.remaining||f.original_amount}</div></div>`;
+        });
+    } else {
+        fineHtml = '<div class="detail-item"><div class="detail-label">罚款</div><div class="detail-value">无记录</div></div>';
+    }
+
+    // 构建详情 HTML
+    const detailRow = document.createElement('tr');
+    detailRow.className = 'detail-row';
+    detailRow.innerHTML = `
+        <td colspan="9">
+            <div class="detail-section show">
+                <div style="margin-bottom:16px;">
+                    <strong style="font-size:14px;">📊 用户 ${shortId(uid)} 完整数据</strong>
+                    <span style="float:right;"><button class="btn-sm" style="background:#94a3b8;color:white;font-size:11px;" onclick="this.closest('.detail-row').remove()">收起</button></span>
+                </div>
+                <div style="margin-bottom:12px;padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--green);">
+                    <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:8px;">💰 资产</div>
+                    <div class="detail-grid">${curHtml}${bankHtml}</div>
+                </div>
+                <div style="margin-bottom:12px;padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--blue);">
+                    <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;">✅ 活动记录</div>
+                    <div class="detail-grid">${checkinHtml}${taskHtml}</div>
+                </div>
+                <div style="margin-bottom:12px;padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--orange);">
+                    <div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px;">🎮 游戏数据</div>
+                    <div class="detail-grid">${jixingHtml}${jisuanHtml}</div>
+                </div>
+                <div style="padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--admin-red);">
+                    <div style="font-size:12px;font-weight:700;color:var(--admin-red);margin-bottom:8px;">📝 其他</div>
+                    <div class="detail-grid">${fineHtml}</div>
+                </div>
+            </div>
+        </td>`;
+
+    // 插入到对应行后面
+    const tr = document.querySelector(`tr[data-userid="${uid}"]`);
+    if (tr) tr.after(detailRow);
+}
+</script>
+
+<!-- ========== 兑换码模态框 ========== -->
+<!-- 创建兑换码 -->
+<div class="modal" id="addCodeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:16px;padding:28px;width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-top:4px solid var(--blue);">
+        <h3 style="margin-bottom:18px;font-size:18px;color:var(--admin-dark);">创建兑换码</h3>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励描述（仅备注）</label>
+            <input type="text" id="codeRewardDesc" placeholder="例如：新手礼包、活动奖励" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;font-family:inherit;">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励类型 1</label>
+            <div id="rewardType1Wrap" style="display:flex;gap:8px;">
+                <select id="codeRewardType1" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;" onchange="toggleRewardInput('codeRewardType1','codeRewardAmount1','codeRewardItem1')">
+                    <option value="voucher">兑换券</option>
+                    <option value="lottery">抽奖券</option>
+                    <option value="premium">高级抽奖券</option>
+                    <option value="jixing_muchun_currency">纪行券</option>
+                    <option value="item">实物奖励</option>
+                </select>
+                <input type="number" id="codeRewardAmount1" min="0" value="10" style="width:100px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;">
+                <input type="text" id="codeRewardItem1" placeholder="物品名称" style="width:120px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;display:none;" />
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励类型 2（可选）</label>
+            <div id="rewardType2Wrap" style="display:flex;gap:8px;">
+                <select id="codeRewardType2" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;" onchange="toggleRewardInput('codeRewardType2','codeRewardAmount2','codeRewardItem2')">
+                    <option value="none">无</option>
+                    <option value="voucher">兑换券</option>
+                    <option value="lottery">抽奖券</option>
+                    <option value="premium">高级抽奖券</option>
+                    <option value="jixing_muchun_currency">纪行券</option>
+                    <option value="item">实物奖励</option>
+                </select>
+                <input type="number" id="codeRewardAmount2" min="0" value="0" style="width:100px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;">
+                <input type="text" id="codeRewardItem2" placeholder="物品名称" style="width:120px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;display:none;" />
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">生成数量 (1-100)</label>
+            <input type="number" id="codeCount" min="1" max="100" value="1" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;">
+        </div>
+        <div style="margin-bottom:18px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">过期时间（留空永不过期）</label>
+            <input type="datetime-local" id="codeExpiresAt" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn-sm" style="background:#f1f5f9;color:#64748b;" onclick="closeAddCodeModal()">取消</button>
+            <button class="btn-sm btn-primary" onclick="addExchangeCode()">&#128274; 生成兑换码</button>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑/查看兑换码 -->
+<div class="modal" id="editCodeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;justify-content:center;align-items:center;">
+    <div style="background:white;border-radius:16px;padding:28px;width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-top:4px solid var(--orange);">
+        <h3 style="margin-bottom:18px;font-size:18px;color:var(--admin-dark);">兑换码详情</h3>
+        <input type="hidden" id="editCodeId">
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">兑换码</label>
+            <input type="text" id="viewCodeValue" readonly style="width:100%;padding:10px 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;font-family:'Courier New',monospace;font-size:15px;letter-spacing:2px;text-align:center;color:var(--admin-dark);font-weight:700;">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">状态</label>
+            <span id="viewCodeStatus" style="font-size:14px;font-weight:600;"></span>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励描述</label>
+            <input type="text" id="editCodeRewardDesc" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;font-family:inherit;">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励类型 1</label>
+            <div id="editRewardType1Wrap" style="display:flex;gap:8px;">
+                <select id="editCodeRewardType1" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;" onchange="toggleRewardInput('editCodeRewardType1','editCodeRewardAmount1','editCodeRewardItem1')">
+                    <option value="voucher">兑换券</option>
+                    <option value="lottery">抽奖券</option>
+                    <option value="premium">高级抽奖券</option>
+                    <option value="jixing_muchun_currency">纪行券</option>
+                    <option value="item">实物奖励</option>
+                </select>
+                <input type="number" id="editCodeRewardAmount1" min="0" value="0" style="width:100px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;">
+                <input type="text" id="editCodeRewardItem1" placeholder="物品名称" style="width:120px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;display:none;" />
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励类型 2</label>
+            <div id="editRewardType2Wrap" style="display:flex;gap:8px;">
+                <select id="editCodeRewardType2" style="flex:1;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;" onchange="toggleRewardInput('editCodeRewardType2','editCodeRewardAmount2','editCodeRewardItem2')">
+                    <option value="none">无</option>
+                    <option value="voucher">兑换券</option>
+                    <option value="lottery">抽奖券</option>
+                    <option value="premium">高级抽奖券</option>
+                    <option value="jixing_muchun_currency">纪行券</option>
+                    <option value="item">实物奖励</option>
+                </select>
+                <input type="number" id="editCodeRewardAmount2" min="0" value="0" style="width:100px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;">
+                <input type="text" id="editCodeRewardItem2" placeholder="物品名称" style="width:120px;padding:10px;border:1px solid var(--border);border-radius:9px;font-size:13px;display:none;" />
+            </div>
+        </div>
+        <div style="margin-bottom:18px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">过期时间</label>
+            <input type="datetime-local" id="editCodeExpiresAt" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">
+            <button class="btn-sm" style="background:#f1f5f9;color:#64748b;" onclick="closeEditCodeModal()">关闭</button>
+            <button class="btn-sm" style="background:var(--admin-red);color:white;" onclick="deleteExchangeCode()">&#128465; 删除</button>
+            <button class="btn-sm btn-primary" onclick="updateExchangeCode()">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== 兑换码管理（Supabase 版） ==========
+const CODE_REWARD_NAMES = { voucher:'兑换券', lottery:'抽奖券', premium:'高级抽奖券', jixing_muchun_currency:'纪行券' };
+
+// 切换奖励类型：货币类显示数量输入，实物显示物品名输入
+function toggleRewardInput(typeSelectId, amountInputId, itemInputId) {
+    const val = document.getElementById(typeSelectId).value;
+    const amountEl = document.getElementById(amountInputId);
+    const itemEl = document.getElementById(itemInputId);
+    if (val === 'item') { amountEl.style.display = 'none'; itemEl.style.display = ''; itemEl.focus(); }
+    else { amountEl.style.display = ''; itemEl.style.display = 'none'; }
+}
+
+function generateExchangeCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let r = '';
+    for (let i = 0; i < 8; i++) r += chars[Math.floor(Math.random() * chars.length)];
+    return r;
+}
+
+function getCodeRewardText(c) {
+    let parts = [];
+    // 奖励1
+    if (c.reward_type1 === 'item' && c.reward_item1) parts.push(`🎁 ${c.reward_item1}`);
+    else if (c.reward_type1 && c.reward_amount1 > 0) parts.push(`${c.reward_amount1} ${CODE_REWARD_NAMES[c.reward_type1]||c.reward_type1}`);
+    // 奖励2
+    if (c.reward_type2 === 'item' && c.reward_item2) parts.push(`🎁 ${c.reward_item2}`);
+    else if (c.reward_type2 && c.reward_type2 !== 'none' && c.reward_amount2 > 0) parts.push(`${c.reward_amount2} ${CODE_REWARD_NAMES[c.reward_type2]||c.reward_type2}`);
+    return parts.length > 0 ? parts.join(' + ') : '无';
+}
+
+async function renderCodesTable() {
+    const rows = allData.codes?.data || [];
+    const container = document.getElementById('codesBody');
+    if (!container) return;
+    container.innerHTML = rows.length === 0 ?
+        '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:30px;">暂无兑换码，点击上方按钮创建</td></tr>' :
+        rows.map(c => {
+            const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+            const statusClass = c.redeemed ? 'badge-gray' : isExpired ? 'badge-red' : 'badge-green';
+            const statusText = c.redeemed ? '已使用' : isExpired ? '已过期' : '未使用';
+            return `<tr>
+                <td><strong style="font-family:'Courier New',monospace;letter-spacing:1px;">${c.code}</strong></td>
+                <td>${c.desc || '-'}</td>
+                <td>${getCodeRewardText(c)}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                <td>${c.expires_at ? fmtDateTime(c.expires_at) : '<span style="color:#94a3b8;">永不过期</span>'}</td>
+                <td>${c.redeemed_at ? fmtDateTime(c.redeemed_at) : '-'}</td>
+                <td>${fmtDateTime(c.created_at)}</td>
+                <td><button class="btn-sm btn-primary" onclick="openEditCodeModal(${c.id})">编辑/查看</button></td>
+            </tr>`;
+        }).join('');
+}
+
+// ---- 创建 ----
+function openAddCodeModal() {
+    document.getElementById('codeRewardDesc').value = '';
+    document.getElementById('codeRewardType1').value = 'voucher';
+    document.getElementById('codeRewardAmount1').value = '10';
+    document.getElementById('codeRewardItem1').value = '';
+    document.getElementById('codeRewardItem1').style.display = 'none';
+    document.getElementById('codeRewardAmount1').style.display = '';
+    document.getElementById('codeRewardType2').value = 'none';
+    document.getElementById('codeRewardAmount2').value = '0';
+    document.getElementById('codeRewardItem2').value = '';
+    document.getElementById('codeRewardItem2').style.display = 'none';
+    document.getElementById('codeRewardAmount2').style.display = '';
+    document.getElementById('codeCount').value = '1';
+    document.getElementById('codeExpiresAt').value = '';
+    document.getElementById('addCodeModal').style.display = 'flex';
+}
+
+function closeAddCodeModal() { document.getElementById('addCodeModal').style.display = 'none'; }
+
+async function addExchangeCode() {
+    const count = parseInt(document.getElementById('codeCount').value) || 1;
+    if (count < 1 || count > 100) { alert('数量需在1~100之间'); return; }
+
+    const rt1 = document.getElementById('codeRewardType1').value;
+    const rt2 = document.getElementById('codeRewardType2').value;
+
+    // 验证至少有一种有效奖励
+    let hasValid1 = false;
+    if (rt1 === 'item') hasValid1 = !!document.getElementById('codeRewardItem1').value.trim();
+    else hasValid1 = (parseInt(document.getElementById('codeRewardAmount1').value)||0) > 0;
+
+    let hasValid2 = false;
+    if (rt2 !== 'none') {
+        if (rt2 === 'item') hasValid2 = !!document.getElementById('codeRewardItem2').value.trim();
+        else hasValid2 = (parseInt(document.getElementById('codeRewardAmount2').value)||0) > 0;
+    }
+
+    if (!hasValid1 && !hasValid2) { alert('至少设置一种奖励！'); return; }
+
+    const newCodes = [];
+    for (let i = 0; i < count; i++) {
+        const row = {
+            code: generateExchangeCode(),
+            desc: document.getElementById('codeRewardDesc').value.trim(),
+            reward_type1: rt1,
+            reward_type2: rt2,
+            expires_at: document.getElementById('codeExpiresAt').value || null,
+            redeemed: false
+        };
+        if (rt1 === 'item') { row.reward_item1 = document.getElementById('codeRewardItem1').value.trim(); row.reward_amount1 = 0; }
+        else { row.reward_amount1 = parseInt(document.getElementById('codeRewardAmount1').value)||0; row.reward_item1 = null; }
+        if (rt2 === 'item') { row.reward_item2 = document.getElementById('codeRewardItem2').value.trim(); row.reward_amount2 = 0; }
+        else if (rt2 !== 'none') { row.reward_amount2 = parseInt(document.getElementById('codeRewardAmount2').value)||0; row.reward_item2 = null; }
+        else { row.reward_amount2 = 0; row.reward_item2 = null; }
+        newCodes.push(row);
+    }
+
+    const { error } = await sb.from('exchange_codes').insert(newCodes);
+    if (error) { alert('创建失败: ' + error.message); return; }
+    closeAddCodeModal();
+    await refreshAllData();
+}
+
+// ---- 编辑 ----
+async function openEditCodeModal(id) {
+    const codes = allData.codes?.data || [];
+    const c = codes.find(x => x.id === id);
+    if (!c) return;
+
+    document.getElementById('editCodeId').value = c.id;
+    document.getElementById('viewCodeValue').value = c.code;
+
+    // Status display
+    const statusEl = document.getElementById('viewCodeStatus');
+    if (c.redeemed) {
+        statusEl.textContent = '✅ 已使用 — ' + (c.redeemed_at ? new Date(c.redeemed_at).toLocaleString() : '');
+        statusEl.style.color = '#15803d';
+    } else if (c.expires_at && new Date(c.expires_at) < new Date()) {
+        statusEl.textContent = '⏰ 已过期';
+        statusEl.style.color = '#dc2626';
+    } else {
+        statusEl.textContent = '✅ 可用';
+        statusEl.style.color = '#06d6a0';
+    }
+
+    document.getElementById('editCodeRewardDesc').value = c.desc || '';
+
+    // 奖励类型 1
+    const rt1 = c.reward_type1 || 'voucher';
+    document.getElementById('editCodeRewardType1').value = rt1;
+    toggleRewardInput('editCodeRewardType1','editCodeRewardAmount1','editCodeRewardItem1');
+    if (rt1 === 'item') { document.getElementById('editCodeRewardItem1').value = c.reward_item1 || ''; }
+    else { document.getElementById('editCodeRewardAmount1').value = c.reward_amount1 || 0; }
+
+    // 奖励类型 2
+    const rt2 = c.reward_type2 || 'none';
+    document.getElementById('editCodeRewardType2').value = rt2;
+    toggleRewardInput('editCodeRewardType2','editCodeRewardAmount2','editCodeRewardItem2');
+    if (rt2 === 'item') { document.getElementById('editCodeRewardItem2').value = c.reward_item2 || ''; }
+    else { document.getElementById('editCodeRewardAmount2').value = c.reward_amount2 || 0; }
+
+    document.getElementById('editCodeExpiresAt').value = c.expires_at ? c.expires_at.slice(0,16) : '';
+    document.getElementById('editCodeModal').style.display = 'flex';
+}
+
+function closeEditCodeModal() { document.getElementById('editCodeModal').style.display = 'none'; }
+
+async function updateExchangeCode() {
+    const id = parseInt(document.getElementById('editCodeId').value);
+
+    const rt1 = document.getElementById('editCodeRewardType1').value;
+    const rt2 = document.getElementById('editCodeRewardType2').value;
+
+    const updateObj = {
+        desc: document.getElementById('editCodeRewardDesc').value.trim(),
+        reward_type1: rt1,
+        reward_type2: rt2,
+        expires_at: document.getElementById('editCodeExpiresAt').value || null
+    };
+
+    if (rt1 === 'item') { updateObj.reward_item1 = document.getElementById('editCodeRewardItem1').value.trim(); updateObj.reward_amount1 = 0; }
+    else { updateObj.reward_amount1 = parseInt(document.getElementById('editCodeRewardAmount1').value)||0; updateObj.reward_item1 = null; }
+
+    if (rt2 === 'item') { updateObj.reward_item2 = document.getElementById('editCodeRewardItem2').value.trim(); updateObj.reward_amount2 = 0; }
+    else if (rt2 !== 'none') { updateObj.reward_amount2 = parseInt(document.getElementById('editCodeRewardAmount2').value)||0; updateObj.reward_item2 = null; }
+    else { updateObj.reward_amount2 = 0; updateObj.reward_type2 = 'none'; updateObj.reward_item2 = null; }
+
+    const { error } = await sb.from('exchange_codes').update(updateObj).eq('id', id);
+    if (error) { alert('更新失败: ' + error.message); return; }
+    closeEditCodeModal();
+    await refreshAllData();
+}
+
+async function deleteExchangeCode() {
+    if (!confirm('确定删除此兑换码？')) return;
+    const id = parseInt(document.getElementById('editCodeId').value);
+    const { error } = await sb.from('exchange_codes').delete().eq('id', id);
+    if (error) { alert('删除失败: ' + error.message); return; }
+    closeEditCodeModal();
+    await refreshAllData();
+}
+
+// ===== 发送邮件 =====
+document.getElementById('notifyBroadcast').addEventListener('change', function() {
+    document.getElementById('notifyTargetUser').style.display = this.checked ? 'none' : 'block';
+});
+
+function toggleMailAttInput(num) {
+    const typeEl = document.getElementById(`mailAttType${num}`);
+    const amountEl = document.getElementById(`mailAttAmount${num}`);
+    const itemEl = document.getElementById(`mailAttItem${num}`);
+    if (typeEl.value === 'item') {
+        amountEl.style.display = 'none'; itemEl.style.display = '';
+    } else {
+        amountEl.style.display = ''; itemEl.style.display = 'none';
+    }
+}
+
+async function sendMail() {
+    const btn = document.getElementById('sendNotifyBtn');
+    const content = document.getElementById('notifyContent').value.trim();
+    if (!content) { alert('请输入邮件内容'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '发送中...';
+
+    try {
+        const isBroadcast = document.getElementById('notifyBroadcast').checked;
+        const targetId = isBroadcast ? null : (document.getElementById('notifyTargetUser').value.trim() || null);
+        const type = document.getElementById('notifyType').value;
+
+        // 附件奖励
+        const attType1 = document.getElementById('mailAttType1').value || null;
+        const attType2 = document.getElementById('mailAttType2').value || null;
+
+        const insertData = {
+            content,
+            notification_type: type,
+            target_user_id: targetId,
+            attachment_type1: attType1,
+            attachment_amount1: (attType1 && attType1 !== 'item') ? (parseInt(document.getElementById('mailAttAmount1').value)||0) : 0,
+            attachment_item1: (attType1 === 'item') ? (document.getElementById('mailAttItem1').value.trim()||null) : null,
+            attachment_type2: attType2,
+            attachment_amount2: (attType2 && attType2 !== 'item') ? (parseInt(document.getElementById('mailAttAmount2').value)||0) : 0,
+            attachment_item2: (attType2 === 'item') ? (document.getElementById('mailAttItem2').value.trim()||null) : null,
+            claimed: false
+        };
+
+        const { error } = await sb.from('notifications').insert(insertData);
+
+        if (error) {
+            alert('发送失败: ' + error.message);
+        } else {
+            alert('✅ 邮件已发送！');
+            document.getElementById('notifyContent').value = '';
+            // 重置附件
+            ['1','2'].forEach(n => {
+                document.getElementById(`mailAttType${n}`).value = '';
+                document.getElementById(`mailAttAmount${n}`).value = '';
+                document.getElementById(`mailAttItem${n}`).value = '';
+                document.getElementById(`mailAttAmount${n}`).style.display = '';
+                document.getElementById(`mailAttItem${n}`).style.display = 'none';
+            });
+            loadNotifyHistory();
+        }
+    } catch(e) {
+        alert('发送出错: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.textContent = '📧 发送邮件';
+}
+
+async function loadNotifyHistory() {
+    const [mailRes, claimRes] = await Promise.all([
+        sb.from('notifications').select('*')
+            .order('created_at', { ascending: false })
+            .limit(30),
+        sb.from('mail_claims').select('notification_id')
+    ]);
+
+    if (mailRes.error) return;
+
+    // 汇总每封邮件的领取人数
+    const claimCounts = {};
+    if (claimRes.data) {
+        for (const c of claimRes.data) {
+            claimCounts[c.notification_id] = (claimCounts[c.notification_id] || 0) + 1;
+        }
+    }
+
+    const data = mailRes.data;
+    const el = document.getElementById('notifyHistoryList');
+
+    // 格式化附件简述
+    function fmtAtt(m) {
+        const names = { voucher:'兑换券',lottery:'抽奖券',premium:'高级抽奖券',jixing_muchun_currency:'纪行券',item:'实物' };
+        const parts = [];
+        if (m.attachment_type1 && m.attachment_type1 !== 'none') {
+            parts.push(m.attachment_type1==='item'
+                ? `🎁 ${m.attachment_item1||'物品'}`
+                : `${names[m.attachment_type1]||m.attachment_type1}×${m.attachment_amount1}`);
+        }
+        if (m.attachment_type2 && m.attachment_type2 !== 'none') {
+            parts.push(m.attachment_type2==='item'
+                ? `🎁 ${m.attachment_item2||'物品'}`
+                : `${names[m.attachment_type2]||m.attachment_type2}×${m.attachment_amount2}`);
+        }
+        return parts.length > 0 ? `<span style="font-size:11px;color:#059669;font-weight:600;">[${parts.join('+')}]</span>` : '';
+    }
+
+    el.innerHTML = !data || data.length === 0
+        ? '<div style="color:#94a3b8;padding:20px;text-align:center;">暂无邮件记录</div>'
+        : data.map(n => {
+            const cnt = claimCounts[n.id] || 0;
+            const hasAtt = n.attachment_type1 && n.attachment_type1 !== 'none';
+            const claimText = hasAtt ? (cnt > 0 ? `✅ ${cnt}人已领` : '⬜ 无人领取') : '';
+            return `<div class="notify-item ${n.notification_type||'info'}">
+                <div>${escapeHtml(n.content)} ${fmtAtt(n)}</div>
+                <div class="notify-time">${fmtDateTime(n.created_at)} ${n.target_user_id?'👤指定':'📢广播'} ${claimText}</div>
+            </div>`;
+        }).join('');
+}
+
+function escapeHtml(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+</script>
+</body>
+</html>
