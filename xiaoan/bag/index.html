@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的背包</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+    const SB_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I';
+    const sbClient = window.supabase ? window.supabase.createClient(SB_URL, SB_KEY) : null;
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 95%;
+            max-width: 1100px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 3px solid #ffd166;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #764ba2;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            padding: 10px 30px;
+            border-radius: 50px;
+            display: inline-block;
+            background: linear-gradient(to right, #ffd166, #ff9e7d);
+        }
+
+        .nav-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #06d6a0;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 6px 12px rgba(6, 214, 160, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(6, 214, 160, 0.4);
+        }
+
+        .btn-home { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .btn-home:hover { box-shadow: 0 8px 16px rgba(118, 75, 162, 0.4); }
+
+        /* 统计栏 - 4卡片 */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.3);
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card.voucher { background: white; color: #333; border: 2px solid #e0e0e0; }
+        .stat-card.key { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .stat-card.empty { background: rgba(0,0,0,0.04); color: #bbb; }
+
+        /* 券余额竖排 */
+        .currency-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .currency-item {
+            flex: 1;
+            text-align: center;
+            padding: 8px 2px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .currency-item .c-icon { font-size: 1rem; margin-right: 2px; }
+        .currency-item .c-val { font-weight: bold; font-size: 1.05rem; }
+        .currency-item .c-name { opacity: 0.85; font-size: 0.72rem; }
+
+        .stat-label {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        /* 筛选标签 */
+        .filter-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            border-bottom: 3px solid #ffd166;
+            padding-bottom: 10px;
+        }
+
+        .filter-tab {
+            padding: 12px 25px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            font-weight: bold;
+            color: #777;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .filter-tab.active {
+            color: white;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 -5px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .filter-tab:hover:not(.active) {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* 背包格子 */
+        .bag-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 18px;
+            padding: 10px;
+        }
+
+        .bag-item {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bag-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+
+        .bag-item.exchange-item {
+            background: linear-gradient(135deg, #fff9e6, #fff3cd);
+            border-color: #f0ad4e;
+        }
+
+        .bag-item.exchange-item:hover {
+            border-color: #ec971f;
+            transform: translateY(-5px);
+        }
+
+        .item-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #118ab2;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .item-desc {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            flex-grow: 1;
+        }
+
+        .item-date {
+            color: #aaa;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+        }
+
+        .item-source {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .source-normal {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .source-advanced {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+        .item-count-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: #ff6b6b;
+            color: white;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        /* 使用按钮 */
+        .use-btn {
+            background: linear-gradient(135deg, #06d6a0, #48dbfb);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(6, 214, 160, 0.3);
+        }
+
+        .use-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 14px rgba(6, 214, 160, 0.4);
+        }
+
+        .unusable-tag {
+            background: linear-gradient(135deg, #bdc3c7, #95a5a6);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* 兑换相关样式 */
+        .exchange-info {
+            width: 100%;
+        }
+
+        .exchange-progress {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #8a6d3b;
+        }
+
+        .exchange-bar {
+            flex: 1;
+            height: 12px;
+            background: #e0d5b7;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .exchange-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #f0ad4e, #ec971f);
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+
+        .exchange-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f0ad4e, #d68910);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(240, 173, 78, 0.35);
+        }
+
+        .exchange-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 14px rgba(240, 173, 78, 0.5);
+        }
+
+        .exchange-waiting {
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+            padding: 8px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 10px;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state p {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state small {
+            font-size: 0.95rem;
+            color: #bbb;
+        }
+
+        /* 通知提示 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 28px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .notification.success { background: #06d6a0; }
+        .notification.error { background: #ff6b6b; }
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 使用确认模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 500;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 35px;
+            border-radius: 25px;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            border: 3px solid #667eea;
+        }
+
+        .modal-box h3 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+
+        .modal-box .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-box .modal-item-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #118ab2;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-actions .btn-confirm {
+            background: linear-gradient(135deg, #06d6a0, #48dbfb);
+        }
+
+        .modal-actions .btn-cancel {
+            background: #ff6b6b;
+        }
+
+        /* 礼花效果 */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            animation: confettiFall 1.5s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container { padding: 18px; }
+            .header h1 { font-size: 1.8rem; }
+            .bag-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+            .bag-item { min-height: 170px; padding: 14px; }
+            .item-icon { font-size: 2.3rem; }
+            .item-name { font-size: 0.95rem; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .stat-card { padding: 14px; min-height: 70px; }
+            .currency-item { padding: 6px 1px; font-size: 0.72rem; }
+            .currency-item .c-val { font-size: 0.95rem; }
+            .stat-number { font-size: 2rem; }
+        }
+
+        @media (max-width: 480px) {
+            .bag-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-tab { padding: 10px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>&#128230; 我的背包 &#128230;</h1>
+            <div class="nav-bar">
+                <button class="btn btn-home" onclick="window.location.href='/xiaoan'">&#127968; 返回主页</button>
+                <button class="btn" onclick="window.location.href='choujiang/index.html'">&#127921; 前往抽奖</button>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="stats-bar" id="statsBar"></div>
+
+        <!-- 筛选标签 -->
+        <div class="filter-tabs" id="filterTabs">
+            <div class="filter-tab active" data-filter="all">&#128220; 全部</div>
+            <div class="filter-tab" data-filter="normal">&#127921; 普通抽奖</div>
+            <div class="filter-tab" data-filter="advanced">&#10024; 高级抽奖</div>
+        </div>
+
+        <!-- 背包物品网格 -->
+        <div class="bag-grid" id="bagGrid">
+            <!-- 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 使用确认模态框 -->
+    <div class="modal-overlay" id="useModal">
+        <div class="modal-box">
+            <div class="modal-icon" id="modalIcon">&#127873;</div>
+            <h3>确认使用道具？</h3>
+            <div class="modal-item-name" id="modalItemName">道具名称</div>
+            <p style="color:#888;margin-bottom:20px;">使用后该道具将被消耗，无法恢复。</p>
+            <div class="modal-actions">
+                <button class="btn btn-confirm" id="confirmUseBtn">&#9989; 使用</button>
+                <button class="btn btn-cancel" id="cancelUseBtn">&#10006; 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 兑换码输入模态框 -->
+    <div class="modal-overlay" id="redeemModal">
+        <div class="modal-box">
+            <div class="modal-icon">&#128273;</div>
+            <h3>兑换码兑换</h3>
+            <input type="text" id="redeemCodeInput" placeholder="请输入兑换码..." autocomplete="off"
+                   style="width:100%;padding:14px;border:2px solid #ddd;border-radius:15px;font-size:1.2rem;text-align:center;
+                          letter-spacing:3px;font-family:monospace;margin-bottom:16px;
+                          border-color:#43e97b;">
+            <p style="color:#888;margin-bottom:18px;font-size:0.9rem;">在管理员处获取的兑换码可在此兑换奖励</p>
+            <div class="modal-actions">
+                <button class="btn btn-confirm" id="confirmRedeemBtn">&#9989; 确认兑换</button>
+                <button class="btn btn-cancel" id="cancelRedeemBtn">&#10006; 取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // ========== 数据管理 ==========
+        
+        // 从 localStorage 加载所有奖品记录
+        function loadAllRecords() {
+            const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+            const advancedRecords = JSON.parse(localStorage.getItem('advancedRecords') || '[]');
+
+            // 合并并标记来源
+            const allItems = [];
+
+            normalRecords.forEach((record, index) => {
+                // 排除兑换券和银行券类型、已使用物品
+                if (record.rewardType === 'currency' || record.rewardType === 'bankTicket' || record.used) return;
+
+                const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
+                const isExchange = prizeName === '下次一定';
+
+                allItems.push({
+                    ...record,
+                    _source: 'normal',
+                    _sourceLabel: '普通抽奖',
+                    _originalIndex: index,
+                    _listKey: 'records',
+                    // "下次一定"可兑换高级抽奖券
+                    usable: true,
+                    isExchangeItem: isExchange
+                });
+            });
+
+            advancedRecords.forEach((record, index) => {
+                if (!record.prize) return;
+                const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
+                const rewardType = record.prize?.rewardType || record.rewardType || 'item';
+
+                // 排除兑换券、银行券和已使用物品
+                if (rewardType === 'currency' || rewardType === 'bankTicket' || record.used) return;
+
+                allItems.push({
+                    prize: prizeName,
+                    rewardType: rewardType,
+                    usable: true,
+                    isExchangeItem: (prizeName === '下次一定'),
+                    used: !!record.used,
+                    usedTime: record.usedTime || null,
+                    date: record.date || new Date().toISOString(),
+                    icon: record.prize?.icon || getItemIcon(prizeName),
+                    description: record.prize?.description || '',
+                    _source: 'advanced',
+                    _sourceLabel: '高级抽奖',
+                    _originalIndex: index,
+                    _listKey: 'advancedRecords',
+                    _rawRecord: record
+                });
+            });
+
+            return allItems;
+        }
+
+        // 根据名称获取图标
+        function getItemIcon(name) {
+            const iconMap = {
+                '电视卡': '&#128250;', '电视卡（单日）': '&#128250;', '电视卡（周五、周末单日）': '&#128250;',
+                '免计算题卡': '&#127917;', '免计算题卡（单日）': '&#127917;',
+                '勉强卡': '&#127919;', '勉强卡（100）': '&#127919;', '勉强卡（300）': '&#127919;', '勉强卡（500）': '&#127919;',
+                '超级周末': '&#128247;', '超级周末（单日）': '&#128247;',
+                '周末游戏时间（双日）': '&#127918;', '周末游戏时间（双日+赠周五）': '&#127918;',
+                '陪同游戏时间（单日）': '&#127918;',
+                '下次一定': '&#128148;',
+                '补偿许可证': '&#128220;',
+                '全天无限制超级通票': '&#128168;'
+            };
+            for (const [key, val] of Object.entries(iconMap)) {
+                if (name.includes(key) || key.includes(name)) return val;
+            }
+            return '&#127873;';
+        }
+
+        // ========== UI 渲染 ==========
+
+        let currentFilter = 'all';
+        let pendingUseItem = null; // 待使用的物品
+
+        function render() {
+            const allItems = loadAllRecords();
+            renderStats();
+            renderGrid(allItems);
+        }
+
+        function renderStats() {
+            const voucher = parseInt(localStorage.getItem('voucher') || '0');
+            const lottery = parseInt(localStorage.getItem('lottery') || '0');
+            const premium = parseInt(localStorage.getItem('premium') || '0');
+            const jixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0');
+            const key = localStorage.getItem('exchangeKey') || '';
+
+            document.getElementById('statsBar').innerHTML = `
+                <div class="stat-card voucher">
+                    <div class="currency-row">
+                        <div class="currency-item">
+                            <div><span class="c-icon">🎫</span><span class="c-val">${voucher}</span></div>
+                            <div class="c-name">兑换券</div>
+                        </div>
+                        <div class="currency-item">
+                            <div><span class="c-icon">🎰</span><span class="c-val">${lottery}</span></div>
+                            <div class="c-name">抽奖券</div>
+                        </div>
+                        <div class="currency-item">
+                            <div><span class="c-icon">✨</span><span class="c-val">${premium}</span></div>
+                            <div class="c-name">高级抽奖</div>
+                        </div>
+                        <div class="currency-item">
+                            <div><span class="c-icon">🎯</span><span class="c-val">${jixing}</span></div>
+                            <div class="c-name">纪行券</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card key" onclick="openRedeemModal()" style="cursor:pointer;">
+                    <div style="font-size:1.5rem;margin-bottom:4px;">🔑</div>
+                    <div class="stat-label">兑换密钥</div>
+                    ${key ? `<div style="font-size:0.85rem;font-family:monospace;opacity:0.9;word-break:break-all;">${key}</div>` : '<div style="font-size:0.75rem;opacity:0.7;">未绑定</div>'}
+                    <div style="font-size:0.7rem;color:#aaa;margin-top:4px;">点击兑换</div>
+                </div>
+                <div class="stat-card empty">
+                </div>
+                <div class="stat-card empty">
+                </div>
+            `;
+        }
+
+        function renderGrid(allItems) {
+            const grid = document.getElementById('bagGrid');
+            let filtered = [...allItems];
+
+            // 应用筛选
+            switch (currentFilter) {
+                case 'normal':
+                    filtered = allItems.filter(i => i._source === 'normal');
+                    break;
+                case 'advanced':
+                    filtered = allItems.filter(i => i._source === 'advanced');
+                    break;
+                default:
+                    break;
+            }
+
+            // 按名称分组统计数量
+            const grouped = {};
+            filtered.forEach(item => {
+                const prizeName = typeof item.prize === 'object' ? (item.prize?.name || JSON.stringify(item.prize)) : item.prize;
+                const key = prizeName + '_' + item._source;
+                if (!grouped[key]) {
+                    grouped[key] = { ...item, count: 1 };
+                } else {
+                    grouped[key].count++;
+                }
+            });
+
+            // 计算所有来源的"下次一定"总数量（用于兑换进度）
+            const xiaciTotalCount = Object.values(grouped)
+                .filter(g => (typeof g.prize === 'object' ? g.prize?.name : g.prize) === '下次一定')
+                .reduce((sum, g) => sum + g.count, 0);
+
+            const groupValues = Object.values(grouped);
+
+            if (groupValues.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">&#128694;</div>
+                        <p>背包空空如也~</p>
+                        <small>去抽奖获得更多奖品吧！</small>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = groupValues.map((item, idx) => {
+                const isExchangeItem = item.isExchangeItem;
+                const isUsable = !isExchangeItem;
+                const sourceClass = item._source === 'advanced' ? 'source-advanced' : 'source-normal';
+                const sourceLabel = item._source === 'advanced' ? '高级' : '普通';
+                const dateStr = item.date ? formatDate(item.date) : '';
+                const displayName = typeof item.prize === 'object' ? (item.prize?.name || String(item.prize)) : item.prize;
+
+                return `
+                    <div class="bag-item ${isExchangeItem ? 'exchange-item' : ''}" data-index="${idx}">
+                        ${item.count > 1 ? `<div class="item-count-badge">${item.count}</div>` : ''}
+                        <div class="item-source ${sourceClass}">${sourceLabel}</div>
+                        <div class="item-icon">${item.icon || '&#127873;'}</div>
+                        <div class="item-name">${displayName}</div>
+                        ${isExchangeItem ?
+                            `<div class="exchange-info">
+                                <div class="exchange-progress">
+                                    <div class="exchange-bar"><div class="exchange-fill" style="width:${Math.min(xiaciTotalCount / 15 * 100, 100)}%"></div></div>
+                                    <span>${xiaciTotalCount}/15</span>
+                                </div>
+                                ${xiaciTotalCount >= 15 ?
+                                    `<button class="exchange-btn" data-prize="${displayName}">&#128176; 兑换</button>` :
+                                    `<div class="exchange-waiting">还需${15 - xiaciTotalCount}个</div>`
+                                }
+                            </div>` :
+                            `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                             <div class="item-date">${dateStr}</div>
+                             <button class="use-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}">&#127873; 使用</button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+
+            // 绑定使用按钮事件（事件委托）
+            grid.querySelectorAll('.use-btn').forEach(btn => {
+                btn.addEventListener('click', handleUseClick);
+            });
+
+            // 绑定兑换按钮事件
+            grid.querySelectorAll('.exchange-btn').forEach(btn => {
+                btn.addEventListener('click', handleExchangeClick);
+            });
+        }
+
+        // ========== 交互逻辑 ==========
+
+        // 筛选标签切换
+        document.getElementById('filterTabs').addEventListener('click', function(e) {
+            const tab = e.target.closest('.filter-tab');
+            if (!tab) return;
+            
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentFilter = tab.dataset.filter;
+            render();
+        });
+
+        // 点击兑换按钮（15个"下次一定"换1张高级抽奖券）
+        function handleExchangeClick() {
+            const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+            const advancedRecords = JSON.parse(localStorage.getItem('advancedRecords') || '[]');
+
+            // 收集所有未使用的"下次一定"记录
+            const xiaciNormal = [];
+            const xiaciAdvanced = [];
+
+            normalRecords.forEach((r, idx) => {
+                if (r.used) return;
+                const name = typeof r.prize === 'object' ? r.prize.name : r.prize;
+                if (name === '下次一定') xiaciNormal.push({ listKey: 'records', index: idx });
+            });
+            advancedRecords.forEach((r, idx) => {
+                if (r.used || !r.prize) return;
+                const name = typeof r.prize === 'object' ? r.prize.name : r.prize;
+                if (name === '下次一定') xiaciAdvanced.push({ listKey: 'advancedRecords', index: idx });
+            });
+
+            const totalCount = xiaciNormal.length + xiaciAdvanced.length;
+
+            if (totalCount < 15) {
+                showNotification(`数量不足，还需 ${15 - totalCount} 个才能兑换`, 'error');
+                return;
+            }
+
+            // 显示确认模态框
+            document.getElementById('modalIcon').innerHTML = '&#128176;';
+            document.getElementById('modalItemName').textContent = `用15个"下次一定"兑换1张高级抽奖券`;
+            document.querySelector('#useModal p').textContent = '确认兑换？消耗的"下次一定"将标记为已使用。';
+            document.getElementById('confirmUseBtn').textContent = '✅ 确认兑换';
+            document.getElementById('useModal').style.display = 'flex';
+
+            // 临时保存兑换信息
+            pendingUseItem = { type: 'exchange', items: [...xiaciNormal, ...xiaciAdvanced] };
+        }
+
+        // 点击使用按钮
+        function handleUseClick(e) {
+            const btn = e.currentTarget;
+            const listKey = btn.dataset.listKey;
+            const originalIndex = parseInt(btn.dataset.originalIndex);
+
+            const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+            const record = records[originalIndex];
+
+            if (!record || record.used) {
+                showNotification('该物品已使用或不存在！', 'error');
+                return;
+            }
+
+            pendingUseItem = { listKey, originalIndex, record };
+
+            // 显示确认模态框
+            const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
+            const icon = record.prize?.icon || getItemIcon(prizeName);
+
+            document.getElementById('modalIcon').innerHTML = icon;
+            document.getElementById('modalItemName').textContent = prizeName;
+            document.querySelector('#useModal p').textContent = '使用后该道具将被消耗，无法恢复。';
+            document.getElementById('confirmUseBtn').textContent = '✅ 使用';
+            document.getElementById('useModal').style.display = 'flex';
+        }
+
+        // 确认使用/兑换
+        document.getElementById('confirmUseBtn').addEventListener('click', function() {
+            if (!pendingUseItem) return;
+
+            // 兑换逻辑：15个"下次一定" → 1张高级抽奖券
+            if (pendingUseItem.type === 'exchange') {
+                const items = pendingUseItem.items.slice(0, 15);
+
+                // 按来源分组处理
+                const byListKey = {};
+                items.forEach(item => {
+                    if (!byListKey[item.listKey]) byListKey[item.listKey] = [];
+                    byListKey[item.listKey].push(item.index);
+                });
+
+                for (const [listKey, indices] of Object.entries(byListKey)) {
+                    const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+                    indices.forEach(i => {
+                        if (records[i]) {
+                            records[i].used = true;
+                            records[i].usedTime = new Date().toISOString();
+                        }
+                    });
+                    localStorage.setItem(listKey, JSON.stringify(records));
+                }
+
+                // 增加1张高级抽奖券
+                const currentPremium = parseInt(localStorage.getItem('premium') || '0');
+                localStorage.setItem('premium', String(currentPremium + 1));
+
+                closeModal();
+                showNotification('🎉 兑换成功！获得1张高级抽奖券', 'success');
+                createConfetti();
+                setTimeout(render, 300);
+                return;
+            }
+
+            // 普通使用逻辑
+            const { listKey, originalIndex } = pendingUseItem;
+            const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+
+            if (!records[originalIndex]) {
+                showNotification('物品不存在！', 'error');
+                closeModal();
+                return;
+            }
+
+            // 标记为已使用
+            records[originalIndex].used = true;
+            records[originalIndex].usedTime = new Date().toISOString();
+            localStorage.setItem(listKey, JSON.stringify(records));
+
+            closeModal();
+            showNotification(`&#127881; 成功使用：${typeof records[originalIndex].prize === 'object' ? records[originalIndex].prize.name : records[originalIndex].prize}`, 'success');
+
+            createConfetti();
+            setTimeout(render, 300);
+        });
+
+        // 取消使用
+        document.getElementById('cancelUseBtn').addEventListener('click', closeModal);
+
+        // 点击遮罩关闭
+        document.getElementById('useModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        function closeModal() {
+            document.getElementById('useModal').style.display = 'none';
+            document.querySelector('#useModal p').textContent = '使用后该道具将被消耗，无法恢复。';
+            document.getElementById('confirmUseBtn').textContent = '✅ 使用';
+            pendingUseItem = null;
+        }
+
+        // ========== 兑换码兑换 ==========
+
+        function openRedeemModal() {
+            document.getElementById('redeemCodeInput').value = '';
+            document.getElementById('redeemModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('redeemCodeInput').focus(), 100);
+        }
+
+        function closeRedeemModal() {
+            document.getElementById('redeemModal').style.display = 'none';
+        }
+
+        // 确认兑换
+        document.getElementById('confirmRedeemBtn').addEventListener('click', async function() {
+            const btn = this;
+            if (btn.disabled) return;
+            
+            const code = document.getElementById('redeemCodeInput').value.trim();
+            if (!code) {
+                showNotification('请输入兑换码', 'error');
+                return;
+            }
+
+            if (!sbClient) {
+                showNotification('网络连接失败，请刷新重试', 'error');
+                return;
+            }
+
+            // 防重复点击
+            btn.disabled = true;
+
+            try {
+                // 从 Supabase 查询兑换码
+                const { data: codes, error } = await sbClient
+                    .from('exchange_codes')
+                    .select('*')
+                    .eq('code', code);
+
+                if (error || !codes || codes.length === 0) {
+                    showNotification('兑换码不存在', 'error');
+                    btn.disabled = false;
+                    return;
+                }
+
+                const codeData = codes[0];
+
+                if (codeData.redeemed) {
+                    showNotification('该兑换码已被使用', 'error');
+                    btn.disabled = false;
+                    return;
+                }
+                if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
+                    showNotification('该兑换码已过期', 'error');
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 【关键】先标记已使用（原子操作，防止并发重复领取）
+                const { error: updateError } = await sbClient
+                    .from('exchange_codes')
+                    .update({
+                        redeemed: true,
+                        redeemed_at: new Date().toISOString(),
+                        redeemed_by: (await sbClient.auth.getUser())?.data?.user?.id || null
+                    })
+                    .eq('id', codeData.id);
+
+                if (updateError) {
+                    showNotification('兑换码状态更新失败，请重试', 'error');
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 标记成功后，再发放奖励（Supabase 字段名：reward_type1/2, reward_amount1/2, reward_item1/2）
+                const typeNames = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', jixing_muchun_currency: '纪行券' };
+                let rewards = [];
+
+                // 奖励 1：实物奖励
+                if (codeData.reward_type1 === 'item' && codeData.reward_item1) {
+                    const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+                    normalRecords.push({
+                        prize: { name: codeData.reward_item1, rewardType: 'item' },
+                        date: new Date().toISOString(),
+                        used: false,
+                        source: '兑换码'
+                    });
+                    localStorage.setItem('records', JSON.stringify(normalRecords));
+                    rewards.push(`🎁 ${codeData.reward_item1}`);
+                }
+                // 奖励 1：货币奖励
+                else if (codeData.reward_type1 && codeData.reward_type1 !== 'none' && codeData.reward_amount1 > 0) {
+                    const current = parseInt(localStorage.getItem(codeData.reward_type1) || '0');
+                    localStorage.setItem(codeData.reward_type1, String(current + codeData.reward_amount1));
+                    rewards.push(`${codeData.reward_amount1} ${typeNames[codeData.reward_type1] || codeData.reward_type1}`);
+                }
+
+                // 奖励 2：实物奖励
+                if (codeData.reward_type2 === 'item' && codeData.reward_item2) {
+                    const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+                    normalRecords.push({
+                        prize: { name: codeData.reward_item2, rewardType: 'item' },
+                        date: new Date().toISOString(),
+                        used: false,
+                        source: '兑换码'
+                    });
+                    localStorage.setItem('records', JSON.stringify(normalRecords));
+                    rewards.push(`🎁 ${codeData.reward_item2}`);
+                }
+                // 奖励 2：货币奖励
+                else if (codeData.reward_type2 && codeData.reward_type2 !== 'none' && codeData.reward_amount2 > 0) {
+                    const current = parseInt(localStorage.getItem(codeData.reward_type2) || '0');
+                    localStorage.setItem(codeData.reward_type2, String(current + codeData.reward_amount2));
+                    rewards.push(`${codeData.reward_amount2} ${typeNames[codeData.reward_type2] || codeData.reward_type2}`);
+                }
+
+                closeRedeemModal();
+                showNotification(`🎉 兑换成功！获得 ${rewards.join(' + ') || '奖励'}`, 'success');
+                createConfetti();
+                renderStats(); // 刷新统计栏显示
+            } catch(e) {
+                console.error('兑换失败:', e);
+                showNotification('兑换出错，请稍后重试', 'error');
+            }
+            btn.disabled = false; // 恢复按钮
+        });
+
+        document.getElementById('cancelRedeemBtn').addEventListener('click', closeRedeemModal);
+        document.getElementById('redeemModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRedeemModal();
+        });
+
+        // 回车键提交
+        document.getElementById('redeemCodeInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('confirmRedeemBtn').click();
+        });
+
+        // ========== 工具函数 ==========
+
+        function showNotification(message, type = 'success') {
+            const el = document.getElementById('notification');
+            el.innerHTML = message;
+            el.className = `notification ${type} show`;
+            setTimeout(() => el.className = 'notification', 3000);
+        }
+
+        function formatDate(isoStr) {
+            try {
+                const d = new Date(isoStr);
+                return `${d.getMonth()+1}/${d.getDate()}`;
+            } catch { return ''; }
+        }
+
+        function createConfetti() {
+            const colors = ['#ff6b6b', '#48dbfb', '#1dd1a1', '#ff9ff3', '#feca57', '#ff9f43', '#00d2d3'];
+            for (let i = 0; i < 60; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-10px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.width = conf.style.height = (Math.random() * 8 + 5) + 'px';
+                document.body.appendChild(conf);
+                setTimeout(() => conf.remove(), 1500);
+            }
+        }
+
+        // 监听 storage 变化实现跨页面同步
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'records' || e.key === 'advancedRecords') {
+                render();
+            }
+        });
+
+        // ========== 初始化 ==========
+        document.addEventListener('DOMContentLoaded', render);
+    </script>
+</body>
+</html>
