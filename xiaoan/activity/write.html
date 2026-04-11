@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨香之骰：练字大挑战 - 超级兑换券乐园</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        body {
+            background: url('write.png') center/cover no-repeat fixed;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 40px rgba(80, 120, 100, 0.2);
+            width: 95%;
+            max-width: 700px;
+            padding: 30px;
+            margin-top: 60px;
+            border: 2px solid rgba(80, 120, 100, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #48bb78, #38a169, #4299e1, #48bb78, #38a169, #4299e1);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #ecc94b, #d69e2e);
+            color: #744210;
+            box-shadow: 0 4px 15px rgba(236, 201, 75, 0.4);
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            color: white;
+            box-shadow: 0 4px 15px rgba(159, 122, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            color: #fff;
+            text-shadow:
+                0 0 10px rgba(0,0,0,0.8),
+                0 0 20px rgba(0,0,0,0.6),
+                2px 2px 4px rgba(0,0,0,0.9),
+                -1px -1px 3px rgba(50,200,100,0.9),
+                -2px -2px 5px #38a169,
+                2px 2px 5px #fff;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 0.95rem;
+        }
+
+        .date-display {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 20px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* 骰子区域 */
+        .dice-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .dice-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .dice {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #1a1a2e;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.3),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.1),
+                inset 0 5px 15px rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            position: relative;
+        }
+
+        .dice.rolling {
+            animation: diceRoll 0.6s ease-out;
+        }
+
+        @keyframes diceRoll {
+            0% { transform: rotateX(0) rotateY(0) scale(1); }
+            25% { transform: rotateX(180deg) rotateY(90deg) scale(0.9); }
+            50% { transform: rotateX(360deg) rotateY(180deg) scale(1.1); }
+            75% { transform: rotateX(540deg) rotateY(270deg) scale(0.9); }
+            100% { transform: rotateX(720deg) rotateY(360deg) scale(1); }
+        }
+
+        .dice:not(.rolled):hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 15px 40px rgba(0, 0, 0, 0.4),
+                inset 0 -5px 15px rgba(0, 0, 0, 0.1),
+                inset 0 5px 15px rgba(255, 255, 255, 0.8);
+        }
+
+        .dice.rolled {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+            animation: diceGlow 2s infinite;
+        }
+
+        @keyframes diceGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(72, 187, 120, 0.5), 0 10px 30px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(72, 187, 120, 0.8), 0 10px 30px rgba(0, 0, 0, 0.3); }
+        }
+
+        .roll-hint {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            margin-top: 10px;
+        }
+
+        /* 任务卡片 */
+        .task-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 70%, rgba(255,255,255,0.05));
+            pointer-events: none;
+        }
+
+        .task-card.dice-1 { border-color: #48bb78; }
+        .task-card.dice-2 { border-color: #4299e1; }
+        .task-card.dice-3 { border-color: #9f7aea; }
+        .task-card.dice-4 { border-color: #ed8936; }
+        .task-card.dice-5 { border-color: #ecc94b; }
+        .task-card.dice-6 { border-color: #e53e3e; background: rgba(229, 62, 62, 0.15); }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .task-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+        }
+
+        .task-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .task-difficulty {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .task-desc {
+            line-height: 1.8;
+            opacity: 0.9;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .reward-box {
+            background: rgba(72, 187, 120, 0.15);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin: 15px 0;
+        }
+
+        .reward-box strong {
+            color: #48bb78;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            padding: 6px 16px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: rgba(237, 137, 54, 0.3);
+            color: #ed8936;
+        }
+
+        .status-completed {
+            background: rgba(72, 187, 120, 0.3);
+            color: #48bb78;
+        }
+
+        .status-waiting {
+            background: rgba(66, 153, 225, 0.3);
+            color: #63b3ed;
+        }
+
+        /* 免练字卡显示 */
+        .pass-card-display {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pass-card-count {
+            background: white;
+            color: #805ad5;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* 输入框样式 */
+        input[type="number"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: white;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 150px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #48bb78;
+        }
+
+        input[type="number"]::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 统计区域 */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 24px;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        /* 历史记录 */
+        .history-section {
+            margin-top: 30px;
+        }
+
+        .history-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .history-dice {
+            font-size: 1.5rem;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-status {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 10px;
+        }
+
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 25px;
+            padding: 35px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid rgba(72, 187, 120, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #48bb78;
+            margin-bottom: 15px;
+        }
+
+        .modal-text {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .modal-rewards {
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* 提示消息 */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            color: white;
+        }
+
+        .toast.warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin-top: 50px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .dice {
+                width: 100px;
+                height: 100px;
+                font-size: 3rem;
+            }
+
+            .task-actions {
+                flex-direction: column;
+            }
+
+            .task-actions button {
+                width: 100%;
+            }
+        }
+
+        /* ===== 超时倒计时警告框 ===== */
+        .overtime-countdown-box {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border: 2px solid #48bb78;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin: 12px 0;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .overtime-label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #f8f8f8;
+            margin-bottom: 8px;
+        }
+
+        .overtime-timer {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 3px;
+            margin: 6px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        #overtimeCountdown {
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .overtime-hint {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* 警告状态（≤3分钟） */
+        .overtime-warning {
+            background: linear-gradient(135deg, #1a1a2e, #2d1810) !important;
+            border-color: #f6ad55 !important;
+            box-shadow: 0 0 20px rgba(246, 173, 85, 0.4), inset 0 0 20px rgba(246, 173, 85, 0.05);
+        }
+
+        .overtime-warning .overtime-label {
+            color: #fbd38d;
+        }
+
+        .overtime-warning .overtime-timer {
+            color: #f6ad55;
+            text-shadow: 0 0 12px rgba(246, 173, 85, 0.5);
+        }
+
+        .overtime-warning .overtime-hint {
+            color: rgba(251, 211, 141, 0.7);
+        }
+
+        /* 紧急状态（≤1分钟） */
+        .overtime-critical {
+            background: linear-gradient(135deg, #1a0000, #300000) !important;
+            border-color: #fc8181 !important;
+            box-shadow: 0 0 30px rgba(252, 129, 129, 0.6), inset 0 0 20px rgba(252, 129, 129, 0.08) !important;
+            animation: overtimeShake 0.5s ease-in-out infinite !important;
+        }
+
+        .overtime-critical .overtime-label {
+            color: #fff5f5;
+            font-size: 1.08rem;
+        }
+
+        .overtime-critical .overtime-timer {
+            color: #fc8181;
+            text-shadow: 0 0 14px rgba(252, 129, 129, 0.7);
+        }
+
+        .overtime-critical .overtime-hint {
+            color: rgba(255, 200, 200, 0.9);
+            font-weight: bold;
+        }
+
+        /* 已过期 */
+        .overtime-expired {
+            background: linear-gradient(135deg, #171923, #1a202c) !important;
+            border-color: #4a5568 !important;
+            box-shadow: none !important;
+            animation: none !important;
+        }
+
+        .overtime-icon { font-size: 2rem; margin-bottom: 4px; }
+        .overtime-expired .overtime-label { color: #a0aec0; }
+        .overtime-expired .overtime-hint { color: #718096; }
+
+        @keyframes overtimePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.65; transform: scale(1.06); }
+        }
+
+        @keyframes overtimeShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            60% { transform: translateX(-2px); }
+            80% { transform: translateX(2px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景音乐 -->
+    <audio id="bgm" autoplay loop>
+        <source src="write.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 返回按钮 -->
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">🏠 返回</button>
+    </div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>🖋️ 墨香之骰：练字大挑战 🖋️</h1>
+            <p>每日掷骰，接受练字的挑战！</p>
+            <div class="date-display" id="dateDisplay"></div>
+        </div>
+
+        <!-- 统计栏 -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="totalRolls">0</div>
+                <div class="stat-label">总投掷次数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalCompleted">0</div>
+                <div class="stat-label">完成任务</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="remainingTasks">6</div>
+                <div class="stat-label">剩余任务</div>
+            </div>
+        </div>
+
+        <!-- 骰子区域 -->
+        <div class="dice-section">
+            <div class="dice-container">
+                <div class="dice" id="dice" onclick="rollDice()">❓</div>
+            </div>
+            <p class="roll-hint" id="rollHint">点击骰子开始今日挑战！</p>
+            <br>
+            <button class="btn btn-primary" id="rollBtn" onclick="rollDice()">🎲 掷骰子</button>
+        </div>
+
+        <!-- 任务展示区 -->
+        <div id="taskArea"></div>
+
+        <!-- 历史记录 -->
+        <div class="history-section">
+            <div class="history-title">📜 近期记录</div>
+            <div class="history-list" id="historyList">
+                <p style="opacity: 0.5; text-align: center; padding: 20px;">暂无记录</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 完成任务弹窗 -->
+    <div class="modal" id="completeModal">
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">🎉</div>
+            <h2 class="modal-title" id="modalTitle">恭喜完成！</h2>
+            <p class="modal-text" id="modalText">你已完成今日的挑战任务！</p>
+            <div class="modal-rewards" id="modalRewards"></div>
+            <button class="btn btn-success" onclick="closeModal()" style="padding: 12px 40px;">太棒了！</button>
+        </div>
+    </div>
+
+    <!-- 输入练字数量弹窗 -->
+    <div class="modal" id="inputModal">
+        <div class="modal-content">
+            <div class="modal-icon">📝</div>
+            <h2 class="modal-title">确认完成情况</h2>
+            <p class="modal-text">请输入你完成的练字数量：</p>
+            <div style="margin: 20px 0;">
+                <input type="number" id="questionCount" placeholder="输入字数" min="1" max="999">
+            </div>
+            <button class="btn btn-primary" onclick="submitQuestionCount()" style="margin-right: 10px;">确认提交</button>
+            <button class="btn" style="background: rgba(255,255,255,0.2); color: white;" onclick="closeInputModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 三连骰抽取模式弹窗 -->
+    <div class="modal" id="tripleRollModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-icon">🎲🎲🎲</div>
+            <h2 class="modal-title" style="color: #9f7aea;">幸运三连抽取！</h2>
+            <p class="modal-text">确认完成练字后，请摇3次骰子来决定你的额外奖励！</p>
+
+            <div id="tripleRollArea" style="margin: 20px 0;">
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                    <div class="dice" id="tripleDice1" style="width: 70px; height: 70px; font-size: 2rem;">❓</div>
+                    <div class="dice" id="tripleDice2" style="width: 70px; height: 70px; font-size: 2rem;">❓</div>
+                    <div class="dice" id="tripleDice3" style="width: 70px; height: 70px; font-size: 2rem;">❓</div>
+                </div>
+                <div style="text-align: center; margin-bottom: 10px;">
+                    <span id="tripleRollStatus" style="font-size: 0.9rem; opacity: 0.8;">已摇：0 / 3 次</span>
+                </div>
+            </div>
+
+            <div id="tripleRollResult" style="display: none; background: rgba(159,122,234,0.15); border: 1px solid rgba(159,122,234,0.3); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                <strong style="color: #9f7aea;">🎁 三连骰奖励：</strong>
+                <div id="tripleRewardText" style="margin-top: 8px;"></div>
+            </div>
+
+            <button class="btn btn-purple" id="tripleRollBtn" onclick="rollTripleDice()">🎲 摇第 1 次骰子</button>
+            <button class="btn btn-success" id="tripleConfirmBtn" onclick="confirmTripleRoll()" style="display: none; margin-top: 10px;">确认领取奖励</button>
+        </div>
+    </div>
+
+    <!-- 提示消息 -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ===== 配置 =====
+        const DICE_PROBABILITIES = [
+            { num: 1, prob: 0.15 },
+            { num: 2, prob: 0.26 },
+            { num: 3, prob: 0.11 },
+            { num: 4, prob: 0.28 },
+            { num: 5, prob: 0.15 },
+            { num: 6, prob: 0.05 }
+        ];
+
+        const TASKS = {
+            1: {
+                icon: '✍️',
+                title: '墨香初现',
+                difficulty: '简单',
+                desc: '完成一篇练字即可领取奖励。',
+                reward: [{ type: 'premium', amount: 1, name: '高级抽奖券' }],
+                timeLimit: null,
+                hasTimeCondition: false
+            },
+            2: {
+                icon: '🏆',
+                title: '全能达人',
+                difficulty: '挑战',
+                desc: '在21点前完成所有每日任务，展现你的全面能力！',
+                reward: [{ type: 'premium', amount: 1, name: '高级抽奖券' }],
+                timeLimit: 21,
+                hasTimeCondition: true
+            },
+            3: {
+                icon: '🎲',
+                title: '幸运三连',
+                difficulty: '中等',
+                desc: '在19点前完成一篇练字，确认完成后将开启「三连骰」抽取模式！<br><small style="opacity:0.7;">可摇3次骰子，记录点数 a、b、c<br>🎁 奖励：(a+b+c) 抽奖券 + 3×(a×b×c) 兑换券 + ((a×b+c)/6) 高级抽奖券（四舍五入）</small>',
+                reward: null,
+                timeLimit: 19,
+                hasTimeCondition: true,
+                isTripleRollMode: true
+            },
+            4: {
+                icon: '🌅',
+                title: '晨曦挥毫',
+                difficulty: '中等',
+                desc: '在18点前完成一篇练字，把握清晨的黄金时间！',
+                reward: [{ type: 'journeyTicket', amount: 1, name: '纪行券' }],
+                timeLimit: 18,
+                hasTimeCondition: true
+            },
+            5: {
+                icon: '⏱️',
+                title: '时间竞速',
+                difficulty: '挑战',
+                desc: '在不同时间段完成所有每日任务，奖励随时间变化！<br><small style="opacity:0.7;">⏰ 18点前：500兑换券<br>⏰ 19点前：400兑换券<br>⏰ 20点前：250兑换券<br>⏰ 21点前：100兑换券<br>⏰ 22点前：-300兑换券</small>',
+                reward: null,
+                timeLimit: null,
+                hasTimeCondition: false,
+                isTimeRaceChallenge: true
+            },
+            6: {
+                icon: '📚',
+                title: '校园时光',
+                difficulty: '特殊',
+                desc: '在学校完成作业，收获双倍奖励！',
+                reward: [
+                    { type: 'journeyTicket', amount: 1, name: '纪行券' },
+                    { type: 'premium', amount: 1, name: '高级抽奖券' }
+                ],
+                timeLimit: null,
+                hasTimeCondition: false
+            }
+        };
+
+        const DICE_EMOJIS = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+        // ===== 状态变量 =====
+        let todayData = null;
+        let history = [];
+
+        // ===== 初始化 =====
+        function init() {
+            // 尝试自动播放背景音乐
+            const bgm = document.getElementById('bgm');
+            if (bgm) {
+                bgm.volume = 0.4;
+                bgm.play().catch(() => {
+                    // 浏览器阻止自动播放，在首次点击时触发
+                    document.addEventListener('click', function playBgm() {
+                        bgm.play().catch(() => {});
+                        document.removeEventListener('click', playBgm);
+                    }, { once: true });
+                });
+            }
+
+            loadData();
+            updateDateDisplay();
+            renderTaskArea();
+            renderHistory();
+            updateStats();
+
+            // 检查是否已投掷
+            if (todayData && todayData.rolled) {
+                showRolledState(todayData.diceResult);
+            }
+
+            // 检查是否所有任务都已完成
+            if (todayData && todayData.completedTasks && todayData.completedTasks.length >= 6) {
+                document.getElementById('rollBtn').textContent = '✅ 全部完成';
+                document.getElementById('rollBtn').disabled = true;
+                document.getElementById('rollHint').textContent = '🎉 所有任务都已抽取完毕！';
+            }
+        }
+
+        function loadData() {
+            const todayStr = getTodayString();
+            
+            // 加载今日数据
+            const savedToday = localStorage.getItem('write_today');
+            let todayObj = savedToday ? JSON.parse(savedToday) : {};
+            
+            if (todayObj.date === todayStr) {
+                todayData = todayObj;
+                // 兼容旧数据：如果没有completedTasks字段则初始化
+                if (!todayData.completedTasks) {
+                    todayData.completedTasks = [];
+                    saveTodayData();
+                }
+            } else {
+                todayData = {
+                    date: todayStr,
+                    rolled: false,
+                    diceResult: null,
+                    completed: false,
+                    passCardUsed: false,
+                    completedTasks: []
+                };
+                saveTodayData();
+            }
+
+            // 加载历史记录
+            const savedHistory = localStorage.getItem('write_history');
+            history = savedHistory ? JSON.parse(savedHistory) : [];
+
+            // 加载免练字卡数量（独立存储）
+            if (localStorage.getItem('write_passCards') === null) {
+                localStorage.setItem('write_passCards', '0');
+            }
+        }
+
+        function saveTodayData() {
+            localStorage.setItem('write_today', JSON.stringify(todayData));
+        }
+
+        function saveHistory() {
+            localStorage.setItem('write_history', JSON.stringify(history));
+        }
+
+        function getPassCardsCount() {
+            return parseInt(localStorage.getItem('write_passCards') || '0');
+        }
+
+        function addPassCards(count) {
+            const current = getPassCardsCount();
+            localStorage.setItem('write_passCards', String(current + count));
+        }
+
+        function usePassCard() {
+            const current = getPassCardsCount();
+            if (current > 0) {
+                localStorage.setItem('write_passCards', String(current - 1));
+                return true;
+            }
+            return false;
+        }
+
+        // ===== 工具函数 =====
+        function getTodayString() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function getCurrentHour() {
+            return new Date().getHours();
+        }
+
+        function updateDateDisplay() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('zh-CN', options);
+        }
+
+        // 超时倒计时定时器
+        let overtimeTimer = null;
+        let overtimeDeadline = null; // 倒计时截止时间（用于rollTime缺失时的兼容）
+
+        function startOvertimeCountdown() {
+            if (overtimeTimer) clearInterval(overtimeTimer);
+
+            const update = () => {
+                const el = document.getElementById('overtimeCountdown');
+                if (!el) { if (overtimeTimer) clearInterval(overtimeTimer); return; }
+
+                const now = new Date();
+                
+                // 确定倒计时截止时间
+                if (!overtimeDeadline) {
+                    if (todayData && todayData.rollTime) {
+                        overtimeDeadline = new Date(todayData.rollTime).getTime() + 10 * 60 * 1000;
+                    } else {
+                        overtimeDeadline = now.getTime() + 10 * 60 * 1000;
+                    }
+                }
+
+                const remainingSec = Math.max(0, Math.floor((overtimeDeadline - now.getTime()) / 1000));
+
+                if (remainingSec > 0) {
+                    const min = Math.floor(remainingSec / 60);
+                    const sec = remainingSec % 60;
+                    el.textContent = `${min}:${String(sec).padStart(2, '0')}`;
+                    
+                    // 更新紧急程度提示文字
+                    const hintEl = el.closest('.overtime-countdown-box')?.querySelector('.overtime-hint');
+                    if (hintEl) hintEl.textContent = `剩余 ${min} 分 ${sec} 秒后窗口关闭`;
+
+                    // 动态切换紧急样式
+                    const box = el.closest('.overtime-countdown-box');
+                    if (box) {
+                        box.classList.remove('overtime-warning', 'overtime-critical');
+                        if (remainingSec <= 60) {
+                            box.classList.add('overtime-critical');
+                            // 最后60秒脉冲闪烁效果
+                            el.style.animation = 'overtimePulse 1s ease-in-out infinite';
+                        } else if (remainingSec <= 180) {
+                            box.classList.add('overtime-warning');
+                            el.style.animation = '';
+                        } else {
+                            el.style.animation = '';
+                        }
+                    }
+                } else {
+                    el.textContent = '00:00';
+                    const box = el.closest('.overtime-countdown-box');
+                    if (box) {
+                        box.className = 'overtime-countdown-box overtime-expired';
+                        box.innerHTML = '<div class="overtime-icon">❌</div><div class="overtime-label">10分钟补救窗口已关闭</div><div class="overtime-hint">任务已失效，请明天再来</div>';
+                    }
+                    clearInterval(overtimeTimer);
+                    overtimeTimer = null;
+                    setTimeout(() => renderTaskArea(), 2000);
+                }
+            };
+
+            // 重置截止时间（每次重新渲染时重新计算）
+            overtimeDeadline = null;
+            update();
+            overtimeTimer = setInterval(update, 1000);
+        }
+
+        // ===== 掷骰子 =====
+        function rollDice() {
+            if (!todayData || todayData.rolled) {
+                showToast('今天已经掷过骰子了！', 'warning');
+                return;
+            }
+
+            // 检查是否所有任务都已抽过
+            if (todayData.completedTasks && todayData.completedTasks.length >= 6) {
+                showToast('🎉 所有任务都已完成抽取！明天再来吧~', 'warning');
+                document.getElementById('rollBtn').textContent = '✅ 全部完成';
+                document.getElementById('rollBtn').disabled = true;
+                return;
+            }
+
+            const diceEl = document.getElementById('dice');
+            const rollBtn = document.getElementById('rollBtn');
+
+            // 开始动画
+            diceEl.classList.add('rolling');
+            rollBtn.disabled = true;
+
+            // 模拟滚动效果
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                diceEl.textContent = DICE_EMOJIS[Math.floor(Math.random() * 6) + 1];
+                rollCount++;
+                
+                if (rollCount >= 15) {
+                    clearInterval(rollInterval);
+                    
+                    // 根据概率确定结果（排除已完成的）
+                    const result = getRandomDiceResult();
+                    
+                    if (result === null) {
+                        showToast('所有任务都已抽取完毕！', 'warning');
+                        diceEl.classList.remove('rolling');
+                        rollBtn.disabled = true;
+                        rollBtn.textContent = '✅ 全部完成';
+                        return;
+                    }
+                    
+                    // 显示结果
+                    setTimeout(() => {
+                        diceEl.classList.remove('rolling');
+                        diceEl.classList.add('rolled');
+                        diceEl.textContent = DICE_EMOJIS[result];
+                        
+                        // 更新数据
+                        todayData.rolled = true;
+                        todayData.diceResult = result;
+                        todayData.rollTime = new Date().toISOString();
+                        // 记录已抽取的任务
+                        if (!todayData.completedTasks) todayData.completedTasks = [];
+                        saveTodayData();
+                        
+                        showRolledState(result);
+
+                        // 添加到历史
+                        addHistoryEntry(result);
+
+                        // 更新统计
+                        updateStats();
+                        
+                        showToast(`掷出了 ${result} 点！「${TASKS[result].title}」`, 'success');
+                    }, 100);
+                }
+            }, 80);
+        }
+
+        function getRandomDiceResult() {
+            // 排除已抽取过的任务
+            const available = DICE_PROBABILITIES.filter(
+                item => !todayData.completedTasks.includes(item.num)
+            );
+            
+            if (available.length === 0) return null; // 所有任务已抽完
+            
+            const rand = Math.random();
+            let cumulative = 0;
+            
+            for (const item of available) {
+                cumulative += item.prob / available.reduce((s, i) => s + i.prob, 0) * 1; // 重归一化概率
+                if (rand <= cumulative) {
+                    return item.num;
+                }
+            }
+            
+            return available[0].num; // 默认返回第一个可用
+        }
+
+        function showRolledState(diceNum) {
+            document.getElementById('rollHint').textContent = `今日运势：${diceNum} 点`;
+            document.getElementById('rollBtn').textContent = '✅ 已投掷';
+            document.getElementById('rollBtn').disabled = true;
+
+            renderTaskArea();
+        }
+
+        // ===== 渲染任务区域 =====
+        function renderTaskArea() {
+            const taskArea = document.getElementById('taskArea');
+            
+            if (!todayData || !todayData.rolled) {
+                taskArea.innerHTML = `
+                    <div style="text-align: center; padding: 30px; opacity: 0.6;">
+                        <p style="font-size: 1.1rem;">🎲 点击上方骰子开始今日挑战！</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">每天只有一次机会，珍惜每一次投掷~</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (todayData.completed) {
+                renderCompletedTask(taskArea);
+                return;
+            }
+
+            const diceNum = todayData.diceResult;
+            const task = TASKS[diceNum];
+
+            // 检查时间条件
+            let canComplete = true;
+            let timeStatusText = '';
+            
+            if (task.hasTimeCondition && task.timeLimit !== null) {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                
+                if (currentHour >= task.timeLimit) {
+                    // 规则5特殊处理：超过18点后有10分钟倒计时窗口
+                    if (task.hasOvertimeCountdown) {
+                        // 如果没有记录掷骰时间，以当前页面加载时刻为起点
+                        const startTime = todayData.rollTime ? new Date(todayData.rollTime) : now;
+                        // 确保截止时间不早于当前时间（给用户至少10分钟窗口）
+                        const deadline = new Date(Math.max(startTime.getTime(), now.getTime()) + 10 * 60 * 1000);
+                        const remainingSec = Math.max(0, Math.floor((deadline - now) / 1000));
+                        
+                        if (remainingSec > 0) {
+                            const min = Math.floor(remainingSec / 60);
+                            const sec = remainingSec % 60;
+                            const urgencyClass = remainingSec <= 60 ? 'overtime-critical' : remainingSec <= 180 ? 'overtime-warning' : '';
+                            timeStatusText = `<div class="overtime-countdown-box ${urgencyClass}"><div class="overtime-label">⚠️ 超时补救窗口 — 请尽快完成！</div><div class="overtime-timer"><span id="overtimeCountdown">${min}:${String(sec).padStart(2, '0')}</span></div><div class="overtime-hint">剩余 ${min} 分 ${sec} 秒后窗口关闭</div></div>`;
+                        } else {
+                            canComplete = false;
+                            timeStatusText = '❌ 10分钟倒计时已结束';
+                        }
+                    } else {
+                        canComplete = false;
+                        timeStatusText = `⏰ 当前 ${currentTimeStr}，需要在 ${task.timeLimit}:00 前启动`;
+                    }
+                } else {
+                    const remainingHours = task.timeLimit - currentHour;
+                    timeStatusText = `⏰ 还有 ${remainingHours} 小时截止`;
+                }
+            }
+
+            // 6号是即时奖励
+            if (task.isInstantReward) {
+                taskArea.innerHTML = '';
+                return;
+            }
+
+            // 免练字卡使用选项（非即时奖励时）
+            const passCardHtml = getPassCardsCount() > 0 ? `
+                <div class="pass-card-display">
+                    🃏 你有 <span class="pass-card-count">${getPassCardsCount()}</span> 张免练字卡
+                    <button class="btn btn-purple" style="padding: 6px 16px; font-size: 0.85rem; margin-left: 10px;" onclick="usePassCardAndComplete()">
+                        使用免练字卡
+                    </button>
+                </div>
+            ` : '';
+
+            taskArea.innerHTML = `
+                <div class="task-card dice-${diceNum}">
+                    <div class="task-header">
+                        <div class="task-icon">${task.icon}</div>
+                        <div>
+                            <div class="task-title">${task.title}</div>
+                            <span class="task-difficulty">${task.difficulty}</span>
+                        </div>
+                        <span class="status-tag status-pending">待完成</span>
+                    </div>
+                    <p class="task-desc">${task.desc}</p>
+                    ${timeStatusText ? `<p style="color: #63b3ed; font-size: 0.9rem;">${timeStatusText}</p>` : ''}
+                    <div class="reward-box">
+                        <strong>🎁 奖励：</strong> ${formatReward(task.reward)}
+                    </div>
+                    ${passCardHtml}
+                    <div class="task-actions">
+                        ${canComplete ? 
+                            (task.isTripleRollMode ? 
+                                `<button class="btn btn-purple" onclick="openTripleRollModal()">✅ 我已完成，开启三连骰</button>` :
+                            task.isTimeRaceChallenge ?
+                                `<button class="btn btn-gold" onclick="completeTimeRaceTask(${diceNum})">⏱️ 我已完成，结算奖励</button>` :
+                                `<button class="btn btn-success" onclick="completeTask(${diceNum})">✅ 我已完成，领取奖励</button>`
+                            ) :
+                            `<button class="btn" disabled style="background: rgba(128,128,128,0.3);">⏳ 时间未到</button>`
+                        }
+                    </div>
+                </div>
+            `;
+            
+            // 如果规则5处于超时倒计时窗口，启动倒计时自动更新
+            if (task.hasOvertimeCountdown) {
+                startOvertimeCountdown();
+            }
+        }
+
+        function renderCompletedTask(taskArea) {
+            const diceNum = todayData.diceResult;
+            const task = TASKS[diceNum];
+
+            taskArea.innerHTML = `
+                <div class="task-card dice-${diceNum}" style="border-style: dashed;">
+                    <div class="task-header">
+                        <div class="task-icon">${task.icon}</div>
+                        <div>
+                            <div class="task-title">${task.title}</div>
+                            <span class="task-difficulty">${task.difficulty}</span>
+                        </div>
+                        <span class="status-tag status-completed">✅ 已完成</span>
+                    </div>
+                    <p class="task-desc">${task.desc}</p>
+                    <div class="reward-box">
+                        <strong>🎁 已获得：</strong> ${todayData.rewardText || formatReward(task.reward)}
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== 完成任务 =====
+        function completeTask(diceNum) {
+            const task = TASKS[diceNum];
+            
+            // 再次检查时间条件
+            if (task.hasTimeCondition && task.timeLimit !== null) {
+                const currentHour = getCurrentHour();
+                if (currentHour >= task.timeLimit) {
+                    showToast(`已超过 ${task.timeLimit}:00 截止时间！`, 'error');
+                    renderTaskArea();
+                    return;
+                }
+            }
+
+            // 发放奖励
+            grantReward(task.reward);
+            
+            // 标记此任务为已完成（不可再抽取）
+            markTaskCompleted(diceNum);
+            
+            // 更新状态
+            todayData.completed = true;
+            todayData.rewardText = formatReward(task.reward);
+            saveTodayData();
+            
+            // 更新统计
+            updateStats();
+
+            // 显示成功弹窗
+            showModal(
+                '🎉',
+                '任务完成！',
+                `恭喜完成「${task.title}」任务！`,
+                task.reward
+            );
+
+            renderTaskArea();
+        }
+
+        function usePassCardAndComplete() {
+            if (usePassCard()) {
+                const diceNum = todayData.diceResult;
+                const task = TASKS[diceNum];
+                
+                grantReward(task.reward);
+                markTaskCompleted(diceNum);
+                
+                todayData.completed = true;
+                todayData.passCardUsed = true;
+                todayData.rewardText = formatReward(task.reward) + ' (+免练字卡x1已使用)';
+                saveTodayData();
+                
+                updateStats();
+
+                showModal(
+                    '🃏',
+                    '免练字卡使用成功！',
+                    `使用免练字卡直接完成任务！\n获得${formatReward(task.reward)}`,
+                    task.reward
+                );
+
+                renderTaskArea();
+            } else {
+                showToast('没有可用的免练字卡！', 'error');
+            }
+        }
+
+        // ===== 标记任务为已完成（不再可抽取） =====
+        function markTaskCompleted(diceNum) {
+            if (!todayData.completedTasks) todayData.completedTasks = [];
+            if (!todayData.completedTasks.includes(diceNum)) {
+                todayData.completedTasks.push(diceNum);
+            }
+            saveTodayData();
+        }
+
+        // ===== 三连骰模式（任务3） =====
+        let tripleRollResults = [];
+        let tripleRollCount = 0;
+
+        function openTripleRollModal() {
+            const task = TASKS[todayData.diceResult];
+            
+            // 检查时间条件
+            if (task.hasTimeCondition && task.timeLimit !== null) {
+                const currentHour = getCurrentHour();
+                if (currentHour >= task.timeLimit) {
+                    showToast(`已超过 ${task.timeLimit}:00 截止时间！`, 'error');
+                    renderTaskArea();
+                    return;
+                }
+            }
+
+            // 重置三连骰状态
+            tripleRollResults = [];
+            tripleRollCount = 0;
+            document.getElementById('tripleDice1').textContent = '❓';
+            document.getElementById('tripleDice2').textContent = '❓';
+            document.getElementById('tripleDice3').textContent = '❓';
+            document.getElementById('tripleDice1').className = 'dice';
+            document.getElementById('tripleDice2').className = 'dice';
+            document.getElementById('tripleDice3').className = 'dice';
+            document.getElementById('tripleRollStatus').textContent = '已摇：0 / 3 次';
+            document.getElementById('tripleRollResult').style.display = 'none';
+            document.getElementById('tripleRollBtn').style.display = 'inline-block';
+            document.getElementById('tripleRollBtn').textContent = '🎲 摇第 1 次骰子';
+            document.getElementById('tripleRollBtn').disabled = false;
+            document.getElementById('tripleConfirmBtn').style.display = 'none';
+
+            document.getElementById('tripleRollModal').classList.add('active');
+        }
+
+        function closeTripleRollModal() {
+            document.getElementById('tripleRollModal').classList.remove('active');
+        }
+
+        function rollTripleDice() {
+            if (tripleRollCount >= 3) return;
+
+            const diceEl = document.getElementById(`tripleDice${tripleRollCount + 1}`);
+            const btn = document.getElementById('tripleRollBtn');
+
+            diceEl.classList.add('rolling');
+            btn.disabled = true;
+
+            let rollCount = 0;
+            const rollInterval = setInterval(() => {
+                diceEl.textContent = DICE_EMOJIS[Math.floor(Math.random() * 6) + 1];
+                rollCount++;
+                
+                if (rollCount >= 12) {
+                    clearInterval(rollInterval);
+                    
+                    const result = Math.floor(Math.random() * 6) + 1;
+                    
+                    setTimeout(() => {
+                        diceEl.classList.remove('rolling');
+                        diceEl.classList.add('rolled');
+                        diceEl.textContent = DICE_EMOJIS[result];
+
+                        tripleRollResults.push(result);
+                        tripleRollCount++;
+
+                        document.getElementById('tripleRollStatus').textContent = `已摇：${tripleRollCount} / 3 次`;
+
+                        if (tripleRollCount < 3) {
+                            btn.disabled = false;
+                            btn.textContent = `🎲 摇第 ${tripleRollCount + 1} 次骰子`;
+                        } else {
+                            // 3次都摇完了，计算奖励
+                            btn.style.display = 'none';
+                            calculateTripleReward();
+                            document.getElementById('tripleConfirmBtn').style.display = 'inline-block';
+                        }
+                    }, 80);
+                }
+            }, 70);
+        }
+
+        function calculateTripleReward() {
+            const a = tripleRollResults[0];
+            const b = tripleRollResults[1];
+            const c = tripleRollResults[2];
+
+            const lotteryAmount = a + b + c;
+            const voucherAmount = 3 * (a * b * c);
+            const premiumAmount = Math.round((a * b + c) / 6);
+
+            const rewards = [];
+            if (lotteryAmount > 0) rewards.push({ type: 'lottery', amount: lotteryAmount, name: '抽奖券' });
+            if (voucherAmount > 0) rewards.push({ type: 'voucher', amount: voucherAmount, name: '兑换券' });
+            if (premiumAmount > 0) rewards.push({ type: 'premium', amount: premiumAmount, name: '高级抽奖券' });
+
+            document.getElementById('tripleRollResult').style.display = 'block';
+            document.getElementById('tripleRewardText').innerHTML = `
+                <div style="margin: 5px 0;">🎲 点数：${a} + ${b} + ${c} = ${lotteryAmount} 抽奖券</div>
+                <div style="margin: 5px 0;">💰 3×(${a}×${b}×${c}) = ${voucherAmount} 兑换券</div>
+                <div style="margin: 5px 0;">💎 (${a}×${b}+${c})/6 ≈ ${premiumAmount} 高级抽奖券</div>
+                <div style="margin-top: 10px; font-weight: bold; color: #ffd700;">
+                    总计：${formatReward(rewards)}
+                </div>
+            `;
+        }
+
+        function confirmTripleRoll() {
+            const a = tripleRollResults[0];
+            const b = tripleRollResults[1];
+            const c = tripleRollResults[2];
+
+            const lotteryAmount = a + b + c;
+            const voucherAmount = 3 * (a * b * c);
+            const premiumAmount = Math.round((a * b + c) / 6);
+
+            const rewards = [];
+            if (lotteryAmount > 0) rewards.push({ type: 'lottery', amount: lotteryAmount, name: '抽奖券' });
+            if (voucherAmount > 0) rewards.push({ type: 'voucher', amount: voucherAmount, name: '兑换券' });
+            if (premiumAmount > 0) rewards.push({ type: 'premium', amount: premiumAmount, name: '高级抽奖券' });
+
+            grantReward(rewards);
+            markTaskCompleted(todayData.diceResult);
+
+            todayData.completed = true;
+            todayData.tripleRolls = tripleRollResults;
+            todayData.rewardText = `三连骰 [${a},${b},${c}] → ${formatReward(rewards)}`;
+            saveTodayData();
+
+            updateStats();
+            closeTripleRollModal();
+
+            showModal(
+                '🎲',
+                '三连骰抽取完成！',
+                `点数 ${a}、${b}、${c} 的组合为你带来了丰厚奖励！`,
+                rewards
+            );
+
+            renderTaskArea();
+        }
+
+        // ===== 时间竞速模式（任务5） =====
+        function completeTimeRaceTask(diceNum) {
+            const task = TASKS[diceNum];
+            const currentHour = getCurrentHour();
+
+            let voucherAmount = 0;
+            let timeLabel = '';
+
+            if (currentHour < 18) {
+                voucherAmount = 500;
+                timeLabel = '18点前（⭐⭐⭐⭐⭐）';
+            } else if (currentHour < 19) {
+                voucherAmount = 400;
+                timeLabel = '19点前（⭐⭐⭐⭐）';
+            } else if (currentHour < 20) {
+                voucherAmount = 250;
+                timeLabel = '20点前（⭐⭐⭐）';
+            } else if (currentHour < 21) {
+                voucherAmount = 100;
+                timeLabel = '21点前（⭐⭐）';
+            } else if (currentHour < 22) {
+                voucherAmount = -300;
+                timeLabel = '22点前（⚠️ 扣分）';
+            } else {
+                voucherAmount = -300;
+                timeLabel = '22点后（⚠️ 扣分）';
+            }
+
+            const rewards = [{ type: 'voucher', amount: voucherAmount, name: '兑换券' }];
+
+            grantReward(rewards);
+            markTaskCompleted(diceNum);
+
+            todayData.completed = true;
+            todayData.timeRaceHour = currentHour;
+            todayData.rewardText = `${timeLabel} → ${formatReward(rewards)}`;
+            saveTodayData();
+
+            updateStats();
+
+            const emoji = voucherAmount >= 0 ? '⏱️' : '😅';
+            showModal(
+                emoji,
+                '时间竞速结算！',
+                `你在 ${timeLabel} 完成了所有每日任务！\n当前时间：${new Date().toLocaleTimeString('zh-CN')}`,
+                rewards
+            );
+
+            renderTaskArea();
+        }
+
+        // ===== 发放奖励 =====
+        function grantReward(rewards) {
+            if (!rewards) return;
+            
+            for (const reward of rewards) {
+                switch (reward.type) {
+                    case 'voucher':
+                        addCurrency('voucher', reward.amount);
+                        break;
+                    case 'lottery':
+                        addCurrency('lottery', reward.amount);
+                        break;
+                    case 'premium':
+                        addCurrency('premium', reward.amount);
+                        break;
+                    case 'bankTicket':
+                        addCurrency('bankTicket', reward.amount);
+                        break;
+                    case 'journeyTicket':
+                        addCurrency('journeyTicket', reward.amount);
+                        break;
+                    case 'passCard':
+                        addPassCards(reward.amount);
+                        break;
+                }
+            }
+        }
+
+        function addCurrency(type, amount) {
+            const keyMap = {
+                'voucher': 'voucher',
+                'lottery': 'lottery',
+                'premium': 'premium',
+                'bankTicket': 'bankTicket',
+                'journeyTicket': 'journeyTicket'
+            };
+            
+            const key = keyMap[type];
+            if (key) {
+                const current = parseInt(localStorage.getItem(key) || '0');
+                localStorage.setItem(key, current + amount);
+                console.log(`[墨香之骰] ${type}: +${amount}`);
+            }
+        }
+
+        // ===== 格式化奖励文本 =====
+        function formatReward(rewards) {
+            if (!rewards) return '动态奖励';
+            
+            return rewards.map(r => `${r.name} x${r.amount}`).join(' + ');
+        }
+
+        // ===== 历史记录 =====
+        function addHistoryEntry(diceNum) {
+            const entry = {
+                date: new Date().toLocaleString(),
+                dice: diceNum,
+                completed: false
+            };
+            history.unshift(entry);
+            
+            // 只保留最近20条记录
+            if (history.length > 20) {
+                history.pop();
+            }
+            
+            saveHistory();
+            renderHistory();
+        }
+
+        function updateHistoryCompletion(completed) {
+            if (history.length > 0 && !history[0].completed) {
+                history[0].completed = completed;
+                saveHistory();
+                renderHistory();
+            }
+        }
+
+        function renderHistory() {
+            const listEl = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                listEl.innerHTML = '<p style="opacity: 0.5; text-align: center; padding: 20px;">暂无记录</p>';
+                return;
+            }
+
+            listEl.innerHTML = history.map(h => `
+                <div class="history-item">
+                    <div class="history-dice">${DICE_EMOJIS[h.dice] || '?'}</div>
+                    <div class="history-info">
+                        <strong>${TASKS[h.dice].title}</strong>
+                        <div style="font-size: 0.75rem; opacity: 0.6;">${h.date}</div>
+                    </div>
+                    <span class="history-status ${h.completed ? 'status-completed' : 'status-pending'}">
+                        ${h.completed ? '✅ 已完成' : '待完成'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // ===== 统计更新 =====
+        function updateStats() {
+            document.getElementById('totalRolls').textContent = history.length;
+            document.getElementById('totalCompleted').textContent = history.filter(h => h.completed).length;
+            const completedCount = (todayData && todayData.completedTasks) ? todayData.completedTasks.length : 0;
+            document.getElementById('remainingTasks').textContent = Math.max(0, 6 - completedCount);
+        }
+
+        // ===== 弹窗控制 =====
+        function showModal(icon, title, text, rewards) {
+            document.getElementById('modalIcon').textContent = icon;
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalText').textContent = text;
+            
+            const rewardsEl = document.getElementById('modalRewards');
+            if (rewards && rewards.length > 0) {
+                rewardsEl.style.display = 'block';
+                rewardsEl.innerHTML = `<strong>获得奖励：</strong>${formatReward(rewards)}`;
+            } else {
+                rewardsEl.style.display = 'none';
+            }
+            
+            document.getElementById('completeModal').classList.add('active');
+            updateHistoryCompletion(true);
+        }
+
+        function closeModal() {
+            document.getElementById('completeModal').classList.remove('active');
+        }
+
+        // ===== Toast提示 =====
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== 启动 =====
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
