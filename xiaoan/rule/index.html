@@ -714,7 +714,6 @@
                 <!-- 管理规则列表将通过JavaScript动态添加 -->
             </div>
         </div>
-    </div>
     
     <!-- 模态框部分 -->
     <!-- 添加规则模态框 -->
@@ -941,20 +940,6 @@
     
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
-    
-    <!-- 密码验证模态框 -->
-    <div class="modal" id="passwordVerifyModal">
-        <div class="modal-content">
-            <h2>验证密码</h2>
-            <p>请输入密码进入规则设置</p>
-            <div class="form-group">
-                <label for="verifyPassword">密码</label>
-                <input type="password" id="verifyPassword" placeholder="请输入密码">
-            </div>
-            <button class="btn" onclick="verifyPassword()">确认</button>
-            <button class="btn btn-danger" onclick="closePasswordVerifyModal()">取消</button>
-        </div>
-    </div>
 
     <script>
         // 常量定义
@@ -1357,7 +1342,7 @@
             
             document.getElementById('todayAmount').textContent = Math.max(0, todayTotal);
         }
-        
+
         let isPasswordVerified = false;
         let pendingTabId = null;
         let currentTab = 'rules'; // 默认标签
