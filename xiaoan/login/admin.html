@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员登录 - 超级兑换券乐园</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        :root {
+            --primary-color: #06d6a0;
+            --admin-color: #ef4444;
+            --accent-color: #ffd166;
+            --bg-start: #1e1b4b;
+            --bg-end: #312e81;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --input-bg: #f5f7fa;
+        }
+
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-container {
+            width: 420px;
+            max-width: 92vw;
+            background: white;
+            border-radius: 24px;
+            padding: 40px 36px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 顶部管理员标识条 */
+        .admin-bar {
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--admin-color), #f97316, var(--admin-color));
+            background-size: 200% 100%;
+            animation: barShimmer 3s ease-in-out infinite;
+        }
+        @keyframes barShimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .admin-icon {
+            font-size: 52px;
+            margin-bottom: 12px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .login-title {
+            font-size: 24px;
+            color: var(--text-color);
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .login-subtitle {
+            font-size: 13px;
+            color: #888;
+        }
+        .admin-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            background: #fef2f2;
+            color: var(--admin-color);
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 8px;
+            border: 1px solid #fecaca;
+        }
+
+        .input-group { margin-bottom: 18px; }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            font-size: 15px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            font-family: inherit;
+            outline: none;
+        }
+        .input-group input:focus {
+            border-color: var(--admin-color);
+            box-shadow: 0 0 0 4px rgba(239,68,68,0.10);
+        }
+        .input-group input::placeholder { color: #bbb; }
+        .input-group input.admin-user {
+            background: #fffbeb;
+            border-color: #fcd34d;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .password-wrapper { position: relative; }
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #aaa;
+            padding: 4px;
+        }
+        .toggle-password:hover { color: #555; }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--admin-color), #dc2626);
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239,68,68,0.35);
+        }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-login.loading::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { to { left: 100%; } }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #888;
+            text-decoration: none;
+        }
+        .back-link:hover { color: var(--primary-color); text-decoration: underline; }
+
+        .message {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            display: none;
+            line-height: 1.5;
+        }
+        .message.error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        .message.success { display: block; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+        .footer-info {
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+            font-size: 11px;
+            color: #ccc;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* 加载遮罩 */
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9999;
+            background: rgba(30,27,75,0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 480px) {
+            .login-container { padding: 32px 24px; margin: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="admin-bar"></div>
+
+    <div class="login-header">
+        <div class="admin-icon">🔐</div>
+        <div class="login-title">管理员控制台</div>
+        <div class="login-subtitle">Administrator Console</div>
+        <span class="admin-badge">⚠️ 仅限授权人员</span>
+    </div>
+
+    <form onsubmit="event.preventDefault(); adminLogin();">
+        <div class="input-group">
+            <label>管理员账号</label>
+            <input type="text" id="usernameInput"
+                   class="admin-user" placeholder="admin"
+                   value="admin" readonly
+                   autocomplete="username">
+        </div>
+
+        <div class="input-group password-wrapper">
+            <label>管理员密码</label>
+            <input type="password" id="passwordInput"
+                   placeholder="请输入管理员密码"
+                   autocomplete="current-password"
+                   autofocus>
+            <button type="button" class="toggle-password"
+                    onclick="togglePassword('passwordInput', this)">👁️</button>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+            🔑 验证身份并进入
+        </button>
+    </form>
+
+    <div class="message" id="msgBox"></div>
+
+    <a href="index.html" class="back-link">← 返回用户登录页</a>
+
+    <div class="footer-info">
+        管理员操作将被记录在审计日志中<br>
+        Powered by XiaoAn System
+    </div>
+</div>
+
+<!-- 加载遮罩 -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div>正在验证...</div>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc';
+
+    // 聚焦密码输入框
+    document.getElementById('passwordInput').focus();
+
+    async function adminLogin() {
+        const username = document.getElementById('usernameInput').value.trim().toLowerCase();
+        const password = document.getElementById('passwordInput').value;
+        const btn = document.getElementById('loginBtn');
+
+        // ===== 校验用户名必须为 admin =====
+        if (username !== 'admin') {
+            showMessage('error', '❌ 用户名必须是 "admin"');
+            return;
+        }
+
+        if (!password) {
+            showMessage('error', '请输入管理员密码');
+            document.getElementById('passwordInput').focus();
+            return;
+        }
+
+        // 用 Supabase Auth 验证 admin@system.local 的密码
+        const email = 'admin@system.local';
+
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = '⏳ 验证中...';
+        hideMessage();
+
+        try {
+            if (typeof window.supabase === 'undefined') {
+                throw new Error('SDK 未加载');
+            }
+
+            const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            const { data, error } = await sb.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            // 登录成功，保存信息
+            sessionStorage.setItem('xiaoan_user_id', data.user.id);
+            localStorage.setItem('xiaoan_user_id', data.user.id);
+            localStorage.setItem('xiaoan_is_admin', 'true');
+
+            showMessage('success', '🎉 身份验证通过！正在跳转...');
+
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1200);
+
+        } catch (err) {
+            let errMsg = err.message || '未知错误';
+            if (errMsg.includes('Invalid')) errMsg = '管理员密码错误 ❌';
+            else if (errMsg.includes('Email not confirmed')) errMsg = '管理员账户未激活';
+            showMessage('error', errMsg);
+
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = '🔑 验证身份并进入';
+            document.getElementById('passwordInput').focus();
+            document.getElementById('passwordInput').select();
+        }
+    }
+
+    function showMessage(type, text) {
+        const el = document.getElementById('msgBox');
+        el.className = 'message ' + type;
+        el.textContent = text;
+    }
+    function hideMessage() {
+        document.getElementById('msgBox').className = 'message';
+    }
+
+    function togglePassword(inputId, btn) {
+        const inp = document.getElementById(inputId);
+        if (inp.type === 'password') {
+            inp.type = 'text';
+            btn.textContent = '🙈';
+        } else {
+            inp.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
+
+    // 支持 Enter 键提交
+    document.getElementById('passwordInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') adminLogin();
+    });
+</script>
+</body>
+</html>
