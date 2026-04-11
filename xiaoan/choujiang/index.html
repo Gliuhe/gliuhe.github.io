@@ -1007,10 +1007,12 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 localStorage.removeItem('lotteryTickets');
             }
             
-            if (!localStorage.getItem('lottery')) {
-                localStorage.setItem('lottery', '0');
+            if (!localStorage.getItem('lottery') || localStorage.getItem('lottery') === 'NaN' || isNaN(parseInt(localStorage.getItem('lottery')))) {
+                // 不设默认值，等云端同步；如果离线模式则保持0
+                const existing = parseInt(localStorage.getItem('lottery'));
+                if (isNaN(existing) || existing === null) localStorage.setItem('lottery', '0');
             }
-            lotteryTickets = parseInt(localStorage.getItem('lottery'));
+            lotteryTickets = parseInt(localStorage.getItem('lottery')) || 0;
             
             // 监听storage事件实现双向同步
             // 统一监听storage变化
