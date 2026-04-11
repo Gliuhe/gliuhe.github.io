@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate">
     <meta name="theme-color" content="#06d6a0">
-    <title>超级兑换券乐园 - v1.4.7</title>
+    <title>超级兑换券乐园 - v2.2</title>
     <style>
         * {
             box-sizing: border-box;
@@ -314,9 +314,144 @@
             position: relative;
         }
         
+        /* 用户信息栏 - 固定左上角 */
+        .user-bar {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1000;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 22px;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.55);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            font-size: 14px;
+        }
+        .user-avatar {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary-color), #00c896);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: bold;
+            box-shadow: 0 3px 14px rgba(6,214,160,0.35);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
+        .user-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 18px rgba(6,214,160,0.45); }
+        .user-info-text { text-align: left; line-height: 1.5; flex: 1; }
+        .user-name { font-weight: 700; color: var(--text-color); font-size: 15px; }
+        .user-status { font-size: 12px; color: #999; }
+        .btn-logout {
+            padding: 5px 14px; border:none; border-radius: 10px;
+            background: rgba(239,68,68,0.1); color:#dc2626; font-size:12px; cursor:pointer;
+            font-family: inherit; font-weight: 600; transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-logout:hover { background: #dc2626; color: white; }
+
+        /* 快捷按钮组 */
+        .quick-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
+        .quick-btn {
+            width: 36px; height: 36px;
+            border: none; border-radius: 10px;
+            background: rgba(255,255,255,0.7);
+            color: #555; font-size: 16px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .quick-btn:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+        .quick-btn .mail-unread {
+            position: absolute; top: -5px; right: -5px;
+            min-width: 16px; height: 16px; padding: 0 4px;
+            background: #ef4444; color: #fff;
+            font-size: 10px; font-weight: bold;
+            border-radius: 8px; line-height: 16px;
+        }
+        .quick-btn .badge {
+            position: absolute; top: -4px; right: -4px;
+            min-width: 14px; height: 14px; padding: 0 3px;
+            background: #ef4444; color: #fff;
+            font-size: 9px; font-weight: bold;
+            border-radius: 7px; line-height: 14px;
+        }
+
+        /* 任务抽取模态框 */
+        .task-draw-modal {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+        }
+        .task-draw-modal.active { display: flex; }
+        .task-draw-card {
+            background: linear-gradient(145deg, #fff, #f8fafc);
+            width: 90%; max-width: 420px;
+            border-radius: 22px;
+            padding: 32px 28px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.2);
+            animation: taskDrawPop 0.4s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes taskDrawPop {
+            0% { transform: scale(0.7) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .task-draw-icon { font-size: 3rem; margin-bottom: 12px; }
+        .task-draw-title {
+            font-size: 1.35rem; font-weight: bold;
+            color: #333; margin-bottom: 8px;
+        }
+        .task-drew-title {
+            font-size: 1.15rem; font-weight: 700;
+            color: #06d6a0; margin-bottom: 10px;
+            word-break: break-all;
+        }
+        .task-drew-desc {
+            font-size: 0.92rem; color: #666;
+            line-height: 1.6; margin-bottom: 18px;
+            max-height: 80px; overflow-y: auto;
+        }
+        .task-drew-reward {
+            font-size: 0.85rem; color: #f59e0b;
+            font-weight: 600; margin-bottom: 20px;
+        }
+        .task-draw-actions { display: flex; gap: 10px; justify-content: center; }
+        .btn-task-goto {
+            padding: 11px 24px; border:none; border-radius: 12px;
+            background: linear-gradient(135deg,#06d6a0,#00c896);
+            color:#fff; font-size:0.95rem; font-weight:bold;
+            cursor:pointer; transition: all 0.2s;
+        }
+        .btn-task-goto:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(6,214,160,0.35); }
+        .btn-task-close {
+            padding: 11px 20px; border:none; border-radius: 12px;
+            background: #e5e7eb; color:#666;
+            font-size:0.95rem; cursor:pointer; transition: all 0.2s;
+        }
+        .btn-task-close:hover { background: #d1d5db; }
+        
         .header h1 {
             color: var(--secondary-color);
-            font-size: 2.8rem;
+            font-size: 2.4rem;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 10px;
             background: linear-gradient(45deg, var(--secondary-color), var(--accent-color));
@@ -740,6 +875,129 @@
             border-radius: 30px;
             z-index: -1;
             opacity: 0.5;
+        }
+
+        /* ===== 邮箱模态框（游戏风格分栏布局） ===== */
+        #mailModal { z-index: 200; }
+        .mail-modal-content {
+            background: #fff; border-radius: 20px;
+            width: 900px; max-width: 95vw; height: 600px; max-height: 85vh;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .mail-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 24px 14px; border-bottom: 2px solid #f1f5f9; flex-shrink: 0;
+            background: linear-gradient(135deg,#f8fafc,#fff);
+        }
+        .mail-header h2 { font-size: 1.4rem; margin:0; color: #1e293b; letter-spacing:1px; }
+        .mail-header button { background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8; transition:color .2s; }
+        .mail-header button:hover { color: #ef4444; }
+
+        /* ===== 左右分栏主体 ===== */
+        .mail-body {
+            flex: 1; display: flex; overflow: hidden; position: relative;
+        }
+        .mail-list-panel {
+            width: 380px; min-width: 340px; flex-shrink: 0;
+            border-right: 2px solid #e2e8f0;
+            display: flex; flex-direction: column; background: #fafbfc;
+        }
+        .mail-list {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 10px 12px;
+        }
+        .mail-list::-webkit-scrollbar { width: 5px; }
+        .mail-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius:4px; }
+
+        .mail-item {
+            padding: 14px 16px; border-radius: 12px; border: 2px solid transparent;
+            cursor: pointer; transition: all 0.2s; position: relative;
+            background: white; border-left: 4px solid transparent;
+        }
+        .mail-item:hover { border-color: #cbd5e1; transform: translateX(2px); background: #f8fafc; }
+        .mail-item.active { border-color: #06d6a0; background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border-left-color: #059669; }
+        .mail-item.unread { border-left-color: #3b82f6 !important; }
+        .mail-item.unread::before {
+            content:''; position:absolute; top:14px; left:-8px;
+            width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;
+            box-shadow: 0 0 6px rgba(59,130,246,0.5);
+        }
+        /* ✅ 已读邮件灰色处理（非未读 + 非选中态） */
+        .mail-item:not(.unread):not(.active) { opacity: 0.58; background: #f1f5f9; }
+        .mail-item:not(.unread):not(.active):hover { opacity: 0.85; background: #e2e8f0; }
+        .mail-item.claimed::after { content: '✅'; position: absolute; top: 10px; right: 12px; font-size: 14px; }
+
+        .mail-type-badge {
+            display:inline-block; padding: 2px 10px; border-radius: 8px; font-size: 11px;
+            font-weight: bold; margin-right: 8px; vertical-align: middle;
+        }
+        .mail-type-info { background:#dbeafe;color:#2563eb; }
+        .mail-type-success { background:#d1fae5;color:#059669; }
+        .mail-type-warning { background:#fef3c7;color:#d97706; }
+        .mail-type-error { background:#fee2e2;color:#dc2626; }
+
+        .mail-content-text { font-size: 14px; color: #334155; margin: 6px 0 0; line-height: 1.45; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .mail-attachment {
+            display:flex; align-items:center; gap:6px; margin-top:6px; padding:6px 10px;
+            background:#f0fdf4; border-radius:8px; font-size:12px; color:#059669; font-weight:600;
+        }
+        .mail-time { font-size:11px; color:#94a3b8; margin-top:5px; }
+        .mail-empty { text-align:center; color:#94a3b8; padding:60px 20px; font-size:15px; }
+
+        /* ===== 右侧详情面板（内嵌，不再弹窗） ===== */
+        .mail-detail-panel {
+            flex: 1; display: flex; flex-direction: column; padding: 24px 28px;
+            overflow-y: auto; background: #fff;
+        }
+        .mail-detail-panel.hidden { display: none; }
+        .mail-detail-placeholder {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            color: #cbd5e1; font-size: 18px; user-select: none;
+        }
+        .mail-detail-placeholder-icon { font-size: 48px; opacity: 0.25; text-align: center; }
+        .mail-detail-title {
+            font-size: 28px; font-weight: bold; color: #dc2626;
+            text-align: center; padding: 30px 0 10px;
+            letter-spacing: 4px; text-shadow: 1px 1px 0 #fecaca;
+        }
+        .mail-detail-subtitle {
+            text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 30px;
+        }
+
+        .mail-detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px dashed #e2e8f0; }
+        .mail-detail-body {
+            font-size: 15px; line-height: 1.85; color: #334155; margin-bottom: 20px;
+            white-space: pre-wrap; word-break: break-word;
+        }
+        .mail-detail-attachment {
+            background: linear-gradient(135deg, #ecfdf5, #f0fdf4); border: 2px dashed #86efac; border-radius: 14px;
+            padding: 18px 20px; margin-bottom: 20px;
+        }
+        .mail-detail-actions { display: flex; gap: 12px; margin-top: auto; padding-top: 16px; }
+
+        /* 底部操作栏 */
+        .mail-footer {
+            display: flex; gap: 12px; padding: 12px 20px; border-top: 2px solid #f1f5f9;
+            background: #fafbfc; flex-shrink: 0;
+        }
+        .mail-footer-btn {
+            flex: 1; padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            cursor: pointer; border: 2px solid transparent; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+
+        /* 遮罩弹窗保留给移动端/小屏 */
+        .mail-detail-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300;
+            display: none; align-items: center; justify-content: center;
+        }
+        @media (min-width: 769px) {
+            .mail-detail-overlay { display: none !important; }
+        }
+        .mail-detail-card {
+            background: white; padding: 28px; border-radius: 18px; width: 450px; max-width: 90vw;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
         }
         
         .products {
@@ -1219,6 +1477,40 @@
             transition: all 0.3s;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
+
+        /* ===== 实时通知横幅（管理推送） ===== */
+        .notify-banner {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 320px;
+            max-width: 90vw;
+            padding: 14px 24px;
+            border-radius: 16px;
+            color: white;
+            font-weight: bold;
+            font-size: 15px;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: notifySlideDown 0.4s ease forwards;
+            cursor: pointer;
+        }
+        .notify-banner.notify-info { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .notify-banner.notify-success { background: linear-gradient(135deg, #10b981, #059669); }
+        .notify-banner.notify-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .notify-banner.notify-error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        @keyframes notifySlideDown {
+            from { top: -100px; opacity: 0; }
+            to { top: 12px; opacity: 1; }
+        }
+        @keyframes notifySlideUp {
+            from { top: 12px; opacity: 1; }
+            to { top: -100px; opacity: 0; }
+        }
         
         .status-success {
             background: #06d6a0;
@@ -1301,54 +1593,156 @@
         }
         
         .sync-section {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 20px;
-            padding: 20px;
+            padding: 24px;
             margin: 20px 0;
-            border: 2px solid #06d6a0;
+            border: 2px solid #e0e7ff;
+        }
+
+        .sync-section h2 {
+            color: #4f46e5;
+            margin-bottom: 16px;
+        }
+
+        /* 云端状态卡片 */
+        .cloud-status-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 18px 22px;
+            color: #fff;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.35);
         }
         
-        .sync-status {
+        .cloud-status-header {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 10px;
         }
         
-        .sync-indicator {
-            width: 15px;
-            height: 15px;
+        .cloud-status-dot {
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
-            margin-right: 10px;
+            background: #ffd166;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px currentColor;
         }
         
-        .sync-active {
-            background: #06d6a0;
-            box-shadow: 0 0 10px #06d6a0;
+        .cloud-status-dot.status-connected { background: #06d6a0; box-shadow: 0 0 10px #06d6a0; }
+        .cloud-status-dot.status-offline { background: #ff6b6b; box-shadow: 0 0 10px #ff6b6b; }
+        .cloud-status-dot.status-syncing { background: #ffd166; animation: dotPulse 1s infinite; }
+        @keyframes dotPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+        
+        .cloud-status-label {
+            font-size: 15px;
+            font-weight: 600;
         }
         
-        .sync-inactive {
-            background: #ff6b6b;
+        .cloud-status-time {
+            font-size: 11px;
+            opacity: 0.75;
+            margin-left: auto;
+        }
+        
+        .cloud-status-detail {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        /* 模块状态网格 */
+        .sync-modules h3 {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+        
+        .module-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+        
+        .module-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        .module-icon { font-size: 16px; flex-shrink: 0; }
+        .module-name { font-weight: 500; color: #334155; }
+        
+        .module-ok { border-left: 3px solid #06d6a0; }
+        .module-warn { border-left: 3px solid #ffd166; }
+        .module-error { border-left: 3px solid #ff6b6b; }
+        .module-loading { border-left: 3px solid #94a3b8; animation: modulePulse 1s infinite; }
+        @keyframes modulePulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+        /* 云操作按钮 */
+        .cloud-actions {
+            margin-bottom: 14px !important;
+        }
+
+        .btn-cloud-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-cloud-primary:hover {
+            background: linear-gradient(135deg, #5a6fd6, #6a4190);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+
+        .btn-cloud-secondary {
+            background: linear-gradient(135deg, #06d6a0, #059669);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        .btn-cloud-secondary:hover {
+            background: linear-gradient(135deg, #05c093, #047857);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(6,214,160,0.4);
         }
         
         .sync-instructions {
-            background: #f8f9fa;
+            background: #f1f5f9;
             border-radius: 15px;
-            padding: 15px;
-            margin-top: 15px;
-            border: 2px dashed #ffd166;
+            padding: 16px 18px;
+            margin-top: 16px;
+            border: 1px dashed #cbd5e1;
         }
         
         .sync-instructions h3 {
-            color: #118ab2;
+            color: #475569;
             margin-bottom: 10px;
+            font-size: 14px;
         }
         
-        .sync-instructions ol {
-            padding-left: 20px;
+        .sync-instructions ul {
+            padding-left: 18px;
+            list-style-type: disc;
         }
         
         .sync-instructions li {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #64748b;
+            line-height: 1.5;
         }
         
         @keyframes fadeIn {
@@ -1371,6 +1765,20 @@
                 padding: 20px;
                 width: 95%;
             }
+            
+            .user-bar {
+                justify-content: flex-start;
+                gap: 12px;
+                padding: 14px 18px;
+                margin-bottom: 10px;
+                border-radius: 16px;
+            }
+            .user-avatar { width: 48px; height: 48px; font-size: 20px; border-radius: 14px; }
+            .user-info-text { text-align: left; }
+            .user-name { font-size: 14px; }
+            .user-status { font-size: 11px; }
+            .quick-btn { width: 32px; height: 32px; font-size: 14px; border-radius: 8px; }
+            .btn-logout { padding: 4px 10px; font-size: 11px; }
             
             .header h1 {
                 font-size: 2.2rem;
@@ -1533,7 +1941,25 @@
         <button class="theme-btn" data-theme="blue">蓝色</button>
     </div>
     
+    <!-- 用户信息栏（登录后显示，固定左上角） -->
+    <div id="userBar" class="user-bar" style="display:none;">
+        <div class="user-avatar" id="userAvatar" title="点击更换头像" onclick="triggerAvatarUpload()">👤</div>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+        <div class="user-info-text">
+            <div class="user-name" id="userName">--</div>
+            <div class="user-status" id="userStatus">☁️ 已连接</div>
+        </div>
+        <div class="quick-actions">
+            <button class="quick-btn" onclick="openMailbox()" id="mailBtn" title="邮箱">📬<span class="mail-unread" id="mailUnreadBadge" style="display:none;">0</span></button>
+            <button class="quick-btn" onclick="window.location.href='rule/announcement.html'" title="公告栏">📢</button>
+            <button class="quick-btn" onclick="drawRandomTask()" id="drawTaskBtn" title="随机抽取任务">🎲</button>
+        </div>
+        <button class="btn-logout" onclick="doLogout()">退出</button>
+    </div>
+    
     <div class="header">
+        <!-- 用户信息栏已移至header上方 -->
+        
         <h1>超级兑换券乐园</h1>
     </div>
     
@@ -1616,11 +2042,11 @@
                 <button class="btn btn-warning pulse" onclick="switchTab('products')">🎁 兑换商品</button>
                 <button class="btn" onclick="window.location.href='choujiang/index.html'">🎰 前往抽奖</button>
                 <button class="btn" onclick="window.location.href='rule/index.html'">📝 任务中心</button>
-                <button class="btn" onclick="window.location.href='rule/announcement.html'">📢 公告栏</button>
                 <button class="btn" onclick="window.location.href='bank/index.html'">🏦 银行理财</button>
                 <div class="activity-btn-wrapper">
                     <button class="btn" onclick="window.location.href='activity/index.html'">🎉 活动中心</button>
                 </div>
+                <button class="btn" onclick="window.location.href='bag/index.html'">🎒 我的背包</button>
             </div>
         </div>
         
@@ -1660,28 +2086,51 @@
             </div>
             
             <div class="sync-section">
-                <h2>手动数据同步</h2>
-                <div class="sync-status">
-                    <div class="sync-indicator sync-active"></div>
-                    <div>数据状态: <span id="syncStatusText">本地存储</span></div>
-                </div>
+                <h2>☁️ 云端数据同步</h2>
                 
-                <div class="action-buttons">
-                    <button class="btn" onclick="backupData()">💾 备份数据到文件</button>
-                    <button class="btn" onclick="openRestoreModal()">📥 从文件恢复数据</button>
+                <!-- 连接状态卡片 -->
+                <div class="cloud-status-card" id="cloudStatusCard">
+                    <div class="cloud-status-header">
+                        <span class="cloud-status-dot" id="cloudDot"></span>
+                        <span class="cloud-status-label" id="cloudStatusLabel">检测中...</span>
+                        <span class="cloud-status-time" id="cloudSyncTime">--</span>
+                    </div>
+                    <div class="cloud-status-detail" id="cloudStatusDetail">
+                        正在连接云端服务...
+                    </div>
                 </div>
-                
+
+                <!-- 数据模块同步状态 -->
+                <div class="sync-modules">
+                    <h3>📊 同步模块状态</h3>
+                    <div class="module-grid" id="moduleGrid">
+                        <div class="module-item module-ok" data-module="currencies"><span class="module-icon">💰</span><span class="module-name">货币余额</span></div>
+                        <div class="module-item module-ok" data-module="bank"><span class="module-icon">🏦</span><span class="module-name">银行系统</span></div>
+                        <div class="module-item module-ok" data-module="lottery"><span class="module-icon">🎲</span><span class="module-name">抽奖记录</span></div>
+                        <div class="module-item module-ok" data-module="checkin"><span class="module-icon">📅</span><span class="module-name">签到数据</span></div>
+                        <div class="module-item module-ok" data-module="history"><span class="module-icon">📋</span><span class="module-name">兑换历史</span></div>
+                        <div class="module-item module-ok" data-module="rules"><span class="module-icon">✅</span><span class="module-name">任务中心</span></div>
+                        <div class="module-item module-ok" data-module="activity"><span class="module-icon">🎯</span><span class="module-name">活动数据</span></div>
+                        <div class="module-item module-ok" data-module="avatar"><span class="module-icon">👤</span><span class="module-name">用户头像</span></div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮区 -->
+                <div class="action-buttons cloud-actions">
+                    <button class="btn btn-cloud-primary" onclick="forceUploadToCloud()" title="将本地所有数据强制上传到云端覆盖">☁️ 强制上传到云端</button>
+                    <button class="btn btn-cloud-secondary" onclick="forceDownloadFromCloud()" title="从云端拉取最新数据并覆盖本地">⬇️ 从云端刷新数据</button>
+                </div>
+
                 <div class="sync-instructions">
-                    <h3>同步操作指南</h3>
-                    <ol>
-                        <li>在设备A上点击<strong>"备份数据到文件"</strong>按钮</li>
-                        <li>将生成的备份文件保存到您的设备</li>
-                        <li>将备份文件发送到设备B（通过邮件、消息等）</li>
-                        <li>在设备B上点击<strong>"从文件恢复数据"</strong>按钮</li>
-                        <li>选择备份文件并输入密码</li>
-                        <li>点击<strong>"恢复数据"</strong>按钮完成同步</li>
-                    </ol>
-                    <p><strong>注意：</strong>每次同步前请确保所有设备都已备份最新数据</p>
+                    <h3>📖 云同步说明</h3>
+                    <ul>
+                        <li><strong>自动同步：</strong>每次操作后数据会自动保存到 Supabase 云端，无需手动操作</li>
+                        <li><strong>跨设备：</strong>登录同一账号后，数据会在所有设备间实时同步</li>
+                        <li><strong>离线可用：</strong>网络断开时使用本地缓存，恢复网络后自动同步</li>
+                        <li><strong>强制上传：</strong>将当前本地数据完整上传至云端（覆盖云端）</li>
+                        <li><strong>从云端刷新：</strong>用云端的最新数据覆盖本地（适用于多设备冲突后）</li>
+                        <li><strong>数据迁移：</strong>如需导出或导入完整备份，请前往「数据迁移」页面</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -1960,80 +2409,24 @@
         </div>
     </div>
     
-    <!-- 罚款管理模态框 -->
+    <!-- 罚款模态框（仅缴纳功能，罚款由管理员发布） -->
     <div class="modal" id="fineModal">
-        <div class="modal-content" style="max-width: 700px;">
-            <!-- 罚款模态框标签页 -->
-            <div class="nav-tabs" style="margin-bottom: 20px;">
-                <div class="nav-tab active" onclick="switchFineTab('pay')">💰 缴纳罚款</div>
-                <div class="nav-tab" onclick="switchFineTab('manage')">⚙️ 罚款管理</div>
+        <div class="modal-content" style="max-width: 600px;">
+            <h2>💰 缴纳罚款</h2>
+            <div id="fineSummaryText" style="background:#f8f9fa;padding:15px;border-radius:10px;margin-bottom:16px;color:#666;">正在加载...</div>
+
+            <div class="form-group">
+                <label for="fineReasonSelect">选择罚款项</label>
+                <select id="fineReasonSelect" class="fine-reason-select" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;font-size:14px;">
+                    <option value="">加载中...</option>
+                </select>
             </div>
-            
-            <!-- 缴纳罚款页 -->
-            <div id="finePayTab" class="fine-tab-content active">
-                <h2>💰 缴纳罚款</h2>
-                <div class="fine-summary" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <div id="fineSummaryText">当前无待缴罚款</div>
-                </div>
-                <div class="form-group">
-                    <label for="fineReasonSelect">选择罚款原因</label>
-                    <select id="fineReasonSelect" class="fine-reason-select">
-                        <option value="">请选择罚款原因</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="finePayAmount">缴纳金额（兑换券）</label>
-                    <input type="number" id="finePayAmount" min="1" placeholder="请输入缴纳金额">
-                </div>
-                <button class="btn btn-warning" onclick="payFine()">确认缴纳</button>
-                <button class="btn btn-danger" onclick="closeFineModal()">取消</button>
+            <div class="form-group">
+                <label for="finePayAmount">缴纳金额（兑换券）</label>
+                <input type="number" id="finePayAmount" min="1" placeholder="输入缴纳金额" style="padding:10px;border-radius:8px;border:1px solid #ddd;width:100%;">
             </div>
-            
-            <!-- 罚款管理页 -->
-            <div id="fineManageTab" class="fine-tab-content">
-                <h2>⚙️ 罚款管理</h2>
-                
-                <!-- 罚款提示横幅 -->
-                <div id="fineBanner" class="fine-banner">
-                    <div class="fine-banner-content">
-                        <div class="fine-banner-text">
-                            <span id="bannerText">当前有罚款未缴</span>
-                        </div>
-                        <div class="fine-banner-amount">
-                            <span id="bannerAmount">0</span> 兑换券
-                        </div>
-                    </div>
-                    <div class="fine-banner-actions">
-                        <button class="fine-banner-btn primary" onclick="switchFineTab('pay')">立即缴纳</button>
-                        <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="managePassword">管理密码</label>
-                    <input type="password" id="managePassword" placeholder="请输入管理密码" oninput="verifyManagePassword()">
-                </div>
-                <div id="fineManageContent" style="display: none;">
-                    <div class="form-group">
-                        <label for="newFineReason">罚款原因</label>
-                        <input type="text" id="newFineReason" placeholder="例如：未按时完成作业">
-                    </div>
-                    <div class="form-group">
-                        <label for="newFineAmount">罚款总额（兑换券）</label>
-                        <input type="number" id="newFineAmount" min="1" placeholder="请输入罚款总额">
-                    </div>
-                    <div class="form-group">
-                        <label for="newFineDueDays">缴纳期限（天数）</label>
-                        <input type="number" id="newFineDueDays" min="1" value="7" placeholder="请输入缴纳期限">
-                    </div>
-                    <button class="btn" onclick="addFineItem()">➕ 添加罚款项</button>
-                    
-                    <div id="fineItemsList" style="margin-top: 20px;">
-                        <!-- 罚款项列表将在这里动态生成 -->
-                    </div>
-                </div>
-                <button class="btn btn-danger" onclick="closeFineModal()">关闭</button>
-            </div>
+            <button class="btn btn-warning" onclick="payFine()">确认缴纳</button>
+            <button class="btn" onclick="closeFineModal()">取消</button>
         </div>
     </div>
     
@@ -2053,6 +2446,18 @@
     
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
+
+    <!-- 实时通知横幅（管理推送） -->
+    <div id="notifyBannerContainer"></div>
+    
+    <!-- Supabase SDK（必须先于 cloud-store.js 加载） -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <!-- 云存储适配器（依赖 Supabase SDK） -->
+    <script src="cloud-store.js"></script>
+
+    <!-- 云端状态指示器 -->
+    <div id="cloudStatus" style="position:fixed;top:8px;right:8px;z-index:9999;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;display:none;pointer-events:none;">🌐</div>
 
     <script>
         // 常量定义
@@ -2081,11 +2486,11 @@
             if (!localStorage.getItem('voucher')) {
                 localStorage.setItem('voucher', '100');
             }
-            if (!localStorage.getItem('lottery')) {
-                localStorage.setItem('lottery', '10');
+            if (!localStorage.getItem('lottery') || isNaN(parseInt(localStorage.getItem('lottery')))) {
+                localStorage.setItem('lottery', '0');
             }
-            if (!localStorage.getItem('premium')) {
-                localStorage.setItem('premium', '2');
+            if (!localStorage.getItem('premium') || isNaN(parseInt(localStorage.getItem('premium')))) {
+                localStorage.setItem('premium', '0');
             }
             
             // 兼容旧版本的currency数据
@@ -2416,6 +2821,11 @@
                     tab.classList.add('active');
                 }
             });
+
+            // 切换到系统设置时刷新云同步面板
+            if (tabId === 'settings' && typeof initCloudStatusPanel === 'function') {
+                initCloudStatusPanel();
+            }
         }
         
         // 增加货币
@@ -2814,117 +3224,76 @@
             reader.readAsText(file);
         }
         
+        // ===== 罚款系统（云端版：管理员发布，用户只负责缴纳） =====
 
-        
-        // 切换罚款标签页
-        function switchFineTab(tab) {
-            // 隐藏所有标签内容
-            document.querySelectorAll('.fine-tab-content').forEach(tabContent => {
-                tabContent.classList.remove('active');
-            });
-            
-            // 取消所有标签的激活状态
-            document.querySelectorAll('#fineModal .nav-tab').forEach(tabBtn => {
-                tabBtn.classList.remove('active');
-            });
-            
-            // 显示选中的标签内容
-            document.getElementById(`fine${tab.charAt(0).toUpperCase() + tab.slice(1)}Tab`).classList.add('active');
-            
-            // 激活选中的标签
-            document.querySelectorAll('#fineModal .nav-tab').forEach(tabBtn => {
-                if (tabBtn.getAttribute('onclick').includes(tab)) {
-                    tabBtn.classList.add('active');
-                }
-            });
-            
-            // 如果是缴纳罚款页，更新罚款摘要和原因选项
-            if (tab === 'pay') {
-                updateFineSummary();
-                updateFineReasonSelect();
-            }
-            // 如果是管理页，检查密码
-            else if (tab === 'manage') {
-                document.getElementById('fineManageContent').style.display = 'none';
-                document.getElementById('managePassword').value = '';
-                // 更新罚款横幅显示
-                updateFineBanner();
+        let _finesCache = null;  // 缓存当前用户的罚款列表
+
+        /** 从云端加载当前用户的罚款 */
+        async function loadFinesFromCloud() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) return [];
+            try {
+                const { data, error } = await sb.from('fine_items')
+                    .select('*').eq('user_id', uid).order('due_date', { ascending: true });
+                if (error) throw error;
+                _finesCache = data || [];
+                return _finesCache;
+            } catch (e) {
+                console.error('加载罚款失败:', e);
+                _finesCache = [];
+                return [];
             }
         }
-        
-        // 验证管理密码
-        function verifyManagePassword() {
-            const password = document.getElementById('managePassword').value;
 
-            if (password !== localStorage.getItem('xiaoan_password')) {
-                showStatus('管理密码错误！', "error");
-                return false;
-            }
-            
-            document.getElementById('fineManageContent').style.display = 'block';
-            updateFineItemsList();
-            
-            // 更新罚款横幅显示
-            updateFineBanner();
-            return true;
-        }
-        
-        // 更新罚款横幅显示
-        function updateFineBanner() {
+        /** 更新罚款横幅（页面顶部的红色/黄色提示条） */
+        async function updateFineBanner() {
             const banner = document.getElementById('fineBanner');
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const activeFines = fineItems.filter(item => item.remaining > 0);
+            if (!banner) return;
+            // 未登录时隐藏
+            if (!window.__cloudUserId) { banner.style.display = 'none'; return; }
+            
+            const fines = await loadFinesFromCloud();
+            const activeFines = fines.filter(f => f.is_paid !== true && (f.remaining || 0) > 0);
             
             if (activeFines.length === 0) {
-                // 没有罚款，隐藏横幅
                 banner.style.display = 'none';
                 return;
             }
-            
-            // 计算剩余罚款总额
-            const remainingAmount = activeFines.reduce((sum, item) => sum + item.remaining, 0);
-            const overdueFines = activeFines.filter(item => new Date(item.dueDate) < new Date());
-            
-            // 更新横幅内容
+
+            const remainingAmount = activeFines.reduce((sum, f) => sum + (f.remaining || 0), 0);
+            const now = new Date();
+            const overdueFines = activeFines.filter(f => new Date(f.due_date) < now);
+
             document.getElementById('bannerAmount').textContent = remainingAmount;
-            
+
             if (overdueFines.length > 0) {
-                // 有逾期罚款，显示警告横幅
                 banner.className = 'fine-banner';
                 document.getElementById('bannerText').textContent = `⚠️ 有 ${overdueFines.length} 项罚款已逾期！`;
             } else {
-                // 没有逾期罚款，显示提醒横幅
                 banner.className = 'fine-banner warning';
                 document.getElementById('bannerText').textContent = `您有 ${activeFines.length} 项罚款待缴`;
             }
-            
-            // 显示横幅
             banner.style.display = 'block';
         }
-        
-        // 隐藏罚款横幅
+
+        /** 隐藏罚款横幅 */
         function hideFineBanner() {
             const banner = document.getElementById('fineBanner');
-            banner.style.display = 'none';
+            if (banner) banner.style.display = 'none';
             showStatus('已隐藏罚款提醒，请记得及时缴纳罚款！', "warning");
         }
 
-        // 检查今日是否已掷计算骰
+        /** 检查今日是否已掷计算骰 */
         function checkDiceStatus() {
             const diceBanner = document.getElementById('diceBanner');
             if (!diceBanner) return;
 
-            // 获取今日日期
             const today = new Date();
             const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-            // 读取今日数据
             const todayDataStr = localStorage.getItem('jisuan_today');
-            if (!todayDataStr) {
-                // 从未访问过，显示提醒
-                diceBanner.style.display = 'block';
-                return;
-            }
+            if (!todayDataStr) { diceBanner.style.display = 'block'; return; }
 
             let todayData;
             try {
@@ -2934,253 +3303,165 @@
                 return;
             }
 
-            // 如果今天的数据日期不是今天，说明是新的一天
-            if (todayData.date !== dateStr) {
-                diceBanner.style.display = 'block';
-                return;
-            }
+            if (todayData.date !== dateStr) { diceBanner.style.display = 'block'; return; }
+            if (!todayData.rolled || !todayData.diceResult) { diceBanner.style.display = 'block'; return; }
 
-            // 如果尚未掷骰，显示提醒
-            if (!todayData.rolled || !todayData.diceResult) {
-                diceBanner.style.display = 'block';
-                return;
-            }
-
-            // 已掷过骰，隐藏提醒
             diceBanner.style.display = 'none';
         }
-        
-        // 更新罚款摘要
-        function updateFineSummary() {
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const activeFines = fineItems.filter(item => item.remaining > 0);
-            const overdueFines = activeFines.filter(item => new Date(item.dueDate) < new Date());
-            
+
+        /** 更新罚款摘要（弹窗内的汇总信息） */
+        function renderFineSummary(fines) {
+            const el = document.getElementById('fineSummaryText');
+            if (!el) return;
+
+            const activeFines = fines.filter(f => f.is_paid !== true && (f.remaining || 0) > 0);
+            const overdueFines = activeFines.filter(f => new Date(f.due_date) < new Date());
+
             if (activeFines.length === 0) {
-                document.getElementById('fineSummaryText').innerHTML = '当前无待缴罚款';
+                el.innerHTML = '<span style="color:#059669;">✅ 当前无待缴罚款</span>';
                 return;
             }
-            
-            const totalAmount = activeFines.reduce((sum, item) => sum + item.total, 0);
-            const remainingAmount = activeFines.reduce((sum, item) => sum + item.remaining, 0);
-            const paidAmount = totalAmount - remainingAmount;
-            
-            document.getElementById('fineSummaryText').innerHTML = `
+
+            const totalOriginal = activeFines.reduce((s, f) => s + (f.original_amount || 0), 0);
+            const totalRemaining = activeFines.reduce((s, f) => s + (f.remaining || 0), 0);
+
+            el.innerHTML = `
                 <strong>待缴罚款汇总：</strong><br>
-                总罚款：${totalAmount} 兑换券<br>
-                已缴纳：${paidAmount} 兑换券<br>
-                剩余：${remainingAmount} 兑换券<br>
+                总金额：${totalOriginal} 兑换券 | 剩余：${totalRemaining} 兑换券<br>
                 待缴项目：${activeFines.length} 个
-                ${overdueFines.length > 0 ? `<br><span style="color: #ff6b6b;">⚠️ 逾期项目：${overdueFines.length} 个</span>` : ''}
+                ${overdueFines.length > 0 ? `<br><span style="color: #ff6b6b;">⚠️ ${overdueFines.length} 项已逾期</span>` : ''}
             `;
         }
-        
-        // 更新罚款原因选择框
-        function updateFineReasonSelect() {
+
+        /** 填充罚款选择下拉框 */
+        function renderFineSelect(fines) {
             const select = document.getElementById('fineReasonSelect');
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const activeFines = fineItems.filter(item => item.remaining > 0);
-            
-            // 清空选项（保留第一个空选项）
-            while (select.options.length > 1) {
-                select.remove(1);
+            if (!select) return;
+
+            select.innerHTML = '<option value="">请选择要缴纳的罚款</option>';
+            const activeFines = fines.filter(f => f.is_paid !== true && (f.remaining || 0) > 0);
+
+            if (activeFines.length === 0) {
+                select.innerHTML = '<option value="">无待缴罚款</option>';
+                select.disabled = true;
+                return;
             }
-            
-            // 添加活动罚款项
-            activeFines.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.id;
-                option.textContent = `${item.reason} (剩余: ${item.remaining}/${item.total} 兑换券)`;
-                select.appendChild(option);
+
+            select.disabled = false;
+            activeFines.forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f.id;
+                const dueDate = new Date(f.due_date);
+                const isOverdue = dueDate < new Date();
+                opt.textContent = `${f.reason} — 剩余${f.remaining}/${f.original_amount}券 ${isOverdue ? '(⚠逾期)' : ''}`;
+                select.appendChild(opt);
             });
         }
-        
-        // 更新罚款项列表
-        function updateFineItemsList() {
-            const container = document.getElementById('fineItemsList');
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
+
+        /** 打开罚款弹窗并加载数据 */
+        async function openFineModal() {
+            document.getElementById('fineModal').style.display = 'flex';
+            document.getElementById('finePayAmount').value = '';
             
-            container.innerHTML = '';
-            
-            if (fineItems.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #666;">暂无罚款项</p>';
-                return;
-            }
-            
-            fineItems.forEach(item => {
-                const progress = item.total > 0 ? (item.remaining / item.total) * 100 : 0;
-                const dueDate = new Date(item.dueDate);
-                const now = new Date();
-                const isOverdue = now > dueDate;
-                const daysLeft = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
-                
-                const itemElement = document.createElement('div');
-                itemElement.className = 'fine-item';
-                if (isOverdue) {
-                    itemElement.style.borderLeft = '4px solid #ff6b6b';
-                    itemElement.style.background = 'rgba(255, 107, 107, 0.1)';
-                }
-                
-                itemElement.innerHTML = `
-                    <div class="fine-item-info">
-                        <div class="fine-item-reason">
-                            ${item.reason}
-                            ${isOverdue ? '<span style="color: #ff6b6b; margin-left: 10px;">⚠️ 已逾期</span>' : 
-                            `<span style="color: #06d6a0; margin-left: 10px;">⏰ 剩余${daysLeft}天</span>`}
-                        </div>
-                        <div class="fine-item-amount">
-                            总额：${item.total} 兑换券 | 剩余：${item.remaining} 兑换券
-                            ${item.penaltyApplied ? '<span style="color: #ff6b6b; margin-left: 10px;">(已追加20%惩罚)</span>' : ''}
-                        </div>
-                        <div style="font-size: 0.9rem; color: #666; margin-top: 5px;">
-                            截止日期：${dueDate.toLocaleDateString()}
-                        </div>
-                        <div class="fine-progress">
-                            <div class="fine-progress-bar" style="width: ${progress}%"></div>
-                        </div>
-                    </div>
-                    <div class="fine-item-actions">
-                        <button class="btn btn-danger" onclick="deleteFineItem(${item.id})">删除</button>
-                    </div>
-                `;
-                container.appendChild(itemElement);
-            });
+            const fines = await loadFinesFromCloud();
+            renderFineSummary(fines);
+            renderFineSelect(fines);
         }
-        
-        // 添加罚款项
-        function addFineItem() {
-            const reason = document.getElementById('newFineReason').value;
-            const amount = parseInt(document.getElementById('newFineAmount').value);
-            const dueDays = parseInt(document.getElementById('newFineDueDays').value) || 7;
-            
-            if (!reason) {
-                showStatus('请输入罚款原因！', "error");
-                return;
-            }
-            
-            if (!amount || amount <= 0) {
-                showStatus('请输入有效的罚款金额！', "error");
-                return;
-            }
-            
-            if (!dueDays || dueDays <= 0) {
-                showStatus('请输入有效的缴纳期限！', "error");
-                return;
-            }
-            
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const newId = fineItems.length > 0 ? Math.max(...fineItems.map(item => item.id)) + 1 : 1;
-            
-            // 设置截止日期
-            const dueDate = new Date();
-            dueDate.setDate(dueDate.getDate() + dueDays);
-            
-            fineItems.push({
-                id: newId,
-                reason: reason,
-                total: amount,
-                remaining: amount,
-                created: new Date().toISOString(),
-                dueDate: dueDate.toISOString(),
-                isOverdue: false,
-                penaltyApplied: false
-            });
-            
-            localStorage.setItem('fineItems', JSON.stringify(fineItems));
-            
-            // 清空输入框
-            document.getElementById('newFineReason').value = '';
-            document.getElementById('newFineAmount').value = '';
-            document.getElementById('newFineDueDays').value = '7';
-            
-            updateFineItemsList();
-            showStatus(`罚款项添加成功！期限为${dueDays}天。`);
+
+        function closeFineModal() {
+            document.getElementById('fineModal').style.display = 'none';
         }
-        
-        // 删除罚款项
-        function deleteFineItem(id) {
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const updatedItems = fineItems.filter(item => item.id !== id);
-            
-            localStorage.setItem('fineItems', JSON.stringify(updatedItems));
-            updateFineItemsList();
-            showStatus('罚款项删除成功！');
+
+        /** 缴纳罚款（写入数据库） */
+        async function payFine() {
+            const selectedId = document.getElementById('fineReasonSelect').value;
+            const amount = parseFloat(document.getElementById('finePayAmount').value);
+
+            if (!selectedId) { showStatus('请选择罚款项！', "error"); return; }
+            if (!amount || amount <= 0) { showStatus('请输入有效金额！', "error"); return; }
+
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { showStatus('未连接云端', "error"); return; }
+
+            // 从缓存找目标罚款
+            const target = (_finesCache || []).find(f => f.id === selectedId);
+            if (!target) { showStatus('罚款项不存在！', "error"); return; }
+
+            const remaining = target.remaining || 0;
+            if (amount > remaining) { showStatus(`最多可缴 ${remaining} 兑换券！`, "error"); return; }
+
+            // 检查余额
+            const currentVoucher = parseFloat(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < amount) { showStatus(`兑换券不足！当前 ${currentVoucher}，需要 ${amount}`, "error"); return; }
+
+            try {
+                const newRemaining = remaining - amount;
+                const isPaid = newRemaining <= 0;
+                const newPaid = (target.paid_amount || 0) + amount;
+
+                // 更新数据库
+                const { error: updateErr } = await sb.from('fine_items')
+                    .update({
+                        remaining: Math.max(0, newRemaining),
+                        paid_amount: newPaid,
+                        is_paid: isPaid,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', selectedId);
+                if (updateErr) throw updateErr;
+
+                // 扣本地兑换券
+                const newVoucher = currentVoucher - amount;
+                localStorage.setItem('voucher', String(newVoucher));
+                // 同步 xiaoan_currencies 对象
+                let curObj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                curObj.voucher = newVoucher;
+                localStorage.setItem('xiaoan_currencies', JSON.stringify(curObj));
+                // 同步云端
+                sb.from('user_currencies').upsert({
+                    user_id: uid, currency_type: 'voucher', amount: newVoucher,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,currency_type' }).then(() => {}).catch(() => {});
+
+                // 添加历史记录
+                addHistoryRecord(-amount, `罚款：${target.reason}`, 'fine');
+
+                // 清缓存、刷新UI
+                _finesCache = null;
+                updateUI();
+
+                // 刷新弹窗内容
+                const freshFines = await loadFinesFromCloud();
+                renderFineSummary(freshFines);
+                renderFineSelect(freshFines);
+                document.getElementById('finePayAmount').value = '';
+
+                // 更新横幅
+                updateFineBanner().then(() => {});
+
+                showStatus(isPaid ? `✅ 已缴清「${target.reason}」全部罚款！` : `✅ 成功缴纳 ${amount} 兑换券，剩余 ${Math.max(0, newRemaining)}`);
+            } catch (e) {
+                console.error('缴纳罚款失败:', e);
+                showStatus('❌ 缴纳失败，请重试', "error");
+            }
         }
-        
-        // 缴纳罚款
-        function payFine() {
-            const selectedReasonId = parseInt(document.getElementById('fineReasonSelect').value);
-            const amount = parseInt(document.getElementById('finePayAmount').value);
-            
-            if (!selectedReasonId) {
-                showStatus('请选择罚款原因！', "error");
-                return;
-            }
-            
-            if (!amount || amount <= 0) {
-                showStatus('请输入有效的缴纳金额！', "error");
-                return;
-            }
-            
-            const fineItems = JSON.parse(localStorage.getItem('fineItems') || '[]');
-            const fineItem = fineItems.find(item => item.id === selectedReasonId);
-            
-            if (!fineItem) {
-                showStatus('选择的罚款项不存在！', "error");
-                return;
-            }
-            
-            if (amount > fineItem.remaining) {
-                showStatus(`缴纳金额不能超过剩余罚款金额 ${fineItem.remaining}！`, "error");
-                return;
-            }
-            
-            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
-            
-            if (currentVoucher < amount) {
-                showStatus('兑换券不足，无法缴纳罚款！', "error");
-                return;
-            }
-            
-            // 扣除兑换券
-            const newAmount = currentVoucher - amount;
-            localStorage.setItem('voucher', newAmount);
-            
-            // 更新罚款项剩余金额
-            fineItem.remaining -= amount;
-            localStorage.setItem('fineItems', JSON.stringify(fineItems));
-            
-            // 添加历史记录
-            const history = JSON.parse(localStorage.getItem('history'));
+
+        /** 添加交易历史记录 */
+        function addHistoryRecord(amount, reason, type) {
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
             history.push({
                 date: new Date().toISOString(),
-                amount: -amount,
-                reason: `罚款：${fineItem.reason}`,
-                type: 'fine',
+                amount: amount,
+                reason: reason,
+                type: type || '',
                 currencyType: 'voucher',
                 currencyName: '兑换券',
-                balanceAfter: newAmount
+                balanceAfter: parseFloat(localStorage.getItem('voucher') || '0')
             });
             localStorage.setItem('history', JSON.stringify(history));
-            
-            // 检查是否需要删除已缴清的罚款项
-            if (fineItem.remaining === 0) {
-                const updatedItems = fineItems.filter(item => item.remaining > 0);
-                localStorage.setItem('fineItems', JSON.stringify(updatedItems));
-                showStatus(`成功缴清罚款 "${fineItem.reason}"！`);
-            } else {
-                showStatus(`成功缴纳罚款 ${amount} 兑换券！剩余 ${fineItem.remaining} 兑换券`);
-            }
-            
-            // 更新界面
-            updateFineSummary();
-            updateFineReasonSelect();
-            updateUI();
-            
-            // 清空输入框
-            document.getElementById('finePayAmount').value = '';
         }
-        
+
         // 确认重置系统
         function confirmResetSystem() {
             const password = document.getElementById('resetPassword').value;
@@ -3322,18 +3603,6 @@
         function openResetModal() {
             document.getElementById('resetModal').style.display = 'flex';
             document.getElementById('resetPassword').value = '';
-        }
-        
-        function openFineModal() {
-            document.getElementById('fineModal').style.display = 'flex';
-            // 默认显示缴纳罚款页
-            switchFineTab('pay');
-            // 清空缴纳罚款页的输入框
-            document.getElementById('finePayAmount').value = '';
-        }
-        
-        function closeFineModal() {
-            document.getElementById('fineModal').style.display = 'none';
         }
         
         function closeResetModal() {
@@ -4108,7 +4377,2022 @@
         });
         
         // 启动应用
-        initApp();
+        async function startApp() {
+            const cloudStatusEl = document.getElementById('cloudStatus');
+            const userBar = document.getElementById('userBar');
+
+            // 1. 从URL参数获取 user_id（登录页面跳转过来时携带）
+            const urlParams = new URLSearchParams(window.location.search);
+            let userId = urlParams.get('user');
+            
+            // 2. 如果没有URL参数，尝试从 storage 获取
+            if (!userId) {
+                userId = sessionStorage.getItem('xiaoan_user_id') || 
+                         localStorage.getItem('xiaoan_user_id');
+            }
+
+            // 3. 未登录 → 强制跳转到登录页
+            if (!userId) {
+                window.location.replace('login/index.html');
+                return;
+            }
+
+            // 4. 已登录：显示用户信息栏
+            userBar.style.display = 'flex';
+            
+            const shortId = userId.substring(0, 8) + '...';
+            document.getElementById('userName').textContent = shortId;
+            document.getElementById('userAvatar').textContent = 
+                (userId.substring(0,1)).toUpperCase();
+            // 尝试加载用户头像
+            loadUserAvatar();
+            document.getElementById('userStatus').textContent = '☁️ 连接中...';
+
+            // 5. 直接初始化云端连接（不再依赖 CloudStore 类的 init 方法）
+            cloudStatusEl.style.display = 'block';
+            cloudStatusEl.style.background = '#ffd166';
+            cloudStatusEl.textContent = '☁️ 连接中...';
+
+            const SUPABASE_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc';
+
+            // ===== 优化：先渲染页面，后台同步云端 =====
+            // 6. 先用 localStorage 数据启动应用（瞬间显示）
+            initApp();
+
+            // 7. 后台静默连接云端
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    throw new Error('Supabase SDK 未加载');
+                }
+
+                const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('[Cloud] 🚀 后台连接 Supabase, userId:', userId);
+
+                // ===== 立即初始化实时通知（不等云同步完成）=====
+                initNotificationListener(sbClient, userId);
+                // 页面加载时也查一次未读通知（防止漏掉之前发的）
+                _checkUnreadNotifications(sbClient, userId);
+
+                // 后台加载所有云端数据（不阻塞页面）
+                _loadAllFromCloud(sbClient, userId).then(() => {
+                    // 云加载完成后设置写入通道
+                    window.__cloudClient = sbClient;
+                    window.__cloudUserId = userId;
+                    
+                    if (window.CloudStore && typeof window.CloudStore === 'object') {
+                        window.CloudStore.enabled = true;
+                        window.CloudStore.sb = sbClient;
+                        window.CloudStore.userId = userId;
+                        
+                        if (!window.CloudStore._directSyncInstalled) {
+                            window.CloudStore.queueSync = function(key, value) {
+                                console.log(`[Cloud] 📤 需要同步: ${key}=${String(value).substring(0,30)}...`);
+                                _directWriteToCloud(key, value);
+                            };
+                            window.CloudStore._directSyncInstalled = true;
+                        }
+                    }
+
+                    // 获取用户名
+                    sbClient.auth.getUser().then(({ data: authUser }) => {
+                        if (authUser?.user?.email) {
+                            let name = authUser.user.email;
+                            if (name.endsWith('@system.local')) name = name.replace('@system.local', '');
+                            document.getElementById('userName').textContent = name;
+                        }
+                    }).catch(() => {});
+
+                    // 更新连接状态
+                    document.getElementById('userStatus').textContent = '✅ 已连接云端';
+                    cloudStatusEl.style.background = '#06d6a0';
+                    cloudStatusEl.textContent = '✅ 云端已同步';
+                    setTimeout(() => { cloudStatusEl.style.display = 'none'; }, 2000);
+
+                    // 记录同步时间 + 初始化状态面板
+                    localStorage.setItem('xiaoan_last_cloud_sync', String(Date.now()));
+                    if (typeof initCloudStatusPanel === 'function') initCloudStatusPanel();
+
+                    // 用最新数据刷新UI（货币、银行等）
+                    updateUI();
+                    loadUserAvatar();
+                    console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
+                }).catch(err => {
+                    console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
+                    document.getElementById('userStatus').textContent = '⚠️ 离线模式';
+                    cloudStatusEl.style.background = '#ff6b6b';
+                    cloudStatusEl.textContent = '⚠️ 离线模式（使用本地数据）';
+                    setTimeout(() => { cloudStatusEl.style.display = 'none'; }, 5000);
+                });
+
+            } catch (err) {
+                console.error('[Cloud] ❌ 云端初始化失败:', err.message);
+                document.getElementById('userStatus').textContent = '⚠️ 离线模式';
+                cloudStatusEl.style.display = 'none';
+            }
+        }
+
+        // ========== 内联的云端数据加载函数 ==========
+        
+        async function _loadAllFromCloud(sbClient, userId) {
+            console.log('[Cloud] 📥 开始加载所有云端数据...');
+            let loadedCount = 0;
+            
+            // ===== 关键：清除旧用户数据，防止串户 =====
+            const lastUserId = sessionStorage.getItem('_cloud_last_user_id');
+            if (lastUserId && lastUserId !== userId) {
+                console.log('[Cloud] 🗑️ 检测到用户切换: ' + lastUserId.substring(0,8) + ' → ' + userId.substring(0,8) + '，清除旧数据');
+                // 需要清除的 localStorage key 列表（应用相关的所有 key）
+                const appKeys = [
+                    'voucher', 'lottery', 'premium', 'bankTicket',
+                    'xiaoan_password', 'password', 'rule_password',
+                    'lottery_password', 'advanced_password', 'bank_password',
+                    'announcement_password', 
+                    'bankSavingsRate', 'bankDepositRate', 'bankInvestmentRate',
+                    'products', 'history', 'dailyExchange', 'lastResetDate',
+                    'fineItems', 'checkinData', 'checkinDates', 'streakDays',
+                    'totalCheckins', 'bankInitialized', 'bankSavings',
+                    'bankDeposit', 'bankInvestment', 'savingsBalance',
+                    'depositBalance', 'investmentBalance',
+                    'depositStartDate', 'investmentStartDate',
+                    'bankHistory', 'yesterdayEarnings_savings',
+                    'yesterdayEarnings_deposit', 'yesterdayEarnings_investment',
+                    'lotteryRecords', 'advancedLotteryRecords',
+                    'lastLotteryDate', 'lastAdvancedLotteryDate',
+                    'lotteryTicketCount', 'premiumLottery',
+                    'jisuanCompleted', 'jisuanScore', 'jisuanPassCards',
+                    'jisuanHistory', 'jisuanLastResetDate', 'jisuan_today',
+                    'jixingCompletedDays', 'jixingCurrency', 'jixingInitialized',
+                    'jixingGiftClaimed', 'jixingBoughtRewards',
+                    'jixingStartDate', 'jixingLastClaimDate',
+                    'qingmingTasks', 'theme', 'lastVisitDate',
+                    'lastInterestDate', 'riskMaxProfit', 'riskMinLoss'
+                ];
+                for (const key of appKeys) {
+                    localStorage.removeItem(key);
+                }
+                console.log('[Cloud] 🗑️ 已清除旧用户数据 (' + appKeys.length + ' 个 key)');
+            }
+            // 记录当前用户
+            sessionStorage.setItem('_cloud_last_user_id', userId);
+            
+            // ===== 并行加载所有模块（替代原来的逐个 await）=====
+            const loadTasks = [];
+
+            // 1. 货币
+            loadTasks.push((async () => {
+                try {
+                    const { data: curRows } = await sbClient.from('user_currencies')
+                        .select('currency_type, amount, updated_at').eq('user_id', userId);
+                    if (curRows?.length > 0) {
+                        curRows.forEach(row => {
+                            const key = row.currency_type;
+                            if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
+                                const cloudVal = parseFloat(row.amount) || 0;
+                                const localVal = parseFloat(localStorage.getItem(key)) || 0;
+                                const finalVal = Math.max(cloudVal, localVal);
+                                localStorage.setItem(key, String(finalVal));
+                                if (localVal > cloudVal) {
+                                    sbClient.from('user_currencies').update({ amount: finalVal })
+                                        .eq('user_id', userId).eq('currency_type', key)
+                                        .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 货币回写失败:', r.error.message); });
+                                }
+                            }
+                        });
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 货币加载失败:', e.message); }
+            })());
+
+            // 2. 系统配置
+            loadTasks.push((async () => {
+                try {
+                    const { data: cfg } = await sbClient.from('system_config').select('*').eq('user_id', userId).maybeSingle();
+                    if (cfg) {
+                        if (cfg.main_password) { localStorage.setItem('xiaoan_password', String(cfg.main_password)); localStorage.setItem('password', String(cfg.main_password)); }
+                        if (cfg.savings_rate) localStorage.setItem('bankSavingsRate', String(cfg.savings_rate));
+                        if (cfg.deposit_rate) localStorage.setItem('bankDepositRate', String(cfg.deposit_rate));
+                        if (cfg.investment_base_rate) localStorage.setItem('bankInvestmentRate', String(cfg.investment_base_rate));
+                        if (cfg.bank_initialized) localStorage.setItem('bankInitialized', 'true');
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 配置加载失败:', e.message); }
+            })());
+
+            // 3. 商品
+            loadTasks.push((async () => {
+                try {
+                    const { data: prods } = await sbClient.from('products').select('*');
+                    if (prods?.length > 0) {
+                        localStorage.setItem('products', JSON.stringify(prods.map(p => ({
+                            id:p.id, name:p.name, price:p.price,
+                            dailyLimit:p.daily_limit||0, availableDays:p.available_days||[]
+                        }))));
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 商品加载失败:', e.message); }
+            })());
+
+            // 4. 银行 + 银行流水
+            loadTasks.push((async () => {
+                try {
+                    const [banks, txns] = await Promise.all([
+                        sbClient.from('bank_accounts').select('*').eq('user_id', userId),
+                        sbClient.from('bank_transactions').select('*').eq('user_id', userId).order('transaction_date', {ascending:false}).limit(500)
+                    ]);
+                    if (banks?.length > 0) {
+                        banks.forEach(acc => {
+                            const key = acc.account_type==='savings'?'bankSavings':acc.account_type==='deposit'?'bankDeposit':'bankInvestment';
+                            if (acc.balance!==null) localStorage.setItem(key, String(acc.balance));
+                            if (acc.rate!==null) localStorage.setItem(key.replace('bank','bank')+('Rate'), String(acc.rate));
+                            if ((acc.account_type==='deposit'||acc.account_type==='investment') && acc.locked_until) {
+                                const dateKey = acc.account_type==='deposit'?'depositStartDate':'investmentStartDate';
+                                localStorage.setItem(dateKey, acc.locked_until);
+                            }
+                        });
+                        localStorage.setItem('bankInitialized','true');
+                    }
+                    if (txns?.length > 0) {
+                        localStorage.setItem('bankHistory', JSON.stringify(txns.map(t => ({
+                            type: t.type || 'deposit', accountType: t.account_type || 'savings',
+                            amount: t.amount || 0, description: t.description || '', date: t.transaction_date
+                        }))));
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 银行加载失败:', e.message); }
+            })());
+
+            // 5. 抽奖记录
+            loadTasks.push((async () => {
+                try {
+                    const [normRows, advRows] = await Promise.all([
+                        sbClient.from('lottery_records').select('*').eq('user_id', userId).eq('pool_type','normal').order('prize_date',{ascending:false}).limit(200),
+                        sbClient.from('lottery_records').select('*').eq('user_id', userId).eq('pool_type','advanced').order('prize_date',{ascending:false}).limit(200)
+                    ]);
+                    if (normRows.data?.length > 0) {
+                        localStorage.setItem('lotteryRecords', JSON.stringify(normRows.data.map(r => ({
+                            prizeName: r.prize_name, used: r.used, date: r.prize_date
+                        }))));
+                    }
+                    if (advRows.data?.length > 0) {
+                        localStorage.setItem('advancedLotteryRecords', JSON.stringify(advRows.data.map(r => ({
+                            prizeName: r.prize_name, used: r.used, date: r.prize_date
+                        }))));
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 抽奖记录加载失败:', e.message); }
+            })());
+
+            // 6. 签到（重建完整的 checkinData JSON 对象，合并云端和本地数据）
+            loadTasks.push((async () => {
+                try {
+                    const { data: chk } = await sbClient.from('checkin_data').select('*').eq('user_id', userId).maybeSingle();
+                    if (chk) {
+                        const cloudData = {
+                            lastCheckinDate: chk.last_checkin_date || null,
+                            checkinLog: chk.checkin_log || [],
+                            checkinDates: chk.checkin_dates || [],
+                            streakDays: chk.streak_days || 0,
+                            totalCheckins: chk.total_checkins || 0,
+                            weekCheckins: 0,
+                            lastStreakReward: 0,
+                            cycleStartDate: chk.cycle_start_date || null,
+                            cycleCheckins: chk.cycle_checkins || 0,
+                            claimedMilestones: chk.claimed_milestones || []
+                        };
+                        // 与本地数据合并：优先保留信息更丰富的一方
+                        const localRaw = localStorage.getItem('checkinData');
+                        let localData = null;
+                        if (localRaw) {
+                            try { localData = JSON.parse(localRaw); } catch(e) {}
+                        }
+                        if (localData) {
+                            // 取连续签到的较大值
+                            cloudData.streakDays = Math.max(cloudData.streakDays, localData.streakDays || 0);
+                            // 取总签到的较大值
+                            cloudData.totalCheckins = Math.max(cloudData.totalCheckins, localData.totalCheckins || 0);
+                            // 取周期签到的较大值
+                            cloudData.cycleCheckins = Math.max(cloudData.cycleCheckins, localData.cycleCheckins || 0);
+                            // 如果本地签到日期更多，用本地的
+                            if ((localData.checkinDates||[]).length > cloudData.checkinDates.length) {
+                                cloudData.checkinDates = localData.checkinDates;
+                            }
+                            // 如果本地签到日志更多，用本地的
+                            if ((localData.checkinLog||[]).length > cloudData.checkinLog.length) {
+                                cloudData.checkinLog = localData.checkinLog;
+                            }
+                            // 保留本地的最后签到日期（如果更新）
+                            if (localData.lastCheckinDate && (!cloudData.lastCheckinDate || localData.lastCheckinDate > cloudData.lastCheckinDate)) {
+                                cloudData.lastCheckinDate = localData.lastCheckinDate;
+                            }
+                            // 合并里程碑
+                            if (localData.claimedMilestones) {
+                                const merged = new Set([...(cloudData.claimedMilestones||[]), ...localData.claimedMilestones]);
+                                cloudData.claimedMilestones = [...merged];
+                            }
+                        }
+                        localStorage.setItem('checkinData', JSON.stringify(cloudData));
+                        localStorage.setItem('checkinDates', JSON.stringify(cloudData.checkinDates));
+                        localStorage.setItem('streakDays', String(cloudData.streakDays));
+                        localStorage.setItem('totalCheckins', String(cloudData.totalCheckins));
+                        // 如果本地有更丰富的数据，回写云端
+                        if (localData && ((localData.checkinDates||[]).length > 0 || (localData.checkinLog||[]).length > 0)) {
+                            const cloudRecord = {
+                                user_id: userId,
+                                last_checkin_date: cloudData.lastCheckinDate,
+                                checkin_log: cloudData.checkinLog,
+                                checkin_dates: cloudData.checkinDates,
+                                streak_days: cloudData.streakDays,
+                                total_checkins: cloudData.totalCheckins,
+                                cycle_start_date: cloudData.cycleStartDate,
+                                cycle_checkins: cloudData.cycleCheckins,
+                                claimed_milestones: cloudData.claimedMilestones
+                            };
+                            sbClient.from('checkin_data').upsert(cloudRecord, { onConflict: 'user_id' })
+                                .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 签到数据回写失败:', r.error.message); });
+                        }
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 签到加载失败:', e.message); }
+            })());
+
+            // 7. 每日兑换
+            loadTasks.push((async () => {
+                try {
+                    const { data: dexRows } = await sbClient.from('daily_exchanges')
+                        .select('product_id, count').eq('user_id', userId)
+                        .eq('exchange_date', new Date().toISOString().split('T')[0]);
+                    if (dexRows?.length > 0) {
+                        const exchangeData = {};
+                        dexRows.forEach(r => { exchangeData[r.product_id] = r.count; });
+                        localStorage.setItem('dailyExchange', JSON.stringify(exchangeData));
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 每日兑换加载失败:', e.message); }
+            })());
+
+            // 8. 罚款 + 计算挑战 + 纪行 + 清明活动（并行）
+            loadTasks.push((async () => {
+                try {
+                    const [fines, jsn, jx, qm] = await Promise.all([
+                        sbClient.from('fine_items').select('*').eq('user_id', userId).order('created_at',{ascending:true}).catch(()=>({data:null})),
+                        sbClient.from('jisuan_data').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null})),
+                        sbClient.from('jixing_progress').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null})),
+                        sbClient.from('qingming_data').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null}))
+                    ]);
+                    if (fines?.length > 0) {
+                        localStorage.setItem('fineItems', JSON.stringify(fines.map(f=>({
+                            id:f.id, reason:f.reason, total:f.original_amount,
+                            remaining:f.remaining, created:f.created_at,
+                            dueDate:f.due_date, penaltyApplied:f.penalty_applied
+                        }))));
+                    }
+                    if (jsn) {
+                        if (jsn.completed) localStorage.setItem('jisuanCompleted','true');
+                        if (jsn.score!==null) localStorage.setItem('jisuanScore',String(jsn.score));
+                        if (jsn.pass_cards!==null) localStorage.setItem('jisuanPassCards',String(jsn.pass_cards));
+                        if (jsn.history) localStorage.setItem('jisuanHistory',JSON.stringify(jsn.history));
+                    }
+                    if (jx) {
+                        if (jx.completed_days) localStorage.setItem('jixingCompletedDays',JSON.stringify(jx.completed_days));
+                        if (jx.currency!==null) localStorage.setItem('jixingCurrency',String(jx.currency));
+                        if (jx.initialized) localStorage.setItem('jixingInitialized','true');
+                        if (jx.gift_claimed) localStorage.setItem('jixingGiftClaimed','true');
+                        if (jx.bought_rewards) localStorage.setItem('jixingBoughtRewards',JSON.stringify(jx.bought_rewards));
+                    }
+                    if (qm?.completed_tasks) localStorage.setItem('qingmingTasks', JSON.stringify(qm.completed_tasks));
+                } catch(e) { console.warn('[Cloud] ⚠️ 其他模块加载失败:', e.message); }
+            })());
+
+            // 9. 兑换历史 + 任务规则 + 活跃任务（并行）
+            loadTasks.push((async () => {
+                try {
+                    const [hist, rules, atasks] = await Promise.all([
+                        sbClient.from('histories').select('*').eq('user_id', userId).order('created_at',{ascending:true}).limit(500).catch(()=>({data:null})),
+                        sbClient.from('rules').select('*').order('sort_order',{ascending:true}).catch(()=>({data:null})),
+                        sbClient.from('active_tasks').select('*').eq('user_id', userId).catch(()=>({data:null}))
+                    ]);
+                    // 加载兑换历史
+                    if (hist?.data?.length > 0) {
+                        const localHist = JSON.parse(localStorage.getItem('history') || '[]');
+                        // 合并：云端有而本地没有的追加
+                        const localIds = new Set(localHist.map(h => h.date + '_' + h.reason));
+                        for (const h of hist.data) {
+                            const key = h.created_at + '_' + h.reason;
+                            if (!localIds.has(key)) {
+                                localHist.push({
+                                    date: h.created_at, amount: h.amount, reason: h.reason,
+                                    type: h.type, currencyType: h.currency_type,
+                                    currencyName: h.currency_name, balanceAfter: h.balance_after
+                                });
+                            }
+                        }
+                        localStorage.setItem('history', JSON.stringify(localHist));
+                    }
+                    // 加载任务规则（全局共享，不按用户过滤）
+                    if (rules?.data?.length > 0) {
+                        localStorage.setItem('rules', JSON.stringify(rules.data.map(r => ({
+                            id: r.id, name: r.name, reward: typeof r.reward === 'string' ? r.reward : JSON.stringify(r.reward),
+                            duration: r.duration, days: r.days, is_daily: r.is_daily,
+                            rewardAmount: r.reward_amount, sortOrder: r.sort_order ?? r.id, isActive: r.is_active !== false
+                        }))));
+                    }
+                    // 加载活跃任务
+                    if (atasks?.data?.length > 0) {
+                        const taskObj = {};
+                        for (const t of atasks.data) {
+                            taskObj[t.rule_id] = {
+                                status: t.status || 'pending',
+                                startTime: t.start_time,
+                                endTime: t.end_time,
+                                rewardText: t.reward_text
+                            };
+                        }
+                        localStorage.setItem('activeTasks', JSON.stringify(taskObj));
+                    }
+                } catch(e) { console.warn('[Cloud] ⚠️ 历史/规则/任务加载失败:', e.message); }
+            })());
+
+            // 等待所有并行任务完成
+            await Promise.all(loadTasks);
+            console.log(`[Cloud] ✅ 云端数据加载完成 (${loadTasks.length} 个模块并行)`);
+        }
+
+        // ========== 核心云端写入函数 ==========
+        
+        /**
+         * 直接将单个 key 的值同步到 Supabase（供拦截器调用）
+         */
+        async function _directWriteToCloud(key, value) {
+            const sbClient = window.__cloudClient;
+            const userId = window.__cloudUserId;
+            
+            if (!sbClient || !userId) {
+                console.warn('[Cloud] ❌ 写入失败: 无可用客户端');
+                return;
+            }
+            
+            try {
+                // ========== 货币类 → user_currencies 表（行级模型: currency_type + amount） ==========
+                if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
+                    const result = await sbClient.from('user_currencies').upsert({
+                        user_id: userId,
+                        currency_type: key,
+                        amount: parseInt(value) || 0
+                    }, { onConflict: 'user_id,currency_type' });
+                    if (result.error) throw new Error(`user_currencies: ${result.error.message}`);
+                    console.log(`[Cloud] ✅ 已写入 ${key}=${value} → user_currencies`);
+                    return;
+                }
+
+                // ========== 密码 → system_config ==========
+                if (['xiaoan_password', 'password'].includes(key)) {
+                    const result = await sbClient.from('system_config').upsert({
+                        user_id: userId, main_password: String(value)
+                    }, { onConflict: 'user_id' });
+                    if (result.error) throw new Error(result.error.message);
+                    console.log(`[Cloud] ✅ 已写入 ${key} → system_config`);
+                    return;
+                }
+                
+                // ========== 利率配置 → system_config ==========
+                if (['bankSavingsRate', 'bankDepositRate', 'bankInvestmentRate'].includes(key)) {
+                    const rateMap = { 
+                        bankSavingsRate: 'savings_rate', 
+                        bankDepositRate: 'deposit_rate', 
+                        bankInvestmentRate: 'investment_base_rate'
+                    };
+                    const result = await sbClient.from('system_config').upsert({
+                        user_id: userId,
+                        [rateMap[key]]: parseFloat(value) || 0
+                    }, { onConflict: 'user_id' });
+                    if (result.error) throw new Error(result.error.message);
+                    console.log(`[Cloud] ✅ 已写入 ${key} → system_config.${rateMap[key]}`);
+                    return;
+                }
+                
+                // 商品（全局表，所有用户共享）
+                if (key === 'products') {
+                    const prods = JSON.parse(value);
+                    for (const p of (Array.isArray(prods) ? prods : [])) {
+                        await sbClient.from('products').upsert({
+                            id: p.id, name: p.name,
+                            price: p.price, daily_limit: p.daily_limit || 0,
+                            available_days: p.availableDays || p.days || []
+                        }, { onConflict: 'id' });
+                    }
+                    console.log(`[Cloud] ✅ 已写入 products`);
+                    return;
+                }
+                
+                // ========== 银行余额 → bank_accounts ==========
+                if (['bankSavings', 'bankDeposit', 'bankInvestment', 'savingsBalance', 'depositBalance', 'investmentBalance'].includes(key)) {
+                    const accMap = { 
+                        bankSavings:'savings', bankDeposit:'deposit', bankInvestment:'investment',
+                        savingsBalance:'savings', depositBalance:'deposit', investmentBalance:'investment'
+                    };
+                    const result = await sbClient.from('bank_accounts').upsert({
+                        user_id: userId,
+                        account_type: accMap[key],
+                        balance: parseInt(value) || 0
+                    }, { onConflict: 'user_id,account_type' });
+                    if (result.error) throw new Error(result.error.message);
+                    console.log(`[Cloud] ✅ 已写入 ${key}=${value} → bank_accounts`);
+                    return;
+                }
+                
+                // ========== 银行日期 → bank_accounts.locked_until ==========
+                if (['depositStartDate', 'investmentStartDate'].includes(key)) {
+                    const typeMap = { depositStartDate: 'deposit', investmentStartDate: 'investment' };
+                    const result = await sbClient.from('bank_accounts').upsert({
+                        user_id: userId, account_type: typeMap[key], locked_until: value
+                    }, { onConflict: 'user_id,account_type' });
+                    if (result.error) throw new Error(result.error.message);
+                    console.log(`[Cloud] ✅ 已写入 ${key} → bank_accounts.locked_until`);
+                    return;
+                }
+
+                // ========== 银行流水 → bank_transactions（JSON数组，逐条插入） ==========
+                if (key === 'bankHistory') {
+                    const historyArr = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (!Array.isArray(historyArr) || historyArr.length === 0) {
+                        console.log(`[Cloud] ⏭️ bankHistory 为空，跳过`);
+                        return;
+                    }
+                    // 先删除该用户旧记录，再批量写入
+                    await sbClient.from('bank_transactions').delete().eq('user_id', userId);
+                    const txns = historyArr.map(h => ({
+                        user_id: userId,
+                        type: h.type || 'deposit',
+                        account_type: h.accountType || 'savings',
+                        amount: parseFloat(h.amount) || 0,
+                        description: h.description || '',
+                        transaction_date: h.date || h.time || new Date().toISOString()
+                    }));
+                    const { error } = await sbClient.from('bank_transactions').insert(txns);
+                    if (error) throw new Error(error.message);
+                    console.log(`[Cloud] ✅ 已写入 bankHistory → ${txns.length} 条银行流水`);
+                    return;
+                }
+                
+                // ========== 抽奖记录 → lottery_records ==========
+                if (['lotteryRecords', 'advancedLotteryRecords'].includes(key)) {
+                    const records = typeof value === 'string' ? JSON.parse(value) : value;
+                    const poolType = key === 'lotteryRecords' ? 'normal' : 'advanced';
+                    if (!Array.isArray(records) || records.length === 0) return;
+                    
+                    // 删除该用户该奖池的旧记录
+                    await sbClient.from('lottery_records').delete()
+                        .eq('user_id', userId).eq('pool_type', poolType);
+                        
+                    const rows = records.map(r => ({
+                        user_id: userId, pool_type: poolType,
+                        prize_name: r.prizeName || r.name || r.prize_name || '未知奖品',
+                        used: !!r.used,
+                        prize_date: r.date || r.claimedAt || new Date().toISOString()
+                    }));
+                    const { error } = await sbClient.from('lottery_records').insert(rows);
+                    if (error) throw new Error(error.message);
+                    console.log(`[Cloud] ✅ 已写入 ${key} → ${rows.length} 条${poolType}抽奖记录`);
+                    return;
+                }
+                
+                // 签到数据（整体JSON对象）
+                if (key === 'checkinData') {
+                    const data = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (!data || typeof data !== 'object') return;
+                    const record = {
+                        user_id: userId,
+                        last_checkin_date: data.lastCheckinDate || null,
+                        checkin_log: data.checkinLog || [],
+                        checkin_dates: data.checkinDates || [],
+                        streak_days: parseInt(data.streakDays) || 0,
+                        total_checkins: parseInt(data.totalCheckins) || 0,
+                        cycle_start_date: data.cycleStartDate || null,
+                        cycle_checkins: parseInt(data.cycleCheckins) || 0,
+                        claimed_milestones: data.claimedMilestones || []
+                    };
+                    await sbClient.from('checkin_data').upsert(record, { onConflict: 'user_id' });
+                    console.log(`[Cloud] ✅ 已写入 checkinData → checkin_data (连续${record.streak_days}天/累计${record.total_checkins}天)`);
+                    return;
+                }
+
+                // 签到数据（独立字段，兼容旧逻辑）
+                if (['checkinDates', 'streakDays', 'totalCheckins'].includes(key)) {
+                    const baseData = { user_id: userId };
+                    if (key === 'checkinDates') baseData.checkin_dates = typeof value === 'string' ? JSON.parse(value) : value;
+                    else if (key === 'streakDays') baseData.streak_days = parseInt(value) || 0;
+                    else baseData.total_checkins = parseInt(value) || 0;
+                    await sbClient.from('checkin_data').upsert(baseData, { onConflict: 'user_id' });
+                    console.log(`[Cloud] ✅ 已写入 ${key} → checkin_data`);
+                    return;
+                }
+                
+                // 每日兑换（行级模型：每个 product_id 一行）
+                if (key === 'dailyExchange') {
+                    const exchangeData = typeof value === 'string' ? JSON.parse(value) : value;
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    
+                    // 遍历每个商品兑换记录
+                    for (const [productId, count] of Object.entries(exchangeData)) {
+                        await sbClient.from('daily_exchanges').upsert({
+                            user_id: userId,
+                            product_id: parseInt(productId),
+                            exchange_date: todayStr,
+                            count: parseInt(count) || 1
+                        }, { onConflict: 'user_id,product_id,exchange_date' });
+                    }
+                    console.log(`[Cloud] ✅ 已写入 dailyExchange`);
+                    return;
+                }
+                
+                // 罚款（total → original_amount，无 is_overdue 字段）
+                if (key === 'fineItems') {
+                    await sbClient.from('fine_items').delete().eq('user_id', userId);
+                    const items = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (Array.isArray(items) && items.length > 0) {
+                        await sbClient.from('fine_items').insert(items.map(item => ({
+                            user_id: userId, id: item.id, reason: item.reason,
+                            original_amount: item.total, remaining: item.remaining,
+                            created_at: item.created, due_date: item.dueDate || item.dueDate,
+                            penalty_applied: item.penaltyApplied||false, is_paid: false, paid_amount: 0
+                        })));
+                    }
+                    console.log(`[Cloud] ✅ 已写入 fineItems`);
+                    return;
+                }
+                
+                // 计算挑战
+                if (['jisuanCompleted', 'jisuanScore', 'jisuanPassCards'].includes(key)) {
+                    const jsMap = { jisuanCompleted: 'completed', jisuanScore: 'score', jisuanPassCards: 'pass_cards' };
+                    let sv = key === 'jisuanCompleted' ? (value === 'true') : (parseInt(value) || 0);
+                    await sbClient.from('jisuan_data').upsert({
+                        user_id: userId, [jsMap[key]]: sv
+                    }, { onConflict: 'user_id' });
+                    return;
+                }
+                
+                // 纪行（含 bought_rewards；无 start_date 列）
+                if (['jixingCompletedDays', 'jixingCurrency', 'jixingInitialized', 'jixingGiftClaimed', 'jixingBoughtRewards'].includes(key)) {
+                    const jxMap = { jixingCompletedDays: 'completed_days', jixingCurrency: 'currency',
+                                    jixingInitialized: 'initialized', jixingGiftClaimed: 'gift_claimed',
+                                    jixingBoughtRewards: 'bought_rewards' };
+                    let sv;
+                    if (['jixingInitialized','jixingGiftClaimed'].includes(key)) {
+                        sv = value === 'true';
+                    } else if (key === 'jixingCurrency') {
+                        sv = parseInt(value) || 0;
+                    } else {
+                        sv = (typeof value==='string') ? JSON.parse(value) : value;
+                    }
+                    await sbClient.from('jixing_progress').upsert({
+                        user_id: userId, [jxMap[key]]: sv
+                    }, { onConflict: 'user_id' });
+                    return;
+                }
+                
+                // 清明活动（completed_tasks 而非 tasks）
+                if (key === 'qingmingTasks') {
+                    await sbClient.from('qingming_data').upsert({
+                        user_id: userId,
+                        completed_tasks: typeof value === 'string' ? JSON.parse(value) : value
+                    }, { onConflict: 'user_id' });
+                    return;
+                }
+
+                // ========== 兑换历史 → histories 表 ==========
+                if (key === 'history') {
+                    const historyArr = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (!Array.isArray(historyArr) || historyArr.length === 0) {
+                        console.log(`[Cloud] ⏭️ history 为空，跳过`);
+                        return;
+                    }
+                    await sbClient.from('histories').delete().eq('user_id', userId);
+                    const records = historyArr.map(h => ({
+                        user_id: userId,
+                        amount: parseInt(h.amount) || 0,
+                        reason: h.reason || '',
+                        type: h.type || 'exchange',
+                        currency_type: h.currencyType || 'voucher',
+                        currency_name: h.currencyName || '代金券',
+                        balance_after: parseInt(h.balanceAfter) || 0,
+                        created_at: h.date || h.time || new Date().toISOString()
+                    }));
+                    const { error } = await sbClient.from('histories').insert(records);
+                    if (error) throw new Error(error.message);
+                    console.log(`[Cloud] ✅ 已写入 history → ${records.length} 条兑换历史`);
+                    return;
+                }
+
+                // ========== 任务规则 → rules 表 ==========
+                if (key === 'rules') {
+                    const rules = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (!Array.isArray(rules) || rules.length === 0) return;
+                    await sbClient.from('rules').delete();
+                    const rows = rules.map(r => ({
+                        id: r.id,
+                        name: r.name || '',
+                        reward: r.reward || '{}',
+                        duration: parseInt(r.duration) || 0,
+                        days: Array.isArray(r.days) ? r.days : [],
+                        is_daily: !!r.is_daily,
+                        reward_amount: parseInt(r.rewardAmount) || 0,
+                        sort_order: parseInt(r.sortOrder) ?? r.id,
+                        is_active: r.isActive !== false
+                    }));
+                    const { error } = await sbClient.from('rules').insert(rows);
+                    if (error) throw new Error(error.message);
+                    console.log(`[Cloud] ✅ 已写入 rules → ${rows.length} 条任务规则`);
+                    return;
+                }
+
+                // ========== 活跃任务 → active_tasks 表 ==========
+                if (key === 'activeTasks') {
+                    const tasks = typeof value === 'string' ? JSON.parse(value) : value;
+                    if (!tasks || typeof tasks !== 'object') return;
+                    await sbClient.from('active_tasks').delete().eq('user_id', userId);
+                    const rows = [];
+                    for (const [ruleIdStr, taskData] of Object.entries(tasks)) {
+                        if (taskData && typeof taskData === 'object') {
+                            rows.push({
+                                user_id: userId,
+                                rule_id: parseInt(ruleIdStr) || 0,
+                                status: taskData.status || 'pending',
+                                start_time: taskData.startTime || null,
+                                end_time: taskData.endTime || null,
+                                reward_text: taskData.rewardText || ''
+                            });
+                        }
+                    }
+                    if (rows.length > 0) {
+                        const { error } = await sbClient.from('active_tasks').insert(rows);
+                        if (error) throw new Error(error.message);
+                    }
+                    console.log(`[Cloud] ✅ 已写入 activeTasks → ${rows.length} 条活跃任务`);
+                    return;
+                }
+
+                // ========== 计算挑战 — 补充 jisuanHistory 和 jisuan_today ==========
+                if (['jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory', 'jisuan_today'].includes(key)) {
+                    const jsMap = { jisuanCompleted: 'completed', jisuanScore: 'score', jisuanPassCards: 'pass_cards', jisuanHistory: 'history', jisuan_today: 'today' };
+                    let sv;
+                    if (key === 'jisuanCompleted') sv = value === 'true';
+                    else if (['jisuanScore', 'jisuanPassCards'].includes(key)) sv = parseInt(value) || 0;
+                    else sv = (typeof value === 'string') ? JSON.parse(value) : value;
+                    await sbClient.from('jisuan_data').upsert({
+                        user_id: userId, [jsMap[key]]: sv
+                    }, { onConflict: 'user_id' });
+                    console.log(`[Cloud] ✅ 已写入 ${key} → jisuan_data.${jsMap[key]}`);
+                    return;
+                }
+                
+                // 其他不识别的 key，静默忽略
+                // console.log(`[Cloud] ⏭️ 跳过未映射的 key: ${key}`);
+                
+            } catch(err) {
+                console.error(`[Cloud] ❌ 写入 ${key} 失败:`, err.message);
+            }
+        }
+
+        // ====== 云端同步 UI 操作函数 ======
+
+        /** 初始化系统设置中的云同步状态面板 */
+        function initCloudStatusPanel() {
+            const sbClient = window.__cloudClient;
+            const dot = document.getElementById('cloudDot');
+            const label = document.getElementById('cloudStatusLabel');
+            const detail = document.getElementById('cloudStatusDetail');
+            const timeEl = document.getElementById('cloudSyncTime');
+            
+            if (!dot || !label || !detail) return;
+
+            if (sbClient && window.__cloudUserId) {
+                dot.className = 'cloud-status-dot status-connected';
+                label.textContent = '✅ 已连接 Supabase';
+                const lastSync = localStorage.getItem('xiaoan_last_cloud_sync');
+                if (lastSync) {
+                    timeEl.textContent = '同步于 ' + new Date(parseInt(lastSync)).toLocaleTimeString();
+                    detail.textContent = '云端同步正常运行，所有数据变更会自动保存到 Supabase';
+                } else {
+                    timeEl.textContent = '';
+                    detail.textContent = '已连接云端，数据正在后台自动同步中...';
+                }
+            } else {
+                dot.className = 'cloud-status-dot status-offline';
+                label.textContent = '⚠️ 离线模式';
+                timeEl.textContent = '';
+                detail.textContent = '当前使用本地存储，数据仅保存在浏览器中。联网后刷新页面可启用云同步。';
+                
+                // 将所有模块标记为离线状态
+                document.querySelectorAll('.module-item').forEach(el => {
+                    el.classList.remove('module-ok', 'module-loading');
+                    el.classList.add('module-warn');
+                });
+            }
+
+            // 切换到设置 tab 时自动刷新状态
+            const origSwitchTab = typeof switchTab === 'function' ? switchTab : function(){};
+        }
+
+        /**
+         * 强制上传：将 localStorage 所有已映射数据完整上传到 Supabase
+         * 用途：确保本地最新数据覆盖云端（如多设备冲突后以本机为准）
+         */
+        async function forceUploadToCloud() {
+            const sbClient = window.__cloudClient;
+            const userId = window.__cloudUserId;
+            if (!sbClient || !userId) { alert('❌ 未连接云端，请先登录'); return; }
+
+            // 确认操作
+            const ok = confirm(
+                '⚠️ 确定要强制上传吗？\n\n' +
+                '这将把当前设备的所有本地数据上传到云端，覆盖云端已有数据。\n' +
+                '建议在以下场景使用：\n' +
+                '• 本地有最新数据，需要更新到云端\n' +
+                '• 多设备数据冲突，以此设备为准'
+            );
+            if (!ok) return;
+
+            // 显示同步动画
+            _setCloudUIState('syncing', '⏳ 正在上传...');
+            
+            try {
+                const syncMapKeys = [
+                    'voucher','lottery','premium','bankTicket',
+                    'bankSavings','bankDeposit','bankInvestment',
+                    'depositStartDate','investmentStartDate',
+                    'products','history','rules','activeTasks',
+                    'fineItems','checkinData','dailyExchange',
+                    'lotteryRecords','advancedLotteryRecords',
+                    'bankHistory','jisuanCompleted','jisuanScore','jisuanPassCards',
+                    'jixingCompletedDays','jixingCurrency','qingmingTasks'
+                ];
+                
+                let successCount = 0;
+                let failCount = 0;
+                for (const key of syncMapKeys) {
+                    const val = localStorage.getItem(key);
+                    if (val !== null && val !== undefined) {
+                        try {
+                            await _directWriteToCloud(key, val);
+                            successCount++;
+                            // 更新对应模块的 UI
+                            _markModuleSynced(key);
+                        } catch(e) {
+                            console.warn(`[ForceUpload] ${key} 失败:`, e.message);
+                            failCount++;
+                        }
+                    }
+                }
+
+                localStorage.setItem('xiaoan_last_cloud_sync', String(Date.now()));
+                _setCloudUIState('connected', `✅ 上传完成！${successCount} 项成功, ${failCount} 项失败`);
+                alert(`☁️ 上传完成！\n成功: ${successCount} 项\n失败: ${failCount} 项`);
+            } catch(err) {
+                _setCloudUIState('offline', '❌ 上传失败: ' + err.message);
+                alert('❌ 上传失败: ' + err.message);
+            }
+        }
+
+        /**
+         * 强制拉取：从 Supabase 拉取全部数据并写入 localStorage，然后刷新页面
+         * 用途：以云端数据为准覆盖本地
+         */
+        async function forceDownloadFromCloud() {
+            const sbClient = window.__cloudClient;
+            const userId = window.__cloudUserId;
+            if (!sbClient || !userId) { alert('❌ 未连接云端，请先登录'); return; }
+
+            const ok = confirm(
+                '⚠️ 确定要从云端刷新数据吗？\n\n' +
+                '这将用云端的数据覆盖当前本地数据。\n' +
+                '适用于：\n' +
+                '• 其他设备上有更新的数据\n' +
+                '• 本地数据异常，想恢复云端备份'
+            );
+            if (!ok) return;
+
+            _setCloudUIState('syncing', '⏳ 正在从云端拉取...');
+
+            try {
+                await _loadAllFromCloud(sbClient, userId);
+                localStorage.setItem('xiaoan_last_cloud_sync', String(Date.now()));
+                _setCloudUIState('connected', '✅ 已从云端刷新！');
+                alert('☁️ 数据已从云端刷新！\n页面将重新加载...');
+                setTimeout(() => location.reload(), 500);
+            } catch(err) {
+                _setCloudUIState('offline', '❌ 拉取失败: ' + err.message);
+                alert('❌ 刷新失败: ' + err.message);
+            }
+        }
+
+        /** 设置云状态卡片的视觉状态 */
+        function _setCloudUIState(state, text) {
+            const dot = document.getElementById('cloudDot');
+            const label = document.getElementById('cloudStatusLabel');
+            const detail = document.getElementById('cloudStatusDetail');
+            const timeEl = document.getElementById('cloudSyncTime');
+
+            if (!dot || !label) return;
+            
+            dot.className = 'cloud-status-dot status-' + state;
+            label.textContent = text;
+            if (state === 'connected') {
+                timeEl.textContent = '同步于 ' + new Date().toLocaleTimeString();
+                detail.textContent = '云端同步正常完成';
+            } else if (state === 'syncing') {
+                detail.textContent = '正在进行数据传输，请勿关闭页面...';
+            } else {
+                detail.textContent = text;
+                timeEl.textContent = '';
+            }
+        }
+
+        /** 根据 localStorage key 标记对应模块已同步 */
+        function _markModuleSynced(key) {
+            const map = {
+                voucher:'currencies', lottery:'currencies', premium:'currencies', bankTicket:'currencies',
+                bankSavings:'bank', bankDeposit:'bank', bankInvestment:'bank', bankHistory:'bank',
+                lotteryRecords:'lottery', advancedLotteryRecords:'lottery',
+                checkinData:'checkin', history:'history', rules:'rules', activeTasks:'rules',
+                fineItems:'activity', jisuanCompleted:'activity', jixingCurrency:'activity', qingmingTasks:'activity'
+            };
+            const mod = map[key];
+            if (!mod) return;
+            const el = document.querySelector(`.module-item[data-module="${mod}"]`);
+            if (el) {
+                el.classList.remove('module-loading', 'module-warn', 'module-error');
+                el.classList.add('module-ok');
+            }
+        }
+
+        // ====== 头像上传功能 ======
+
+        // 触发文件选择
+        function triggerAvatarUpload() {
+            document.getElementById('avatarInput').click();
+        }
+
+        // 处理文件选择与上传
+        async function handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) { alert('请选择图片文件！'); return; }
+            if (file.size > 2 * 1024 * 1024) { alert('图片不能超过 2MB！'); return; }
+
+            const avatarEl = document.getElementById('userAvatar');
+            const originalHTML = avatarEl.innerHTML;
+            avatarEl.innerHTML = '<span style="font-size:16px">⏳</span>';
+
+            try {
+                const sbClient = window.__cloudClient;
+                if (!sbClient) throw new Error('未连接云端');
+
+                const userId = window.__cloudUserId;
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${userId}/avatar.${fileExt}`;
+
+                const { error: uploadError } = await sbClient.storage.from('avatars').upload(fileName, file, { upsert: true });
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = sbClient.storage.from('avatars').getPublicUrl(fileName);
+                const avatarUrl = urlData.publicUrl;
+
+                const { error: updateError } = await sbClient.auth.updateUser({ data: { avatar_url: avatarUrl } });
+                if (updateError) throw updateError;
+
+                renderAvatar(avatarUrl);
+                localStorage.setItem(_avatarCacheKey(), avatarUrl);
+                console.log('[Avatar] ✅ 上传成功:', avatarUrl);
+            } catch (err) {
+                console.error('[Avatar] ❌ 上传失败:', err);
+                alert('头像上传失败: ' + err.message);
+                avatarEl.innerHTML = originalHTML;
+            }
+            event.target.value = '';
+        }
+
+        // 获取用户专属的头像缓存 key
+        function _avatarCacheKey() {
+            return 'xiaoan_avatar_url_' + (window.__cloudUserId || 'unknown');
+        }
+
+        // 渲染头像（支持 img 或 fallback emoji）
+        function renderAvatar(url) {
+            const el = document.getElementById('userAvatar');
+            if (url) {
+                el.innerHTML = `<img src="${url}" alt="头像">`;
+            } else {
+                const userId = window.__cloudUserId || '';
+                el.innerHTML = '';
+                el.textContent = userId ? userId.substring(0,1).toUpperCase() : '👤';
+            }
+        }
+
+        // 加载已有头像（按用户区分缓存）
+        async function loadUserAvatar() {
+            const cached = localStorage.getItem(_avatarCacheKey());
+            if (cached) { renderAvatar(cached); return; }
+
+            const sbClient = window.__cloudClient;
+            if (!sbClient) return;
+            try {
+                const { data: { user } } = await sbClient.auth.getUser();
+                const url = user?.user_metadata?.avatar_url;
+                if (url) { renderAvatar(url); localStorage.setItem(_avatarCacheKey(), url); }
+            } catch(e) { console.warn('[Avatar] 无法加载头像:', e.message); }
+        }
+
+        // 退出登录
+        function doLogout() {
+            if (!confirm('确定要退出登录吗？')) return;
+            sessionStorage.removeItem('xiaoan_user_id');
+            localStorage.removeItem('xiaoan_user_id');
+            localStorage.removeItem(_avatarCacheKey());
+            window.location.replace('login/index.html');
+        }
+        
+        // ====== 快捷功能：随机抽取任务 ======
+
+        const DRAWN_TASK_KEY = 'xiaoan_drawn_task';
+        let _currentDrawnTaskId = null;
+
+        function drawRandomTask() {
+            const saved = localStorage.getItem(DRAWN_TASK_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    const activeTasks = JSON.parse(localStorage.getItem('activeTasks')) || {};
+                    const task = activeTasks[data.taskId];
+                    if (data.taskId && (!task || task.status !== 'completed')) {
+                        showDrawnTask(data);
+                        return;
+                    }
+                } catch(e) {}
+            }
+
+            const rules = JSON.parse(localStorage.getItem('rules') || '[]');
+            const activeTasks = JSON.parse(localStorage.getItem('activeTasks' || '{}'));
+            const today = new Date();
+            const dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+            const todayStr = dayNames[today.getDay()];
+            
+            const candidateRules = rules.filter(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                const days = rule.days || [];
+                const shouldShowToday = days.length === 0 || days.includes(todayStr) || taskStatus.status === 'completed';
+                return shouldShowToday && taskStatus.status !== 'completed' && taskStatus.status !== 'in-progress';
+            });
+
+            if (candidateRules.length === 0) {
+                alert('当前没有可抽取的任务！所有任务都已完成或正在进行中。');
+                return;
+            }
+
+            const picked = candidateRules[Math.floor(Math.random() * candidateRules.length)];
+            _currentDrawnTaskId = picked.id;
+
+            let rewardText = '';
+            if (picked.rewardType1 && picked.rewardType1 !== 'none') {
+                const names = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', bankTicket: '银行理财券' };
+                rewardText += `🎁 ${names[picked.rewardType1] || picked.rewardType1} × ${picked.rewardAmount1}`;
+            }
+            if (picked.rewardType2 && picked.rewardType2 !== 'none') {
+                const names = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', bankTicket: '银行理财券' };
+                rewardText += (rewardText ? ' + ' : '🎁 ') + `${names[picked.rewardType2] || picked.rewardType2} × ${picked.rewardAmount2}`;
+            }
+
+            const taskData = { taskId: picked.id, title: picked.title, content: picked.content || '', reward: rewardText, drawnAt: new Date().toISOString() };
+            localStorage.setItem(DRAWN_TASK_KEY, JSON.stringify(taskData));
+            showDrawnTask(taskData);
+        }
+
+        function showDrawnTask(data) {
+            document.getElementById('drawnTaskTitle').textContent = data.title;
+            document.getElementById('drawnTaskDesc').textContent = data.content || '';
+            document.getElementById('drawnTaskReward').textContent = data.reward ? `奖励: ${data.reward}` : '';
+            _currentDrawnTaskId = data.taskId;
+            document.getElementById('taskDrawModal').classList.add('active');
+        }
+
+        function closeDrawModal() {
+            document.getElementById('taskDrawModal').classList.remove('active');
+        }
+
+        function goToDrawnTask() {
+            closeDrawModal();
+            window.location.href = 'rule/index.html?taskId=' + (_currentDrawnTaskId || '');
+        }
+
+        // 启动
+        startApp();
+
+        // ===== 实时通知系统 =====
+        let _audioCtxUnlocked = false;
+
+        /**
+         * 预解锁 AudioContext（解决 Safari/Chrome 自动播放限制）
+         * 用户首次点击页面时静音播放并暂停，解锁音频上下文
+         */
+        function _unlockAudio() {
+            if (_audioCtxUnlocked) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const buf = ctx.createBuffer(1, 1, 22050);
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                if (ctx.state === 'suspended') ctx.resume();
+                src.start(0);
+                setTimeout(() => { if (ctx.state !== 'closed') ctx.close(); }, 1000);
+                _audioCtxUnlocked = true;
+                console.log('[Notify] 🔊 AudioContext 已预解锁');
+            } catch(e) {
+                console.warn('[Notify] 音频预解锁失败:', e.message);
+            }
+        }
+        document.addEventListener('click', _unlockAudio, { once: true });
+        document.addEventListener('touchstart', _unlockAudio, { once: true });
+
+        /**
+         * 播放通知提示音（Web Audio API 合成，无需外部文件）
+         * @param {string} tone - 'info'|'success'|'warning'|'error'
+         */
+        function playNotificationSound(tone) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') { ctx.resume(); }
+
+                const now = ctx.currentTime;
+
+                // 根据类型选择不同和弦音色（三音和弦，更饱满）
+                const chordMap = {
+                    info:     [523.25, 659.25, 783.99],   // C5 E5 G5 - 大三和弦
+                    success:  [523.25, 659.25, 1046.50],   // C5 E5 C6 - 明亮大调
+                    warning:  [493.88, 622.25, 739.99],   // B4 D#5 F#5 - 小三和弦
+                    error:    [311.13, 369.99, 466.16]    // Eb4 F#4 Bb4 - 紧张减三
+                };
+                const freqs = chordMap[tone] || chordMap.info;
+                const volume = tone === 'error' ? 0.28 : 0.32; // 音量提升到约2倍
+
+                freqs.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    // 渐入渐出包络：每个音错开一点进入，形成琶音效果
+                    const offset = i * 0.06; // 琶音间隔60ms
+                    g.gain.setValueAtTime(0, now);
+                    g.gain.linearRampToValueAtTime(volume, now + offset + 0.05);  // 渐入
+                    g.gain.setValueAtTime(volume, now + offset + 0.15);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 0.85);       // 长尾渐出
+
+                    osc.connect(g); g.connect(ctx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + 0.9);
+                });
+
+                setTimeout(() => { try { ctx.close(); } catch(e){} }, 1100);
+            } catch(e) {
+                console.warn('[Notify] 播放提示音失败:', e.message);
+            }
+        }
+
+        /**
+         * 显示通知横幅
+         */
+        function showNotificationBanner(content, type) {
+            const container = document.getElementById('notifyBannerContainer');
+            const banner = document.createElement('div');
+            banner.className = `notify-banner notify-${type || 'info'}`;
+
+            const icons = { info: '🔔', success: '🎉', warning: '⚠️', error: '📢' };
+            banner.innerHTML = `<span>${icons[type] || '🔔'}</span><span style="flex:1;">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span><span>✕</span>`;
+
+            container.appendChild(banner);
+
+            // 点击关闭
+            banner.addEventListener('click', () => {
+                banner.style.animation = 'notifySlideUp 0.3s ease forwards';
+                setTimeout(() => banner.remove(), 300);
+            });
+
+            // 自动消失（8秒）
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.style.animation = 'notifySlideUp 0.3s ease forwards';
+                    setTimeout(() => banner.remove(), 300);
+                }
+            }, 8000);
+        }
+
+        /**
+         * 初始化 Supabase Realtime 通知订阅
+         */
+
+        // ===== 系统级通知（后台/锁屏时使用）=====
+        let _systemNotifyTag = 0;
+
+        /**
+         * 请求浏览器通知权限（在用户首次交互后调用）
+         */
+        async function _requestNotificationPermission() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') return;
+            if (Notification.permission !== 'default') return;
+            try {
+                const result = await Notification.requestPermission();
+                console.log('[Notify] 📋 通知权限:', result);
+            } catch(e) { /* 用户拒绝或不可用 */ }
+        }
+
+        /**
+         * 发送系统级通知（桌面端后台/标签页隐藏时弹出）
+         */
+        function _showSystemNotification(content, type) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                // 权限未授予或平台不支持（如 iOS Safari）→ 回退方案
+                _startTitleBlink();
+                return;
+            }
+
+            const icons = { info: '🔔', success: '🎉', warning: '⚠️', error: '📢' };
+            const tag = `notify-${Date.now()}-${++_systemNotifyTag}`;
+
+            const notif = new Notification(icons[type] || '🔔' + ' 小安乐园', {
+                body: content,
+                tag: tag,
+                icon: 'data:image/svg+xml,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
+                    '<circle cx="32" cy="32" r="30" fill="#06d6a0"/>' +
+                    '<text x="32" y="42" font-size="32" text-anchor="middle" fill="white">🔔</text>' +
+                    '</svg>'
+                ),
+                renotify: true,
+                requireInteraction: false
+            });
+
+            // 点击通知时聚焦页面
+            notif.onclick = () => {
+                window.focus();
+                notif.close();
+            };
+
+            // 页面回到前台时自动关闭系统通知
+            document.addEventListener('visibilitychange', function onVisible() {
+                if (!document.hidden) {
+                    notif.close();
+                    document.removeEventListener('visibilitychange', onVisible);
+                }
+            });
+
+            // 10秒后自动关闭
+            setTimeout(() => notif.close(), 10000);
+
+            console.log(`[Notify] 🔔 已发送系统通知: ${content}`);
+        }
+
+        // 用户首次点击页面时顺便请求通知权限
+        document.addEventListener('click', () => {
+            setTimeout(() => _requestNotificationPermission(), 500);
+        }, { once: true });
+
+        // ===== 标题闪烁提醒（所有平台通用，包括 iOS）=====
+        let _titleBlinkTimer = null;
+        let _originalTitle = document.title;
+        let _missedCount = 0;
+
+        function _startTitleBlink() {
+            _missedCount++;
+            if (_titleBlinkTimer) return; // 已在闪烁
+
+            let on = false;
+            _titleBlinkTimer = setInterval(() => {
+                document.title = on ? `🔔(${_missedCount}) 新通知` : _originalTitle;
+                on = !on;
+            }, 800);
+            console.log(`[Notify] 📛 标题开始闪烁（未读 ${_missedCount}）`);
+        }
+
+        function _stopTitleBlink() {
+            if (!_titleBlinkTimer) return;
+            clearInterval(_titleBlinkTimer);
+            _titleBlinkTimer = null;
+            const count = _missedCount;
+            _missedCount = 0;
+            document.title = _originalTitle;
+            return count;
+        }
+
+        // 用户切回前台时：停止闪烁 + 弹出未读汇总
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden) {
+                const missed = _stopTitleBlink();
+                if (missed > 0) {
+                    // 延迟一点等页面渲染完
+                    setTimeout(() => {
+                        showNotificationBanner(
+                            `您有 ${missed} 条未读通知（后台期间收到）`,
+                            'info'
+                        );
+                        playNotificationSound('info');
+                    }, 300);
+                }
+            }
+        });
+
+        function initNotificationListener(sbClient, userId) {
+            if (!sbClient) { console.warn('[Notify] ❌ sbClient 不存在'); return; }
+
+            console.log('[Notify] 🔧 开始初始化 Realtime 订阅...');
+
+            try {
+                const channel = sbClient.channel('notifications-realtime');
+
+                channel.on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'notifications' },
+                    async (payload) => {
+                        const n = payload.new;
+                        // 只接收广播消息或针对自己的
+                        if (n.target_user_id && n.target_user_id !== userId) return;
+
+                        console.log(`[Notify] 📩 收到通知 (${n.notification_type}):`, n.content);
+
+                        // 判断页面是否在后台
+                        const isBackground = document.hidden;
+
+                        if (isBackground) {
+                            // 后台：标题闪烁（所有平台通用）
+                            _startTitleBlink();
+                            // 尝试系统级通知（桌面端可用，iOS 不可用会自动回退）
+                            _showSystemNotification(n.content, n.notification_type || 'info');
+                        } else {
+                            // 前台：自定义横幅 + Web Audio 音效
+                            showNotificationBanner(n.content, n.notification_type);
+                            playNotificationSound(n.notification_type || 'info');
+                        }
+
+                        // 标记已读
+                        sbClient.from('notifications')
+                            .update({ read_at: new Date().toISOString() })
+                            .eq('id', n.id)
+                            .then(() => {})
+                            .catch(() => {});
+                    }
+                );
+
+                channel.subscribe((status, err) => {
+                    console.log(`[Notify] 📡 订阅状态变更: ${status}`, err || '');
+                });
+
+                // 保存引用以便清理
+                window.__notificationChannel = channel;
+
+            } catch(e) {
+                console.warn('[Notify] ❌ Realtime 初始化失败:', e.message);
+            }
+        }
+
+        /**
+         * 页面加载时查询未读邮件（补漏：在页面关闭期间发的通知）
+         */
+        async function _checkUnreadNotifications(sbClient, userId) {
+            try {
+                const { data } = await sbClient
+                    .from('notifications')
+                    .select('*')
+                    .or(`target_user_id.is.null,target_user_id.eq.${userId}`)
+                    .is('read_at', null)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (!data || data.length === 0) return;
+
+                // 逐条展示（间隔显示，避免堆叠）
+                const isBackground = document.hidden;
+                data.forEach((n, i) => {
+                    setTimeout(() => {
+                        const t = n.notification_type || 'info';
+                        if (isBackground) {
+                            _showSystemNotification(n.content, t);
+                        } else {
+                            showNotificationBanner(n.content, t);
+                            playNotificationSound(t);
+                        }
+                    }, i * 500);
+
+                    // 标记已读
+                    setTimeout(() => {
+                        sbClient.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id).then(() => {}).catch(() => {});
+                    }, i * 500 + 200);
+                });
+
+                console.log(`[Notify] 📬 补收到 ${data.length} 条未读通知`);
+            } catch(e) {
+                // 静默失败，不影响主流程
+            }
+        }
+
+        // ===== 📬 邮箱系统 =====
+        let _currentMailId = null;
+        let _currentMailData = null;
+        const MAIL_TYPE_NAMES = { info: '普通通知', success: '奖励通知', warning: '警告', error: '重要' };
+        const CURRENCY_NAMES = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', jixing_muchun_currency: '纪行券', item: '' };
+
+        /** 打开邮箱 */
+        async function openMailbox() {
+            document.getElementById('mailModal').style.display = 'flex';
+            await loadMails();
+        }
+
+        function closeMailbox() {
+            document.getElementById('mailModal').style.display = 'none';
+            // 重置详情面板
+            const panel = document.getElementById('mailDetailPanel');
+            panel.classList.add('hidden');
+            document.getElementById('mailDetailPlaceholder').style.display = '';
+            document.getElementById('mailDetailContent').style.display = 'none';
+            _currentMailId = null;
+            _currentMailData = null;
+            _activeMailId = null;
+        }
+
+        /** 邮件数据缓存（避免 showMailDetail 重复请求） */
+        let _mailCache = null;  // { mails: [], claimedIds: Set }
+
+        /** 加载邮件列表 */
+        async function loadMails() {
+            const el = document.getElementById('mailList');
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+
+            if (!sb || !uid) { el.innerHTML = '<div class="mail-empty">⚠️ 未连接云端</div>'; return; }
+
+            try {
+                // 并行：查邮件 + 查本用户已领取记录
+                const [mailRes, claimRes] = await Promise.all([
+                    sb.from('notifications')
+                        .select('*')
+                        .or(`target_user_id.is.null,target_user_id.eq.${uid}`)
+                        .order('created_at', { ascending: false })
+                        .limit(50),
+                    sb.from('mail_claims')
+                        .select('notification_id')
+                        .eq('user_id', uid)
+                ]);
+
+                const data = mailRes.data;
+                const claimedIds = new Set((claimRes.data || []).map(c => c.notification_id));
+
+                // 写入缓存，供 showMailDetail 直接读取
+                _mailCache = { mails: data || [], claimedIds: claimedIds };
+
+                if (!data || data.length === 0) {
+                    el.innerHTML = '<div class="mail-empty">📭 暂无邮件</div>';
+                    updateMailBadge(0);
+                    return;
+                }
+
+                // 统计未读（基于 read_at，不受领取状态影响）
+                const unread = data.filter(m => !m.read_at).length;
+                updateMailBadge(unread);
+
+                el.innerHTML = data.map(mail => {
+                    const hasAttachment = mail.attachment_type1 && (mail.attachment_type1 !== 'none');
+                    const typeClass = `mail-type-${mail.notification_type || 'info'}`;
+                    const unreadCls = !mail.read_at ? 'unread' : '';
+                    // ✅ 关键修复：从 mail_claims 判断是否已领，而非全局 claimed 字段
+                    const claimedCls = claimedIds.has(mail.id) ? 'claimed' : '';
+                    const attText = hasAttachment ? `<div class="mail-attachment">🎁 ${_formatAttachmentShort(mail)}</div>` : '';
+                    const timeStr = fmtMailTime(mail.created_at);
+                    return `
+                        <div class="mail-item ${unreadCls} ${claimedCls}" onclick="showMailDetail('${mail.id}')">
+                            <span class="mail-type-badge ${typeClass}">${MAIL_TYPE_NAMES[mail.notification_type]||MAIL_TYPE_NAMES.info}</span>
+                            <strong style="font-size:14px;">${escHtml(mail.content)}</strong>
+                            ${attText}
+                            <div class="mail-time">${timeStr}</div>
+                        </div>`;
+                }).join('');
+
+            } catch(e) {
+                el.innerHTML = '<div class="mail-empty">❌ 加载失败</div>';
+            }
+        }
+
+        /** 显示邮件详情（右侧面板内嵌显示）— 从缓存读取，零网络请求 */
+        async function showMailDetail(id) {
+            // 从缓存直接查找，不发网络请求
+            const data = (_mailCache && _mailCache.mails) ? _mailCache.mails.find(m => m.id === id) : null;
+            if (!data) {
+                // 缓存未命中（理论上不会发生），降级为网络请求
+                const sb = window.__cloudClient;
+                const uid = window.__cloudUserId;
+                if (!sb || !uid) return;
+                const [mailRes, claimRes] = await Promise.all([
+                    sb.from('notifications').select('*').eq('id', id).maybeSingle(),
+                    sb.from('mail_claims').select('id').eq('notification_id', id).eq('user_id', uid).maybeSingle()
+                ]);
+                if (!mailRes.data) return;
+                _showDetailUI(mailRes.data, !!claimRes.data);
+                return;
+            }
+
+            const isClaimed = _mailCache && _mailCache.claimedIds && _mailCache.claimedIds.has(id);
+            _showDetailUI(data, isClaimed);
+        }
+
+        /** 渲染详情面板 UI */
+        function _showDetailUI(data, isClaimed) {
+            _currentMailId = data.id;
+            _currentMailData = data;
+
+            // 标记为已读（仅首次打开时）— 异步发送，不阻塞UI
+            if (!data.read_at) {
+                const sb = window.__cloudClient;
+                if (sb) {
+                    sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', data.id).then(() => {}).catch(() => {});
+                }
+                updateMailBadge(-1);
+                // 本地即时更新该条目样式
+                const clickedEl = document.querySelector(`.mail-item[onclick="showMailDetail('${data.id}')"]`);
+                if (clickedEl) clickedEl.classList.remove('unread');
+                // 后台静默刷新缓存
+                _activeMailId = data.id;
+                loadMails().then(() => {}).catch(() => {});
+            }
+
+            // 高亮当前选中项
+            document.querySelectorAll('.mail-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.querySelector(`.mail-item[onclick="showMailDetail('${data.id}')"]`);
+            if (activeEl) activeEl.classList.add('active');
+
+            // 右侧面板：隐藏占位，显示内容
+            const panel = document.getElementById('mailDetailPanel');
+            const placeholder = document.getElementById('mailDetailPlaceholder');
+            const content = document.getElementById('mailDetailContent');
+
+            panel.classList.remove('hidden');
+            placeholder.style.display = 'none';
+            content.style.display = '';
+
+            document.getElementById('detailTypeBadge').className = `mail-type-badge mail-type-${data.notification_type||'info'}`;
+            document.getElementById('detailTypeBadge').textContent = MAIL_TYPE_NAMES[data.notification_type]||MAIL_TYPE_NAMES.info;
+            document.getElementById('detailTime').textContent = fmtMailTime(data.created_at);
+            document.getElementById('detailBody').textContent = data.content;
+
+            // 附件
+            const hasAtt = data.attachment_type1 && data.attachment_type1 !== 'none';
+            const attEl = document.getElementById('detailAttachment');
+            const claimBtn = document.getElementById('claimRewardBtn');
+
+            if (hasAtt) {
+                attEl.style.display = '';
+                document.getElementById('detailAttachmentText').innerHTML = _formatAttachmentFull(data);
+
+                if (isClaimed) {
+                    claimBtn.textContent = '✅ 已领取';
+                    claimBtn.disabled = true;
+                    claimBtn.style.background = '#94a3b8';
+                } else {
+                    claimBtn.textContent = '📦 领取附件奖励';
+                    claimBtn.disabled = false;
+                    claimBtn.style.background = '#06d6a0';
+                }
+            } else {
+                attEl.style.display = 'none';
+                claimBtn.style.display = 'none';
+            }
+        }
+
+        function closeMailDetail() {
+            // 遮罩弹窗关闭（移动端）
+            document.getElementById('mailDetailOverlay').style.display = 'none';
+            // 重置选中
+            document.querySelectorAll('.mail-item').forEach(el => el.classList.remove('active'));
+        }
+
+        /** 删除已读邮件 */
+        async function deleteReadMails() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+
+            if (!_mailCache || !_mailCache.mails) return;
+
+            // 筛选已读邮件（read_at 不为空）
+            const readIds = _mailCache.mails.filter(m => m.read_at).map(m => m.id);
+            if (readIds.length === 0) {
+                alert('📭 没有已读邮件可删除');
+                return;
+            }
+
+            if (!confirm(`确定删除 ${readIds.length} 封已读邮件吗？`)) return;
+
+            try {
+                const { error } = await sb.from('notifications')
+                    .delete()
+                    .in('id', readIds);
+                if (error) throw error;
+
+                // 清除缓存，重新加载列表
+                _mailCache = null;
+                _currentMailId = null;
+                _currentMailData = null;
+
+                // 重置详情面板
+                const panel = document.getElementById('mailDetailPanel');
+                panel.classList.add('hidden');
+                document.getElementById('mailDetailPlaceholder').style.display = '';
+                document.getElementById('mailDetailContent').style.display = 'none';
+
+                await loadMails();
+            } catch (e) {
+                console.error('删除已读邮件失败:', e);
+                alert('❌ 删除失败，请重试');
+            }
+        }
+
+        /** 全部领取附件奖励 */
+        async function claimAllAttachments() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+
+            if (!_mailCache || !_mailCache.mails) { alert('⚠️ 邮件数据未加载'); return; }
+
+            // 筛选有附件且当前用户未领取的邮件
+            const unclaimed = _mailCache.mails.filter(m => {
+                const hasAtt = m.attachment_type1 && m.attachment_type1 !== 'none';
+                return hasAtt && !_mailCache.claimedIds.has(m.id);
+            });
+
+            if (unclaimed.length === 0) {
+                alert('📭 没有待领取的附件');
+                return;
+            }
+
+            // 汇总预览
+            let preview = `即将领取 ${unclaimed.length} 封邮件的附件：\n\n`;
+            unclaimed.forEach(m => {
+                preview += `• ${m.content.substring(0, 20)}... ${_formatAttachmentShort(m)}\n`;
+            });
+            preview += '\n确定全部领取吗？';
+            if (!confirm(preview)) return;
+
+            let successCount = 0;
+            let failCount = 0;
+            const totalRewards = [];
+
+            for (const mail of unclaimed) {
+                try {
+                    // 防重复检查
+                    const existing = await sb.from('mail_claims').select('id')
+                        .eq('notification_id', mail.id).eq('user_id', uid).maybeSingle();
+                    if (existing.data) { successCount++; continue; }
+
+                    // 发放奖励
+                    const curRows = {};
+                    const rewards = [];
+
+                    // 奖励1
+                    if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                        if (mail.attachment_type1 === 'item') {
+                            rewards.push(`🎁 ${mail.attachment_item1 || '实物奖励'}`);
+                            addRecordToLocal({ prize: { name: mail.attachment_item1, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                        } else {
+                            const type = mail.attachment_type1;
+                            const amt = mail.attachment_amount1 || 0;
+                            const name = CURRENCY_NAMES[type] || type;
+                            rewards.push(`${name} +${amt}`);
+                            const current = parseFloat(localStorage.getItem(type)) || 0;
+                            curRows[type] = current + amt;
+                        }
+                    }
+
+                    // 奖励2
+                    if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                        if (mail.attachment_type2 === 'item') {
+                            rewards.push(`🎁 ${mail.attachment_item2 || '实物奖励'}`);
+                            addRecordToLocal({ prize: { name: mail.attachment_item2, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                        } else {
+                            const type = mail.attachment_type2;
+                            const amt = mail.attachment_amount2 || 0;
+                            const name = CURRENCY_NAMES[type] || type;
+                            rewards.push(`${name} +${amt}`);
+                            const current = parseFloat(localStorage.getItem(type)) || 0;
+                            if (!curRows[type]) curRows[type] = current;
+                            curRows[type] += amt;
+                        }
+                    }
+
+                    // 保存货币变更
+                    for (const [type, val] of Object.entries(curRows)) {
+                        localStorage.setItem(type, String(val));
+                        let obj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                        obj[type] = val;
+                        localStorage.setItem('xiaoan_currencies', JSON.stringify(obj));
+                        sb.from('user_currencies').upsert({
+                            user_id: uid, currency_type: type, amount: val,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'user_id,currency_type' }).then(() => {}).catch(() => {});
+                    }
+
+                    // 写入领取记录
+                    await sb.from('mail_claims').insert({
+                        notification_id: mail.id,
+                        user_id: uid,
+                        claimed_at: new Date().toISOString()
+                    });
+
+                    totalRewards.push(...rewards);
+                    successCount++;
+                } catch (e) {
+                    console.error(`领取邮件 ${mail.id} 失败:`, e);
+                    failCount++;
+                }
+            }
+
+            // 刷新UI
+            updateUI();
+            _mailCache = null;
+
+            // 刷新列表
+            await loadMails();
+
+            // 如果当前正在查看某封已领邮件，更新详情面板按钮状态
+            if (_currentMailId && _currentMailData) {
+                const btn = document.getElementById('claimRewardBtn');
+                if (btn) { btn.textContent = '✅ 已领取'; btn.disabled = true; btn.style.background = '#94a3b8'; }
+            }
+
+            // 结果提示
+            if (failCount > 0) {
+                alert(`✅ 成功领取 ${successCount} 封，❌ 失败 ${failCount} 封\n\n获得：\n${totalRewards.join('\n') || '无'}`);
+            } else {
+                alert(`✅ 全部领取成功！共 ${successCount} 封邮件\n\n获得：\n${totalRewards.join('\n') || '无'}`);
+            }
+        }
+
+        let _activeMailId = null; // 记录选中的邮件 ID，刷新列表后恢复高亮
+
+        /** 加载邮件后恢复选中高亮 */
+        function _restoreActiveItem() {
+            if (_activeMailId) {
+                setTimeout(() => {
+                    const el = document.querySelector(`.mail-item[onclick="showMailDetail('${_activeMailId}')"]`);
+                    if (el) el.classList.add('active');
+                }, 50);
+            }
+        }
+
+        /** 领取附件奖励 */
+        async function claimMailAttachment() {
+            if (!_currentMailData || !_currentMailId) return;
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+            const d = _currentMailData;
+
+            try {
+                // ✅ 先检查是否已领取（防重复提交）
+                const existing = await sb.from('mail_claims').select('id')
+                    .eq('notification_id', _currentMailId).eq('user_id', uid).maybeSingle();
+                if (existing.data) {
+                    alert('⚠️ 您已经领取过这封邮件的奖励了');
+                    return;
+                }
+
+                // 发放奖励到用户资产
+                const rewards = [];
+
+                // ✅ 关键修复：从独立 key 读取当前余额（updateUI 从这些 key 读值）
+                //    不要从 xiaoan_currencies 对象读（它可能过期/不存在）
+                const curRows = {};
+
+                // 奖励1
+                if (d.attachment_type1 && d.attachment_type1 !== 'none') {
+                    if (d.attachment_type1 === 'item') {
+                        rewards.push(`🎁 ${d.attachment_item1 || '实物奖励'}`);
+                        addRecordToLocal({ prize: { name: d.attachment_item1, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                    } else {
+                        const type = d.attachment_type1;
+                        const amt = d.attachment_amount1 || 0;
+                        const name = CURRENCY_NAMES[type] || type;
+                        rewards.push(`${name} +${amt}`);
+                        // ✅ 从独立 key 读当前值（与 updateUI 同源）
+                        const current = parseFloat(localStorage.getItem(type)) || 0;
+                        curRows[type] = current + amt;
+                    }
+                }
+
+                // 奖励2
+                if (d.attachment_type2 && d.attachment_type2 !== 'none') {
+                    if (d.attachment_type2 === 'item') {
+                        rewards.push(`🎁 ${d.attachment_item2 || '实物奖励'}`);
+                        addRecordToLocal({ prize: { name: d.attachment_item2, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                    } else {
+                        const type = d.attachment_type2;
+                        const amt = d.attachment_amount2 || 0;
+                        const name = CURRENCY_NAMES[type] || type;
+                        rewards.push(`${name} +${amt}`);
+                        const current = parseFloat(localStorage.getItem(type)) || 0;
+                        if (!curRows[type]) curRows[type] = current; // 防止奖励1也是同类型时覆盖
+                        curRows[type] += amt;
+                    }
+                }
+
+                // 保存货币变更（同时写两套存储）
+                for (const [type, val] of Object.entries(curRows)) {
+                    // 写独立 key（updateUI 的数据源）
+                    localStorage.setItem(type, String(val));
+                    // 写 xiaoan_currencies 对象（保持同步）
+                    let obj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                    obj[type] = val;
+                    localStorage.setItem('xiaoan_currencies', JSON.stringify(obj));
+                    // 同步云端
+                    sb.from('user_currencies').upsert({
+                        user_id: uid, currency_type: type, amount: val,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' }).then(() => {}).catch(() => {});
+                }
+
+                // ✅ 关键修复：写入 mail_claims 记录（per-user），而非更新 notifications 全局 claimed 字段
+                await sb.from('mail_claims').insert({
+                    notification_id: _currentMailId,
+                    user_id: uid,
+                    claimed_at: new Date().toISOString()
+                });
+
+                showNotificationBanner(`🎉 领取成功！获得：${rewards.join(', ')}`, 'success');
+                playNotificationSound('success');
+
+                // 刷新 UI（刷新列表 + 刷新详情面板按钮状态）
+                updateUI();
+                _activeMailId = _currentMailId; // 保持选中
+                await loadMails();
+                if (_currentMailId) showMailDetail(_currentMailId); // 刷新右侧详情
+                loadMails();
+
+            } catch(e) {
+                alert('❌ 领取失败: ' + e.message);
+            }
+        }
+
+        /** 写入一条背包记录（复用兑换码逻辑） */
+        function addRecordToLocal(item) {
+            try {
+                let records = JSON.parse(localStorage.getItem('records') || '[]');
+                records.push({
+                    prize: item.prize,
+                    date: item.date,
+                    _source: item.source || 'admin_mail',
+                    isExchangeItem: false
+                });
+                localStorage.setItem('records', JSON.stringify(records));
+            } catch(e) {}
+        }
+
+        /** 更新邮箱未读角标 */
+        function updateMailBadge(count) {
+            const badge = document.getElementById('mailUnreadBadge');
+            if (typeof count === 'number' && count < 0) {
+                // 减量操作：读取当前值
+                const cur = parseInt(badge.textContent) || 0;
+                count = Math.max(0, cur + count);
+            }
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        /** 格式化附件简短显示 */
+        function _formatAttachmentShort(mail) {
+            const parts = [];
+            if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                parts.push(_attDesc(mail.attachment_type1, mail.attachment_amount1, mail.attachment_item1));
+            }
+            if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                parts.push(_attDesc(mail.attachment_type2, mail.attachment_amount2, mail.attachment_item2));
+            }
+            return parts.join(' + ') || '';
+        }
+
+        /** 格式化附件完整显示 */
+        function _formatAttachmentFull(mail) {
+            const parts = [];
+            if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                parts.push(`<div>${_attDesc(mail.attachment_type1, mail.attachment_amount1, mail.attachment_item1)}</div>`);
+            }
+            if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                parts.push(`<div>${_attDesc(mail.attachment_type2, mail.attachment_amount2, mail.attachment_item2)}</div>`);
+            }
+            return parts.join('');
+        }
+
+        function _attDesc(type, amount, itemName) {
+            if (type === 'item') return `🎁 实物奖励：${itemName || '未知物品'}`;
+            return `${CURRENCY_NAMES[type]||type} ×${amount}`;
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+        }
+
+        function fmtMailTime(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const pad = n => String(n).padStart(2,'0');
+            return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
     </script>
+    <!-- 邮箱模态框（游戏分栏风格） -->
+    <div class="modal" id="mailModal" style="display:none;">
+        <div class="mail-modal-content">
+            <!-- 顶栏 -->
+            <div class="mail-header">
+                <h2>📬 邮箱</h2>
+                <button onclick="closeMailbox()">✕</button>
+            </div>
+
+            <!-- 主体：左列表 + 右详情 -->
+            <div class="mail-body">
+                <!-- 左侧邮件列表 -->
+                <div class="mail-list-panel">
+                    <div class="mail-list" id="mailList">
+                        <div class="mail-empty">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 右侧详情面板 -->
+                <div class="mail-detail-panel hidden" id="mailDetailPanel">
+                    <div class="mail-detail-placeholder" id="mailDetailPlaceholder">
+                        <div>
+                            <div class="mail-detail-placeholder-icon">📭</div>
+                            <div class="mail-detail-title">邮件详情</div>
+                            <div class="mail-detail-subtitle">← 点击左侧查看邮件内容</div>
+                        </div>
+                    </div>
+                    <!-- 详情内容（选中邮件后显示） -->
+                    <div id="mailDetailContent" style="display:none;">
+                        <div class="mail-detail-header">
+                            <span class="mail-type-badge mail-type-info" id="detailTypeBadge">info</span>
+                            <span style="font-size:12px;color:#94a3b8;" id="detailTime"></span>
+                        </div>
+                        <div class="mail-detail-body" id="detailBody"></div>
+                        <div class="mail-detail-attachment" id="detailAttachment" style="display:none;">
+                            <div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#059669;">🎁 附件奖励</div>
+                            <div id="detailAttachmentText"></div>
+                        </div>
+                        <div class="mail-detail-actions">
+                            <button class="btn" id="claimRewardBtn" onclick="claimMailAttachment()" style="flex:1;background:#06d6a0;color:white;padding:12px;border-radius:10px;">领取附件</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="mail-footer">
+                <button class="mail-footer-btn" style="background:#f0fdf4;border-color:#86efac;color:#059669;" onclick="claimAllAttachments()">
+                    🎁 全部领取
+                </button>
+                <button class="mail-footer-btn" style="background:#fff1f2;border-color:#fda4af;color:#e11d48;" onclick="deleteReadMails()">
+                    🗑 删除已读
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端/小屏：详情遮罩弹窗保留 -->
+    <div class="mail-detail-overlay" id="mailDetailOverlay">
+        <div class="mail-detail-card">
+            <div class="mail-detail-header">
+                <span class="mail-type-badge" id="mDetailTypeBadge">info</span>
+                <span style="font-size:12px;color:#94a3b8;" id="mDetailTime"></span>
+            </div>
+            <div class="mail-detail-body" id="mDetailBody"></div>
+            <div class="mail-detail-attachment" id="mDetailAttachment" style="display:none;">
+                <div style="font-weight:bold;margin-bottom:6px;">🎁 附件奖励</div>
+                <div id="mDetailAttachmentText"></div>
+            </div>
+            <div class="mail-detail-actions">
+                <button class="btn btn-danger" onclick="closeMailDetail()" style="flex:1;">关闭</button>
+                <button class="btn" id="mClaimRewardBtn" onclick="claimMailAttachment()" style="flex:1;background:#06d6a0;color:white;">领取附件</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务抽取模态框 -->
+    <div class="task-draw-modal" id="taskDrawModal">
+        <div class="task-draw-card">
+            <div class="task-draw-icon">🎲</div>
+            <div class="task-draw-title">今日随机任务</div>
+            <div class="task-drew-title" id="drawnTaskTitle">--</div>
+            <div class="task-drew-desc" id="drawnTaskDesc"></div>
+            <div class="task-drew-reward" id="drawnTaskReward"></div>
+            <div class="task-draw-actions">
+                <button class="btn-task-goto" onclick="goToDrawnTask()">前去完成</button>
+                <button class="btn-task-close" onclick="closeDrawModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
