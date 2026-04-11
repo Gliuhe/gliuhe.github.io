@@ -727,7 +727,7 @@ async function createFine() {
             user_id: targetUserId,
             reason: reason,
             original_amount: originalAmount,
-            remaining: original_amount,
+            remaining: originalAmount,
             due_date: new Date(dueDate + 'T23:59:59').toISOString(),
             paid_amount: 0,
             penalty_amount: 0,
