@@ -1140,6 +1140,8 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cloud-sync-helper.js"></script>
     <script>
         /* ===== 系统配置与常量定义 ===== */
         
@@ -1323,6 +1325,7 @@
                                     description: `第${day + 1}天利息`
                                 });
                                 localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+            syncBankHistoryToCloud();
                                 
                                 console.log(`[利息计算] ${config.name} 第${day + 1}天利息已记录`);
                             }
@@ -1341,6 +1344,7 @@
                         if (totalInterest !== 0) {
                             // 添加总利息到账户
                             localStorage.setItem(config.key, (amount + totalInterest).toString());
+                            syncBankAccountToCloud(config.key);
                             console.log(`[利息计算] ${config.name} 利息已更新，新余额: ${amount + totalInterest}`);
                         } else {
                             console.log(`[利息计算] ${config.name} 零收益，仅记录显示信息`);
@@ -1865,9 +1869,11 @@
             
             // 更新兑换券余额
             localStorage.setItem('voucher', (currentVoucher - amount).toString());
-            
+            syncCurrencyToCloud('voucher');
+
             // 更新银行账户余额
             localStorage.setItem(config.key, (currentBankAmount + amount).toString());
+            syncBankAccountToCloud(config.key);
             
             // 如果是定期存款或投资理财，记录存入时间
             if (config.period > 0) {
@@ -1968,9 +1974,11 @@
             
             // 更新银行账户余额
             localStorage.setItem(config.key, (currentBankAmount - amount).toString());
-            
+            syncBankAccountToCloud(config.key);
+
             // 更新兑换券余额
             localStorage.setItem('voucher', (currentVoucher + amount).toString());
+            syncCurrencyToCloud('voucher');
             
             // 如果是定期存款或投资理财，更新存款记录（移除已取出的记录）
             if (config.period > 0) {
@@ -2014,6 +2022,7 @@
                 date: new Date().toISOString()
             });
             localStorage.setItem('bankTransactions', JSON.stringify(transactions));
+            syncBankHistoryToCloud();
 
             closeWithdrawModal();
             updateUI();
