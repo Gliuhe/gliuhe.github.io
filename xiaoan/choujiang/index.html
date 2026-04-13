@@ -899,6 +899,8 @@
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cloud-sync-helper.js"></script>
     <script>
         // 常量定义
         const DEFAULT_PASSWORD = "1234";
@@ -1526,6 +1528,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 const voucher = parseInt(localStorage.getItem('voucher') || '100');
                 const newVoucher = voucher + currencyEarned;
                 localStorage.setItem('voucher', newVoucher.toString());
+                syncCurrencyToCloud('voucher');
                 document.getElementById('currencyAmount').textContent = newVoucher;
 
                 // 触发storage事件同步到其他页面
@@ -1944,10 +1947,12 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     // 扣除兑换券
                     const newVoucher = voucher - totalCost;
                     localStorage.setItem('voucher', newVoucher.toString());
-                    
+                    syncCurrencyToCloud('voucher');
+
                     // 增加抽奖券
                     lotteryTickets += ticketsToBuy;
                     localStorage.setItem('lottery', lotteryTickets.toString());
+                    syncCurrencyToCloud('lottery');
                     
                     // 更新UI
                     updateUI();
