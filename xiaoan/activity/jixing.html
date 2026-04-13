@@ -892,6 +892,8 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cloud-sync-helper.js"></script>
     <script>
         // 纪行数据键名
         const JIXING_KEY = 'jixing_muchun_progress';
@@ -1185,6 +1187,7 @@
             } else {
                 const voucher = parseInt(localStorage.getItem('voucher') || '0');
                 localStorage.setItem('voucher', voucher + amount);
+                syncCurrencyToCloud('voucher');
                 
                 const history = JSON.parse(localStorage.getItem('history') || '[]');
                 history.push({
