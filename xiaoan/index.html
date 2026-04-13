@@ -4495,6 +4495,8 @@
                     // 用最新数据刷新UI（货币、银行等）
                     updateUI();
                     loadUserAvatar();
+
+                    loadMails().then(() => {}).catch(() => {});
                     
                     // 更新罚款横幅（云连接成功后）
                     updateFineBanner();
@@ -4545,6 +4547,7 @@
                     'lotteryTicketCount', 'premiumLottery',
                     'jisuanCompleted', 'jisuanScore', 'jisuanPassCards',
                     'jisuanHistory', 'jisuanLastResetDate', 'jisuan_today',
+                    'write_today', 'write_history', 'write_passCards',
                     'jixingCompletedDays', 'jixingCurrency', 'jixingInitialized',
                     'jixingGiftClaimed', 'jixingBoughtRewards',
                     'jixingStartDate', 'jixingLastClaimDate',
@@ -4573,12 +4576,17 @@
                             if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
                                 const cloudVal = parseFloat(row.amount) || 0;
                                 const localVal = parseFloat(localStorage.getItem(key)) || 0;
-                                const finalVal = Math.max(cloudVal, localVal);
+                                // 以 localStorage 为准（子页面的最新操作都在本地）
+                                const finalVal = localVal;
                                 localStorage.setItem(key, String(finalVal));
-                                if (localVal > cloudVal) {
-                                    sbClient.from('user_currencies').update({ amount: finalVal })
-                                        .eq('user_id', userId).eq('currency_type', key)
-                                        .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 货币回写失败:', r.error.message); });
+                                // 本地与云端不一致时回写云端（确保同步）
+                                if (localVal !== cloudVal) {
+                                    sbClient.from('user_currencies').upsert({
+                                        user_id: userId,
+                                        currency_type: key,
+                                        amount: finalVal
+                                    }, { onConflict: 'user_id,currency_type' })
+                                    .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 货币回写失败:', r.error.message); });
                                 }
                             }
                         });
@@ -4623,7 +4631,17 @@
                     if (banks?.length > 0) {
                         banks.forEach(acc => {
                             const key = acc.account_type==='savings'?'bankSavings':acc.account_type==='deposit'?'bankDeposit':'bankInvestment';
-                            if (acc.balance!==null) localStorage.setItem(key, String(acc.balance));
+                            // 银行账户余额：以本地为准（银行页面可能已修改）
+                            if (acc.balance!==null) {
+                                const localVal = parseFloat(localStorage.getItem(key)) || 0;
+                                const cloudVal = parseFloat(acc.balance) || 0;
+                                const finalVal = localVal;
+                                localStorage.setItem(key, String(finalVal));
+                                if (localVal !== cloudVal) {
+                                    sbClient.from('bank_accounts').upsert({ user_id: userId, account_type: acc.account_type, balance: finalVal }, { onConflict: 'user_id,account_type' })
+                                        .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 银行账户回写失败:', key, r.error.message); });
+                                }
+                            }
                             if (acc.rate!==null) localStorage.setItem(key.replace('bank','bank')+('Rate'), String(acc.rate));
                             if ((acc.account_type==='deposit'||acc.account_type==='investment') && acc.locked_until) {
                                 const dateKey = acc.account_type==='deposit'?'depositStartDate':'investmentStartDate';
@@ -4768,10 +4786,36 @@
                         if (jsn.score!==null) localStorage.setItem('jisuanScore',String(jsn.score));
                         if (jsn.pass_cards!==null) localStorage.setItem('jisuanPassCards',String(jsn.pass_cards));
                         if (jsn.history) localStorage.setItem('jisuanHistory',JSON.stringify(jsn.history));
+                        if (jsn.today) localStorage.setItem('jisuan_today',JSON.stringify(jsn.today));
+                        // 纪行券：以本地为准（子页面可能已修改）
+                        if (jsn.jixing_muchun_currency !== null && jsn.jixing_muchun_currency !== undefined) {
+                            const localVal = parseFloat(localStorage.getItem('jixing_muchun_currency')) || 0;
+                            const cloudVal = parseFloat(jsn.jixing_muchun_currency) || 0;
+                            const finalVal = localVal;
+                            localStorage.setItem('jixing_muchun_currency', String(finalVal));
+                            if (localVal !== cloudVal) {
+                                sbClient.from('jisuan_data').upsert({ user_id: userId, jixing_muchun_currency: finalVal }, { onConflict: 'user_id' })
+                                    .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 纪行券回写失败:', r.error.message); });
+                            }
+                        }
+                        // 练字活动数据
+                        if (jsn.write_today) localStorage.setItem('write_today', typeof jsn.write_today === 'string' ? jsn.write_today : JSON.stringify(jsn.write_today));
+                        if (jsn.write_history) localStorage.setItem('write_history', typeof jsn.write_history === 'string' ? jsn.write_history : JSON.stringify(jsn.write_history));
+                        if (jsn.write_passCards !== null) localStorage.setItem('write_passCards', String(jsn.write_passCards));
                     }
                     if (jx) {
                         if (jx.completed_days) localStorage.setItem('jixingCompletedDays',JSON.stringify(jx.completed_days));
-                        if (jx.currency!==null) localStorage.setItem('jixingCurrency',String(jx.currency));
+                        // 纪行货币：以本地为准
+                        if (jx.currency !== null) {
+                            const localVal = parseFloat(localStorage.getItem('jixingCurrency')) || 0;
+                            const cloudVal = parseFloat(jx.currency) || 0;
+                            const finalVal = localVal;
+                            localStorage.setItem('jixingCurrency', String(finalVal));
+                            if (localVal !== cloudVal) {
+                                sbClient.from('jixing_progress').upsert({ user_id: userId, currency: finalVal }, { onConflict: 'user_id' })
+                                    .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 纪行货币回写失败:', r.error.message); });
+                            }
+                        }
                         if (jx.initialized) localStorage.setItem('jixingInitialized','true');
                         if (jx.gift_claimed) localStorage.setItem('jixingGiftClaimed','true');
                         if (jx.bought_rewards) localStorage.setItem('jixingBoughtRewards',JSON.stringify(jx.bought_rewards));
@@ -5148,12 +5192,14 @@
                     return;
                 }
 
-                // ========== 计算挑战 — 补充 jisuanHistory 和 jisuan_today ==========
-                if (['jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory', 'jisuan_today'].includes(key)) {
-                    const jsMap = { jisuanCompleted: 'completed', jisuanScore: 'score', jisuanPassCards: 'pass_cards', jisuanHistory: 'history', jisuan_today: 'today' };
+                // ========== 计算挑战 — 补充 jisuanHistory 和 jisuan_today + 练字活动 ==========
+                if (['jisuanCompleted', 'jisuanScore', 'jisuanPassCards', 'jisuanHistory', 'jisuan_today',
+                     'write_today', 'write_history', 'write_passCards'].includes(key)) {
+                    const jsMap = { jisuanCompleted: 'completed', jisuanScore: 'score', jisuanPassCards: 'pass_cards', jisuanHistory: 'history', jisuan_today: 'today',
+                                    write_today: 'write_today', write_history: 'write_history', write_passCards: 'write_passCards' };
                     let sv;
                     if (key === 'jisuanCompleted') sv = value === 'true';
-                    else if (['jisuanScore', 'jisuanPassCards'].includes(key)) sv = parseInt(value) || 0;
+                    else if (['jisuanScore', 'jisuanPassCards', 'write_passCards'].includes(key)) sv = parseInt(value) || 0;
                     else sv = (typeof value === 'string') ? JSON.parse(value) : value;
                     await sbClient.from('jisuan_data').upsert({
                         user_id: userId, [jsMap[key]]: sv
@@ -5757,27 +5803,6 @@
                         if (n.target_user_id && n.target_user_id !== userId) return;
 
                         console.log(`[Notify] 📩 收到通知 (${n.notification_type}):`, n.content);
-
-                        // 判断页面是否在后台
-                        const isBackground = document.hidden;
-
-                        if (isBackground) {
-                            // 后台：标题闪烁（所有平台通用）
-                            _startTitleBlink();
-                            // 尝试系统级通知（桌面端可用，iOS 不可用会自动回退）
-                            _showSystemNotification(n.content, n.notification_type || 'info');
-                        } else {
-                            // 前台：自定义横幅 + Web Audio 音效
-                            showNotificationBanner(n.content, n.notification_type);
-                            playNotificationSound(n.notification_type || 'info');
-                        }
-
-                        // 标记已读
-                        sbClient.from('notifications')
-                            .update({ read_at: new Date().toISOString() })
-                            .eq('id', n.id)
-                            .then(() => {})
-                            .catch(() => {});
                     }
                 );
 
@@ -5820,11 +5845,6 @@
                             playNotificationSound(t);
                         }
                     }, i * 500);
-
-                    // 标记已读
-                    setTimeout(() => {
-                        sbClient.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', n.id).then(() => {}).catch(() => {});
-                    }, i * 500 + 200);
                 });
 
                 console.log(`[Notify] 📬 补收到 ${data.length} 条未读通知`);
@@ -5908,7 +5928,7 @@
                     return `
                         <div class="mail-item ${unreadCls} ${claimedCls}" onclick="showMailDetail('${mail.id}')">
                             <span class="mail-type-badge ${typeClass}">${MAIL_TYPE_NAMES[mail.notification_type]||MAIL_TYPE_NAMES.info}</span>
-                            <strong style="font-size:14px;">${escHtml(mail.content)}</strong>
+                            <strong style="font-size:14px;">${escHtml(mail.title || mail.content || '无标题')}</strong>
                             ${attText}
                             <div class="mail-time">${timeStr}</div>
                         </div>`;
@@ -5978,6 +5998,7 @@
             document.getElementById('detailTypeBadge').className = `mail-type-badge mail-type-${data.notification_type||'info'}`;
             document.getElementById('detailTypeBadge').textContent = MAIL_TYPE_NAMES[data.notification_type]||MAIL_TYPE_NAMES.info;
             document.getElementById('detailTime').textContent = fmtMailTime(data.created_at);
+            document.getElementById('detailTitle').textContent = data.title || '无标题';
             document.getElementById('detailBody').textContent = data.content;
 
             // 附件
@@ -5988,6 +6009,7 @@
             if (hasAtt) {
                 attEl.style.display = '';
                 document.getElementById('detailAttachmentText').innerHTML = _formatAttachmentFull(data);
+                claimBtn.style.display = '';
 
                 if (isClaimed) {
                     claimBtn.textContent = '✅ 已领取';
@@ -6379,8 +6401,9 @@
                     <div id="mailDetailContent" style="display:none;">
                         <div class="mail-detail-header">
                             <span class="mail-type-badge mail-type-info" id="detailTypeBadge">info</span>
-                            <span style="font-size:12px;color:#94a3b8;" id="detailTime"></span>
+                            <span style="font-size:12px;color:#94a8b8;" id="detailTime"></span>
                         </div>
+                        <div id="detailTitle" style="font-size:16px;font-weight:700;color:#1e293b;margin:10px 0 6px;"></div>
                         <div class="mail-detail-body" id="detailBody"></div>
                         <div class="mail-detail-attachment" id="detailAttachment" style="display:none;">
                             <div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#059669;">🎁 附件奖励</div>
