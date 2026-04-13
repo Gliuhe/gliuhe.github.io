@@ -917,6 +917,8 @@
     <!-- 返回按钮 -->
     <a href="index.html" class="back-button" title="返回普通抽奖">⬅</a>
 
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cloud-sync-helper.js"></script>
     <script>
         // 常量定义
         const LOTTERY_COST = 1; // 基础消耗，实际消耗根据奖池动态计算
@@ -1735,6 +1737,8 @@
                         const currencyToAdd = result.prize.currencyAmount || 0;
                         const newVoucherAmount = voucherAmount + currencyToAdd;
                         localStorage.setItem('voucher', newVoucherAmount.toString());
+            syncCurrencyToCloud('voucher');
+                        syncCurrencyToCloud('voucher');
 
                         // 触发storage事件同步到主页
                         window.dispatchEvent(new StorageEvent('storage', {
@@ -1820,6 +1824,7 @@
             // 扣除兑换券
             const newVoucherAmount = voucherAmount - VOUCHER_COST;
             localStorage.setItem('voucher', newVoucherAmount.toString());
+            syncCurrencyToCloud('voucher');
             
             // 触发storage事件同步到主页
             window.dispatchEvent(new StorageEvent('storage', {
@@ -1857,6 +1862,7 @@
                         const currencyToAdd = result.prize.currencyAmount || 0;
                         const updatedVoucherAmount = currentVoucherAmount + currencyToAdd;
                         localStorage.setItem('voucher', updatedVoucherAmount.toString());
+                        syncCurrencyToCloud('voucher');
 
                         // 触发storage事件同步到主页
                         window.dispatchEvent(new StorageEvent('storage', {
