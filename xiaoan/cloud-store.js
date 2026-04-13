@@ -102,6 +102,15 @@ class CloudStore {
             // 下划线版本（兼容 jisuan.html）
             'jisuan_passCards': { table: 'jisuan_data', field: 'pass_cards' },
             'jisuan_history': { table: 'jisuan_data', field: 'history' },
+
+            // 练字活动（复用 jisuan_data 表存储）
+            'write_today': { table: 'jisuan_data', field: 'write_today' },
+            'write_history': { table: 'jisuan_data', field: 'write_history' },
+            'write_passCards': { table: 'jisuan_data', field: 'write_pass_cards' },
+
+            // 抽奖活动（复用 jisuan_data 表存储）
+            'lottery_data': { table: 'jisuan_data', field: 'lottery_data' },
+            'lottery_reward_config': { table: 'jisuan_data', field: 'lottery_reward_config' },
             
             // 纪行（战斗通行证）
             'jixingCompletedDays': { table: 'jixing_progress', field: 'completed_days' },
@@ -431,6 +440,14 @@ class CloudStore {
             localStorage.setItem('jisuan_history', JSON.stringify(data.history));
         }
         if (data.today) localStorage.setItem('jisuan_today', JSON.stringify(data.today));
+        if (data.write_today) localStorage.setItem('write_today', typeof data.write_today === 'string' ? data.write_today : JSON.stringify(data.write_today));
+        if (data.write_history) localStorage.setItem('write_history', typeof data.write_history === 'string' ? data.write_history : JSON.stringify(data.write_history));
+        if (data.write_passCards !== null) {
+            localStorage.setItem('write_passCards', String(data.write_passCards));
+            localStorage.setItem('write_passCards', String(data.write_passCards));
+        }
+        if (data.lottery_data) localStorage.setItem('lottery_data', typeof data.lottery_data === 'string' ? data.lottery_data : JSON.stringify(data.lottery_data));
+        if (data.lottery_reward_config) localStorage.setItem('lottery_reward_config', typeof data.lottery_reward_config === 'string' ? data.lottery_reward_config : JSON.stringify(data.lottery_reward_config));
     }
 
     async _loadJixingData() {
@@ -782,7 +799,11 @@ class CloudStore {
             jisuanPassCards: 'pass_cards', jisuanHistory: 'history',
             jisuan_today: 'today',
             // 下划线版本
-            jisuan_passCards: 'pass_cards', jisuan_history: 'history'
+            jisuan_passCards: 'pass_cards', jisuan_history: 'history',
+            // 练字活动
+            write_today: 'write_today', write_history: 'write_history', write_passCards: 'write_pass_cards',
+            // 抽奖活动
+            lottery_data: 'lottery_data', lottery_reward_config: 'lottery_reward_config'
         };
         const dbField = fieldMap[key];
         if (!dbField) return;
