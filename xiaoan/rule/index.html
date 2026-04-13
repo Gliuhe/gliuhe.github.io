@@ -673,6 +673,9 @@
             }
         }
     </style>
+    <!-- Supabase SDK + 云存储 -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cloud-store.js"></script>
 </head>
 <body>
     <div class="header">
@@ -1914,7 +1917,64 @@
         }
         
         // 初始化
-        function initApp() {
+        async function initApp() {
+            // 先从云端加载 rules 和 activeTasks（如果已登录）
+            try {
+                const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
+                if (userId && window.supabase) {
+                    const sbClient = window.supabase.createClient(
+                        'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+                    );
+                    
+                    // 加载 rules
+                    const { data: cloudRules } = await sbClient.from('rules').select('*').order('sort_order', { ascending: true });
+                    if (cloudRules && cloudRules.length > 0) {
+                        // 字段映射：云端 → 本地格式
+                        const mappedRules = cloudRules.map(r => {
+                            let parsedReward = {};
+                            if (typeof r.reward === 'string' && r.reward) {
+                                try { parsedReward = JSON.parse(r.reward); } catch(e) {}
+                            }
+                            return {
+                                id: r.id,
+                                title: r.name || r.title || '',
+                                rewardType1: parsedReward.type1 || r.reward_type_1,
+                                rewardAmount1: parsedReward.amount1 ?? r.reward_amount_1 ?? 0,
+                                rewardType2: parsedReward.type2 || r.reward_type_2,
+                                rewardAmount2: parsedReward.amount2 ?? r.reward_amount_2 ?? 0,
+                                content: r.content || '',
+                                days: Array.isArray(r.days) ? r.days : [],
+                                isDaily: !!r.is_daily,
+                                duration: r.duration || 0,
+                                isActive: r.is_active !== false,
+                                sortOrder: r.sort_order ?? r.id ?? 0
+                            };
+                        });
+                        localStorage.setItem('rules', JSON.stringify(mappedRules));
+                        console.log('[rule] ✅ 从云端加载 rules:', mappedRules.length, '条');
+                    }
+
+                    // 加载 active_tasks
+                    const { data: cloudTasks } = await sbClient.from('active_tasks').select('*').eq('user_id', userId);
+                    if (cloudTasks && cloudTasks.length > 0) {
+                        const taskObj = {};
+                        cloudTasks.forEach(t => {
+                            taskObj[t.rule_id] = {
+                                status: t.status || 'pending',
+                                startTime: t.start_time,
+                                endTime: t.end_time,
+                                rewardText: t.reward_text
+                            };
+                        });
+                        localStorage.setItem('activeTasks', JSON.stringify(taskObj));
+                        console.log('[rule] ✅ 从云端加载 active_tasks:', cloudTasks.length, '条');
+                    }
+                }
+            } catch(e) {
+                console.warn('[rule] ⚠️ 云端加载失败，使用本地数据:', e.message);
+            }
+
             initializeData();
             updateUI();
 
@@ -1929,11 +1989,14 @@
             };
 
             // 为密码输入框添加回车键提交功能
-            document.getElementById('verifyPassword').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    verifyPassword();
-                }
-            });
+            const verifyInput = document.getElementById('verifyPassword');
+            if (verifyInput) {
+                verifyInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        verifyPassword();
+                    }
+                });
+            }
         }
 
         // 领取每日任务奖励
