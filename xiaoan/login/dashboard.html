@@ -231,9 +231,9 @@
         <button class="tab-btn" onclick="switchTab('bank')">🏦 银行数据</button>
         <button class="tab-btn" onclick="switchTab('fines')">📝 罚款记录</button>
         <button class="tab-btn" onclick="switchTab('jixing')">🗺️ 纪行进度</button>
-        <button class="tab-btn" onclick="switchTab('jisuan')">🧮 计算挑战</button>
         <button class="tab-btn" onclick="switchTab('codes')">🎫 兑换码</button>
         <button class="tab-btn" onclick="switchTab('notify')">📬 发送邮件</button>
+        <button class="tab-btn" onclick="switchTab('lottery')">🎰 抽奖配置</button>
     </div>
 
     <!-- 面板1：用户列表 -->
@@ -279,11 +279,30 @@
                 <tbody id="checkinBody"></tbody>
             </table>
         </div>
-        <h3 style="margin-bottom:12px;font-size:16px;">活跃任务</h3>
+        <h3 style="margin-bottom:12px;font-size:16px;">活跃任务
+            <button class="btn" style="font-size:11px;padding:4px 12px;margin-left:8px;background:#4299e1;color:#fff;" onclick="toggleSyncTool()">🔄 同步工具</button>
+        </h3>
+        <!-- 同步工具面板 -->
+        <div id="syncToolPanel" style="display:none;background:#f0f9ff;border:1px solid #4299e1;border-radius:10px;padding:14px;margin-bottom:12px;">
+            <div style="font-size:13px;color:#334155;margin-bottom:8px;"><strong>📌 使用方法：</strong></div>
+            <ol style="font-size:12px;color:#64748b;margin:0 0 10px 18px;line-height:1.7;">
+                <li>在用户浏览器打开主页面 <code style;background:#e2e8f0;padding:1px 5px;border-radius:3px;">index.html</code>，按 F12 打开控制台</li>
+                <li>输入下方命令并回车（自动复制到剪贴板）：</li>
+                <li style="background:#1e293b;padding:10px;border-radius:6px;margin-top:4px;overflow-x:auto;"><code style="color:#38bdf8;font-size:11px;">copy(JSON.stringify({rules:JSON.parse(localStorage.getItem('rules')||'[]'),activeTasks:JSON.parse(localStorage.getItem('activeTasks')||'{}'),jixing:{completedDays:JSON.parse(localStorage.getItem('jixingCompletedDays')||'[]'),jixingMuchunCurrency:localStorage.getItem('jixing_muchun_currency')||'0',initialized:localStorage.getItem('jixingInitialized')==='true'}}))</code></li>
+                <li>复制输出的内容，粘贴到下方文本框</li>
+                <li>点击「覆盖同步到云端」</li>
+            </ol>
+            <textarea id="syncDataInput" rows="6" placeholder="粘贴控制台输出的 JSON 数据..." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:monospace;font-size:11px;resize:vertical;"></textarea>
+            <div style="margin-top:8px;display:flex;gap:8px;">
+                <button class="btn" style="background:#4299e1;color:#fff;font-size:12px;padding:6px 16px;" onclick="syncTasksToCloud()">☁️ 覆盖同步到云端</button>
+                <button class="btn" style="background:#94a3b8;color:#fff;font-size:12px;padding:6px 16px;" onclick="document.getElementById('syncDataInput').value=''">🗑️ 清空</button>
+            </div>
+            <div id="syncResult" style="margin-top:8px;font-size:12px;"></div>
+        </div>
         <div class="data-table-container">
             <table class="data-table">
                 <thead><tr>
-                    <th>用户ID</th><th>规则ID</th><th>状态</th><th>开始时间</th><th>结束时间</th><th>奖励</th>
+                    <th>图标/ID</th><th>任务名称</th><th>状态</th><th>开始时间</th><th>结束时间</th><th>奖励</th>
                 </tr></thead>
                 <tbody id="tasksBody"></tbody>
             </table>
@@ -338,22 +357,9 @@
         <div class="data-table-container">
             <table class="data-table">
                 <thead><tr>
-                    <th>用户ID</th><th>已完成天数</th><th>货币</th><th>已初始化</th>
-                    <th>礼包领取</th><th>已购奖励</th><th>上次领取</th>
+                    <th>项目</th><th>状态/数量</th>
                 </tr></thead>
                 <tbody id="jixingBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 面板9：计算挑战 -->
-    <div class="tab-panel" id="panel-jisuan">
-        <div class="data-table-container">
-            <table class="data-table">
-                <thead><tr>
-                    <th>用户ID</th><th>今日完成</th><th>分数</th><th>通过卡</th><th>历史记录数</th>
-                </tr></thead>
-                <tbody id="jisuanBody"></tbody>
             </table>
         </div>
     </div>
@@ -382,7 +388,10 @@
                 <p style="font-size:13px;color:#64748b;margin-bottom:16px;">
                     邮件会实时推送到用户端邮箱（含附件奖励功能）。
                 </p>
-                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">邮件内容</label>
+                <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;">邮件标题</label>
+                <input type="text" id="notifyTitle" placeholder="输入邮件标题..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;box-sizing:border-box;" />
+
+                <label style="display:block;font-size:13px;font-weight:600;margin-top:12px;margin-bottom:6px;">邮件内容</label>
                 <textarea id="notifyContent" rows="4" placeholder="输入邮件内容..." style="width:100%;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
 
                 <label style="display:block;font-size:13px;font-weight:600;margin-top:12px;margin-bottom:6px;">邮件类型</label>
@@ -447,6 +456,43 @@
             </div>
         </div>
     </div>
+
+    <!-- 面板12：抽奖配置 -->
+    <div class="tab-panel" id="panel-lottery">
+        <div style="max-width:800px;">
+            <h3 style="margin-bottom:16px;">🎰 纪行抽奖奖励配置</h3>
+            <p style="font-size:13px;color:#64748b;margin-bottom:20px;">
+                配置各星级奖励内容。规则：三连6→五星(二次判定50%特级) | 点数和≥15→四星 | 否则三星。五星保底70次(第65抽起+5%/抽)，四星保底10次(第8抽起递增)。五星触发后二次随机：普通(货币)或特级(实物)，上次普通则本次必特。修改后点击「保存配置」生效。
+            </p>
+
+            <!-- 三星奖励 -->
+            <fieldset style="margin-bottom:18px;border:1px dashed #cbd5e1;border-radius:10px;padding:14px 16px;">
+                <legend style="font-size:13px;font-weight:600;color:#a0aec0;">⭐ 三星奖励（点数和 &lt; 15）</legend>
+                <div id="lotteryStar3Config"></div>
+            </fieldset>
+
+            <!-- 四星奖励 -->
+            <fieldset style="margin-bottom:18px;border:1px dashed #9f7aea;border-radius:10px;padding:14px 16px;">
+                <legend style="font-size:13px;font-weight:600;color:#9f7aea;">⭐⭐ 四星奖励（点数和 ≥ 15 或 四星保底/10次）</legend>
+                <div id="lotteryStar4Config"></div>
+            </fieldset>
+
+            <!-- 普通五星 -->
+            <fieldset style="margin-bottom:18px;border:1px dashed #ecc94b;border-radius:10px;padding:14px 16px;">
+                <legend style="font-size:13px;font-weight:600;color:#ecc94b;">⭐⭐⭐ 普通五星（50%概率，上次特级则必普通）</legend>
+                <div id="lotteryStar5Config"></div>
+            </fieldset>
+
+            <!-- 特级大奖 -->
+            <fieldset style="margin-bottom:18px;border:1px dashed #48bb78;border-radius:10px;padding:14px 16px;">
+                <legend style="font-size:13px;font-weight:600;color:#48bb78;">👑 特级大奖（50%概率/上次普通则必中，含实物奖励）</legend>
+                <div id="lotteryItemConfig"></div>
+            </fieldset>
+
+            <button class="btn-sm btn-primary" onclick="saveLotteryConfig()" style="padding:10px 28px; font-size:14px;">💾 保存配置</button>
+            <span id="lotterySaveStatus" style="margin-left:10px;font-size:13px;"></span>
+        </div>
+    </div>
 </div>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -487,10 +533,11 @@ async function refreshAllData() {
             sb.from('user_currencies').select('*'),
             sb.from('bank_accounts').select('*'),
             sb.from('checkin_data').select('*'),
-            sb.from('active_tasks').select('*'),
+            sb.from('active_tasks').select('*').eq('user_id', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'),
+            sb.from('jisuan_data').select('*').eq('user_id', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'),
+            sb.from('rules').select('*'),
             sb.from('fine_items').select('*'),
             sb.from('jixing_progress').select('*'),
-            sb.from('jisuan_data').select('*'),
             sb.from('bank_transactions').select('*'),
             sb.from('exchange_codes').select('*')
         ]);
@@ -499,8 +546,8 @@ async function refreshAllData() {
         const get = (i) => results[i].status === 'fulfilled' ? results[i].value : { data: [], error: results[i].reason };
 
         allData = { currencies: get(0), banks: get(1), checkins: get(2),
-                     tasks: get(3), fines: get(4), jixing: get(5), jisuan: get(6),
-                     bankTrans: get(7), codes: get(8) };
+                     tasks: get(3), userJisuan: get(4), rules: get(5), fines: get(6), jixing: get(7),
+                     bankTrans: get(8), codes: get(9) };
 
         renderStats();
         renderUsersTable();
@@ -509,8 +556,8 @@ async function refreshAllData() {
         renderBankTable(allData.bankTrans.data);
         renderFinesTable();
         renderJixingTable();
-        renderJisuanTable();
         renderCodesTable();
+        loadLotteryConfig();
 
         showLoading(false);
     } catch(e) {
@@ -653,16 +700,42 @@ function renderCheckinTable() {
         </tr>`).join('');
 
     const tasksRows = allData.tasks.data || [];
-    document.getElementById('tasksBody').innerHTML = tasksRows.length === 0 ?
-        '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">暂无活跃任务</td></tr>' :
-        tasksRows.map(t => `<tr>
-            <td><span class="user-id-short">${shortId(String(t.user_id))}</span></td>
-            <td>#${t.rule_id||'-'}</td>
-            <td><span class="badge ${t.status==='completed'?'badge-green':t.status==='failed'?'badge-red':'badge-blue'}">${t.status||'-'}</span></td>
-            <td style="font-size:12px;">${fmtDateTime(t.start_time)}</td>
-            <td style="font-size:12px;">${fmtDateTime(t.end_time)||'进行中'}</td>
-            <td>${t.reward_text||'-'}</td>
-        </tr>`).join('');
+    const rulesList = (allData.rules.data || []).sort((a, b) => (a.sort_order ?? a.id) - (b.sort_order ?? b.id));
+
+    // 统计任务完成情况
+    const completedCount = tasksRows.filter(t => t.status === 'completed').length;
+    setStat('statTasks', `${completedCount}/${rulesList.length}`);
+
+    // 奖励名称映射
+    const REWARD_NAMES = { voucher: '🎫兑换券', lottery: '�抽奖券', premium: '💎高级券', bankTicket: '�银行券', item: '�实物' };
+
+    let taskHtml = '';
+
+    if (rulesList.length > 0) {
+        taskHtml += '<tr style="background:rgba(66,153,225,0.08);"><td colspan="6" style="font-weight:bold;padding:10px 12px;color:#4299e1;">� 规则任务列表</td></tr>';
+        taskHtml += rulesList.map(rule => {
+            const activeTask = tasksRows.find(t => String(t.rule_id) === String(rule.id));
+            const status = activeTask?.status || 'pending';
+            const isCompleted = status === 'completed';
+            const rewardText = [];
+            if (rule.reward_type_1 && rule.reward_type_1 !== 'none' && rule.reward_amount_1 > 0)
+                rewardText.push(`${REWARD_NAMES[rule.reward_type_1]||rule.reward_type_1}×${rule.reward_amount_1}`);
+            if (rule.reward_type_2 && rule.reward_type_2 !== 'none' && rule.reward_amount_2 > 0)
+                rewardText.push(`${REWARD_NAMES[rule.reward_type_2]||rule.reward_type_2}×${rule.reward_amount_2}`);
+
+            return `<tr>
+                <td>#${rule.id}</td>
+                <td><strong>${rule.name || rule.title || '-'}</strong><br><small style="color:#94a3b8;">${(rule.content || '').substring(0, 40)}${(rule.content||'').length>40?'...':''}</small></td>
+                <td><span class="badge ${isCompleted?'badge-green':status==='failed'?'badge-red':'badge-orange'}">${isCompleted?'✅ 已完成':'⏳ 未完成'}</span></td>
+                <td style="font-size:12px;">${activeTask ? fmtDateTime(activeTask.start_time) : '-'}</td>
+                <td style="font-size:12px;">${isCompleted ? fmtDateTime(activeTask.end_time) : '-'}</td>
+                <td>${rewardText.length > 0 ? rewardText.join('<br>') : '-'}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    document.getElementById('tasksBody').innerHTML = taskHtml || 
+        '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:30px;">暂无规则任务</td></tr>';
 }
 
 // ===== 银行数据 =====
@@ -755,32 +828,44 @@ async function createFine() {
 
 // ===== 纪行进度 =====
 function renderJixingTable() {
-    const rows = allData.jixing.data || [];
-    document.getElementById('jixingBody').innerHTML = rows.length === 0 ?
-        '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:30px;">暂无纪行数据</td></tr>' :
-        rows.map(j => `<tr>
-            <td><span class="user-id-short">${shortId(String(j.user_id))}</span></td>
-            <td>${Array.isArray(j.completed_days)?j.completed_days.length:0} / 30 天</td>
-            <td><strong>${j.currency||0}</strong></td>
-            <td><span class="badge ${j.initialized?'badge-green':'badge-gray'}">${j.initialized?'是':'否'}</span></td>
-            <td><span class="badge ${j.gift_claimed?'badge-green':'badge-gray'}">${j.gift_claimed?'已领':'未领'}</span></td>
-            <td style="font-size:12px;">${Array.isArray(j.bought_rewards)?JSON.stringify(j.bought_rewards):'-'}</td>
-            <td>${j.last_claim_date||'-'}</td>
-        </tr>`).join('');
-}
+    const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+    const j = (allData.jixing.data || []).find(r => String(r.user_id) === targetUserId);
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 5=周五, 6=周六
+    const isJixingDay = dayOfWeek >= 1 && dayOfWeek <= 4; // 周一至周四
+    const todayStr = today.toISOString().split('T')[0];
+    
+    // 纪行券从 user_currencies 表读取
+    const currencies = allData.currencies?.data || [];
+    const jixingTicket = currencies.find(c => String(c.user_id) === targetUserId && c.currency_type === 'jixing_muchun_currency');
+    const ticketCount = jixingTicket ? parseInt(jixingTicket.amount) : 0;
+    
+    // 进度数据从 jixing_progress 读取
+    const completedDays = (j && Array.isArray(j.completed_days)) ? j.completed_days : [];
+    const todayDone = completedDays.includes(todayStr);
 
-// ===== 计算挑战 =====
-function renderJisuanTable() {
-    const rows = allData.jisuan.data || [];
-    document.getElementById('jisuanBody').innerHTML = rows.length === 0 ?
-        '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:30px;">暂无计算挑战数据</td></tr>' :
-        rows.map(j => `<tr>
-            <td><span class="user-id-short">${shortId(String(j.user_id))}</span></td>
-            <td><span class="badge ${j.completed?'badge-green':'badge-gray'}">${j.completed?'已完成':'未完成'}</span></td>
-            <td><strong>${j.score||0}</strong></td>
-            <td>${j.pass_cards||0}</td>
-            <td>${Array.isArray(j.history)?j.history.length:0} 条</td>
-        </tr>`).join('');
+    if (!isJixingDay) {
+        document.getElementById('jixingBody').innerHTML = `
+            <tr><td><strong>🎫 纪行券总数</strong></td><td><strong style="color:#4299e1;">${ticketCount}</strong></td></tr>
+            <tr><td><strong>📅 今日完成</strong></td><td style="color:#94a3b8;font-size:12px;">🚫 当日无纪行任务（仅周一至周四）</td></tr>
+            <tr><td><strong>📊 累计完成</strong></td><td>${completedDays.length} / 18 天</td></tr>`;
+        return;
+    }
+
+    document.getElementById('jixingBody').innerHTML = `
+        <tr>
+            <td><strong>📅 今日完成</strong></td>
+            <td><span class="badge ${todayDone?'badge-green':'badge-orange'}">${todayDone?'✅ 已完成':'⏳ 未完成'}</span></td>
+        </tr>
+        <tr>
+            <td><strong>🎫 纪行券总数</strong></td>
+            <td><strong style="color:#4299e1;">${ticketCount}</strong></td>
+        </tr>
+        <tr>
+            <td><strong>📊 累计完成</strong></td>
+            <td>${completedDays.length} / 18 天</td>
+        </tr>
+    `;
 }
 
 // ===== 工具函数 =====
@@ -804,6 +889,7 @@ function switchTab(name) {
         panel.style.display = '';  // 清除可能的内联 display
     }
     if (name === 'notify') loadNotifyHistory();
+    if (name === 'lottery') loadLotteryConfig();
 }
 
 function showLoading(show) {
@@ -839,7 +925,6 @@ function showUserDetail(userId) {
     const tasks = (d.tasks.data||[]).filter(r => String(r.user_id) === uid);
     const fines = (d.fines.data||[]).filter(r => String(r.user_id) === uid);
     const jixing = (d.jixing.data||[]).find(r => String(r.user_id) === uid);
-    const jisuan = (d.jisuan.data||[]).find(r => String(r.user_id) === uid);
 
     // 货币详情
     let curHtml = '';
@@ -864,28 +949,46 @@ function showUserDetail(userId) {
          <div class="detail-item"><div class="detail-label">最后签到</div><div class="detail-value">${checkin.last_checkin_date||'-'}</div></div>` :
         '<div class="detail-item"><div class="detail-label">签到</div><div class="detail-value">无记录</div></div>';
 
-    // 任务
+    // 任务（rules + active_tasks 完成状态）
     let taskHtml = '';
-    if (tasks.length > 0) {
-        tasks.forEach(t => {
-            taskHtml += `<div class="detail-item"><div class="detail-label">任务 #${t.rule_id}</div>
-                <div class="detail-value"><span class="badge ${t.status==='completed'?'badge-green':t.status==='failed'?'badge-red':'badge-blue'}">${t.status}</span></div></div>`;
+    const detailRules = (allData.rules?.data || []).sort((a, b) => (a.sort_order ?? a.id) - (b.sort_order ?? b.id));
+    const REWARD_NAMES = { voucher: '🎫兑换券', lottery: '�抽奖券', premium: '💎高级券', bankTicket: '�银行券', item: '📦实物' };
+
+    if (detailRules.length > 0) {
+        const completedCount = tasks.filter(t => t.status === 'completed').length;
+        taskHtml += `<div class="detail-item"><div class="detail-label" style="color:#4299e1;">📋 规则任务</div><div class="detail-value">${completedCount}/${detailRules.length}</div></div>`;
+        detailRules.forEach(rule => {
+            const activeTask = tasks.find(t => String(t.rule_id) === String(rule.id));
+            const isCompleted = activeTask?.status === 'completed';
+            taskHtml += `<div class="detail-item" style="padding-left:16px;"><div class="detail-label">#${rule.id} ${rule.name || rule.title || '-'}</div>
+                <div class="detail-value"><span style="font-size:11px;color:${isCompleted?'#48bb78':'#ed8936'};">${isCompleted?'✅ 已完成':'⏳ 未完成'}</span></div></div>`;
         });
     } else {
-        taskHtml = '<div class="detail-item"><div class="detail-label">任务</div><div class="detail-value">无活跃任务</div></div>';
+        taskHtml = '<div class="detail-item"><div class="detail-label">任务</div><div class="detail-value">无规则任务</div></div>';
     }
 
     // 纪行
-    const jixingHtml = jixing ?
-        `<div class="detail-item"><div class="detail-label">纪行完成天数</div><div class="detail-value">${Array.isArray(jixing.completed_days)?jixing.completed_days.length:0}/30</div></div>
-         <div class="detail-item"><div class="detail-label">纪行货币</div><div class="detail-value">${jixing.currency||0}</div></div>` :
-        '<div class="detail-item"><div class="detail-label">纪行</div><div class="detail-value">未开始</div></div>';
-
-    // 计算挑战
-    const jisuanHtml = jisuan ?
-        `<div class="detail-item"><div class="detail-label">计算分数</div><div class="detail-value">${jisuan.score||0}</div></div>
-         <div class="detail-item"><div class="detail-label">通过卡</div><div class="detail-value">${jisuan.pass_cards||0}</div></div>` :
-        '<div class="detail-item"><div class="detail-label">计算挑战</div><div class="detail-value">无记录</div></div>';
+    const todayDate = new Date();
+    const dayOfWeek = todayDate.getDay();
+    const isJixingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
+    const todayStr = todayDate.toISOString().split('T')[0];
+    const jixingCompletedDays = jixing && Array.isArray(jixing.completed_days) ? jixing.completed_days : [];
+    const jixingTodayDone = jixingCompletedDays.includes(todayStr);
+    // 纪行券从 user_currencies 读取
+    const detailJixingTicket = currencies.find(c => c.currency_type === 'jixing_muchun_currency');
+    const detailTicketCount = detailJixingTicket ? parseInt(detailJixingTicket.amount) : 0;
+    
+    if (!isJixingDay) {
+        var jixingHtml = `
+            <div class="detail-item"><div class="detail-label">🎫 纪行券</div><div class="detail-value">${detailTicketCount}</div></div>
+            <div class="detail-item"><div class="detail-label">📅 今日完成</div><div class="detail-value" style="color:#94a3b8;font-size:11px;">🚫 当日无纪行任务</div></div>
+            <div class="detail-item"><div class="detail-label">📊 累计完成</div><div class="detail-value">${jixingCompletedDays.length}/18</div></div>`;
+    } else {
+        var jixingHtml = `
+            <div class="detail-item"><div class="detail-label">📅 今日完成</div><div class="detail-value"><span style="font-size:11px;color:${jixingTodayDone?'#48bb78':'#ed8936'};">${jixingTodayDone?'✅':'⏳'}</span></div></div>
+            <div class="detail-item"><div class="detail-label">🎫 纪行券</div><div class="detail-value">${detailTicketCount}</div></div>
+            <div class="detail-item"><div class="detail-label">📊 累计完成</div><div class="detail-value">${jixingCompletedDays.length}/18</div></div>`;
+    }
 
     // 罚款
     let fineHtml = '';
@@ -918,7 +1021,7 @@ function showUserDetail(userId) {
                 </div>
                 <div style="margin-bottom:12px;padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--orange);">
                     <div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px;">🎮 游戏数据</div>
-                    <div class="detail-grid">${jixingHtml}${jisuanHtml}</div>
+                    <div class="detail-grid">${jixingHtml}</div>
                 </div>
                 <div style="padding:10px;background:#fff;border-radius:8px;border-left:3px solid var(--admin-red);">
                     <div style="font-size:12px;font-weight:700;color:var(--admin-red);margin-bottom:8px;">📝 其他</div>
@@ -1073,6 +1176,120 @@ function getCodeRewardText(c) {
     if (c.reward_type2 === 'item' && c.reward_item2) parts.push(`🎁 ${c.reward_item2}`);
     else if (c.reward_type2 && c.reward_type2 !== 'none' && c.reward_amount2 > 0) parts.push(`${c.reward_amount2} ${CODE_REWARD_NAMES[c.reward_type2]||c.reward_type2}`);
     return parts.length > 0 ? parts.join(' + ') : '无';
+}
+
+// ===== 同步工具 =====
+function toggleSyncTool() {
+    const panel = document.getElementById('syncToolPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function syncTasksToCloud() {
+    const input = document.getElementById('syncDataInput').value.trim();
+    const resultEl = document.getElementById('syncResult');
+    
+    if (!input) {
+        resultEl.innerHTML = '<span style="color:#e53e3e;">⚠️ 请先粘贴数据</span>';
+        return;
+    }
+
+    let data;
+    try {
+        data = JSON.parse(input);
+    } catch(e) {
+        resultEl.innerHTML = '<span style="color:#e53e3e;">❌ JSON 格式错误：' + e.message + '</span>';
+        return;
+    }
+
+    if (!data.rules || !data.activeTasks) {
+        resultEl.innerHTML = '<span style="color:#ed8936;">⚠️ 数据缺少 rules 或 activeTasks 字段</span>';
+        return;
+    }
+
+    const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+    resultEl.innerHTML = '<span style="color:#4299e1;">☁️ 正在同步...</span>';
+
+    try {
+        // 1. 覆盖 rules 表（全局共享，需谨慎）
+        if (Array.isArray(data.rules) && data.rules.length > 0) {
+            const { error: err1 } = await sb.from('rules').delete().neq('id', -999999);
+            const rowsToInsert = data.rules.map(r => ({
+                id: r.id, name: r.name || r.title || '',
+                reward: typeof r.reward === 'string' ? r.reward : JSON.stringify({
+                    type1: r.rewardType1, amount1: r.rewardAmount1,
+                    type2: r.rewardType2, amount2: r.rewardAmount2
+                }),
+                duration: r.duration || 0,
+                days: Array.isArray(r.days) ? r.days : [],
+                is_daily: !!r.isDaily,
+                reward_amount: r.rewardAmount1 || 0,
+                sort_order: r.sortOrder ?? r.id ?? 0,
+                is_active: r.isActive !== false,
+                content: r.content || ''
+            }));
+            
+            if (rowsToInsert.length > 0) {
+                const { error: err2 } = await sb.from('rules').insert(rowsToInsert);
+                if (err2) throw new Error('rules 写入失败: ' + err2.message);
+            }
+        }
+
+        // 2. 覆盖 active_tasks（仅该用户）
+        const { error: err3 } = await sb.from('active_tasks').delete().eq('user_id', targetUserId);
+        
+        const taskEntries = Object.entries(data.activeTasks);
+        if (taskEntries.length > 0) {
+            const taskRows = taskEntries.map(([ruleId, task]) => ({
+                user_id: targetUserId,
+                rule_id: parseInt(ruleId),
+                status: task.status || 'pending',
+                start_time: task.startTime || null,
+                end_time: task.endTime || null,
+                reward_text: task.rewardText || ''
+            }));
+            const { error: err4 } = await sb.from('active_tasks').insert(taskRows);
+            if (err4) throw new Error('active_tasks 写入失败: ' + err4.message);
+        }
+
+        // 3. 同步纪行数据
+        if (data.jixing) {
+            const jx = data.jixing;
+            const completedDays = Array.isArray(jx.completedDays) ? jx.completedDays : [];
+            
+            // 3a. 写入纪行进度（completed_days 等）
+            const { error: err5 } = await sb.from('jixing_progress').upsert({
+                user_id: targetUserId,
+                completed_days: completedDays,
+                initialized: !!jx.initialized
+            }, { onConflict: 'user_id' });
+            if (err5) throw new Error('jixing_progress 写入失败: ' + err5.message);
+
+            // 3b. 纪行券写入 user_currencies 表（key = jixing_muchun_currency）
+            if (jx.jixingMuchunCurrency && parseInt(jx.jixingMuchunCurrency) > 0) {
+                const ticketAmount = parseInt(jx.jixingMuchunCurrency);
+                const existingTicket = await sb.from('user_currencies')
+                    .select('*').eq('user_id', targetUserId).eq('currency_type', 'jixing_muchun_currency').maybeSingle();
+                
+                if (existingTicket.data) {
+                    await sb.from('user_currencies')
+                        .update({ amount: ticketAmount })
+                        .eq('id', existingTicket.data.id);
+                } else {
+                    await sb.from('user_currencies')
+                        .insert({ user_id: targetUserId, currency_type: 'jixing_muchun_currency', amount: ticketAmount });
+                }
+            }
+        }
+
+        resultEl.innerHTML = `<span style="color:#38a169;">✅ 同步成功！rules: ${data.rules.length} 条, active_tasks: ${taskEntries.length} 条${data.jixing ? ', 纪行: 已同步' : ''}</span>`;
+        
+        // 自动刷新数据
+        setTimeout(() => refreshAllData(), 1000);
+
+    } catch(e) {
+        resultEl.innerHTML = `<span style="color:#e53e3e;">❌ 同步失败: ${e.message}</span>`;
+        console.error('[Sync] 同步错误:', e);
+    }
 }
 
 async function renderCodesTable() {
@@ -1259,7 +1476,9 @@ function toggleMailAttInput(num) {
 
 async function sendMail() {
     const btn = document.getElementById('sendNotifyBtn');
+    const title = document.getElementById('notifyTitle').value.trim();
     const content = document.getElementById('notifyContent').value.trim();
+    if (!title) { alert('请输入邮件标题'); return; }
     if (!content) { alert('请输入邮件内容'); return; }
 
     btn.disabled = true;
@@ -1275,6 +1494,7 @@ async function sendMail() {
         const attType2 = document.getElementById('mailAttType2').value || null;
 
         const insertData = {
+            title,
             content,
             notification_type: type,
             target_user_id: targetId,
@@ -1293,6 +1513,7 @@ async function sendMail() {
             alert('发送失败: ' + error.message);
         } else {
             alert('✅ 邮件已发送！');
+            document.getElementById('notifyTitle').value = '';
             document.getElementById('notifyContent').value = '';
             // 重置附件
             ['1','2'].forEach(n => {
@@ -1356,6 +1577,7 @@ async function loadNotifyHistory() {
             const hasAtt = n.attachment_type1 && n.attachment_type1 !== 'none';
             const claimText = hasAtt ? (cnt > 0 ? `✅ ${cnt}人已领` : '⬜ 无人领取') : '';
             return `<div class="notify-item ${n.notification_type||'info'}">
+                <div style="font-weight:600;color:#1e293b;margin-bottom:2px;">${escapeHtml(n.title || '无标题')}</div>
                 <div>${escapeHtml(n.content)} ${fmtAtt(n)}</div>
                 <div class="notify-time">${fmtDateTime(n.created_at)} ${n.target_user_id?'👤指定':'📢广播'} ${claimText}</div>
             </div>`;
@@ -1366,6 +1588,157 @@ function escapeHtml(s) {
     const d = document.createElement('div');
     d.textContent = s;
     return d.innerHTML;
+}
+
+// ===== 抽奖配置 =====
+const LOTTERY_DEFAULT_CONFIG = {
+    star3: [{ type: 'voucher', amount: 5, name: '兑换券' }, { type: 'lottery', amount: 1, name: '抽奖券' }],
+    star4: [{ type: 'voucher', amount: 20, name: '兑换券' }, { type: 'premium', amount: 1, name: '高级抽奖券' }, { type: 'lottery', amount: 3, name: '抽奖券' }],
+    star5_normal: [{ type: 'voucher', amount: 80, name: '兑换券' }, { type: 'premium', amount: 3, name: '高级抽奖券' }, { type: 'lottery', amount: 10, name: '抽奖券' }, { type: 'jixing_muchun_currency', amount: 3, name: '纪行券' }],
+    star5_grand: [{ type: 'item', name: '特级实物大奖', amount: 1 }, { type: 'voucher', amount: 50, name: '兑换券' }, { type: 'premium', amount: 2, name: '高级抽奖券' }]
+};
+
+const CURRENCY_OPTIONS = ['voucher', 'lottery', 'premium', 'jixing_muchun_currency'];
+const CURRENCY_LABELS = { voucher:'兑换券', lottery:'抽奖券', premium:'高级抽奖券', jixing_muchun_currency:'纪行券' };
+
+let lotteryCurrentConfig = null;
+
+function renderLotteryConfigPanel() {
+    const tierIdMap = {
+        star3: 'lotteryStar3Config',
+        star4: 'lotteryStar4Config',
+        star5_normal: 'lotteryStar5Config',
+        star5_grand: 'lotteryItemConfig'
+    };
+    const tiers = ['star3','star4','star5_normal','star5_grand'];
+    for (const tier of tiers) {
+        const el = document.getElementById(tierIdMap[tier]);
+        if (!el) continue;
+        const rewards = (lotteryCurrentConfig && lotteryCurrentConfig[tier]) ? lotteryCurrentConfig[tier] : (LOTTERY_DEFAULT_CONFIG[tier] || []);
+        el.innerHTML = buildRewardEditor(tier, rewards);
+    }
+}
+
+function buildRewardEditor(tier, rewards) {
+    let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+    (rewards || []).forEach((r, i) => {
+        html += `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" data-idx="${i}">
+            <select id="lt_${tier}_type${i}" style="padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
+                ${CURRENCY_OPTIONS.map(o => `<option value="${o}" ${r.type===o?'selected':''}>${CURRENCY_LABELS[o]||o}</option>`).join('')}
+                <option value="item" ${r.type==='item'?'selected':''}>实物奖励</option>
+            </select>`;
+        if (r.type === 'item') {
+            html += `<input type="text" id="lt_${tier}_name${i}" placeholder="物品名称" value="${r.name||''}" style="flex:1;min-width:120px;padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">`;
+        } else {
+            html += `<input type="number" id="lt_${tier}_amount${i}" placeholder="数量" value="${r.amount||0}" min="0" style="width:70px;padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">`;
+        }
+        html += `<button class="btn-sm" onclick="removeLotteryReward('${tier}',${i})" style="padding:4px 10px;font-size:11px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;">✕</button></div>`;
+    });
+    html += `<button class="btn-sm" onclick="addLotteryReward('${tier}')" style="padding:5px 14px;font-size:11px;background:#f0fdf4;color:#059669;border:1px solid #86efac;border-radius:6px;cursor:pointer;">+ 添加奖励</button></div>`;
+    return html;
+}
+
+function addLotteryReward(tier) {
+    if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
+    syncTierFromDOM(tier);
+    if (!lotteryCurrentConfig[tier]) lotteryCurrentConfig[tier] = [];
+    lotteryCurrentConfig[tier].push({ type: 'voucher', amount: 10, name: '' });
+    renderLotteryConfigPanel();
+}
+
+function removeLotteryReward(tier, idx) {
+    if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
+    syncTierFromDOM(tier);
+    if (!lotteryCurrentConfig[tier]) {
+        lotteryCurrentConfig[tier] = (LOTTERY_DEFAULT_CONFIG[tier] || []).map(function(r) { return Object.assign({}, r); });
+    }
+    if (idx >= 0 && idx < lotteryCurrentConfig[tier].length) {
+        lotteryCurrentConfig[tier].splice(idx, 1);
+        renderLotteryConfigPanel();
+    }
+}
+
+function syncTierFromDOM(tier) {
+    const tierIdMap = {
+        star3: 'lotteryStar3Config',
+        star4: 'lotteryStar4Config',
+        star5_normal: 'lotteryStar5Config',
+        star5_grand: 'lotteryItemConfig'
+    };
+    const container = document.getElementById(tierIdMap[tier]);
+    if (!container) return;
+    const rows = container.querySelectorAll('[data-idx]');
+    const rewards = [];
+    rows.forEach(row => {
+        const idx = row.dataset.idx;
+        const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
+        const type = typeEl ? typeEl.value : 'voucher';
+        if (type === 'item') {
+            const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
+            rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+        } else {
+            const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
+            rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
+        }
+    });
+    if (rewards.length > 0) lotteryCurrentConfig[tier] = rewards;
+}
+
+async function saveLotteryConfig() {
+    const tierIdMap = {
+        star3: 'lotteryStar3Config',
+        star4: 'lotteryStar4Config',
+        star5_normal: 'lotteryStar5Config',
+        star5_grand: 'lotteryItemConfig'
+    };
+    const tiers = ['star3','star4','star5_normal','star5_grand'];
+    const config = {};
+    for (const tier of tiers) {
+        config[tier] = [];
+        const container = document.getElementById(tierIdMap[tier]);
+        if (!container) continue;
+        const rows = container.querySelectorAll('[data-idx]');
+        rows.forEach(row => {
+            const idx = row.dataset.idx;
+            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
+            const type = typeEl ? typeEl.value : 'voucher';
+            if (type === 'item') {
+                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
+                config[tier].push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+            } else {
+                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
+                config[tier].push({ type, amount: parseInt(amtEl?.value)||0 });
+            }
+        });
+    }
+
+    try {
+        const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        const { data: existing } = await sb.from('jisuan_data').select('*').eq('user_id', targetUserId).maybeSingle();
+        const updateData = { lottery_reward_config: JSON.stringify(config), updated_at: new Date().toISOString() };
+        if (existing) {
+            await sb.from('jisuan_data').update(updateData).eq('user_id', targetUserId);
+        } else {
+            await sb.from('jisuan_data').insert({ user_id: targetUserId, ...updateData });
+        }
+
+        lotteryCurrentConfig = config;
+        document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;">✅ 配置已保存！</span>';
+        setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 3000);
+    } catch(e) {
+        document.getElementById('lotterySaveStatus').innerHTML = `<span style="color:#ef4444;">❌ 保存失败: ${e.message}</span>`;
+    }
+}
+
+async function loadLotteryConfig() {
+    try {
+        const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        const { data } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
+        if (data && data.lottery_reward_config) {
+            try { lotteryCurrentConfig = JSON.parse(data.lottery_reward_config); } catch(e) {}
+        }
+    } catch(e) {}
+    renderLotteryConfigPanel();
 }
 </script>
 </body>
