@@ -1922,6 +1922,8 @@
             try {
                 const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
                 if (userId && window.supabase) {
+                    if (typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
+
                     const sbClient = window.supabase.createClient(
                         'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
