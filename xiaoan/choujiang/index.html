@@ -1546,6 +1546,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 // 安全检查：确保newBankTicket是有效数字
                 if (!isNaN(newBankTicket) && newBankTicket >= 0) {
                     localStorage.setItem('bankTicket', newBankTicket.toString());
+                    syncCurrencyToCloud('bankTicket');
 
                     // 触发storage事件同步到银行页面
                     window.dispatchEvent(new StorageEvent('storage', {
