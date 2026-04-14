@@ -1303,9 +1303,12 @@
 
         // 初始化
         function init() {
+            const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
+            if (userId && typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
+
             // 初始化默认进度（首次访问）
             initializeDefaultProgress();
-            
+
             renderProgress();
             updateCurrencyDisplay();
             updateShopItems();
