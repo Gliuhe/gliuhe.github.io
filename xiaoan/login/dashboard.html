@@ -335,7 +335,6 @@
     <div class="tab-panel" id="panel-fines">
         <h3 style="margin-bottom:12px;">📝 新增罚款</h3>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:14px;background:#fff8f0;border:2px solid #ffd166;border-radius:10px;">
-            <input type="text" id="fineTargetUserId" placeholder="目标用户ID" style="flex:1;min-width:140px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
             <input type="text" id="fineReason" placeholder="罚款原因" style="flex:1.5;min-width:160px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
             <input type="number" id="fineOriginalAmount" placeholder="金额（兑换券）" min="1" style="width:130px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
             <input type="date" id="fineDueDate" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
@@ -785,12 +784,11 @@ function renderFinesTable() {
 
 /** 创建新罚款 */
 async function createFine() {
-    const targetUserId = document.getElementById('fineTargetUserId').value.trim();
+    const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
     const reason = document.getElementById('fineReason').value.trim();
     const originalAmount = parseFloat(document.getElementById('fineOriginalAmount').value);
     const dueDate = document.getElementById('fineDueDate').value;
 
-    if (!targetUserId) { alert('请输入目标用户ID'); return; }
     if (!reason) { alert('请输入罚款原因'); return; }
     if (!originalAmount || originalAmount <= 0) { alert('请输入有效金额'); return; }
     if (!dueDate) { alert('请选择到期日'); return; }
@@ -810,7 +808,6 @@ async function createFine() {
         if (error) throw error;
 
         // 清空表单
-        document.getElementById('fineTargetUserId').value = '';
         document.getElementById('fineReason').value = '';
         document.getElementById('fineOriginalAmount').value = '';
         document.getElementById('fineDueDate').value = '';
