@@ -1930,6 +1930,63 @@
             border-color: var(--secondary-color);
             background: rgba(255, 107, 107, 0.1);
         }
+
+        /* 练字提醒横幅 */
+        .write-reminder-banner {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+            animation: bannerPulse 2s ease-in-out infinite;
+        }
+        .write-reminder-banner.show { display: flex; }
+        @keyframes bannerPulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15); }
+            50% { box-shadow: 0 4px 16px rgba(245, 158, 11, 0.25); }
+        }
+        .wrb-left { display: flex; align-items: center; gap: 12px; }
+        .wrb-icon { font-size: 1.8rem; animation: diceBounce 1s ease-in-out infinite; }
+        @keyframes diceBounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(10deg); }
+        }
+        .wrb-text { display: flex; flex-direction: column; gap: 2px; }
+        .wrb-title { font-size: 0.95rem; font-weight: 700; color: #92400e; }
+        .wrb-desc { font-size: 0.78rem; color: #b45309; }
+        .wrb-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .wrb-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3); }
+        .wrb-close {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            color: #92400e;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .wrb-close:hover { opacity: 1; }
+        @media (max-width: 600px) {
+            .write-reminder-banner { flex-direction: column; text-align: center; }
+            .wrb-left { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -1993,6 +2050,19 @@
     </div>
 
     <div class="container">
+        <!-- 练字提醒横幅 -->
+        <div class="write-reminder-banner" id="writeReminderBanner">
+            <div class="wrb-left">
+                <span class="wrb-icon">🎲</span>
+                <div class="wrb-text">
+                    <span class="wrb-title">今日练字任务未完成</span>
+                    <span class="wrb-desc">前往练字页面掷骰子，完成任务获取奖励</span>
+                </div>
+            </div>
+            <button class="wrb-btn" onclick="goToWritePage()">去掷骰子</button>
+            <button class="wrb-close" onclick="closeWriteReminder()">✕</button>
+        </div>
+
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('dashboard')">🏠 控制面板</div>
             <div class="nav-tab" onclick="switchTab('products')">🎁 兑换商品</div>
@@ -4575,12 +4645,13 @@
                             const key = row.currency_type;
                             if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
                                 const cloudVal = parseFloat(row.amount) || 0;
-                                const localVal = parseFloat(localStorage.getItem(key)) || 0;
-                                // 以 localStorage 为准（子页面的最新操作都在本地）
-                                const finalVal = localVal;
+                                const rawLocal = localStorage.getItem(key);
+                                const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+                                // 如果本地有有效值 → 本地优先；如果本地为空 → 云端优先（新设备同步）
+                                const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
                                 localStorage.setItem(key, String(finalVal));
                                 // 本地与云端不一致时回写云端（确保同步）
-                                if (localVal !== cloudVal) {
+                                if (finalVal !== cloudVal) {
                                     sbClient.from('user_currencies').upsert({
                                         user_id: userId,
                                         currency_type: key,
@@ -4631,13 +4702,14 @@
                     if (banks?.length > 0) {
                         banks.forEach(acc => {
                             const key = acc.account_type==='savings'?'bankSavings':acc.account_type==='deposit'?'bankDeposit':'bankInvestment';
-                            // 银行账户余额：以本地为准（银行页面可能已修改）
+                            // 银行账户余额：本地有值优先，本地为空则用云端
                             if (acc.balance!==null) {
-                                const localVal = parseFloat(localStorage.getItem(key)) || 0;
                                 const cloudVal = parseFloat(acc.balance) || 0;
-                                const finalVal = localVal;
+                                const rawLocal = localStorage.getItem(key);
+                                const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+                                const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
                                 localStorage.setItem(key, String(finalVal));
-                                if (localVal !== cloudVal) {
+                                if (finalVal !== cloudVal) {
                                     sbClient.from('bank_accounts').upsert({ user_id: userId, account_type: acc.account_type, balance: finalVal }, { onConflict: 'user_id,account_type' })
                                         .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 银行账户回写失败:', key, r.error.message); });
                                 }
@@ -4787,13 +4859,14 @@
                         if (jsn.pass_cards!==null) localStorage.setItem('jisuanPassCards',String(jsn.pass_cards));
                         if (jsn.history) localStorage.setItem('jisuanHistory',JSON.stringify(jsn.history));
                         if (jsn.today) localStorage.setItem('jisuan_today',JSON.stringify(jsn.today));
-                        // 纪行券：以本地为准（子页面可能已修改）
+                        // 纪行券：本地有值优先，本地为空则用云端
                         if (jsn.jixing_muchun_currency !== null && jsn.jixing_muchun_currency !== undefined) {
-                            const localVal = parseFloat(localStorage.getItem('jixing_muchun_currency')) || 0;
                             const cloudVal = parseFloat(jsn.jixing_muchun_currency) || 0;
-                            const finalVal = localVal;
+                            const rawLocal = localStorage.getItem('jixing_muchun_currency');
+                            const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+                            const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
                             localStorage.setItem('jixing_muchun_currency', String(finalVal));
-                            if (localVal !== cloudVal) {
+                            if (finalVal !== cloudVal) {
                                 sbClient.from('jisuan_data').upsert({ user_id: userId, jixing_muchun_currency: finalVal }, { onConflict: 'user_id' })
                                     .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 纪行券回写失败:', r.error.message); });
                             }
@@ -4805,13 +4878,14 @@
                     }
                     if (jx) {
                         if (jx.completed_days) localStorage.setItem('jixingCompletedDays',JSON.stringify(jx.completed_days));
-                        // 纪行货币：以本地为准
+                        // 纪行货币：本地有值优先，本地为空则用云端
                         if (jx.currency !== null) {
-                            const localVal = parseFloat(localStorage.getItem('jixingCurrency')) || 0;
                             const cloudVal = parseFloat(jx.currency) || 0;
-                            const finalVal = localVal;
+                            const rawLocal = localStorage.getItem('jixingCurrency');
+                            const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+                            const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
                             localStorage.setItem('jixingCurrency', String(finalVal));
-                            if (localVal !== cloudVal) {
+                            if (finalVal !== cloudVal) {
                                 sbClient.from('jixing_progress').upsert({ user_id: userId, currency: finalVal }, { onConflict: 'user_id' })
                                     .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 纪行货币回写失败:', r.error.message); });
                             }
@@ -4857,16 +4931,23 @@
                             rewardAmount: r.reward_amount, sortOrder: r.sort_order ?? r.id, isActive: r.is_active !== false
                         }))));
                     }
-                    // 加载活跃任务
+                    // 加载活跃任务（合并云端和本地）
                     if (atasks?.data?.length > 0) {
+                        const localTasks = JSON.parse(localStorage.getItem('activeTasks') || '{}');
                         const taskObj = {};
                         for (const t of atasks.data) {
-                            taskObj[t.rule_id] = {
-                                status: t.status || 'pending',
-                                startTime: t.start_time,
-                                endTime: t.end_time,
-                                rewardText: t.reward_text
-                            };
+                            const localTask = localTasks[t.rule_id];
+                            // 本地有该任务且状态不是pending → 本地优先；否则用云端
+                            if (localTask && localTask.status && localTask.status !== 'pending') {
+                                taskObj[t.rule_id] = localTask;
+                            } else {
+                                taskObj[t.rule_id] = {
+                                    status: t.status || 'pending',
+                                    startTime: t.start_time,
+                                    endTime: t.end_time,
+                                    rewardText: t.reward_text
+                                };
+                            }
                         }
                         localStorage.setItem('activeTasks', JSON.stringify(taskObj));
                     }
@@ -4876,6 +4957,53 @@
             // 等待所有并行任务完成
             await Promise.all(loadTasks);
             console.log(`[Cloud] ✅ 云端数据加载完成 (${loadTasks.length} 个模块并行)`);
+
+            // 检查是否需要显示练字提醒横幅
+            checkWriteReminder();
+        }
+
+        // ========== 练字提醒横幅 ==========
+        function checkWriteReminder() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const raw = localStorage.getItem('write_today');
+                let showBanner = true;
+
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    // 如果今日已掷骰（rolled=true）且日期匹配，则不显示横幅
+                    if (data.date === today && data.rolled === true) {
+                        showBanner = false;
+                    }
+                }
+
+                // 检查是否被用户关闭过（当日）
+                const dismissed = localStorage.getItem('write_reminder_dismissed');
+                if (dismissed === today) {
+                    showBanner = false;
+                }
+
+                const banner = document.getElementById('writeReminderBanner');
+                if (banner) {
+                    banner.classList.toggle('show', showBanner);
+                }
+            } catch (e) {
+                console.warn('[WriteReminder] 检测失败:', e);
+            }
+        }
+
+        function goToWritePage() {
+            window.location.href = '/xiaoan/activity/write.html';
+        }
+
+        function closeWriteReminder() {
+            const banner = document.getElementById('writeReminderBanner');
+            if (banner) {
+                banner.classList.remove('show');
+            }
+            // 记录今日已关闭
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem('write_reminder_dismissed', today);
         }
 
         // ========== 核心云端写入函数 ==========
