@@ -281,7 +281,21 @@ class CloudStore {
         data.forEach(row => {
             const key = row.currency_type;
             if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
-                localStorage.setItem(key, String(row.amount));
+                const cloudVal = parseFloat(row.amount) || 0;
+                const rawLocal = localStorage.getItem(key);
+                const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+                // 如果本地有有效值 → 本地优先；如果本地为空 → 云端优先
+                const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
+                localStorage.setItem(key, String(finalVal));
+                // 本地与云端不一致时回写云端（确保同步）
+                if (finalVal !== cloudVal) {
+                    this.sb.from('user_currencies').upsert({
+                        user_id: this.userId,
+                        currency_type: key,
+                        amount: finalVal
+                    }, { onConflict: 'user_id,currency_type' })
+                    .then(r => { if (r.error) console.warn('[CloudStore] ⚠️ 货币回写失败:', key, r.error.message); });
+                }
             }
         });
     }
@@ -457,7 +471,17 @@ class CloudStore {
         if (error || !data) return;
 
         if (data.completed_days) localStorage.setItem('jixingCompletedDays', JSON.stringify(data.completed_days));
-        if (data.currency !== null) localStorage.setItem('jixingCurrency', String(data.currency));
+        if (data.currency !== null) {
+            const cloudVal = parseFloat(data.currency) || 0;
+            const rawLocal = localStorage.getItem('jixingCurrency');
+            const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
+            const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
+            localStorage.setItem('jixingCurrency', String(finalVal));
+            if (finalVal !== cloudVal) {
+                this.sb.from('jixing_progress').upsert({ user_id: this.userId, currency: finalVal }, { onConflict: 'user_id' })
+                .then(r => { if (r.error) console.warn('[CloudStore] ⚠️ 纪行货币回写失败:', r.error.message); });
+            }
+        }
         if (data.initialized) localStorage.setItem('jixingInitialized', 'true');
         if (data.gift_claimed) localStorage.setItem('jixingGiftClaimed', 'true');
         if (data.bought_rewards) localStorage.setItem('jixingBoughtRewards', JSON.stringify(data.bought_rewards));
@@ -505,16 +529,23 @@ class CloudStore {
             }))));
         }
 
-        // 活跃任务
+        // 活跃任务（合并云端和本地）
         if (!atasksRes.error && atasksRes.data?.length > 0) {
+            const localTasks = JSON.parse(localStorage.getItem('activeTasks') || '{}');
             const taskObj = {};
             for (const t of atasksRes.data) {
-                taskObj[t.rule_id] = {
-                    status: t.status || 'pending',
-                    startTime: t.start_time,
-                    endTime: t.end_time,
-                    rewardText: t.reward_text
-                };
+                const localTask = localTasks[t.rule_id];
+                // 本地有该任务且状态不是pending → 本地优先；否则用云端
+                if (localTask && localTask.status && localTask.status !== 'pending') {
+                    taskObj[t.rule_id] = localTask;
+                } else {
+                    taskObj[t.rule_id] = {
+                        status: t.status || 'pending',
+                        startTime: t.start_time,
+                        endTime: t.end_time,
+                        rewardText: t.reward_text
+                    };
+                }
             }
             localStorage.setItem('activeTasks', JSON.stringify(taskObj));
         }
