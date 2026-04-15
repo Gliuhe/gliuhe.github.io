@@ -52,3 +52,32 @@ function syncAllBankToCloud(){
     for(var i=0;i<keys.length;i++)syncBankAccountToCloud(keys[i]);
     syncBankHistoryToCloud();
 }
+function syncJixingProgressToCloud(){
+    try{
+        var sb=_getSb();if(!sb)return;
+        var raw=localStorage.getItem('jixingCompletedDays');
+        if(!raw)return;
+        var days=typeof raw==='string'?JSON.parse(raw):raw;
+        if(!Array.isArray(days))return;
+        sb.from('jixing_progress').upsert({user_id:USER_ID,completed_days:days},{onConflict:'user_id'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 纪行进度同步失败:',r.error.message)});
+    }catch(e){}
+}
+function syncActiveTasksToCloud(){
+    try{
+        var sb=_getSb();if(!sb)return;
+        var raw=localStorage.getItem('activeTasks');
+        if(!raw)return;
+        var tasks=typeof raw==='string'?JSON.parse(raw):raw;
+        if(!tasks||typeof tasks!=='object')return;
+        sb.from('active_tasks').delete().eq('user_id',USER_ID).then(function(){
+            var rows=[];
+            for(var ruleId in tasks){
+                var td=tasks[ruleId];
+                if(td&&typeof td==='object'){
+                    rows.push({user_id:USER_ID,rule_id:parseInt(ruleId)||0,status:td.status||'pending',start_time:td.startTime||null,end_time:td.endTime||null,reward_text:td.rewardText||''});
+                }
+            }
+            if(rows.length>0)sb.from('active_tasks').insert(rows).then(function(r){if(r.error)console.warn('[sync] ⚠️ 任务同步失败:',r.error.message)});
+        });
+    }catch(e){}
+}
