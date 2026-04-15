@@ -676,6 +676,7 @@
     <!-- Supabase SDK + 云存储 -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-store.js"></script>
+    <script src="../cloud-sync-helper.js"></script>
 </head>
 <body>
     <div class="header">
@@ -1137,6 +1138,7 @@
             if (needsUpdate) {
                 console.log('更新任务状态到localStorage');
                 localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            if(typeof syncActiveTasksToCloud==='function')syncActiveTasksToCloud();
                 localStorage.setItem('lastResetDate', todayStr);
             } else {
                 console.log('无需更新任务状态');
@@ -1783,6 +1785,7 @@
                 completedTime: new Date().toISOString()
             };
             localStorage.setItem('activeTasks', JSON.stringify(activeTasks));
+            if(typeof syncActiveTasksToCloud==='function')syncActiveTasksToCloud();
 
             // 显示完成动画和奖励详情
             const rewards = [];
