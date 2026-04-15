@@ -915,6 +915,7 @@
         // 保存纪行进度
         function saveJixingProgress(data) {
             localStorage.setItem(JIXING_KEY, JSON.stringify(data));
+            if(typeof syncJixingProgressToCloud==='function')syncJixingProgressToCloud();
         }
 
         // 获取纪行券数量
