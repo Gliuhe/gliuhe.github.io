@@ -1074,12 +1074,6 @@
                     // 根据概率确定结果（排除已完成的）
                     let result = getRandomDiceResult();
                     
-                    // 首次抽取必定为5（校园时光）
-                    if (!todayData.completedTasks || todayData.completedTasks.length === 0) {
-                        result = 5;
-                        console.log('[write] 首次抽取，强制结果=5');
-                    }
-                    
                     if (result === null) {
                         showToast('所有任务都已抽取完毕！', 'warning');
                         diceEl.classList.remove('rolling');
