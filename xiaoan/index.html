@@ -2035,19 +2035,6 @@
             <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
         </div>
     </div>
-    
-    <!-- 计算骰子提醒横幅 -->
-    <div id="diceBanner" class="fine-banner" style="display: none; background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);">
-        <div class="fine-banner-content">
-            <div class="fine-banner-text">
-                <span id="bannerText">🎲 今日尚未掷骰！完成挑战赢高级抽奖券~</span>
-            </div>
-            <div class="fine-banner-actions">
-                <button class="fine-banner-btn primary" onclick="window.location.href='activity/jisuan.html'">一键直达</button>
-                <button class="fine-banner-btn secondary" onclick="document.getElementById('diceBanner').style.display='none'">关闭</button>
-            </div>
-        </div>
-    </div>
 
     <div class="container">
         <!-- 练字提醒横幅 -->
@@ -3354,31 +3341,6 @@
             showStatus('已隐藏罚款提醒，请记得及时缴纳罚款！', "warning");
         }
 
-        /** 检查今日是否已掷计算骰 */
-        function checkDiceStatus() {
-            const diceBanner = document.getElementById('diceBanner');
-            if (!diceBanner) return;
-
-            const today = new Date();
-            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-            const todayDataStr = localStorage.getItem('jisuan_today');
-            if (!todayDataStr) { diceBanner.style.display = 'block'; return; }
-
-            let todayData;
-            try {
-                todayData = JSON.parse(todayDataStr);
-            } catch (e) {
-                diceBanner.style.display = 'block';
-                return;
-            }
-
-            if (todayData.date !== dateStr) { diceBanner.style.display = 'block'; return; }
-            if (!todayData.rolled || !todayData.diceResult) { diceBanner.style.display = 'block'; return; }
-
-            diceBanner.style.display = 'none';
-        }
-
         /** 更新罚款摘要（弹窗内的汇总信息） */
         function renderFineSummary(fines) {
             const el = document.getElementById('fineSummaryText');
@@ -3784,9 +3746,6 @@
             
             // 更新罚款横幅显示
             updateFineBanner();
-            
-            // 检查今日是否已掷骰
-            checkDiceStatus();
             
             // 添加页面加载动画
             setTimeout(() => {
