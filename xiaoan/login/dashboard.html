@@ -461,7 +461,7 @@
         <div style="max-width:800px;">
             <h3 style="margin-bottom:16px;">🎰 纪行抽奖奖励配置</h3>
             <p style="font-size:13px;color:#64748b;margin-bottom:20px;">
-                配置各星级奖励内容。规则：三连6→五星(二次判定50%特级) | 点数和≥15→四星 | 否则三星。五星保底70次(第65抽起+5%/抽)，四星保底10次(第8抽起递增)。五星触发后二次随机：普通(货币)或特级(实物)，上次普通则本次必特。修改后点击「保存配置」生效。
+                配置各星级奖励内容。规则：三连6→五星(二次判定50%特级) | 点数和≥15→四星 | 否则三星。五星保底70次(第65抽起+5%/抽)，四星保底10次(第8抽起递增)。五星触发后二次随机：普通(货币)或特级(实物)，上次普通则本次必特。<strong>五星奖励分为A区（用户选择其中一个）和B区（全部获取）</strong>。修改后点击「保存配置」生效。
             </p>
 
             <!-- 三星奖励 -->
@@ -479,13 +479,27 @@
             <!-- 普通五星 -->
             <fieldset style="margin-bottom:18px;border:1px dashed #ecc94b;border-radius:10px;padding:14px 16px;">
                 <legend style="font-size:13px;font-weight:600;color:#ecc94b;">⭐⭐⭐ 普通五星（50%概率，上次特级则必普通）</legend>
-                <div id="lotteryStar5Config"></div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:6px;">🅰️ A区奖励（用户选择其中一个）</div>
+                    <div id="lotteryStar5ConfigA"></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">🅱️ B区奖励（全部获取）</div>
+                    <div id="lotteryStar5ConfigB"></div>
+                </div>
             </fieldset>
 
             <!-- 特级大奖 -->
             <fieldset style="margin-bottom:18px;border:1px dashed #48bb78;border-radius:10px;padding:14px 16px;">
                 <legend style="font-size:13px;font-weight:600;color:#48bb78;">👑 特级大奖（50%概率/上次普通则必中，含实物奖励）</legend>
-                <div id="lotteryItemConfig"></div>
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:6px;">🅰️ A区奖励（用户选择其中一个）</div>
+                    <div id="lotteryItemConfigA"></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">🅱️ B区奖励（全部获取）</div>
+                    <div id="lotteryItemConfigB"></div>
+                </div>
             </fieldset>
 
             <button class="btn-sm btn-primary" onclick="saveLotteryConfig()" style="padding:10px 28px; font-size:14px;">💾 保存配置</button>
@@ -713,7 +727,7 @@ function renderCheckinTable() {
     if (rulesList.length > 0) {
         taskHtml += '<tr style="background:rgba(66,153,225,0.08);"><td colspan="6" style="font-weight:bold;padding:10px 12px;color:#4299e1;">� 规则任务列表</td></tr>';
         taskHtml += rulesList.map(rule => {
-            const activeTask = tasksRows.find(t => String(t.rule_id) === String(rule.id));
+            const activeTask = tasksRows.find(t => t.rule_id == rule.id);
             const status = activeTask?.status || 'pending';
             const isCompleted = status === 'completed';
             const rewardText = [];
@@ -955,7 +969,7 @@ function showUserDetail(userId) {
         const completedCount = tasks.filter(t => t.status === 'completed').length;
         taskHtml += `<div class="detail-item"><div class="detail-label" style="color:#4299e1;">📋 规则任务</div><div class="detail-value">${completedCount}/${detailRules.length}</div></div>`;
         detailRules.forEach(rule => {
-            const activeTask = tasks.find(t => String(t.rule_id) === String(rule.id));
+            const activeTask = tasks.find(t => t.rule_id == rule.id);
             const isCompleted = activeTask?.status === 'completed';
             taskHtml += `<div class="detail-item" style="padding-left:16px;"><div class="detail-label">#${rule.id} ${rule.name || rule.title || '-'}</div>
                 <div class="detail-value"><span style="font-size:11px;color:${isCompleted?'#48bb78':'#ed8936'};">${isCompleted?'✅ 已完成':'⏳ 未完成'}</span></div></div>`;
@@ -1591,8 +1605,14 @@ function escapeHtml(s) {
 const LOTTERY_DEFAULT_CONFIG = {
     star3: [{ type: 'voucher', amount: 5, name: '兑换券' }, { type: 'lottery', amount: 1, name: '抽奖券' }],
     star4: [{ type: 'voucher', amount: 20, name: '兑换券' }, { type: 'premium', amount: 1, name: '高级抽奖券' }, { type: 'lottery', amount: 3, name: '抽奖券' }],
-    star5_normal: [{ type: 'voucher', amount: 80, name: '兑换券' }, { type: 'premium', amount: 3, name: '高级抽奖券' }, { type: 'lottery', amount: 10, name: '抽奖券' }, { type: 'jixing_muchun_currency', amount: 3, name: '纪行券' }],
-    star5_grand: [{ type: 'item', name: '特级实物大奖', amount: 1 }, { type: 'voucher', amount: 50, name: '兑换券' }, { type: 'premium', amount: 2, name: '高级抽奖券' }]
+    star5_normal: {
+        zoneA: [{ type: 'voucher', amount: 80, name: '兑换券' }, { type: 'premium', amount: 3, name: '高级抽奖券' }],
+        zoneB: [{ type: 'lottery', amount: 10, name: '抽奖券' }, { type: 'jixing_muchun_currency', amount: 3, name: '纪行券' }]
+    },
+    star5_grand: {
+        zoneA: [{ type: 'item', name: '特级实物大奖', amount: 1 }, { type: 'voucher', amount: 50, name: '兑换券' }],
+        zoneB: [{ type: 'premium', amount: 2, name: '高级抽奖券' }]
+    }
 };
 
 const CURRENCY_OPTIONS = ['voucher', 'lottery', 'premium', 'jixing_muchun_currency'];
@@ -1603,16 +1623,28 @@ let lotteryCurrentConfig = null;
 function renderLotteryConfigPanel() {
     const tierIdMap = {
         star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config',
-        star5_normal: 'lotteryStar5Config',
-        star5_grand: 'lotteryItemConfig'
+        star4: 'lotteryStar4Config'
     };
-    const tiers = ['star3','star4','star5_normal','star5_grand'];
+    const tierZoneMap = {
+        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
+        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
+    };
+    const tiers = ['star3','star4'];
     for (const tier of tiers) {
         const el = document.getElementById(tierIdMap[tier]);
         if (!el) continue;
         const rewards = (lotteryCurrentConfig && lotteryCurrentConfig[tier]) ? lotteryCurrentConfig[tier] : (LOTTERY_DEFAULT_CONFIG[tier] || []);
         el.innerHTML = buildRewardEditor(tier, rewards);
+    }
+    const star5Tiers = ['star5_normal', 'star5_grand'];
+    for (const tier of star5Tiers) {
+        const zones = tierZoneMap[tier];
+        if (!zones) continue;
+        const config = (lotteryCurrentConfig && lotteryCurrentConfig[tier]) ? lotteryCurrentConfig[tier] : (LOTTERY_DEFAULT_CONFIG[tier] || {});
+        const zoneAEl = document.getElementById(zones.A);
+        const zoneBEl = document.getElementById(zones.B);
+        if (zoneAEl) zoneAEl.innerHTML = buildRewardEditor(tier + '_zoneA', config.zoneA || []);
+        if (zoneBEl) zoneBEl.innerHTML = buildRewardEditor(tier + '_zoneB', config.zoneB || []);
     }
 }
 
@@ -1658,37 +1690,67 @@ function removeLotteryReward(tier, idx) {
 function syncTierFromDOM(tier) {
     const tierIdMap = {
         star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config',
-        star5_normal: 'lotteryStar5Config',
-        star5_grand: 'lotteryItemConfig'
+        star4: 'lotteryStar4Config'
     };
-    const container = document.getElementById(tierIdMap[tier]);
-    if (!container) return;
-    const rows = container.querySelectorAll('[data-idx]');
-    const rewards = [];
-    rows.forEach(row => {
-        const idx = row.dataset.idx;
-        const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
-        const type = typeEl ? typeEl.value : 'voucher';
-        if (type === 'item') {
-            const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
-            rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
-        } else {
-            const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
-            rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
-        }
-    });
-    if (rewards.length > 0) lotteryCurrentConfig[tier] = rewards;
+    const tierZoneMap = {
+        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
+        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
+    };
+    if (tier.endsWith('_zoneA') || tier.endsWith('_zoneB')) {
+        const baseTier = tier.replace(/_zone[AB]$/, '');
+        const zone = tier.endsWith('_zoneA') ? 'zoneA' : 'zoneB';
+        const zones = tierZoneMap[baseTier];
+        if (!zones) return;
+        const container = document.getElementById(zones[zone === 'zoneA' ? 'A' : 'B']);
+        if (!container) return;
+        const rows = container.querySelectorAll('[data-idx]');
+        const rewards = [];
+        rows.forEach(row => {
+            const idx = row.dataset.idx;
+            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
+            const type = typeEl ? typeEl.value : 'voucher';
+            if (type === 'item') {
+                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
+                rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+            } else {
+                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
+                rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
+            }
+        });
+        if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
+        if (!lotteryCurrentConfig[baseTier]) lotteryCurrentConfig[baseTier] = {};
+        lotteryCurrentConfig[baseTier][zone] = rewards;
+    } else {
+        const container = document.getElementById(tierIdMap[tier]);
+        if (!container) return;
+        const rows = container.querySelectorAll('[data-idx]');
+        const rewards = [];
+        rows.forEach(row => {
+            const idx = row.dataset.idx;
+            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
+            const type = typeEl ? typeEl.value : 'voucher';
+            if (type === 'item') {
+                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
+                rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+            } else {
+                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
+                rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
+            }
+        });
+        if (rewards.length > 0) lotteryCurrentConfig[tier] = rewards;
+    }
 }
 
 async function saveLotteryConfig() {
     const tierIdMap = {
         star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config',
-        star5_normal: 'lotteryStar5Config',
-        star5_grand: 'lotteryItemConfig'
+        star4: 'lotteryStar4Config'
     };
-    const tiers = ['star3','star4','star5_normal','star5_grand'];
+    const tierZoneMap = {
+        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
+        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
+    };
+    const tiers = ['star3','star4'];
     const config = {};
     for (const tier of tiers) {
         config[tier] = [];
@@ -1708,6 +1770,29 @@ async function saveLotteryConfig() {
             }
         });
     }
+    const star5Tiers = ['star5_normal', 'star5_grand'];
+    for (const tier of star5Tiers) {
+        const zones = tierZoneMap[tier];
+        if (!zones) continue;
+        config[tier] = { zoneA: [], zoneB: [] };
+        for (const [zoneKey, zoneId] of Object.entries(zones)) {
+            const container = document.getElementById(zoneId);
+            if (!container) continue;
+            const rows = container.querySelectorAll('[data-idx]');
+            rows.forEach(row => {
+                const idx = row.dataset.idx;
+                const typeEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_type${idx}`);
+                const type = typeEl ? typeEl.value : 'voucher';
+                if (type === 'item') {
+                    const nameEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_name${idx}`);
+                    config[tier][zoneKey === 'A' ? 'zoneA' : 'zoneB'].push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+                } else {
+                    const amtEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_amount${idx}`);
+                    config[tier][zoneKey === 'A' ? 'zoneA' : 'zoneB'].push({ type, amount: parseInt(amtEl?.value)||0 });
+                }
+            });
+        }
+    }
 
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
@@ -1720,6 +1805,8 @@ async function saveLotteryConfig() {
         }
 
         lotteryCurrentConfig = config;
+        // 同时更新 localStorage 和云端，防止被 cloud-store.js 同步机制覆盖
+        localStorage.setItem('lottery_reward_config', JSON.stringify(config));
         document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;">✅ 配置已保存！</span>';
         setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 3000);
     } catch(e) {
@@ -1730,9 +1817,15 @@ async function saveLotteryConfig() {
 async function loadLotteryConfig() {
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
-        const { data } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
-        if (data && data.lottery_reward_config) {
-            try { lotteryCurrentConfig = JSON.parse(data.lottery_reward_config); } catch(e) {}
+        // 优先读取 localStorage（本地最新），如果没有则从云端读取
+        const localConfig = localStorage.getItem('lottery_reward_config');
+        if (localConfig) {
+            try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
+        } else {
+            const { data } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
+            if (data && data.lottery_reward_config) {
+                try { lotteryCurrentConfig = JSON.parse(data.lottery_reward_config); } catch(e) {}
+            }
         }
     } catch(e) {}
     renderLotteryConfigPanel();
