@@ -199,15 +199,15 @@
         .pull-hint { margin-top: 8px; font-size: 0.78rem; color: rgba(255,255,255,0.4); }
 
         /* 弹窗 */
-        .modal-overlay { display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);justify-content:center;align-items:center; }
+        .modal-overlay { display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);justify-content:center;align-items:center; }
         .modal-overlay.show{display:flex}
         .modal-card {
-            background:rgba(20, 20, 35, 0.95);border-radius:20px;padding:36px 28px;max-width:400px;width:90%;text-align:center;
-            box-shadow:0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+            background:rgba(20, 20, 35, 0.98);border-radius:20px;padding:40px 32px;max-width:95vw;width:95vw;max-height:95vh;height:auto;text-align:center;
+            box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
             animation:mIn .4s cubic-bezier(.34,1.56,.64,1);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);overflow-y:auto;
         }
-        @keyframes mIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+        @keyframes mIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
 
         /* 详情模态框 */
         .detail-card {
@@ -278,6 +278,18 @@
         .history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px}
         .history-title{font-size:0.88rem;color:rgba(255,255,255,0.5)}
         .history-list{max-height:190px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.2) transparent}
+
+        /* 待使用兑换码横幅 */
+        .pending-codes-banner{display:none;margin:14px 0;padding:14px 18px;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.1));border:1.5px dashed rgba(16,185,129,0.4);border-radius:12px}
+        .pending-codes-banner.show{display:block;animation:slideDown 0.4s ease}
+        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .pcb-title{font-size:0.9rem;font-weight:700;color:#6ee7b7;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+        .pcb-list{display:flex;flex-direction:column;gap:8px}
+        .pcb-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(16,185,129,0.2)}
+        .pcb-code{font-family:'Courier New',monospace;font-size:1rem;font-weight:700;color:#fcd34d;letter-spacing:1px}
+        .pcb-name{font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px}
+        .pcb-copy-btn{padding:6px 14px;background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.4);border-radius:6px;color:#6ee7b7;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s}
+        .pcb-copy-btn:hover{background:rgba(16,185,129,0.4)}
         .h-item{display:flex;align-items:center;gap:10px;padding:7px 12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:10px;margin-bottom:4px;font-size:0.84rem;transition:border-color .2s}
         .h-item:hover{border-color:rgba(255,255,255,0.15)}
         .h-dice{font-size:1.05rem;min-width:34px;text-align:center;letter-spacing:1px}
@@ -334,12 +346,25 @@
             border-radius: 24px; display: flex; align-items: center; justify-content: center;
             font-size: 4rem; font-weight: bold; color: #1a1a2e;
             box-shadow: 0 12px 36px rgba(0,0,0,0.25), inset 0 -4px 14px rgba(0,0,0,0.08), inset 0 4px 14px rgba(255,255,255,0.8);
-            user-select: none; touch-action: none; position: relative;
-            transition: transform 0.15s ease; cursor: pointer;
+            user-select: none; touch-action: pan-y; position: relative;
+            transition: transform 0.15s ease; cursor: grab;
         }
+        .ten-dice.swiping { cursor: grabbing; transition: none; }
         .ten-dice.bouncing { animation: tenBounce 0.1s linear infinite; }
         @keyframes tenBounce {
             0%{transform:scale(1) rotate(0deg)} 25%{transform:scale(1.06) rotate(-2deg)} 50%{transform:scale(1) rotate(0deg)} 75%{transform:scale(1.04) rotate(2deg)} 100%{transform:scale(1) rotate(0deg)}
+        }
+
+        /* 十连抽跳动时的边框闪光 */
+        .ten-dice.bouncing-purple { animation: tenBounce 0.1s linear infinite, borderGlowPurple 1s ease-in-out infinite alternate; }
+        .ten-dice.bouncing-gold { animation: tenBounce 0.1s linear infinite, borderGlowGold 1s ease-in-out infinite alternate; }
+        @keyframes borderGlowPurple {
+            0%{box-shadow: 0 0 0 4px rgba(139,92,246,0.3), 0 12px 36px rgba(0,0,0,0.25)}
+            100%{box-shadow: 0 0 0 8px rgba(139,92,246,0.6), 0 0 30px rgba(139,92,246,0.4), 0 12px 36px rgba(0,0,0,0.25)}
+        }
+        @keyframes borderGlowGold {
+            0%{box-shadow: 0 0 0 4px rgba(245,158,11,0.3), 0 12px 36px rgba(0,0,0,0.25)}
+            100%{box-shadow: 0 0 0 8px rgba(245,158,11,0.6), 0 0 30px rgba(245,158,11,0.4), 0 12px 36px rgba(0,0,0,0.25)}
         }
 
         /* ❓变身闪光态 */
@@ -404,6 +429,28 @@
         .ts-rewards { font-size: 0.82rem; color: #6b7280; margin-top: 4px; line-height: 1.6; }
 
         .ten-progress-text { font-size: 0.82rem; color: rgba(0,0,0,0.4); margin-top: 8px; }
+
+        /* 弹窗中的十连抽结果网格 - 全屏大卡片 */
+        .modal-ten-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; margin: 16px 0; }
+        .modal-ten-cell {
+            background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px;
+            padding: 16px 8px; text-align: center; opacity: 0; transform: scale(0.5);
+            animation: cellPopIn 0.35s cubic-bezier(.34,1.56,.64,1) forwards;
+            display: flex; flex-direction: column; align-items: center; min-height: 140px;
+        }
+        .modal-ten-cell.star3 { border-color: rgba(148,163,184,0.4); background: rgba(148,163,184,0.1); }
+        .modal-ten-cell.star4 { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.1); }
+        .modal-ten-cell.star5n { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
+        .modal-ten-cell.star5g { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
+        .mtc-num { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
+        .mtc-icon { font-size: 2.2rem; line-height: 1; margin-bottom: 8px; }
+        .mtc-tier { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
+        .modal-ten-cell.star3 .mtc-tier { background: rgba(148,163,184,0.25); color: #94a3b8; }
+        .modal-ten-cell.star4 .mtc-tier { background: rgba(139,92,246,0.25); color: #c4b5fd; }
+        .modal-ten-cell.star5n .mtc-tier { background: rgba(245,158,11,0.25); color: #fcd34d; }
+        .modal-ten-cell.star5g .mtc-tier { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+        .mtc-rewards { font-size: 0.72rem; color: rgba(255,255,255,0.6); line-height: 1.5; text-align: center; }
+        .mtc-reward-item { display: block; margin: 2px 0; }
     </style>
 </head>
 <body>
@@ -413,7 +460,9 @@
 
     <div class="top-bar">
         <div class="pool-title">🎲 纪行之骰</div>
-        <div class="ticket-badge">🎫 <span class="val" id="ticketCount">0</span></div>
+        <div class="ticket-badge">🎫 <span class="val" id="ticketCount">0</span>
+            <button id="exchangeBtn" onclick="openExchangeModal()" title="用兑换券兑换纪行券" style="margin-left:8px;width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(252,211,77,0.4);background:rgba(252,211,77,0.12);color:#fcd34d;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .2s;">+</button>
+        </div>
     </div>
 
     <div class="gacha-stage">
@@ -514,6 +563,12 @@
                     <div class="pity-row"><span class="pity-label">⭐ 四星</span><div class="pity-track"><div class="pity-fill p4" id="pity4Fill" style="width:0%"></div><div class="pity-dot d4" id="pity4Dot" style="display:none"></div></div><span class="pity-count" id="pity4Count">0/10</span></div>
                     <div class="pity-row"><span class="pity-label">⭐ 五星</span><div class="pity-track"><div class="pity-fill p5" id="pity5Fill" style="width:0%"></div><div class="pity-dot d5" id="pity5Dot" style="display:none"></div></div><span class="pity-count" id="pity5Count">0/90</span></div>
                 </div>
+                <!-- 待使用兑换码横幅 -->
+                <div class="pending-codes-banner" id="pendingCodesBanner">
+                    <div class="pcb-title">🎁 待使用的兑换码</div>
+                    <div class="pcb-list" id="pendingCodesList"></div>
+                </div>
+
                 <div class="history-section">
                     <div class="history-header"><span class="history-title">📜 抽奖记录</span></div>
                     <div class="history-list" id="historyList"><div style="text-align:center;padding:18px;color:rgba(255,255,255,0.3);font-size:0.84rem;">暂无记录，开始你的第一次抽奖吧~</div></div>
@@ -572,7 +627,7 @@
     </div>
 
     <style>
-        .star5-choice-card{max-width:420px;width:92%;}
+        .star5-choice-card{max-width:420px;width:92%;position:relative;}
         .star5-option{
             display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.06);
             border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;
@@ -587,7 +642,32 @@
         .star5-option-name{font-size:1rem;font-weight:700;color:#f3f4f6;}
         .star5-option-desc{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px;}
         #star5ChoiceModal .modal-overlay{background:rgba(0,0,0,0.7)}
+
+        /* 兑换弹窗 */
+        .exchange-input{width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;background:rgba(255,255,255,0.06);color:#f3f4f6;font-size:1rem;text-align:center;font-weight:bold;outline:none;transition:border-color .2s}
+        .exchange-input:focus{border-color:#fcd34d;box-shadow:0 0 0 3px rgba(252,211,77,.15)}
+        .exchange-info{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;font-size:0.82rem;color:rgba(255,255,255,0.5)}
+        .exchange-info span:last-child{color:#fcd34d;font-weight:700}
+        .exchange-week-limit{margin-top:8px;padding:8px 12px;background:rgba(252,211,77,0.08);border:1px solid rgba(252,211,77,0.2);border-radius:8px;font-size:0.78rem;color:rgba(252,211,77,0.7)}
+        #exchangeModal .modal-overlay{background:rgba(0,0,0,0.7)}
     </style>
+
+    <!-- 兑换纪行券弹窗 -->
+    <div class="modal-overlay" id="exchangeModal" onclick="if(event.target===this)document.getElementById('exchangeModal').classList.remove('show')">
+        <div class="modal-card star5-choice-card" onclick="event.stopPropagation()">
+            <button onclick="document.getElementById('exchangeModal').classList.remove('show')" style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;line-height:1;">✕</button>
+            <div style="font-size:2rem;margin-bottom:6px;">💱</div>
+            <span class="result-tier-badge rtb-star5n">兑换纪行券</span>
+            <div class="result-tier-name" style="font-size:1.05rem;margin-bottom:16px;">用兑换券 1:1 兑换纪行券</div>
+            <div class="exchange-info">
+                <span>当前兑换券</span>
+                <span id="exVoucherCount">0</span>
+            </div>
+            <input type="number" class="exchange-input" id="exAmount" placeholder="输入兑换数量" min="1" max="2000">
+            <div class="exchange-week-limit">📅 本周已兑换：<strong id="exWeekUsed">0</strong> / 2000（上限）</div>
+            <button class="lc-save-btn" onclick="confirmExchange()" style="width:100%;margin-top:16px;padding:12px;">确认兑换</button>
+        </div>
+    </div>
 
     <div class="toast" id="toast"></div>
 
@@ -639,6 +719,7 @@
             try{REWARD_CONFIG=JSON.parse(localStorage.getItem('lottery_reward_config'))}catch(e){}
             document.getElementById('ticketCount').textContent=getTicketCount();
             updateStats();updatePityUI();renderHistory();
+            renderPendingCodes(); // 渲染待使用兑换码
             fetchRewardConfigFromCloud();
         }
         async function fetchRewardConfigFromCloud(){
@@ -793,15 +874,21 @@
 
             processResult(results);
 
-            // 切换到结果覆盖层
-            switchOverlay('done');
-            showFinalResult(results);
+            // 奖池图保持空闲状态，不显示结果
+            switchOverlay('idle');
 
             // 弹窗出现前禁用按钮，防止重复点击
             document.getElementById('rollBtn').disabled=true;
 
             // 延迟弹出详情弹窗
-            setTimeout(function(){showModal(results)},1400);
+            setTimeout(function(){
+                var tier=drawHistory.length>0?drawHistory[0].tier:'star3';
+                if(tier==='star5_grand'||tier==='star5_normal'){
+                    showModal(results,true);
+                }else{
+                    showModal(results,false);
+                }
+            },1400);
         }
 
         // ===== 星级判定 =====
@@ -853,7 +940,7 @@
             if(finalTier==='star5_normal'||finalTier==='star5_grand'){
                 var rewardConfig=(REWARD_CONFIG&&REWARD_CONFIG[finalTier])?REWARD_CONFIG[finalTier]:(DEFAULT_REWARDS[finalTier]||{zoneA:[],zoneB:[]});
                 pendingStar5Rewards={tier:finalTier,zoneA:rewardConfig.zoneA||[],zoneB:rewardConfig.zoneB||[]};
-                showStar5ChoiceModal();
+                setTimeout(function(){showStar5ChoiceModal()},1200);
             }else{
                 grantRewards(rewards);
             }
@@ -934,6 +1021,12 @@
             var chosenReward=pendingStar5Rewards.zoneA[idx];
             var allRewards=[chosenReward];
             if(pendingStar5Rewards.zoneB)allRewards=allRewards.concat(pendingStar5Rewards.zoneB);
+            
+            // 如果选择的是实物奖品且有兑换码，保存到待使用列表
+            if(chosenReward.type==='item'&&chosenReward.code){
+                savePendingCode(chosenReward.name,chosenReward.code);
+            }
+            
             grantRewards(allRewards);
 
             var lastRecord=drawHistory[0];
@@ -944,6 +1037,85 @@
 
             updateStats();renderHistory();
             showToast('✅ 奖励已领取！','ok');
+        }
+
+        // ===== 待使用兑换码管理 =====
+        function savePendingCode(name,code){
+            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
+            pendingCodes.push({name:name,code:code,time:new Date().toISOString()});
+            localStorage.setItem('pending_item_codes',JSON.stringify(pendingCodes));
+            renderPendingCodes();
+        }
+        function removePendingCode(code){
+            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
+            pendingCodes=pendingCodes.filter(function(c){return c.code!==code});
+            localStorage.setItem('pending_item_codes',JSON.stringify(pendingCodes));
+            renderPendingCodes();
+        }
+        function renderPendingCodes(){
+            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
+            var banner=document.getElementById('pendingCodesBanner');
+            var list=document.getElementById('pendingCodesList');
+            if(pendingCodes.length===0){
+                banner.classList.remove('show');
+                return;
+            }
+            banner.classList.add('show');
+            list.innerHTML=pendingCodes.map(function(c){
+                return '<div class="pcb-item">'+
+                    '<div><div class="pcb-code">'+c.code+'</div><div class="pcb-name">'+c.name+'</div></div>'+
+                    '<button class="pcb-copy-btn" onclick="copyPendingCode(\''+c.code+'\')">复制</button>'+
+                    '</div>';
+            }).join('');
+        }
+        function copyPendingCode(code){
+            if(navigator.clipboard){
+                navigator.clipboard.writeText(code).then(function(){showToast('✅ 兑换码已复制！','ok');});
+            }else{
+                var ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('✅ 兑换码已复制！','ok');
+            }
+        }
+
+        // ===== 兑换纪行券 =====
+        var EXCHANGE_WEEK_LIMIT=2000;
+        function getWeekKey(){
+            var now=new Date();
+            var d=new Date(now);
+            d.setHours(0,0,0,0);
+            var day=d.getDay()||7;
+            d.setDate(d.getDate()-day+1);
+            return 'ex_week_'+d.toISOString().split('T')[0];
+        }
+        function getWeekExchanged(){
+            return parseInt(localStorage.getItem(getWeekKey())||'0');
+        }
+        function openExchangeModal(){
+            document.getElementById('exVoucherCount').textContent=parseInt(localStorage.getItem('voucher')||'0');
+            document.getElementById('exWeekUsed').textContent=getWeekExchanged();
+            document.getElementById('exAmount').value='';
+            document.getElementById('exchangeModal').classList.add('show');
+        }
+        function confirmExchange(){
+            var amt=parseInt(document.getElementById('exAmount').value)||0;
+            if(amt<=0){showToast('❌ 请输入有效数量','err');return}
+            if(amt>EXCHANGE_WEEK_LIMIT){showToast('❌ 单次最多兑换 '+EXCHANGE_WEEK_LIMIT+' 张','err');return}
+            var voucherBal=parseInt(localStorage.getItem('voucher')||'0');
+            if(voucherBal<amt){showToast('❌ 兑换券不足（需要'+amt+'，当前'+voucherBal+'）','err');return}
+            var weekUsed=getWeekExchanged();
+            if(weekUsed+amt>EXCHANGE_WEEK_LIMIT){showToast('❌ 超过本周上限！剩余可兑换 '+(EXCHANGE_WEEK_LIMIT-weekUsed)+' 张','err');return}
+
+            localStorage.setItem('voucher',String(voucherBal-amt));
+            syncCurrencyToCloud('voucher');
+
+            var jixingBal=parseInt(localStorage.getItem('jixing_muchun_currency')||'0');
+            localStorage.setItem('jixing_muchun_currency',String(jixingBal+amt));
+            syncCurrencyToCloud('jixing_muchun_currency');
+
+            localStorage.setItem(getWeekKey(),String(weekUsed+amt));
+
+            document.getElementById('exchangeModal').classList.remove('show');
+            updateTicketDisplay();
+            showToast('✅ 成功兑换 '+amt+' 张纪行券！','ok');
         }
 
         // ===== 进度指示器 =====
@@ -1007,7 +1179,8 @@
         }
 
         // ===== 弹窗 =====
-        function showModal(dice){
+        // isStar5Pending: 如果是五星，关闭弹窗后需要弹出选择奖励
+        function showModal(dice,isStar5Pending){
             var tier; // 从最近的 drawHistory 获取
             if(drawHistory.length>0)tier=drawHistory[0].tier;else tier='star3';
             var info=TIER_INFO[tier],rewards=drawHistory.length>0?drawHistory[0].rewards:getRewards(tier);
@@ -1019,11 +1192,34 @@
             document.getElementById('mRewards').innerHTML=rt;
             document.getElementById('mDice').textContent=dice.map(function(d){return DICE_EMOJIS[d]}).join(' ')+' = '+dice.reduce(function(a,b){return a+b},0);
             if(tier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
+            // 标记是否需要后续弹出五星选择
+            document.getElementById('resultModal').dataset.star5Pending=isStar5Pending?'1':'0';
             document.getElementById('resultModal').classList.add('show');
         }
         function closeResultModal(){
-            document.getElementById('resultModal').classList.remove('show');
+            var modal=document.getElementById('resultModal');
+            var star5Pending=modal.dataset.star5Pending==='1';
+            var tenResultsData=modal.dataset.tenResults;
+            modal.classList.remove('show');
             if(tenState==='done'){closeTenPull();return}
+            // 如果是五星，关闭结果弹窗后弹出选择奖励弹窗
+            if(star5Pending){
+                // 十连抽：从存储的数据中恢复 pendingStar5Rewards
+                if(tenResultsData){
+                    try{
+                        var results=JSON.parse(tenResultsData);
+                        for(var ti=0;ti<results.length;ti++){
+                            if(results[ti].tier==='star5_grand'||results[ti].tier==='star5_normal'){
+                                var cfg=(REWARD_CONFIG&&REWARD_CONFIG[results[ti].tier])?REWARD_CONFIG[results[ti].tier]:(DEFAULT_REWARDS[results[ti].tier]||{zoneA:[],zoneB:[]});
+                                pendingStar5Rewards={tier:results[ti].tier,zoneA:cfg.zoneA||[],zoneB:cfg.zoneB||[]};
+                                break;
+                            }
+                        }
+                    }catch(e){}
+                }
+                setTimeout(function(){showStar5ChoiceModal()},300);
+                return;
+            }
             hideResult();
             switchOverlay('idle');
             rollState='idle';
@@ -1095,6 +1291,80 @@
         var tenState='idle', tenResults=[], hasAnyStar5=false;
         var tenSwipeStartY=0, tenSwipeEl=null, tenIsSwiping=false;
 
+        // 计算十连抽单次结果（不扣券，不发放奖励，不写入历史）
+        // tenStateObj: 十连抽内部状态，包含临时保底计数和概率调整
+        function calcTenResult(results, tenStateObj){
+            var sum=results.reduce(function(a,b){return a+b},0);
+            var isPerfect18=(sum===18);
+
+            var tier='star3';
+            var triggerSource='';
+
+            // 基础骰子判定（应用概率调整）
+            var star4ProbAdjust=tenStateObj.star4ProbAdjust||0; // 四星概率调整（负值降低）
+            var star5ProbAdjust=tenStateObj.star5ProbAdjust||0; // 五星概率调整（负值降低）
+            
+            if(isPerfect18){tier='star5';triggerSource='sum18';}
+            else if(sum>=16){
+                // 四星基础概率约5-7%，应用递减调整
+                var effectiveStar4Prob=0.06+star4ProbAdjust;
+                if(Math.random()<effectiveStar4Prob/(1+effectiveStar4Prob)){tier='star4';triggerSource='sum16';}
+            }
+
+            // 保底判定（覆盖基础判定）
+            if(tier!=='star5'){
+                var pity5=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar5Draw;
+                if(pity5>=90){tier='star5';triggerSource='pity90';}
+            }
+            if(tier!=='star5'&&tier!=='star4'){
+                var pity4=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar4Draw;
+                if(pity4>=10){tier='star4';triggerSource='pity10';}
+            }
+
+            // 五星子类型判定（应用概率调整）
+            var finalTier=tier,star5SubType=null;
+            if(tier==='star5'){
+                var effectiveStar5GrandProb=0.5+star5ProbAdjust; // 基础50%，应用递减
+                if(triggerSource==='pity90'){
+                    star5SubType=Math.random()<effectiveStar5GrandProb?'grand':'normal';
+                }else{
+                    if(tenStateObj.tempLastStar5Type==='normal'){
+                        star5SubType='grand';
+                    }else{
+                        star5SubType=Math.random()<effectiveStar5GrandProb?'grand':'normal';
+                    }
+                }
+                finalTier=(star5SubType==='grand')?'star5_grand':'star5_normal';
+            }
+
+            // 获取奖励（三星/四星随机选一项，五星不发放）
+            var rewards=[];
+            if(finalTier!=='star5_normal'&&finalTier!=='star5_grand'){
+                rewards=getRewards(finalTier);
+            }
+
+            var triggerReasonMap={sum18:'点数和=18',sum16:'点数和≥16',pity90:'五星保底(90抽)',pity10:'四星保底(10抽)'};
+            var triggerReason=triggerReasonMap[triggerSource]||'默认';
+            var subReason='';
+            if(star5SubType){
+                if(triggerSource==='pity90'){
+                    subReason=star5SubType==='grand'?'50%(特级)':'50%(普通)';
+                }else{
+                    subReason=star5SubType==='grand'?(tenStateObj.tempLastStar5Type==='normal'?'补偿必中':'50%(特级)'):'普通';
+                }
+            }
+
+            return {
+                dice:results,
+                sum:sum,
+                tier:finalTier,
+                baseTier:tier,
+                star5SubType:star5SubType,
+                trigger:triggerReason+(subReason?(' · '+subReason):''),
+                rewards:rewards.map(function(r){return Object.assign({},r)})
+            };
+        }
+
         function startTenPull(){
             if(tenState!=='idle'||rollState!=='idle')return;
             if(!useTicket(1600)){showToast('纪行券不足！需要 1600 张','err');return}
@@ -1111,33 +1381,86 @@
             tp.style.display='';
             resetTenPullUI();
 
-            // 先预计算10次结果
+            // 先预计算10次结果（不扣券，不发放奖励，只计算结果）
+            // 十连抽内部状态：临时保底计数 + 概率调整
+            var tenStateObj={
+                tempTotalDraws: totalDraws,
+                tempLastStar5Draw: lastStar5Draw,
+                tempLastStar4Draw: lastStar4Draw,
+                tempLastStar5Type: lastStar5Type,
+                star4ProbAdjust: 0,      // 四星概率调整
+                star4ConsecutiveCount: 0, // 连续四星计数
+                star5ProbAdjust: 0,       // 五星概率调整
+                lastStar5Distance: 999    // 距离上次五星的抽数
+            };
+            
             for(var i=0;i<10;i++){
                 var d1=rollByProb(DICE_PROBS),d2=rollByProb(DICE_PROBS_2),d3=rollByProb(DICE_PROBS_3);
                 var res=[d1,d2,d3];
-                processResult(res);
-                tenResults.push({dice:res,sum:d1+d2+d3,tier:drawHistory[0].tier,baseTier:drawHistory[0].baseTier||drawHistory[0].tier,
-                    star5SubType:drawHistory[0].star5SubType,trigger:drawHistory[0].trigger,rewards:(drawHistory[0].rewards||[]).map(function(r){return Object.assign({},r)})});
-                if(drawHistory[0].tier==='star5_grand'||drawHistory[0].tier==='star5_normal')hasAnyStar5=true;
+                var resultInfo=calcTenResult(res, tenStateObj);
+                tenResults.push(resultInfo);
+                if(resultInfo.tier==='star5_grand'||resultInfo.tier==='star5_normal')hasAnyStar5=true;
+                
+                // 更新十连抽内部状态
+                tenStateObj.tempTotalDraws++;
+                if(resultInfo.tier==='star5_grand'||resultInfo.tier==='star5_normal'){
+                    tenStateObj.tempLastStar5Draw=tenStateObj.tempTotalDraws;
+                    tenStateObj.tempLastStar5Type=(resultInfo.tier==='star5_grand')?'grand':'normal';
+                    tenStateObj.lastStar5Distance=0;
+                    // 五星后重置四星连续计数
+                    tenStateObj.star4ConsecutiveCount=0;
+                    tenStateObj.star4ProbAdjust=0;
+                }else if(resultInfo.tier==='star4'){
+                    tenStateObj.tempLastStar4Draw=tenStateObj.tempTotalDraws;
+                    tenStateObj.star4ConsecutiveCount++;
+                    tenStateObj.lastStar5Distance++;
+                    // 连续四星概率递减：第2抽-3%，第3抽恢复
+                    if(tenStateObj.star4ConsecutiveCount===2){
+                        tenStateObj.star4ProbAdjust=-0.03;
+                    }else if(tenStateObj.star4ConsecutiveCount>=3){
+                        tenStateObj.star4ConsecutiveCount=0;
+                        tenStateObj.star4ProbAdjust=0;
+                    }
+                }else{
+                    tenStateObj.star4ConsecutiveCount=0;
+                    tenStateObj.star4ProbAdjust=0;
+                    tenStateObj.lastStar5Distance++;
+                }
+                
+                // 五星后概率递减规则：1-4抽-0.7%，5-9抽-0.5%，10-15抽-0.2%，16+恢复
+                if(tenStateObj.lastStar5Distance>=1&&tenStateObj.lastStar5Distance<=4){
+                    tenStateObj.star5ProbAdjust=-0.007; // 1-4抽内-0.7%
+                }else if(tenStateObj.lastStar5Distance>=5&&tenStateObj.lastStar5Distance<=9){
+                    tenStateObj.star5ProbAdjust=-0.005; // 5-9抽内-0.5%
+                }else if(tenStateObj.lastStar5Distance>=10&&tenStateObj.lastStar5Distance<=15){
+                    tenStateObj.star5ProbAdjust=-0.002; // 10-15抽内-0.2%
+                }else{
+                    tenStateObj.star5ProbAdjust=0; // 16+恢复
+                }
             }
-            drawHistory.splice(0,10);
 
             // 开始跳动动画（1~6快速切换）
             var dice=document.getElementById('tenDice');
-            dice.className='ten-dice bouncing';
+            // 根据最高星级决定闪光颜色：五星金光，四星紫光
+            var bestTier='star3';
+            for(var ti=0;ti<tenResults.length;ti++){
+                if(tenResults[ti].tier==='star5_grand'||tenResults[ti].tier==='star5_normal'){bestTier='star5';break}
+                else if(tenResults[ti].tier==='star4'&&bestTier!=='star5')bestTier='star4';
+            }
+            dice.className='ten-dice bouncing'+(bestTier==='star5'?'-gold':bestTier==='star4'?'-purple':'');
             document.getElementById('tenProgressText').textContent='命运骰子正在凝聚...';
 
             var bounceCount=0;
             var bounceIv=setInterval(function(){
                 dice.textContent=DICE_EMOJIS[Math.floor(Math.random()*6)+1];
-                if(++bounceCount>=20){clearInterval(bounceIv)}
-            },90);
+                if(++bounceCount>=30){clearInterval(bounceIv)}
+            },100);
 
-            // 跳动约2秒后进入reveal态
+            // 跳动约3秒后进入reveal态
             setTimeout(function(){
                 clearInterval(bounceIv);
                 enterTenReveal();
-            },2000);
+            },3000);
         }
 
         function enterTenReveal(){
@@ -1153,9 +1476,9 @@
             }
 
             document.getElementById('tenProgressText').textContent=hasAnyStar5?'✨ 检测到五星命格！':'✨ 命运已锁定';
-            document.getElementById('swipeHint').classList.add('visible');
 
-            setupTenSwipe(dice);
+            // 电脑端自动炸开，等待1秒后炸开
+            setTimeout(function(){triggerTenExplode()},1000);
         }
 
         function setupTenSwipe(el){
@@ -1180,21 +1503,30 @@
         }
 
         function onTenMouseDown(e){
+            if(tenState!=='revealed')return;
             e.preventDefault();
             tenSwipeStartY=e.clientY;
             tenIsSwiping=true;
             tenSwipeEl.style.cursor='grabbing';
+            tenSwipeEl.classList.add('swiping');
             window.addEventListener('mousemove',onTenMouseMove);
             window.addEventListener('mouseup',onTenMouseUp);
         }
         function onTenMouseMove(e){
-            if(!tenIsSwiping)return;
+            if(!tenIsSwiping||tenState!=='revealed')return;
             var diff=tenSwipeStartY-e.clientY;
-            if(diff>60){tenIsSwiping=false;triggerTenExplode()}
+            if(diff>60){
+                tenIsSwiping=false;
+                triggerTenExplode();
+            }
         }
         function onTenMouseUp(e){
+            if(tenState!=='revealed')return;
             tenIsSwiping=false;
-            if(tenSwipeEl)tenSwipeEl.style.cursor='';
+            if(tenSwipeEl){
+                tenSwipeEl.style.cursor='';
+                tenSwipeEl.classList.remove('swiping');
+            }
             window.removeEventListener('mousemove',onTenMouseMove);
             window.removeEventListener('mouseup',onTenMouseUp);
         }
@@ -1202,9 +1534,23 @@
             if(tenState==='revealed')triggerTenExplode();
         }
 
-        function onTenTouchStart(e){tenSwipeStartY=e.touches[0].clientY}
-        function onTenTouchMove(e){var diff=tenSwipeStartY-e.touches[0].clientY;if(diff>60){e.preventDefault();triggerTenExplode()}}
-        function onTenTouchEnd(e){}
+        function onTenTouchStart(e){
+            if(tenState!=='revealed')return;
+            tenSwipeStartY=e.touches[0].clientY;
+        }
+        function onTenTouchMove(e){
+            if(tenState!=='revealed')return;
+            var diff=tenSwipeStartY-e.touches[0].clientY;
+            if(diff>60){
+                e.preventDefault();
+                e.stopPropagation();
+                triggerTenExplode();
+            }
+        }
+        function onTenTouchEnd(e){
+            if(tenState!=='revealed')return;
+            e.preventDefault();
+        }
 
         function triggerTenExplode(){
             if(tenState!=='revealed')return;
@@ -1247,6 +1593,37 @@
             document.getElementById('swipeHint').style.display='none';
             document.getElementById('explosionParticles').style.display='none';
             document.getElementById('tenProgressText').textContent='十连抽结果';
+
+            // 发放三星/四星奖励（五星不发放，后续弹窗选择）
+            var star5Count=0;
+            for(var i=0;i<tenResults.length;i++){
+                var r=tenResults[i];
+                if(r.tier==='star5_grand'||r.tier==='star5_normal'){
+                    star5Count++;
+                }else{
+                    // 三星/四星直接发放奖励
+                    grantRewards(r.rewards);
+                }
+                // 更新保底计数
+                totalDraws++;
+                if(r.tier==='star5_grand'||r.tier==='star5_normal'){
+                    lastStar5Draw=totalDraws;
+                    lastStar5Type=(r.tier==='star5_grand')?'grand':'normal';
+                }else if(r.tier==='star4'){
+                    lastStar4Draw=totalDraws;
+                }
+                // 写入历史
+                drawHistory.unshift({
+                    time:new Date().toISOString(),
+                    dice:r.dice,
+                    sum:r.sum,
+                    tier:r.tier,
+                    baseTier:r.baseTier,
+                    star5SubType:r.star5SubType,
+                    trigger:r.trigger,
+                    rewards:r.rewards.map(function(rw){return Object.assign({},rw)})
+                });
+            }
 
             var grid=document.getElementById('tenResultsGrid');
             grid.innerHTML='';
@@ -1298,15 +1675,14 @@
             for(var mk in rewardMap)rTexts.push(mk+' +'+rewardMap[mk]);
             document.getElementById('tsRewards').innerHTML=rTexts.join('<br>')||'无额外奖励';
 
-            summary.classList.add('visible');
-
-            // 弹窗展示
+            // 弹窗展示十连抽每抽详情
             setTimeout(function(){
-                showModalForTenPull(tenResults);
+                showTenDetailModal(tenResults,hasAnyStar5);
             },800);
         }
 
-        function showModalForTenPull(results){
+        // 十连抽详情弹窗：横向平铺卡片网格（与奖池图一致）
+        function showTenDetailModal(results,hasStar5){
             var bestTier='star3';
             for(var i=0;i<results.length;i++){if(results[i].tier==='star5_grand')bestTier='star5_grand';else if(results[i].tier==='star5_normal'&&bestTier!=='star5_grand')bestTier='star5_normal';else if(results[i].tier==='star4'&&bestTier==='star3')bestTier='star4'}
             var info=TIER_INFO[bestTier],modal=document.getElementById('resultModal');
@@ -1315,20 +1691,61 @@
             document.getElementById('mBadge').textContent='十连抽 · '+info.name.toUpperCase();
             document.getElementById('mName').textContent='十连抽结果';
 
-            var allRewards=[],rewardMap={};
-            for(var i=0;i<results.length;i++)if(results[i].rewards)for(var j=0;j<results[i].rewards.length;j++)allRewards.push(results[i].rewards[j]);
-            for(var k=0;k<allRewards.length;k++){
-                var rw=allRewards[k];var key=rw.type==='item'?'🎁 '+rw.name:(CURRENCY_NAMES[rw.type]||rw.type);
-                rewardMap[key]=(rewardMap[key]||0)+(rw.amount||0);
+            // 横向平铺大卡片网格 - 显示每抽详细奖励
+            var tierMap={star3:'star3',star4:'star4',star5_normal:'star5n',star5_grand:'star5g'};
+            var gridHtml='<div class="modal-ten-grid">';
+            for(var idx=0;idx<results.length;idx++){
+                var r=results[idx];
+                var rInfo=TIER_INFO[r.tier]||TIER_INFO.star3;
+                // 显示实际获得的奖励（r.rewards 是实际随机到的奖励）
+                var rewardsHtml='';
+                if(r.tier==='star5_normal'||r.tier==='star5_grand'){
+                    // 五星显示 A区选项 + B区全部（从配置读取）
+                    var rewardCfg=(REWARD_CONFIG&&REWARD_CONFIG[r.tier])?REWARD_CONFIG[r.tier]:(DEFAULT_REWARDS[r.tier]||{zoneA:[],zoneB:[]});
+                    if(rewardCfg.zoneA&&rewardCfg.zoneA.length>0){
+                        rewardsHtml+='<span class="mtc-reward-item">🅰️ '+(rewardCfg.zoneA.length>1?'选1项':'')+'</span>';
+                    }
+                    if(rewardCfg.zoneB&&rewardCfg.zoneB.length>0){
+                        for(var bi=0;bi<rewardCfg.zoneB.length;bi++){
+                            var br=rewardCfg.zoneB[bi];
+                            var brName=br.type==='item'?(br.name||'实物'):(CURRENCY_NAMES[br.type]||br.type||'未知');
+                            var brAmt=br.amount||0;
+                            rewardsHtml+='<span class="mtc-reward-item">'+brName+' +'+brAmt+'</span>';
+                        }
+                    }
+                }else{
+                    // 三星/四星显示实际随机到的奖励（r.rewards）
+                    if(r.rewards&&r.rewards.length>0){
+                        for(var ri=0;ri<r.rewards.length;ri++){
+                            var rw=r.rewards[ri];
+                            var rwName=rw.type==='item'?(rw.name||'实物'):(CURRENCY_NAMES[rw.type]||rw.type||'未知');
+                            var rwAmt=rw.amount||0;
+                            rewardsHtml+='<span class="mtc-reward-item">'+rwName+' +'+rwAmt+'</span>';
+                        }
+                    }else{
+                        rewardsHtml+='<span class="mtc-reward-item">-</span>';
+                    }
+                }
+                gridHtml+='<div class="modal-ten-cell '+tierMap[r.tier]+'" style="animation-delay:'+(idx*60)+'ms">'+
+                    '<div class="mtc-num">#'+(idx+1)+'</div>'+
+                    '<div class="mtc-icon">'+rInfo.icon+'</div>'+
+                    '<span class="mtc-tier">'+rInfo.name+'</span>'+
+                    '<div class="mtc-rewards">'+rewardsHtml+'</div>'+
+                    '</div>';
             }
-            var rt=[];for(var mk in rewardMap)rt.push(mk+' +'+rewardMap[mk]);
-            document.getElementById('mRewards').innerHTML=rt.join('<br>')||'无额外奖励';
+            gridHtml+='</div>';
 
-            var diceStr='';
-            for(var d=0;d<results.length;d++)diceStr+=results[d].dice.map(function(x){return DICE_EMOJIS[x]}).join('')+' ';
-            document.getElementById('mDice').textContent=diceStr.trim()+'（共10次）';
+            // 如果是五星，显示提示
+            if(hasStar5){
+                gridHtml+='<div style="margin-top:12px;padding:10px 14px;background:rgba(252,211,77,0.1);border:1px dashed rgba(252,211,77,0.3);border-radius:8px;font-size:0.82rem;color:#fcd34d;text-align:center;">🎁 关闭弹窗后选择五星奖励</div>';
+            }
+
+            document.getElementById('mRewards').innerHTML=gridHtml;
+            document.getElementById('mDice').textContent='共10次抽奖';
 
             if(bestTier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
+            modal.dataset.star5Pending=hasStar5?'1':'0';
+            modal.dataset.tenResults=JSON.stringify(results);
             modal.classList.add('show');
         }
 
