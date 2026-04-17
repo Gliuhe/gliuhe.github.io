@@ -3,1829 +3,1596 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>纪行之骰：幸运大抽奖 - 超级兑换券乐园</title>
+    <title>沐春望景 - 纪行活动</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+        }
+
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #66BB6A;
+            --accent-color: #81C784;
+            --spring-green: #a8e6cf;
+        }
+
         body {
-            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
-            color: #333;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
             position: relative;
             overflow-x: hidden;
         }
 
-        body::before {
-            content: '';
+        /* 背景大图 */
+        .bg-image {
             position: fixed;
-            inset: 0;
-            background:
-                radial-gradient(ellipse at 20% 20%, rgba(214, 158, 46, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(124, 58, 237, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/jixing.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: scroll;
+            z-index: -2;
         }
 
-        .bg-blur-layer {
+        /* 渐变遮罩层 */
+        .bg-overlay {
             position: fixed;
-            inset: 0;
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(76, 175, 80, 0.2) 0%,
+                rgba(102, 187, 106, 0.3) 40%,
+                rgba(0, 0, 0, 0.6) 100%
+            );
+            z-index: -1;
         }
 
+        /* 返回按钮 */
         .back-btn {
-            position: fixed; top: 16px; left: 16px; z-index: 100;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
         }
-        .back-btn button {
-            padding: 7px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.08); color: #e5e7eb; cursor: pointer; font-size: 0.88rem;
-            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.95);
+            color: #4CAF50;
             backdrop-filter: blur(10px);
         }
-        .back-btn button:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
 
-        /* ===== 顶部栏 ===== */
-        .top-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 24px 8px; max-width: 800px; margin: 0 auto;
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-reward {
+            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+        }
+
+        .btn-reward:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 187, 106, 0.5);
+        }
+
+        .btn-reward:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 主容器 */
+        .container {
             position: relative;
-            z-index: 10;
+            z-index: 2;
+            padding: 100px 20px 40px;
+            max-width: 900px;
+            margin: 0 auto;
         }
-        .pool-title { font-size: 1.3rem; font-weight: 700; color: #f3f4f6; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-        .ticket-badge {
-            display: flex; align-items: center; gap: 6px;
-            background: linear-gradient(135deg, rgba(254, 243, 199, 0.15), rgba(253, 230, 138, 0.1));
-            border: 1px solid rgba(214, 158, 46, 0.4); border-radius: 20px; padding: 5px 16px; font-size: 0.88rem;
+
+        /* 活动标题区 */
+        .event-header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 30px 20px;
+        }
+
+        .event-icon {
+            font-size: 5rem;
+            margin-bottom: 15px;
+        }
+
+        .event-title {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 
+                -2px -2px 0 rgba(0,0,0,0.5),
+                2px -2px 0 rgba(0,0,0,0.5),
+                -2px 2px 0 rgba(0,0,0,0.5),
+                2px 2px 0 rgba(0,0,0,0.5),
+                0 5px 20px rgba(0, 0, 0, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .event-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .event-badge {
+            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 1rem;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        /* 进度区域 */
+        .progress-section {
+            background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-        }
-        .ticket-badge .val { color: #fcd34d; font-weight: bold; font-size: 1.1rem; }
-
-        /* ===== 主舞台 ===== */
-        .gacha-stage { max-width: 820px; width: 100%; margin: auto; padding: 10px 14px 30px; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: stretch; position: relative; z-index: 10; }
-
-        /* 奖池大框（画框效果）*/
-        .pool-frame {
-            position: relative; width: 100%; aspect-ratio: 4/3; max-height: 615px; border-radius: 16px; overflow: hidden;
-            background: #0f0f1a;
-            margin: -10px -10px 20px -10px;
-            box-shadow:
-                0 0 0 1px rgba(255, 255, 255, 0.1),
-                0 0 0 4px rgba(214, 158, 46, 0.15),
-                0 0 30px rgba(0, 0, 0, 0.5),
-                inset 0 0 80px rgba(0, 0, 0, 0.3);
-        }
-        .pool-frame::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 2px;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(214,158,46,0.3) 50%, rgba(255,255,255,0.1) 100%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            z-index: 5;
-        }
-        .pool-bg-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: all 0.4s ease; }
-        .pool-overlay {
-            position: absolute; inset: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; pointer-events: none; transition: all 0.4s ease;
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
 
-        /* ===== 空闲状态（默认）===== */
-        .overlay-idle { background: rgba(15, 15, 26, 0.5); backdrop-filter: blur(4px); }
-        .idle-text { font-size: 1.15rem; color: rgba(255,255,255,0.3); letter-spacing: 3px; }
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-        /* ===== 掷骰状态 ===== */
-        .overlay-rolling { background: rgba(15, 15, 26, 0.4); backdrop-filter: blur(4px); padding: 32px 40px; border-radius: 20px; margin: 20px; }
-        .dice-row { display: flex; gap: 22px; justify-content: center; align-items: center; margin-bottom: 18px; }
-        .dice-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-        .dice-label { font-size: 0.72rem; opacity: 0.45; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.5); }
-        .gacha-dice {
-            width: 90px; height: 90px; background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            font-size: 2.8rem; font-weight: bold; color: #1a1a2e;
-            box-shadow: 0 8px 28px rgba(0,0,0,0.4), inset 0 -4px 12px rgba(0,0,0,0.1), inset 0 4px 12px rgba(255,255,255,0.8);
-            cursor: default; user-select: none; position: relative;
-            transition: transform 0.2s ease;
+        .progress-title {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        .gacha-dice.rolling { animation: gachaRoll 1.2s cubic-bezier(.25,.46,.45,.94); }
-        @keyframes gachaRoll {
-            0% { transform: rotateX(0) rotateY(0) scale(1); }
-            20% { transform: rotateX(144deg) rotateY(72deg) scale(0.92); }
-            40% { transform: rotateX(288deg) rotateY(144deg) scale(1.05); }
-            60% { transform: rotateX(432deg) rotateY(216deg) scale(0.95); }
-            80% { transform: rotateX(576deg) rotateY(288deg) scale(1.02); }
-            100% { transform: rotateX(720deg) rotateY(360deg) scale(1); }
+
+        .progress-count {
+            color: #81C784;
+            font-weight: bold;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(129, 199, 132, 0.5);
         }
-        .gacha-dice.dice-done { box-shadow: 0 4px 16px rgba(236,201,75,0.4), inset 0 -3px 10px rgba(0,0,0,0.1); }
-        .gacha-dice.dice-result-6 {
-            background: linear-gradient(145deg, #fef3c7, #fcd34d);
-            animation: diceGoldPulse 1.8s infinite;
+
+        .progress-bar-container {
+            position: relative;
+            margin-bottom: 25px;
         }
-        @keyframes diceGoldPulse {
-            0%, 100% { box-shadow: 0 4px 16px rgba(236,201,75,0.5), inset 0 -3px 10px rgba(0,0,0,0.1); }
-            50% { box-shadow: 0 4px 28px rgba(236,201,75,0.8), 0 0 40px rgba(236,201,75,0.4), inset 0 -3px 10px rgba(0,0,0,0.1); }
-        }
+
         .progress-bar {
-            display: flex; gap: 8px; align-items: center; padding: 8px 24px;
-            background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);
+            height: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        .step-dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.2); transition: all 0.3s; }
-        .step-dot.active { background: #ecc94b; border-color: #ecc94b; box-shadow: 0 0 8px rgba(236,201,75,0.6); }
-        .step-dot.done { background: #48bb78; border-color: #48bb78; }
-        .progress-text { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 600; min-width: 52px; text-align: right; }
-        .roll-hint-text { font-size: 0.82rem; color: rgba(255,255,255,0.4); margin-top: 6px; }
 
-        /* ===== 结果状态 ===== */
-        .overlay-result { background: rgba(15, 15, 26, 0.75); backdrop-filter: blur(10px); padding: 32px 40px; border-radius: 20px; margin: 20px; }
-        .result-show {
-            text-align: center; opacity: 0; transform: translateY(15px) scale(0.95);
-            transition: all 0.45s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none;
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #66BB6A, #81C784, #a8e6cf);
+            border-radius: 15px;
+            transition: width 0.8s ease;
+            box-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            position: relative;
         }
-        .result-show.visible { opacity: 1; transform: translateY(0) scale(1); }
-        .result-tier-badge {
-            display: inline-block; padding: 5px 22px; border-radius: 20px; font-size: 0.92rem;
-            font-weight: 700; letter-spacing: 2px; margin-bottom: 10px;
-        }
-        .rtb-star3 { background:rgba(255,255,255,0.1);color:#9ca3af;border:1px solid rgba(255,255,255,0.15); }
-        .rtb-star4 { background:rgba(139,92,246,0.2);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3); }
-        .rtb-star5n { background:rgba(253,230,138,0.15);color:#fcd34d;border:1px solid rgba(253,230,138,0.3); }
-        .rtb-star5g { background:rgba(16,185,129,0.15);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3); }
-        .result-icon { font-size: 3.5rem; line-height: 1; margin: 4px 0; }
-        .result-tier-name { font-size: 1.25rem; font-weight: 700; color: #f3f4f6; margin-bottom: 8px; }
-        .result-rewards { font-size: 0.95rem; line-height: 1.8; color: rgba(255,255,255,0.7); }
-        .result-dice-info { font-size: 0.82rem; color: rgba(255,255,255,0.4); margin-top: 8px; }
-        .grand-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-        .particle { position: absolute; width: 5px; height: 5px; border-radius: 50%; animation: pFly 1.5s ease-out forwards; }
-        @keyframes pFly { 0%{transform:translateY(0) scale(1);opacity:1} 100%{transform:translateY(-120px) scale(0);opacity:0} }
 
-        /* ===== 按钮 ===== */
-        .pull-area { text-align: left; margin-bottom: 16px; }
-        .btn-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .btn-row .left { display: flex; gap: 10px; }
-        .btn-row .right { display: flex; gap: 10px; }
-        .detail-btn {
-            padding: 10px 20px; font-size: 0.9rem; font-weight: 600; border: 1.5px solid rgba(255,255,255,0.15);
-            border-radius: 50px; background: rgba(255,255,255,0.08); color: #e5e7eb; cursor: pointer;
-            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        /* 周区域容器 */
+        .week-zones {
+            display: flex;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .zone-section {
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .zone-a {
+            flex: 5;
+            background: rgba(76, 175, 80, 0.15);
+        }
+
+        .zone-b {
+            flex: 2;
+            background: rgba(255, 152, 0, 0.15);
+        }
+
+        .zone-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .zone-icon {
+            font-size: 1.5rem;
+        }
+
+        .zone-title {
+            font-size: 1.2rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .zone-subtitle {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-left: auto;
+        }
+
+        /* 日期格子 */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .days-grid.weekend {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .day-cell {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 15px 8px;
+            text-align: center;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: default;
+        }
+
+        .day-cell.completed {
+            background: linear-gradient(135deg, rgba(168, 230, 207, 0.4), rgba(255, 209, 102, 0.4));
+            border-color: #a8e6cf;
+        }
+
+        .day-cell.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            color: #a8e6cf;
+            font-size: 1rem;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(168, 230, 207, 0.8);
+        }
+
+        .day-cell.today {
+            border-color: #81C784;
+            box-shadow: 0 0 15px rgba(129, 199, 132, 0.5);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .day-name {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-reward {
+            font-size: 1.1rem;
+            color: #FFD166;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 209, 102, 0.5);
+        }
+
+        .day-status {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        .day-cell.completed .day-status {
+            color: #a8e6cf;
+            font-weight: bold;
+        }
+
+        /* 底部统计 */
+        .monthly-stats {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-title {
+            font-size: 1.1rem;
+            color: white;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            color: #81C784;
+            font-weight: bold;
+        }
+
+        .stat-value.weekend {
+            color: #FFB74D;
+        }
+
+        /* 纪行券显示 */
+        .currency-section {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            text-align: center;
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .currency-icon {
+            font-size: 3rem;
+        }
+
+        .currency-label {
+            font-size: 1.3rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .currency-amount {
+            font-size: 2.5rem;
+            color: #81C784;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+        }
+
+        .currency-tip {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+        }
+
+        /* 纪行商店 */
+        .shop-section {
+            background: rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(10px);
-        }
-        .detail-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
-        .pull-btn {
-            padding: 10px 28px; font-size: 0.95rem; font-weight: 700; letter-spacing: 1px;
-            border: none; border-radius: 50px; cursor: pointer;
-            background: linear-gradient(135deg,#ecc94b,#d69e2e); color: #78350f;
-            box-shadow: 0 4px 16px rgba(214,158,46,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
-            transition: all 0.25s;
-            line-height: 1.4;
-        }
-        .pull-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(214,158,46,0.5); }
-        .pull-btn:active:not(:disabled) { transform: translateY(0); }
-        .pull-btn:disabled { opacity: 0.35; cursor: not-allowed; transform:none!important; box-shadow:none!important; }
-        .roll-btn-active {
-            background: linear-gradient(135deg,#60a5fa,#3182ce); color: #fff;
-            box-shadow: 0 4px 16px rgba(49,130,206,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
-        }
-        .roll-btn-active:hover:not(:disabled) { box-shadow: 0 8px 26px rgba(49,130,206,0.5); }
-        .pull-hint { margin-top: 8px; font-size: 0.78rem; color: rgba(255,255,255,0.4); }
-
-        /* 弹窗 */
-        .modal-overlay { display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);justify-content:center;align-items:center; }
-        .modal-overlay.show{display:flex}
-        .modal-card {
-            background:rgba(20, 20, 35, 0.98);border-radius:20px;padding:40px 32px;max-width:95vw;width:95vw;max-height:95vh;height:auto;text-align:center;
-            box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.1);
-            animation:mIn .4s cubic-bezier(.34,1.56,.64,1);
-            backdrop-filter: blur(20px);overflow-y:auto;
-        }
-        @keyframes mIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
-
-        /* 详情模态框 */
-        .detail-card {
-            background:rgba(20, 20, 35, 0.95);border-radius:18px;padding:22px;max-width:520px;width:92%;max-height:80vh;
-            overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
-            animation:mIn .35s cubic-bezier(.34,1.56,.64,1);
-            backdrop-filter: blur(20px);
-        }
-        .detail-card::-webkit-scrollbar{width:5px}
-        .detail-card::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:3px}
-        .detail-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.1)}
-        .detail-title{font-size:1.05rem;font-weight:700;color:#f3f4f6}
-        .detail-close{
-            width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);
-            display:flex;align-items:center;justify-content:center;cursor:pointer;
-            font-size:0.82rem;color:rgba(255,255,255,0.6);transition:all .2s;
-        }
-        .detail-close:hover{background:rgba(255,255,255,0.15);color:#f3f4f6}
-
-        /* 子标签页 */
-        .subtabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.1)}
-        .subtab{
-            padding:8px 18px;border:none;background:none;font-size:0.86rem;font-weight:600;color:rgba(255,255,255,0.4);
-            cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;
-        }
-        .subtab:hover{color:rgba(255,255,255,0.7)}
-        .subtab.active{color:#f3f4f6;border-bottom-color:#d69e2e}
-        .subpanel{display:none}
-        .subpanel.active{display:block}
-
-        /* 星级详情 */
-        .tier-detail-section{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 16px;margin-bottom:12px}
-        .tier-detail-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:0.92rem;font-weight:700}
-        .tier-detail-icon{margin-right:6px}
-        .tier-detail-count{font-size:0.78rem;font-weight:600;padding:2px 10px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1)}
-        .t3-header{color:#9ca3af}.t3-header .tier-detail-count{color:rgba(255,255,255,0.5)}
-        .t4-header{color:#c4b5fd}.t4-header .tier-detail-count{color:#a78bfa}
-        .t5n-header{color:#fcd34d}.t5n-header .tier-detail-count{color:#fcd34d}
-        .t5g-header{color:#6ee7b7}.t5g-header .tier-detail-count{color:#6ee7b7}
-        .tier-reward-preview{font-size:0.84rem;line-height:1.7;color:rgba(255,255,255,0.7);padding:8px 12px;background:rgba(0,0,0,0.2);border-radius:8px;border:1px dashed rgba(255,255,255,0.1);margin-bottom:6px}
-        .tier-desc{font-size:0.76rem;color:rgba(255,255,255,0.3)}
-        .tier-history-list{max-height:120px;overflow-y:auto;margin-top:10px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.2) transparent}
-        .tier-history-list .th-item{display:flex;align-items:center;gap:8px;padding:5px 10px;background:rgba(0,0,0,0.2);border-radius:6px;margin-bottom:3px;font-size:0.78rem;border:1px solid rgba(255,255,255,0.05)}
-        .th-dice{font-size:0.95rem;min-width:30px;text-align:center;letter-spacing:1px}
-        .th-time{font-size:0.68rem;color:rgba(255,255,255,0.3);margin-left:auto}
-
-        /* 统计 */
-        .stats-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-        .stat-chip{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px 16px;text-align:center;min-width:74px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-        .stat-chip .v{font-size:1.15rem;font-weight:bold;color:#fcd34d}
-        .stat-chip .l{font-size:0.68rem;color:rgba(255,255,255,0.4);margin-top:2px}
-
-        /* 保底追踪 */
-        .pity-section{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;margin-bottom:4px}
-        .pity-title{font-size:0.88rem;font-weight:700;color:#e5e7eb;margin-bottom:12px}
-        .pity-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-        .pity-row:last-child{margin-bottom:0}
-        .pity-label{font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.5);min-width:52px}
-        .pity-track{flex:1;height:10px;background:rgba(0,0,0,0.3);border-radius:5px;position:relative;overflow:hidden}
-        .pity-fill{height:100%;border-radius:5px;transition:width 0.4s ease}
-        .pity-fill.p4{background:linear-gradient(90deg,#c4b5fd,#a78bfa)}
-        .pity-fill.p5{background:linear-gradient(90deg,#fcd34d,#f59e0b)}
-        .pity-dot{position:absolute;right:0;top:50%;transform:translate(50%,-50%);width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,0.5)}
-        .pity-count{font-size:0.76rem;font-weight:700;color:rgba(255,255,255,0.4);min-width:56px;text-align:right}
-
-        /* 历史 */
-        .history-section{margin-top:6px}
-        .history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0 2px}
-        .history-title{font-size:0.88rem;color:rgba(255,255,255,0.5)}
-        .history-list{max-height:190px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.2) transparent}
-
-        /* 待使用兑换码横幅 */
-        .pending-codes-banner{display:none;margin:14px 0;padding:14px 18px;background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(5,150,105,0.1));border:1.5px dashed rgba(16,185,129,0.4);border-radius:12px}
-        .pending-codes-banner.show{display:block;animation:slideDown 0.4s ease}
-        @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-        .pcb-title{font-size:0.9rem;font-weight:700;color:#6ee7b7;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-        .pcb-list{display:flex;flex-direction:column;gap:8px}
-        .pcb-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(0,0,0,0.25);border-radius:8px;border:1px solid rgba(16,185,129,0.2)}
-        .pcb-code{font-family:'Courier New',monospace;font-size:1rem;font-weight:700;color:#fcd34d;letter-spacing:1px}
-        .pcb-name{font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px}
-        .pcb-copy-btn{padding:6px 14px;background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.4);border-radius:6px;color:#6ee7b7;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all .2s}
-        .pcb-copy-btn:hover{background:rgba(16,185,129,0.4)}
-        .h-item{display:flex;align-items:center;gap:10px;padding:7px 12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);border-radius:10px;margin-bottom:4px;font-size:0.84rem;transition:border-color .2s}
-        .h-item:hover{border-color:rgba(255,255,255,0.15)}
-        .h-dice{font-size:1.05rem;min-width:34px;text-align:center;letter-spacing:1px}
-        .h-sum{font-size:0.6rem;color:rgba(255,255,255,0.25)}
-        .h-info{flex:1}
-        .h-tag{font-size:0.66rem;padding:1px 8px;border-radius:6px;display:inline-block;font-weight:600}
-        .h-tag.t3{background:rgba(255,255,255,0.1);color:#9ca3af}.h-tag.t4{background:rgba(139,92,246,0.2);color:#c4b5fd}.h-tag.t5n{background:rgba(253,230,138,0.15);color:#fcd34d}.h-tag.t5g{background:rgba(16,185,129,0.15);color:#6ee7b7}
-        .h-time{font-size:0.68rem;color:rgba(255,255,255,0.3)}
-        .h-trigger{font-size:0.62rem;color:rgba(255,255,255,0.25);display:block;margin-top:1px}
-
-        .modal-card .result-icon{font-size:4.5rem}
-        .modal-card .result-tier-name{font-size:1.4rem}
-        .modal-card .result-rewards{font-size:1rem;margin-top:14px}
-        .modal-close-hint{margin-top:20px;padding:10px 28px;border:1px solid rgba(255,255,255,0.15);border-radius:20px;background:rgba(255,255,255,0.08);cursor:pointer;font-size:0.84rem;color:rgba(255,255,255,0.6);display:inline-block;transition:all .2s}
-        .modal-close-hint:hover{background:rgba(255,255,255,0.12)}
-
-        /* Toast */
-        .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-20px);padding:11px 24px;border-radius:10px;font-weight:600;font-size:0.88rem;z-index:99999;opacity:0;transition:all .25s;pointer-events:none}
-        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-        .toast.ok{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
-        .toast.err{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
-
-        @media(max-width:600px){
-            .top-bar{padding:60px 16px 8px;flex-direction:column;gap:8px;align-items:flex-start}
-            .pool-frame{height:360px;border-radius:12px;margin:-6px -6px 16px -6px}
-            .gacha-dice{width:72px;height:72px;font-size:2.2rem}
-            .dice-row{gap:14px}
-            .result-icon{font-size:2.6rem}.result-tier-name{font-size:1.05rem}
-            .gacha-stage{padding:8px 12px 20px}
-            .stat-chip{min-width:64px;padding:6px 12px}
-            .pull-btn{padding:8px 22px;font-size:0.88rem}
-            .ten-btn{padding:8px 22px;font-size:0.88rem}
-            .detail-btn{padding:8px 16px;font-size:0.85rem}
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 25px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid rgba(76, 175, 80, 0.3);
         }
 
-        /* ===== 十连抽 ===== */
-        .ten-btn {
-            padding: 10px 28px; font-size: 0.95rem; font-weight: 700; letter-spacing: 1px;
-            border: none; border-radius: 50px; cursor: pointer;
-            background: linear-gradient(135deg,#a78bfa,#7c3aed); color: #fff;
-            box-shadow: 0 4px 16px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
-            transition: all 0.25s;
-            line-height: 1.4;
-        }
-        .ten-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(124,58,237,0.45); }
-        .ten-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-        .overlay-tenpull { background: rgba(255,255,255,0.25); backdrop-filter: blur(4px); padding: 32px 40px; border-radius: 20px; margin: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 280px; position: relative; }
-
-        /* 十连骰子（超大） */
-        .ten-dice-container { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .ten-dice {
-            width: 120px; height: 120px; background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            border-radius: 24px; display: flex; align-items: center; justify-content: center;
-            font-size: 4rem; font-weight: bold; color: #1a1a2e;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.25), inset 0 -4px 14px rgba(0,0,0,0.08), inset 0 4px 14px rgba(255,255,255,0.8);
-            user-select: none; touch-action: pan-y; position: relative;
-            transition: transform 0.15s ease; cursor: grab;
-        }
-        .ten-dice.swiping { cursor: grabbing; transition: none; }
-        .ten-dice.bouncing { animation: tenBounce 0.1s linear infinite; }
-        @keyframes tenBounce {
-            0%{transform:scale(1) rotate(0deg)} 25%{transform:scale(1.06) rotate(-2deg)} 50%{transform:scale(1) rotate(0deg)} 75%{transform:scale(1.04) rotate(2deg)} 100%{transform:scale(1) rotate(0deg)}
+        .shop-title {
+            font-size: 2rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        /* 十连抽跳动时的边框闪光 */
-        .ten-dice.bouncing-purple { animation: tenBounce 0.1s linear infinite, borderGlowPurple 1s ease-in-out infinite alternate; }
-        .ten-dice.bouncing-gold { animation: tenBounce 0.1s linear infinite, borderGlowGold 1s ease-in-out infinite alternate; }
-        @keyframes borderGlowPurple {
-            0%{box-shadow: 0 0 0 4px rgba(139,92,246,0.3), 0 12px 36px rgba(0,0,0,0.25)}
-            100%{box-shadow: 0 0 0 8px rgba(139,92,246,0.6), 0 0 30px rgba(139,92,246,0.4), 0 12px 36px rgba(0,0,0,0.25)}
-        }
-        @keyframes borderGlowGold {
-            0%{box-shadow: 0 0 0 4px rgba(245,158,11,0.3), 0 12px 36px rgba(0,0,0,0.25)}
-            100%{box-shadow: 0 0 0 8px rgba(245,158,11,0.6), 0 0 30px rgba(245,158,11,0.4), 0 12px 36px rgba(0,0,0,0.25)}
+        .shop-desc {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
         }
 
-        /* ❓变身闪光态 */
-        .ten-dice.reveal { font-size: 4.5rem; transform: scale(1.15); }
-        .ten-dice.reveal-purple {
-            background: linear-gradient(145deg, #ede9fe, #c4b5fd);
-            color: #5b21b6;
-            box-shadow: 0 8px 32px rgba(124,58,237,0.5), inset 0 -3px 10px rgba(91,33,182,0.1);
-            animation: purpleGlow 0.8s ease-in-out infinite alternate;
-        }
-        @keyframes purpleGlow {
-            0%{box-shadow: 0 8px 32px rgba(124,58,237,0.4), inset 0 -3px 10px rgba(91,33,182,0.1)}
-            100%{box-shadow: 0 8px 48px rgba(124,58,237,0.7), 0 0 60px rgba(124,58,237,0.3), inset 0 -3px 10px rgba(91,33,182,0.1)}
-        }
-        .ten-dice.reveal-gold {
-            background: linear-gradient(145deg, #fef3c7, #fcd34d);
-            color: #92400e;
-            box-shadow: 0 8px 32px rgba(214,158,46,0.5), inset 0 -3px 10px rgba(146,64,14,0.1);
-            animation: goldGlow 0.8s ease-in-out infinite alternate;
-        }
-        @keyframes goldGlow {
-            0%{box-shadow: 0 8px 32px rgba(214,158,46,0.4), inset 0 -3px 10px rgba(146,64,14,0.1)}
-            100%{box-shadow: 0 8px 48px rgba(214,158,46,0.7), 0 0 60px rgba(214,158,46,0.3), inset 0 -3px 10px rgba(146,64,14,0.1)}
+        .shop-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
         }
 
-        /* 上滑提示 */
-        .swipe-hint { font-size: 0.85rem; color: rgba(0,0,0,0.45); display: flex; align-items: center; gap: 6px; opacity: 0; transition: opacity 0.4s; }
-        .swipe-hint.visible { opacity: 1; }
-        .swipe-arrow { animation: swipeBounce 1.2s ease-in-out infinite; }
-        @keyframes swipeBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-
-        /* 炸开效果 */
-        .ten-dice.exploding { animation: diceExplode 0.5s cubic-bezier(.55,.055,.675,.19) forwards; pointer-events: none; }
-        @keyframes diceExplode {
-            0%{transform:scale(1) rotate(0deg);opacity:1} 30%{transform:scale(1.4) rotate(10deg);opacity:1} 60%{transform:scale(1.8) rotate(-15deg);opacity:0.6} 100%{transform:scale(2.5) rotate(20deg);opacity:0}
-        }
-        .explosion-particles { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-        .ep-particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; left: 50%; top: 50%; opacity: 0; }
-        .ep-particle.active { animation: epFly 0.6s cubic-bezier(.25,.46,.45,.94) forwards; }
-        @keyframes epFly {
-            0%{transform:translate(-50%,-50%) scale(1);opacity:1} 100%{transform:translate(var(--tx,-80px),var(--ty,-100px)) scale(0);opacity:0}
+        .shop-item {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
         }
 
-        /* 十连结果网格 */
-        .ten-results-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; width: 100%; max-width: 420px; opacity: 0; transform: translateY(20px) scale(0.9); transition: all 0.5s cubic-bezier(.34,1.56,.64,1); }
-        .ten-results-grid.visible { opacity: 1; transform: translateY(0) scale(1); }
-        .ten-result-cell {
-            background: #fff; border: 1.5px solid #e5e7eb; border-radius: 12px;
-            padding: 8px 4px; text-align: center; opacity: 0; transform: scale(0.5);
-            animation: cellPopIn 0.35s cubic-bezier(.34,1.56,.64,1) forwards;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
-        @keyframes cellPopIn { to{opacity:1;transform:scale(1)} }
-        .trc-icon { font-size: 1.4rem; line-height: 1; margin-bottom: 2px; }
-        .trc-tier { font-size: 0.62rem; font-weight: 700; letter-spacing: 1px; border-radius: 6px; padding: 1px 6px; display: inline-block; margin-top: 2px; }
-        .trc-star3 { background:#f3f4f6;color:#6b7280 } .trc-star4 { background:#ede9fe;color:#7c3aed }
-        .trc-star5n { background:#fef3c7;color:#b45309 } .trc-star5g { background:#d1fae5;color:#047857 }
 
-        .ten-summary { text-align: center; margin-top: 14px; opacity: 0; transition: opacity 0.4s 0.6s; }
-        .ten-summary.visible { opacity: 1; }
-        .ts-title { font-size: 0.92rem; font-weight: 700; color: #374151; }
-        .ts-rewards { font-size: 0.82rem; color: #6b7280; margin-top: 4px; line-height: 1.6; }
-
-        .ten-progress-text { font-size: 0.82rem; color: rgba(0,0,0,0.4); margin-top: 8px; }
-
-        /* 弹窗中的十连抽结果网格 - 全屏大卡片 */
-        .modal-ten-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; width: 100%; margin: 16px 0; }
-        .modal-ten-cell {
-            background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); border-radius: 14px;
-            padding: 16px 8px; text-align: center; opacity: 0; transform: scale(0.5);
-            animation: cellPopIn 0.35s cubic-bezier(.34,1.56,.64,1) forwards;
-            display: flex; flex-direction: column; align-items: center; min-height: 140px;
+        .shop-item.sold-out {
+            opacity: 0.5;
+            pointer-events: none;
         }
-        .modal-ten-cell.star3 { border-color: rgba(148,163,184,0.4); background: rgba(148,163,184,0.1); }
-        .modal-ten-cell.star4 { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.1); }
-        .modal-ten-cell.star5n { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
-        .modal-ten-cell.star5g { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); }
-        .mtc-num { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-bottom: 6px; }
-        .mtc-icon { font-size: 2.2rem; line-height: 1; margin-bottom: 8px; }
-        .mtc-tier { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 10px; }
-        .modal-ten-cell.star3 .mtc-tier { background: rgba(148,163,184,0.25); color: #94a3b8; }
-        .modal-ten-cell.star4 .mtc-tier { background: rgba(139,92,246,0.25); color: #c4b5fd; }
-        .modal-ten-cell.star5n .mtc-tier { background: rgba(245,158,11,0.25); color: #fcd34d; }
-        .modal-ten-cell.star5g .mtc-tier { background: rgba(16,185,129,0.25); color: #6ee7b7; }
-        .mtc-rewards { font-size: 0.72rem; color: rgba(255,255,255,0.6); line-height: 1.5; text-align: center; }
-        .mtc-reward-item { display: block; margin: 2px 0; }
+
+        .item-image {
+            width: 100%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-info {
+            padding: 20px;
+        }
+
+        .item-name {
+            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .item-desc {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .item-price {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 10px;
+        }
+
+        .price-icon {
+            font-size: 1.5rem;
+        }
+
+        .price-amount {
+            font-size: 1.5rem;
+            color: #81C784;
+            font-weight: bold;
+        }
+
+        .btn-buy {
+            width: 100%;
+            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-buy:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-buy:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .shop-item.sold-out .btn-buy {
+            background: #999;
+        }
+
+        .shop-item.sold-out .btn-buy::after {
+            content: ' ✓ 已兑换';
+        }
+
+        .choice-wide {
+            max-width: 500px;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .choice-tier {
+            font-size: 0.75rem;
+            color: #FFD700;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .choice-option.sold-out {
+            opacity: 0.4;
+            pointer-events: none;
+            background: rgba(100, 100, 100, 0.3);
+        }
+
+        .choice-option.sold-out::after {
+            content: ' ✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 0.8rem;
+            color: #4CAF50;
+        }
+
+        /* 规则说明 */
+        .rules-section {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .rules-title {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rules-list {
+            list-style: none;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.8;
+        }
+
+        .rules-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .rules-list li::before {
+            content: '🌸';
+            position: absolute;
+            left: 0;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .event-title {
+                font-size: 2.2rem;
+            }
+
+            .days-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .progress-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .shop-items {
+                grid-template-columns: 1fr;
+            }
+
+            .currency-amount {
+                font-size: 2rem;
+            }
+
+            .item-image {
+                height: 180px;
+            }
+
+            .choice-message {
+                padding: 25px 20px;
+                margin: 20px;
+            }
+
+            .choice-options {
+                gap: 12px;
+            }
+
+            .choice-option {
+                padding: 15px;
+            }
+
+            .choice-icon {
+                font-size: 2.5rem;
+            }
+
+            .choice-info h3 {
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 完成动画 */
+        .complete-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .complete-animation.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .success-message {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            animation: popup 0.5s ease-out;
+        }
+
+        @keyframes popup {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-message h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .success-message p {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        /* 彩带动画 */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: confetti-fall 2s ease-in-out forwards;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* 选择弹窗样式 */
+        .choice-message {
+            background: white;
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            animation: popup 0.5s ease-out;
+        }
+
+        .choice-message h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .choice-desc {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .choice-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .choice-option {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9f1, #e8f5e9);
+            border: 2px solid #c8e6c9;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+            border-color: #4CAF50;
+        }
+
+        .choice-icon {
+            font-size: 3rem;
+        }
+
+        .choice-info h3 {
+            color: #4CAF50;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .choice-info p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #666;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
     </style>
 </head>
 <body>
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
 
-    <div class="bg-blur-layer"></div>
-    <div class="back-btn"><button onclick="window.location.href='../index.html'">← 返回</button></div>
-
-    <div class="top-bar">
-        <div class="pool-title">🎲 纪行之骰</div>
-        <div class="ticket-badge">🎫 <span class="val" id="ticketCount">0</span>
-            <button id="exchangeBtn" onclick="openExchangeModal()" title="用兑换券兑换纪行券" style="margin-left:8px;width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(252,211,77,0.4);background:rgba(252,211,77,0.12);color:#fcd34d;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .2s;">+</button>
-        </div>
+    <div class="back-btn">
+        <button class="btn btn-primary" onclick="window.location.href='/xiaoan/activity/'">🏠 返回活动</button>
     </div>
 
-    <div class="gacha-stage">
+    <div class="container">
+        <!-- 活动标题 -->
+        <div class="event-header">
+            <div class="event-icon">🌸</div>
+            <h1 class="event-title">沐春望景</h1>
+            <p class="event-subtitle">春日纪行，每日完成任务，收集纪行券兑换大奖</p>
+            <span class="event-badge">🎯 纪行活动</span>
+        </div>
 
-        <!-- 奖池/掷骰/结果 大框 -->
-        <div class="pool-frame">
-            <img class="pool-bg-img" id="poolBgImg" alt="奖池背景">
-            <div class="pool-overlay" id="poolOverlay">
-
-                <!-- 空闲态 -->
-                <div class="overlay-idle" id="overlayIdle">
-                    <div class="idle-text" id="poolPlaceholder">奖池图区域</div>
+        <!-- 进度区域 -->
+        <div class="progress-section">
+            <div class="progress-header">
+                <div class="progress-title">📅 本周完成进度</div>
+                <div class="progress-count" id="progressCount">0 / 7 天</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
+            </div>
 
-                <!-- 掷骰态 -->
-                <div class="overlay-rolling" id="overlayRolling" style="display:none;">
-                    <div class="dice-row">
-                        <div class="dice-wrapper"><div class="gacha-dice" id="gd1">❓</div><span class="dice-label">I</span></div>
-                        <div class="dice-wrapper"><div class="gacha-dice" id="gd2">❓</div><span class="dice-label">II</span></div>
-                        <div class="dice-wrapper"><div class="gacha-dice" id="gd3">❓</div><span class="dice-label">III</span></div>
+            <!-- A区B区日历 -->
+            <div class="week-zones">
+                <!-- A区：周中（周一到周四） -->
+                <div class="zone-section zone-a">
+                    <div class="zone-header">
+                        <span class="zone-icon">🅰️</span>
+                        <span class="zone-title">周中区</span>
+                        <span class="zone-subtitle">周一至周四</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="step-dot active" id="sd1"></div><div class="step-dot" id="sd2"></div><div class="step-dot" id="sd3"></div>
-                        <span class="progress-text" id="progressText">第 1 / 3 次</span>
-                    </div>
-                    <p class="roll-hint-text" id="rollHint">点击下方按钮掷出第 1 颗骰子</p>
-                </div>
-
-                <!-- 结果态 -->
-                <div class="overlay-result" id="overlayResult" style="display:none;">
-                    <div class="result-show" id="resultShow">
-                        <span class="result-tier-badge" id="resBadge"></span>
-                        <div class="result-icon" id="resIcon"></div>
-                        <div class="result-tier-name" id="resName"></div>
-                        <div class="result-rewards" id="resRewards"></div>
-                        <div class="result-dice-info" id="resDice"></div>
-                        <div class="grand-particles" id="resParticles"></div>
+                    <div class="days-grid" id="zoneAGrid">
+                        <!-- 动态生成 -->
                     </div>
                 </div>
-
-                <!-- 十连抽态 -->
-                <div class="overlay-tenpull" id="overlayTenPull" style="display:none;">
-                    <div class="ten-dice-container">
-                        <div class="ten-dice" id="tenDice">🎲</div>
-                        <div class="swipe-hint" id="swipeHint"><span class="swipe-arrow">↑</span> 向上滑动揭开</div>
+                
+                <!-- B区：周末（周五到周日） -->
+                <div class="zone-section zone-b">
+                    <div class="zone-header">
+                        <span class="zone-icon">🅱️</span>
+                        <span class="zone-title">周末区</span>
+                        <span class="zone-subtitle">周五至周日</span>
                     </div>
-                    <div class="explosion-particles" id="explosionParticles"></div>
-                    <p class="ten-progress-text" id="tenProgressText">正在凝聚命运...</p>
-                    <div class="ten-results-grid" id="tenResultsGrid"></div>
-                    <div class="ten-summary" id="tenSummary"><div class="ts-title" id="tsTitle"></div><div class="ts-rewards" id="tsRewards"></div></div>
+                    <div class="days-grid weekend" id="zoneBGrid">
+                        <!-- 动态生成 -->
+                    </div>
                 </div>
+            </div>
 
+            <!-- 本月统计 -->
+            <div class="monthly-stats">
+                <div class="stats-title">📊 本月累计统计</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-label">周中区共完成</div>
+                        <div class="stat-value" id="zoneAStats">0 天 / 0 券</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">周末区共完成</div>
+                        <div class="stat-value weekend" id="zoneBStats">0 天 / 0 券</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 按钮 -->
-        <div class="pull-area">
-            <div class="btn-row">
-                <div class="left">
-                    <button class="detail-btn" onclick="openDetailModal()">📊 详情</button>
-                </div>
-                <div class="right">
-                    <button class="pull-btn" id="rollBtn">掷骰1次<br>🎫160</button>
-                    <button class="ten-btn" id="tenBtn" onclick="startTenPull()">掷骰10次<br>🎫1600</button>
-                </div>
+        <!-- 纪行券显示 -->
+        <div class="currency-section">
+            <div class="currency-display">
+                <span class="currency-icon">🎫</span>
+                <span class="currency-label">纪行券</span>
+                <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
-            <div class="pull-hint" id="pullHint"></div>
+            <p class="currency-tip">周中区（周一至周四）每日300券 | 周末区：周五600券/周六250券/周日50券</p>
         </div>
-    </div>
-
-    <!-- 详情模态框 -->
-    <div class="modal-overlay" id="detailModal" onclick="closeDetailModal()">
-        <div class="detail-card" onclick="event.stopPropagation()">
-            <div class="detail-header">
-                <span class="detail-title">📊 抽奖详情</span>
-                <span class="detail-close" onclick="closeDetailModal()">✕</span>
-            </div>
-            <div class="subtabs">
-                <button class="subtab active" data-tab="overview" onclick="switchSubTab('overview')">📋 概览</button>
-                <button class="subtab" data-tab="tiers" onclick="switchSubTab('tiers')">⭐ 星级详情</button>
-            </div>
-            <div class="subpanel active" id="panel-overview">
-                <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:0.85rem;color:rgba(255,255,255,0.7);line-height:1.6;">
-                    <div style="font-weight:600;color:#f3f4f6;margin-bottom:4px;">🎲 抽奖规则</div>
-                    <div>• 消耗：160 纪行券/次 · 1600 纪行券/10次</div>
-                    <div>• 五星：点数和=18 (~0.8%) 或 90抽保底</div>
-                    <div>• 四星：点数和≥16 (~5-7%) 或 10抽保底</div>
-                    <div>• 补偿：若上次五星为普通，下次必中特级</div>
-                </div>
-                <div class="stats-row" style="margin-bottom:16px;">
-                    <div class="stat-chip"><div class="v" id="totalDraws">0</div><div class="l">总次数</div></div>
-                    <div class="stat-chip"><div class="v" id="star5GrandCount" style="color:#059669;">0</div><div class="l">👑 特级</div></div>
-                    <div class="stat-chip"><div class="v" id="star5NormalCount" style="color:#fcd34d;">0</div><div class="l">⭐ 普通</div></div>
-                    <div class="stat-chip"><div class="v" id="star4Count" style="color:#7c3aed;">0</div><div class="l">⭐⭐ 四星</div></div>
-                </div>
-                <div class="pity-section" style="margin-bottom:16px;">
-                    <div class="pity-title">⏳ 保底追踪</div>
-                    <div class="pity-row"><span class="pity-label">⭐ 四星</span><div class="pity-track"><div class="pity-fill p4" id="pity4Fill" style="width:0%"></div><div class="pity-dot d4" id="pity4Dot" style="display:none"></div></div><span class="pity-count" id="pity4Count">0/10</span></div>
-                    <div class="pity-row"><span class="pity-label">⭐ 五星</span><div class="pity-track"><div class="pity-fill p5" id="pity5Fill" style="width:0%"></div><div class="pity-dot d5" id="pity5Dot" style="display:none"></div></div><span class="pity-count" id="pity5Count">0/90</span></div>
-                </div>
-                <!-- 待使用兑换码横幅 -->
-                <div class="pending-codes-banner" id="pendingCodesBanner">
-                    <div class="pcb-title">🎁 待使用的兑换码</div>
-                    <div class="pcb-list" id="pendingCodesList"></div>
+        <div class="shop-section">
+            <h2 class="shop-title">🏪 纪行商店</h2>
+            <p class="shop-desc">使用纪行券兑换实物奖品和虚拟奖励</p>
+            
+            <div class="shop-items">
+                <!-- 奖品1 -->
+                <div class="shop-item" id="reward1">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward1_jixing.png" alt="奖品1">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">Klee 联动套装</h3>
+                        <p class="item-desc">Klee 鲨鱼头套+立牌+夜光徽章+纪念票+2个弹弹乐</p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(1)">兑换</button>
+                    </div>
                 </div>
 
-                <div class="history-section">
-                    <div class="history-header"><span class="history-title">📜 抽奖记录</span></div>
-                    <div class="history-list" id="historyList"><div style="text-align:center;padding:18px;color:rgba(255,255,255,0.3);font-size:0.84rem;">暂无记录，开始你的第一次抽奖吧~</div></div>
+                <!-- 奖品2 -->
+                <div class="shop-item" id="reward2">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward2_jixing.png" alt="奖品2">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">透明展示盒，带灯</h3>
+                        <p class="item-desc">中等大小的透明展示盒，带灯</p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(2)">兑换</button>
+                    </div>
                 </div>
-            </div>
-            <div class="subpanel" id="panel-tiers">
-                <div class="tier-detail-section">
-                    <div class="tier-detail-header t3-header"><span class="tier-detail-icon">⭐</span> 三星奖励<span class="tier-detail-count" id="tdStar3Count">0 次</span></div>
-                    <div class="tier-detail-body"><div class="tier-reward-preview" id="tdStar3Rewards"></div><div class="tier-desc">点数和 &lt; 16 时获得（从奖池随机抽取1项）</div></div>
-                    <div class="tier-history-list" id="tdStar3List"></div>
+
+                <!-- 奖品3 -->
+                <div class="shop-item" id="reward3">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward3_jixing.png" alt="奖品3">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">Klee 联动随机2件零食（不含周边，可指定）</h3>
+                        <p class="item-desc">包含：草莓爆米花味/红茶黑巧味/黄油饼干味/浓郁黑巧味...
+                        </p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="buyReward(3)">兑换</button>
+                    </div>
                 </div>
-                <div class="tier-detail-section">
-                    <div class="tier-detail-header t4-header"><span class="tier-detail-icon">✨</span> 四星奖励<span class="tier-detail-count" id="tdStar4Count">0 次</span></div>
-                    <div class="tier-detail-body"><div class="tier-reward-preview" id="tdStar4Rewards"></div><div class="tier-desc">点数和 ≥ 16 或四星保底触发（每10次，随机抽取1项）</div></div>
-                    <div class="tier-history-list" id="tdStar4List"></div>
-                </div>
-                <div class="tier-detail-section">
-                    <div class="tier-detail-header t5n-header"><span class="tier-detail-icon">⭐</span> 普通五星<span class="tier-detail-count" id="tdStar5NCount">0 次</span></div>
-                    <div class="tier-detail-body"><div class="tier-reward-preview" id="tdStar5NRewards"></div><div class="tier-desc">点数和=18 / 五星保底(90次) → 50%概率；若上次为普通则补偿必中特级</div></div>
-                    <div class="tier-history-list" id="tdStar5NList"></div>
-                </div>
-                <div class="tier-detail-section">
-                    <div class="tier-detail-header t5g-header"><span class="tier-detail-icon">👑</span> 特级大奖<span class="tier-detail-count" id="tdStar5GCount">0 次</span></div>
-                    <div class="tier-detail-body"><div class="tier-reward-preview" id="tdStar5GRewards"></div><div class="tier-desc">点数和=18触发50% / 补偿机制必中 / 保底90次仍50%（含实物奖励）</div></div>
-                    <div class="tier-history-list" id="tdStar5GList"></div>
+
+
+                <!-- 虚拟奖励礼包 -->
+                <div class="shop-item" id="reward4">
+                    <div class="item-image">
+                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward4_jixing.png" alt="虚拟奖励礼包">
+                    </div>
+                    <div class="item-info">
+                        <h3 class="item-name">虚拟奖励礼包</h3>
+                        <p class="item-desc">
+                            🎫 15券：10高级抽奖券 或 12888兑换券<br>
+                            🎫 3券：2高级抽奖券 或 2488兑换券
+                        </p>
+                        <div class="item-price">
+                            <span class="price-icon">🎫</span>
+                            <span class="price-amount">3/15</span>
+                        </div>
+                        <button class="btn btn-buy" onclick="showReward4Select()">兑换</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- 结果弹窗 -->
-    <div class="modal-overlay" id="resultModal" onclick="closeResultModal()">
-        <div class="modal-card" onclick="event.stopPropagation()" id="modalCard">
-            <div class="result-icon" id="mIcon"></div>
-            <span class="result-tier-badge" id="mBadge"></span>
-            <div class="result-tier-name" id="mName"></div>
-            <div class="result-rewards" id="mRewards"></div>
-            <div class="result-dice-info" id="mDice"></div>
-            <div class="grand-particles" id="mParticles"></div>
-            <div class="modal-close-hint" onclick="closeResultModal()">点击任意处关闭</div>
-        </div>
-    </div>
-
-    <!-- 五星奖励选择弹窗 -->
-    <div class="modal-overlay" id="star5ChoiceModal" onclick="">
-        <div class="modal-card star5-choice-card" onclick="event.stopPropagation()" id="star5ChoiceCard">
-            <div style="font-size:2rem;margin-bottom:8px;" id="star5ChoiceIcon">⭐</div>
-            <span class="result-tier-badge" id="star5ChoiceBadge">五星奖励</span>
-            <div class="result-tier-name" id="star5ChoiceTitle" style="margin-bottom:16px;">请选择你的奖励</div>
-            <div style="color:rgba(255,255,255,0.6);font-size:0.85rem;margin-bottom:12px;text-align:left;">
-                🅰️ <strong>A区</strong>（选择其中一个）+ 🅱️ <strong>B区</strong>（全部获取）
-            </div>
-            <div id="star5ZoneBPreview" style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:0.82rem;color:rgba(255,255,255,0.5);text-align:center;"></div>
-            <div id="star5ZoneAOptions" style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;"></div>
-        </div>
-    </div>
-
-    <style>
-        .star5-choice-card{max-width:420px;width:92%;position:relative;}
-        .star5-option{
-            display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.06);
-            border:1.5px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;
-            transition:all 0.25s;user-select:none;
-        }
-        .star5-option:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);transform:translateY(-2px);}
-        .star5-option.selected{border-color:#fcd34d;background:rgba(253,230,138,0.15);box-shadow:0 0 20px rgba(252,211,77,0.3);}
-        .star5-option-radio{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-        .star5-option.selected .star5-option-radio{border-color:#fcd34d;}
-        .star5-option.selected .star5-option-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#fcd34d;}
-        .star5-option-info{flex:1;}
-        .star5-option-name{font-size:1rem;font-weight:700;color:#f3f4f6;}
-        .star5-option-desc{font-size:0.78rem;color:rgba(255,255,255,0.4);margin-top:2px;}
-        #star5ChoiceModal .modal-overlay{background:rgba(0,0,0,0.7)}
-
-        /* 兑换弹窗 */
-        .exchange-input{width:100%;padding:10px 14px;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;background:rgba(255,255,255,0.06);color:#f3f4f6;font-size:1rem;text-align:center;font-weight:bold;outline:none;transition:border-color .2s}
-        .exchange-input:focus{border-color:#fcd34d;box-shadow:0 0 0 3px rgba(252,211,77,.15)}
-        .exchange-info{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;font-size:0.82rem;color:rgba(255,255,255,0.5)}
-        .exchange-info span:last-child{color:#fcd34d;font-weight:700}
-        .exchange-week-limit{margin-top:8px;padding:8px 12px;background:rgba(252,211,77,0.08);border:1px solid rgba(252,211,77,0.2);border-radius:8px;font-size:0.78rem;color:rgba(252,211,77,0.7)}
-        #exchangeModal .modal-overlay{background:rgba(0,0,0,0.7)}
-    </style>
-
-    <!-- 兑换纪行券弹窗 -->
-    <div class="modal-overlay" id="exchangeModal" onclick="if(event.target===this)document.getElementById('exchangeModal').classList.remove('show')">
-        <div class="modal-card star5-choice-card" onclick="event.stopPropagation()">
-            <button onclick="document.getElementById('exchangeModal').classList.remove('show')" style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;line-height:1;">✕</button>
-            <div style="font-size:2rem;margin-bottom:6px;">💱</div>
-            <span class="result-tier-badge rtb-star5n">兑换纪行券</span>
-            <div class="result-tier-name" style="font-size:1.05rem;margin-bottom:16px;">用兑换券 1:1 兑换纪行券</div>
-            <div class="exchange-info">
-                <span>当前兑换券</span>
-                <span id="exVoucherCount">0</span>
-            </div>
-            <input type="number" class="exchange-input" id="exAmount" placeholder="输入兑换数量" min="1" max="2000">
-            <div class="exchange-week-limit">📅 本周已兑换：<strong id="exWeekUsed">0</strong> / 2000（上限）</div>
-            <button class="lc-save-btn" onclick="confirmExchange()" style="width:100%;margin-top:16px;padding:12px;">确认兑换</button>
+        <!-- 规则说明 -->
+        <div class="rules-section">
+            <h3 class="rules-title">📜 活动规则</h3>
+            <ul class="rules-list">
+                <li><strong>周中区（周一至周四）：</strong>完成任务中心的"每日任务奖励"可获得300张纪行券</li>
+                <li><strong>周末区（周五至周日）：</strong>周五完成获得600券，周六完成获得250券，周日完成获得50券</li>
+                <li>每周一自动重置进度，开始新一周的纪行</li>
+                <li>累计获得纪行券可在纪行商店兑换奖品</li>
+                <li>实物奖品1-3每个需要15张纪行券</li>
+                <li>虚拟奖励礼包分两档（15券/3券），每档二选一</li>
+                <li>每个奖品限兑换一次，不可重复购买</li>
+                <li>虚拟奖励立即到账，实物奖品将在活动结束后统一发放</li>
+            </ul>
         </div>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <!-- 完成动画 -->
+    <div class="complete-animation" id="completeAnimation">
+        <div class="success-message">
+            <h2>🎉 恭喜你！</h2>
+            <p id="successText">成功领取纪行大奖！</p>
+            <button class="btn btn-primary" onclick="closeAnimation()">确定</button>
+        </div>
+    </div>
+
+    <!-- 虚拟奖励选择弹窗 -->
+    <div class="complete-animation" id="choiceModal">
+        <div class="choice-message choice-wide">
+            <h2>🎁 选择你的奖励</h2>
+            <p class="choice-desc">每个档位限兑一次，请选择：</p>
+            <div class="choice-options choice-grid">
+                <div class="choice-option" onclick="selectReward4('4A', 'premiumLottery')" id="choice4A-lottery">
+                    <div class="choice-tier">🎫 15券</div>
+                    <div class="choice-icon">💎</div>
+                    <div class="choice-info">
+                        <h3>高级抽奖券 × 10</h3>
+                        <p>豪华版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4A', 'voucher')" id="choice4A-voucher">
+                    <div class="choice-tier">🎫 15券</div>
+                    <div class="choice-icon">🎫</div>
+                    <div class="choice-info">
+                        <h3>兑换券 × 12888</h3>
+                        <p>豪华版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4B', 'premiumLottery')" id="choice4B-lottery">
+                    <div class="choice-tier">🎫 3券</div>
+                    <div class="choice-icon">💎</div>
+                    <div class="choice-info">
+                        <h3>高级抽奖券 × 2</h3>
+                        <p>标准版</p>
+                    </div>
+                </div>
+                <div class="choice-option" onclick="selectReward4('4B', 'voucher')" id="choice4B-voucher">
+                    <div class="choice-tier">🎫 3券</div>
+                    <div class="choice-icon">🎫</div>
+                    <div class="choice-info">
+                        <h3>兑换券 × 2488</h3>
+                        <p>标准版</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-secondary" onclick="closeChoiceModal()">取消</button>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
-        // ===== 背景图加载（带浏览器缓存） =====
-        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/gacha-bg.jpg';
-        const BG_CACHE_KEY='lottery_bg_cache';
-        const BG_CACHE_EXPIRE=7*24*60*60*1000; // 7天过期
+        // 纪行数据键名
+        const JIXING_KEY = 'jixing_muchun_progress_v2';
+        const MONTHLY_STATS_KEY = 'jixing_muchun_monthly_stats';
+        const CURRENCY_KEY = 'jixing_muchun_currency';
+        const BOUGHT_KEY = 'jixing_muchun_bought';
+        const INIT_KEY = 'jixing_muchun_initialized_v2';
+        const PRICE_PER_ITEM = 15;
 
-        var poolImg=document.getElementById('poolBgImg');
-        
-        // 检查缓存是否有效
-        var cacheData=null;
-        try{
-            var raw=localStorage.getItem(BG_CACHE_KEY);
-            if(raw){
-                var parsed=JSON.parse(raw);
-                if(Date.now()-parsed.ts<BG_CACHE_EXPIRE){
-                    cacheData=parsed.data;
+        // 星期配置
+        const WEEK_DAYS = [
+            { name: '周一', dayOfWeek: 1, zone: 'A', reward: 300 },
+            { name: '周二', dayOfWeek: 2, zone: 'A', reward: 300 },
+            { name: '周三', dayOfWeek: 3, zone: 'A', reward: 300 },
+            { name: '周四', dayOfWeek: 4, zone: 'A', reward: 300 },
+            { name: '周五', dayOfWeek: 5, zone: 'B', reward: 600 },
+            { name: '周六', dayOfWeek: 6, zone: 'B', reward: 250 },
+            { name: '周日', dayOfWeek: 0, zone: 'B', reward: 50 }
+        ];
+
+        // 获取本周进度
+        function getWeeklyProgress() {
+            const data = localStorage.getItem(JIXING_KEY);
+            if (data) {
+                const parsed = JSON.parse(data);
+                // 检查是否需要重置（周一）
+                if (shouldResetWeekly(parsed.lastResetWeek)) {
+                    return createNewWeeklyProgress();
                 }
+                return parsed;
             }
-        }catch(e){}
-        
-        if(cacheData){
-            poolImg.src=cacheData;
-            // 后台静默检查CDN是否有更新
-            refreshBgFromCdn();
-        }else{
-            loadPoolBg();
-        }
-        
-        function loadPoolBg(){
-            var img=new Image();img.crossOrigin='anonymous';
-            img.onload=function(){
-                poolImg.src=BG_URL;
-                try{
-                    var c=document.createElement('canvas');
-                    c.width=img.naturalWidth||1280;
-                    c.height=img.naturalHeight||720;
-                    c.getContext('2d').drawImage(img,0,0);
-                    var d=c.toDataURL('image/jpeg',0.8);
-                    if(d&&d.length>1000){
-                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
-                    }
-                }catch(e){}
-            }
-            img.onerror=useFallbackBg;
-            img.src=BG_URL+'?v='+Date.now();
-            setTimeout(useFallbackBg,8000);
-        }
-        
-        function refreshBgFromCdn(){
-            var img=new Image();img.crossOrigin='anonymous';
-            img.onload=function(){
-                try{
-                    var c=document.createElement('canvas');
-                    c.width=img.naturalWidth||1280;
-                    c.height=img.naturalHeight||720;
-                    c.getContext('2d').drawImage(img,0,0);
-                    var d=c.toDataURL('image/jpeg',0.8);
-                    if(d&&d.length>1000){
-                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
-                    }
-                }catch(e){}
-            };
-            img.onerror=function(){};
-            img.src=BG_URL;
-        }
-        
-        function useFallbackBg(){if(!poolImg.src||poolImg.naturalHeight===0){poolImg.style.display='none';document.getElementById('poolPlaceholder').style.display='';document.getElementById('poolOverlay').style.background='#e5e7eb';}}
-
-        // ===== 概率配置 =====
-        var DICE_PROBS=[[1,0.12],[2,0.12],[3,0.12],[4,0.12],[5,0.12],[6,0.40]];
-        var DICE_PROBS_2=[[1,0.16],[2,0.16],[3,0.16],[4,0.16],[5,0.16],[6,0.20]];
-        var DICE_PROBS_3=[[1,0.18],[2,0.18],[3,0.18],[4,0.18],[5,0.18],[6,0.10]];
-        var REWARD_CONFIG=null;
-        var DEFAULT_REWARDS={
-            star3:[[{type:'voucher',amount:5,name:'兑换券'},{type:'lottery',amount:1,name:'抽奖券'}],[{type:'voucher',amount:8,name:'兑换券'}],[{type:'lottery',amount:3,name:'抽奖券'}],[{type:'jixing_muchun_currency',amount:1,name:'纪行券'}],[{type:'premium',amount:1,name:'高级券'}]],
-            star4:[[{type:'voucher',amount:20,name:'兑换券'},{type:'premium',amount:1,name:'高级券'},{type:'lottery',amount:3,name:'抽奖券'}],[{type:'voucher',amount:35,name:'兑换券'},{type:'premium',amount:2,name:'高级券'}],[{type:'voucher',amount:15,name:'兑换券'},{type:'lottery',amount:8,name:'抽奖券'}],[{type:'premium',amount:3,name:'高级券'}],[{type:'jixing_muchun_currency',amount:2,name:'纪行券'},{type:'lottery',amount:5,name:'抽奖券'}]],
-            star5_normal:{zoneA:[{type:'voucher',amount:80,name:'兑换券'},{type:'premium',amount:3,name:'高级券'}],zoneB:[{type:'lottery',amount:10,name:'抽奖券'},{type:'jixing_muchun_currency',amount:3,name:'纪行券'}]},
-            star5_grand:{zoneA:[{type:'item',name:'特级实物大奖',amount:1},{type:'voucher',amount:50,name:'兑换券'}],zoneB:[{type:'premium',amount:2,name:'高级券'}]}
-        };
-        var POOL_TIERS=['star3','star4'];
-        var TIER_INFO={star3:{name:'三星奖励',icon:'🎲',badgeCls:'rtb-star3',tagCls:'t3'},star4:{name:'四星奖励',icon:'✨',badgeCls:'rtb-star4',tagCls:'t4'},star5_normal:{name:'五星奖励',icon:'⭐',badgeCls:'rtb-star5n',tagCls:'t5n'},star5_grand:{name:'特级大奖',icon:'👑',badgeCls:'rtb-star5g',tagCls:'t5g'}};
-        var CURRENCY_NAMES={voucher:'兑换券',lottery:'抽奖券',premium:'高级券',jixing_muchun_currency:'纪行券'};
-        var DICE_EMOJIS=['','⚀','⚁','⚂','⚃','⚄','⚅'];
-        var ALL_PROBS=[DICE_PROBS,DICE_PROBS_2,DICE_PROBS_3];
-
-        // ===== 状态变量 =====
-        var totalDraws=0,lastStar5Draw=0,lastStar4Draw=0,lastStar5Type=null,drawHistory=[],isRolling=false;
-        var pendingStar5Rewards=null;  // 待选择的五星奖励 {tier, zoneA, zoneB}
-
-        // 状态机: 'idle' | 'rolling' | 'done'
-        var rollState='idle';
-        var currentStep=0;       // 当前掷到第几颗 (0,1,2)
-        var rolledResults=[];     // 已掷出的结果 [d1, d2, d3]
-
-        // ===== 初始化 =====
-        function init(){
-            try{var o=JSON.parse(localStorage.getItem('lottery_data')||'{}');totalDraws=o.totalDraws||0;lastStar5Draw=o.lastStar5Draw||0;lastStar4Draw=o.lastStar4Draw||0;lastStar5Type=o.lastStar5Type||null;drawHistory=o.drawHistory||[];}catch(e){}
-            try{REWARD_CONFIG=JSON.parse(localStorage.getItem('lottery_reward_config'))}catch(e){}
-            document.getElementById('ticketCount').textContent=getTicketCount();
-            updateStats();updatePityUI();renderHistory();
-            renderPendingCodes(); // 渲染待使用兑换码
-            fetchRewardConfigFromCloud();
-        }
-        async function fetchRewardConfigFromCloud(){
-            try{
-                if(typeof window.supabase==='undefined')return;
-                var sb=window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
-                var {data,error}=await sb.from('jisuan_data').select('lottery_reward_config').eq('id','global').maybeSingle();
-                if(!error&&data&&data.lottery_reward_config){
-                    REWARD_CONFIG=data.lottery_reward_config;
-                    localStorage.setItem('lottery_reward_config',JSON.stringify(REWARD_CONFIG));
-                    console.log('[lottery] ✅ 已从云端加载最新奖励配置');
-                }
-            }catch(e){console.warn('[lottery] 云端配置加载失败，使用本地缓存',e)}
-        }
-        function saveData(){localStorage.setItem('lottery_data',JSON.stringify({totalDraws,lastStar5Draw,lastStar4Draw,lastStar5Type,drawHistory}))}
-        function getRewards(t){
-            var src=(REWARD_CONFIG&&REWARD_CONFIG[t])?REWARD_CONFIG[t]:(DEFAULT_REWARDS[t]||[]);
-            if(POOL_TIERS.indexOf(t)>=0){if(Array.isArray(src)&&src.length>0&&Array.isArray(src[0]))return src[Math.floor(Math.random()*src.length)];}
-            return Array.isArray(src)?src:[];
-        }
-        function getTicketCount(){return parseInt(localStorage.getItem('jixing_muchun_currency')||'0')}
-        function useTicket(n){var c=getTicketCount();if(c<n)return false;localStorage.setItem('jixing_muchun_currency',String(c-n));syncCurrencyToCloud('jixing_muchun_currency');return true}
-        function rollByProb(arr){var r=Math.random(),cum=0;for(var i=0;i<arr.length;i++){cum+=arr[i][1];if(r<=cum)return arr[i][0]}return arr[arr.length-1][0]}
-        function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
-
-        // ===== 状态切换 =====
-        function switchOverlay(state){
-            document.getElementById('overlayIdle').style.display=(state==='idle'||state==='tenpull')?'':'none';
-            document.getElementById('overlayRolling').style.display=(state==='rolling')?'':'none';
-            document.getElementById('overlayResult').style.display=(state==='done')?'':'none';
-            var tp=document.getElementById('overlayTenPull');
-            if(tp)tp.style.display=(state==='tenpull')?'':'none';
-
-            var ov=document.getElementById('poolOverlay');
-            ov.classList.remove('has-result');
-            if(state==='idle'){ov.style.background=''}
-            else if(state==='tenpull'){ov.style.background=''}
-            else if(state==='rolling'){ov.style.background=''}
-            else if(state==='done')ov.classList.add('has-result');
-
-            var btn=document.getElementById('rollBtn'),hint=document.getElementById('pullHint'),tbtn=document.getElementById('tenBtn');
-            if(state==='idle'){
-                btn.className='pull-btn';btn.innerHTML='掷骰1次<br>🎫160';
-                hint.textContent='';
-                if(tbtn)tbtn.disabled=false;
-            }else if(state==='rolling'){
-                btn.className='pull-btn roll-btn-active';btn.textContent='掷骰中...';
-                hint.textContent='按顺序掷出 3 颗骰子';
-                if(tbtn)tbtn.disabled=true;
-            }else{
-                btn.className='pull-btn';btn.innerHTML='再来一次<br>🎫160';
-                hint.textContent='点击再次抽奖 · 或查看 📊 详情 了解更多';
-                if(tbtn)tbtn.disabled=true;
-            }
+            return createNewWeeklyProgress();
         }
 
-        // ===== 核心流程：开始抽奖 =====
-        async function startLottery(){
-            if(isRolling)return;
-            if(getTicketCount()<160){showToast('❌ 纪行券不足（需要160张）','err');return}
-            isRolling=true;
-
-            useTicket(160);document.getElementById('ticketCount').textContent=getTicketCount();
-
-            // 重置骰子UI
-            resetDice();
-            rollState='rolling';
-            switchOverlay('rolling');
-            currentStep=0;rolledResults=[];
-
-            await delay(300);
-
-            // 自动掷第一颗
-            await rollOneDie(0);
-
-            isRolling=false;
-        }
-
-        // ===== 重置骰子显示 =====
-        function resetDice(){
-            for(var i=1;i<=3;i++){
-                var el=document.getElementById('gd'+i);
-                el.textContent='❓';
-                el.className='gacha-dice';
-            }
-            updateProgressDots();
-        }
-
-        // ===== 掷单颗骰子 =====
-        async function rollOneDie(index){
-            if(isRolling)return;
-            isRolling=true;
-            document.getElementById('rollBtn').disabled=true;
-
-            var el=document.getElementById('gd'+(index+1));
-            el.classList.add('rolling');
-            el.classList.remove('dice-done','dice-result-6');
-            el.textContent='?';
-
-            // 滚动动画：快速切换数字
-            var probArr=ALL_PROBS[index];
-            var rollCount=0;
-            var targetResult=rollByProb(probArr);
-
-            await new Promise(function(resolve){
-                var iv=setInterval(function(){
-                    el.textContent=DICE_EMOJIS[Math.floor(Math.random()*6)+1];
-                    rollCount++;
-                    if(rollCount>=18){
-                        clearInterval(iv);
-                        setTimeout(function(){
-                            el.classList.remove('rolling');
-                            el.classList.add('dice-done');
-                            el.textContent=DICE_EMOJIS[targetResult];
-                            if(targetResult===6)el.classList.add('dice-result-6');
-
-                            rolledResults[index]=targetResult;
-                            currentStep=index+1;
-                            updateProgressDots();
-
-                            isRolling=false;
-                            document.getElementById('rollBtn').disabled=false;
-
-                            // 更新提示文字
-                            var hints=['太棒了！继续掷出第 2 颗骰子','最后一颗！掷出第 3 颗骰子'];
-                            document.getElementById('rollHint').textContent=hints[index]||'';
-
-                            resolve();
-                        },150);
-                    }
-                },65);
-            });
-        }
-
-        // ===== 点击掷骰按钮（掷骰模式下）=====
-        async function onRollClick(){
-            if(rollState!=='rolling'||isRolling)return;
-            if(currentStep<3){
-                await rollOneDie(currentStep);
-                if(currentStep===3){
-                    // 三颗都掷完了 → 计算结果
-                    await delay(400);
-                    finishRolling();
-                }
-            }
-        }
-
-        // ===== 三颗都掷完 → 判定星级 + 展示结果 =====
-        function finishRolling(){
-            var results=rolledResults; // [d1, d2, d3]
-            rollState='done';
-
-            processResult(results);
-
-            // 奖池图保持空闲状态，不显示结果
-            switchOverlay('idle');
-
-            // 弹窗出现前禁用按钮，防止重复点击
-            document.getElementById('rollBtn').disabled=true;
-
-            // 延迟弹出详情弹窗
-            setTimeout(function(){
-                var tier=drawHistory.length>0?drawHistory[0].tier:'star3';
-                if(tier==='star5_grand'||tier==='star5_normal'){
-                    showModal(results,true);
-                }else{
-                    showModal(results,false);
-                }
-            },1400);
-        }
-
-        // ===== 星级判定 =====
-        function processResult(results){
-            totalDraws++;
-            var sum=results.reduce(function(a,b){return a+b},0);
-            var isPerfect18=(sum===18);
-            var pity5=totalDraws-lastStar5Draw,pity4=totalDraws-lastStar4Draw;
-
-            var tier='star3';
-            var triggerSource='';
-
-            // 基础骰子判定
-            if(isPerfect18){tier='star5';triggerSource='sum18';}
-            else if(sum>=16){tier='star4';triggerSource='sum16';}
-
-            // 保底判定（覆盖基础判定）
-            if(tier!=='star5'){
-                if(pity5>=90){tier='star5';triggerSource='pity90';}
-            }
-            if(tier!=='star5'&&tier!=='star4'){
-                if(pity4>=10){tier='star4';triggerSource='pity10';}
-            }
-
-            // 重置保底进度
-            if(tier==='star5')lastStar5Draw=totalDraws;
-            if(tier==='star4')lastStar4Draw=totalDraws;
-
-            // 五星子类型判定
-            var finalTier=tier,star5SubType=null;
-            if(tier==='star5'){
-                if(triggerSource==='pity90'){
-                    // ⚠️ 保底触发的五星：始终50%随机，不受补偿机制影响
-                    star5SubType=Math.random()<0.5?'grand':'normal';
-                }else{
-                    // 非保底触发（sum18）：检查补偿机制
-                    if(lastStar5Type==='normal'){
-                        // 上次是普通五星 → 本次必中特级大奖
-                        star5SubType='grand';
-                    }else{
-                        star5SubType=Math.random()<0.5?'grand':'normal';
-                    }
-                }
-                lastStar5Type=star5SubType;
-                finalTier=(star5SubType==='grand')?'star5_grand':'star5_normal';
-            }
-
-            var rewards=getRewards(finalTier);
-            if(finalTier==='star5_normal'||finalTier==='star5_grand'){
-                var rewardConfig=(REWARD_CONFIG&&REWARD_CONFIG[finalTier])?REWARD_CONFIG[finalTier]:(DEFAULT_REWARDS[finalTier]||{zoneA:[],zoneB:[]});
-                pendingStar5Rewards={tier:finalTier,zoneA:rewardConfig.zoneA||[],zoneB:rewardConfig.zoneB||[]};
-                setTimeout(function(){showStar5ChoiceModal()},1200);
-            }else{
-                grantRewards(rewards);
-            }
-
-            var triggerReasonMap={sum18:'点数和=18',sum16:'点数和≥16',pity90:'五星保底(90抽)',pity10:'四星保底(10抽)'};
-            var triggerReason=triggerReasonMap[triggerSource]||'默认';
-            var subReason='';
-            if(star5SubType){
-                if(triggerSource==='pity90'){
-                    subReason=star5SubType==='grand'?'50%(特级)':'50%(普通)';
-                }else{
-                    subReason=star5SubType==='grand'?(lastStar5Type==='normal'?'补偿必中':'50%(特级)'):'普通';
-                }
-            }
-
-            drawHistory.unshift({time:new Date().toISOString(),dice:results,sum,tier:finalTier,baseTier:tier,star5SubType,triggerSource,
-                trigger:triggerReason+(subReason?(' · '+subReason):''),rewards:(finalTier==='star5_normal'||finalTier==='star5_grand')?[]:rewards.map(function(r){return Object.assign({},r)})});
-            if(drawHistory.length>50)drawHistory.pop();
-            saveData();
-
-            updateStats();updatePityUI();renderHistory();
-        }
-
-        function grantRewards(rewards){
-            for(var i=0;i<rewards.length;i++){
-                var r=rewards[i];
-                if(r.type==='item'){
-                    try{var rs=JSON.parse(localStorage.getItem('records')||'[]');rs.push({prize:{name:r.name||'实物奖励',rewardType:'item'},source:'lottery',date:new Date().toISOString()});localStorage.setItem('records',JSON.stringify(rs))}catch(e){}
-                }else{var c=parseFloat(localStorage.getItem(r.type))||0;localStorage.setItem(r.type,String(c+(r.amount||0)));syncCurrencyToCloud(r.type)}
-            }
-        }
-
-        // ===== 五星奖励选择 =====
-        function showStar5ChoiceModal(){
-            if(!pendingStar5Rewards)return;
-            var info=TIER_INFO[pendingStar5Rewards.tier]||TIER_INFO.star5_normal;
-            document.getElementById('star5ChoiceIcon').textContent=info.icon;
-            document.getElementById('star5ChoiceBadge').className='result-tier-badge '+info.badgeCls;
-            document.getElementById('star5ChoiceBadge').textContent='🎉 '+info.name.toUpperCase();
-            document.getElementById('star5ChoiceTitle').textContent='恭喜！请从A区选择一个奖励';
-
-            var zoneBHtml='';
-            if(pendingStar5Rewards.zoneB&&pendingStar5Rewards.zoneB.length>0){
-                zoneBHtml='<div style="font-size:0.75rem;color:rgba(253,230,138,0.7);margin-bottom:4px;">🅱️ B区奖励（自动获取）</div>';
-                for(var bi=0;bi<pendingStar5Rewards.zoneB.length;bi++){
-                    var bItem=pendingStar5Rewards.zoneB[bi];
-                    if(bItem.type==='item'){
-                        zoneBHtml+='<span style="color:#6ee7b7;font-weight:600;">🎁 '+bItem.name+'</span>';
-                    }else{
-                        zoneBHtml+=(CURRENCY_NAMES[bItem.type]||bItem.type)+' +'+bItem.amount;
-                    }
-                    if(bi<pendingStar5Rewards.zoneB.length-1)zoneBHtml+=' · ';
-                }
-            }else{
-                zoneBHtml='<span style="color:rgba(255,255,255,0.3);">B区无额外奖励</span>';
-            }
-            document.getElementById('star5ZoneBPreview').innerHTML=zoneBHtml;
-
-            var optionsHtml='';
-            for(var ai=0;ai<pendingStar5Rewards.zoneA.length;ai++){
-                var aItem=pendingStar5Rewards.zoneA[ai];
-                var rewardText=aItem.type==='item'?aItem.name:(CURRENCY_NAMES[aItem.type]||aItem.type)+' ×'+aItem.amount;
-                optionsHtml+='<div class="star5-option" data-idx="'+ai+'" onclick="selectStar5Option(this,'+ai+')">'+
-                    '<div class="star5-option-radio"></div>'+
-                    '<div class="star5-option-info"><div class="star5-option-name">'+rewardText+'</div><div class="star5-option-desc">点击选择此奖励</div></div></div>';
-            }
-            document.getElementById('star5ZoneAOptions').innerHTML=optionsHtml;
-
-            document.getElementById('star5ChoiceModal').classList.add('show');
-        }
-        function selectStar5Option(el,idx){
-            document.querySelectorAll('.star5-option').forEach(function(o){o.classList.remove('selected')});
-            el.classList.add('selected');
-            setTimeout(function(){confirmStar5Choice(idx)},300);
-        }
-        function confirmStar5Choice(idx){
-            if(!pendingStar5Rewards)return;
-            var chosenReward=pendingStar5Rewards.zoneA[idx];
-            var allRewards=[chosenReward];
-            if(pendingStar5Rewards.zoneB)allRewards=allRewards.concat(pendingStar5Rewards.zoneB);
-            
-            // 如果选择的是实物奖品且有兑换码，保存到待使用列表
-            if(chosenReward.type==='item'&&chosenReward.code){
-                savePendingCode(chosenReward.name,chosenReward.code);
-            }
-            
-            grantRewards(allRewards);
-
-            var lastRecord=drawHistory[0];
-            if(lastRecord){lastRecord.rewards=allRewards.map(function(r){return Object.assign({},r)});saveData();}
-
-            document.getElementById('star5ChoiceModal').classList.remove('show');
-            pendingStar5Rewards=null;
-
-            updateStats();renderHistory();
-            showToast('✅ 奖励已领取！','ok');
-        }
-
-        // ===== 待使用兑换码管理 =====
-        function savePendingCode(name,code){
-            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
-            pendingCodes.push({name:name,code:code,time:new Date().toISOString()});
-            localStorage.setItem('pending_item_codes',JSON.stringify(pendingCodes));
-            renderPendingCodes();
-        }
-        function removePendingCode(code){
-            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
-            pendingCodes=pendingCodes.filter(function(c){return c.code!==code});
-            localStorage.setItem('pending_item_codes',JSON.stringify(pendingCodes));
-            renderPendingCodes();
-        }
-        function renderPendingCodes(){
-            var pendingCodes=JSON.parse(localStorage.getItem('pending_item_codes')||'[]');
-            var banner=document.getElementById('pendingCodesBanner');
-            var list=document.getElementById('pendingCodesList');
-            if(pendingCodes.length===0){
-                banner.classList.remove('show');
-                return;
-            }
-            banner.classList.add('show');
-            list.innerHTML=pendingCodes.map(function(c){
-                return '<div class="pcb-item">'+
-                    '<div><div class="pcb-code">'+c.code+'</div><div class="pcb-name">'+c.name+'</div></div>'+
-                    '<button class="pcb-copy-btn" onclick="copyPendingCode(\''+c.code+'\')">复制</button>'+
-                    '</div>';
-            }).join('');
-        }
-        function copyPendingCode(code){
-            if(navigator.clipboard){
-                navigator.clipboard.writeText(code).then(function(){showToast('✅ 兑换码已复制！','ok');});
-            }else{
-                var ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('✅ 兑换码已复制！','ok');
-            }
-        }
-
-        // ===== 兑换纪行券 =====
-        var EXCHANGE_WEEK_LIMIT=2000;
-        function getWeekKey(){
-            var now=new Date();
-            var d=new Date(now);
-            d.setHours(0,0,0,0);
-            var day=d.getDay()||7;
-            d.setDate(d.getDate()-day+1);
-            return 'ex_week_'+d.toISOString().split('T')[0];
-        }
-        function getWeekExchanged(){
-            return parseInt(localStorage.getItem(getWeekKey())||'0');
-        }
-        function openExchangeModal(){
-            document.getElementById('exVoucherCount').textContent=parseInt(localStorage.getItem('voucher')||'0');
-            document.getElementById('exWeekUsed').textContent=getWeekExchanged();
-            document.getElementById('exAmount').value='';
-            document.getElementById('exchangeModal').classList.add('show');
-        }
-        function confirmExchange(){
-            var amt=parseInt(document.getElementById('exAmount').value)||0;
-            if(amt<=0){showToast('❌ 请输入有效数量','err');return}
-            if(amt>EXCHANGE_WEEK_LIMIT){showToast('❌ 单次最多兑换 '+EXCHANGE_WEEK_LIMIT+' 张','err');return}
-            var voucherBal=parseInt(localStorage.getItem('voucher')||'0');
-            if(voucherBal<amt){showToast('❌ 兑换券不足（需要'+amt+'，当前'+voucherBal+'）','err');return}
-            var weekUsed=getWeekExchanged();
-            if(weekUsed+amt>EXCHANGE_WEEK_LIMIT){showToast('❌ 超过本周上限！剩余可兑换 '+(EXCHANGE_WEEK_LIMIT-weekUsed)+' 张','err');return}
-
-            localStorage.setItem('voucher',String(voucherBal-amt));
-            syncCurrencyToCloud('voucher');
-
-            var jixingBal=parseInt(localStorage.getItem('jixing_muchun_currency')||'0');
-            localStorage.setItem('jixing_muchun_currency',String(jixingBal+amt));
-            syncCurrencyToCloud('jixing_muchun_currency');
-
-            localStorage.setItem(getWeekKey(),String(weekUsed+amt));
-
-            document.getElementById('exchangeModal').classList.remove('show');
-            updateTicketDisplay();
-            showToast('✅ 成功兑换 '+amt+' 张纪行券！','ok');
-        }
-
-        // ===== 进度指示器 =====
-        function updateProgressDots(){
-            for(var i=1;i<=3;i++){
-                var dot=document.getElementById('sd'+i);
-                dot.className='step-dot';
-                if(i<currentStep+1)dot.classList.add('active');
-                if(i<currentStep)dot.classList.add('done');
-            }
-            var texts=['第 1 / 3 次','第 2 / 3 次','第 3 / 3 次'];
-            document.getElementById('progressText').textContent=texts[currentStep];
-        }
-
-        // ===== 最终结果展示 =====
-        function showFinalResult(dice){
-            var tier=drawHistory.length>0?drawHistory[0].tier:'star3';
-            var info=TIER_INFO[tier],ov=document.getElementById('poolOverlay'),rs=document.getElementById('resultShow');
-            ov.classList.add('has-result');
-            document.getElementById('poolPlaceholder').style.display='none';
-
-            document.getElementById('resBadge').className='result-tier-badge '+info.badgeCls;
-            document.getElementById('resBadge').textContent=info.name.toUpperCase();
-            document.getElementById('resIcon').textContent=info.icon;
-            document.getElementById('resName').textContent=info.name;
-
-            var rewards=drawHistory.length>0?drawHistory[0].rewards:getRewards(tier);
-            var rt=rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>');
-            document.getElementById('resRewards').innerHTML=rt;
-            document.getElementById('resDice').textContent=dice.map(function(d){return DICE_EMOJIS[d]}).join(' ')+' = '+dice.reduce(function(a,b){return a+b},0);
-
-            if(tier==='star5_grand')spawnParticles(document.getElementById('resParticles'));
-
-            setTimeout(function(){rs.classList.add('visible')},80);
-        }
-
-        function spawnParticles(container){
-            container.innerHTML='';
-            var colors=['#10b981','#34d399','#6ee7b7','#f59e0b','#111827'];
-            for(var i=0;i<18;i++){var p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.bottom='20px';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDuration=(0.8+Math.random())+'s';p.style.animationDelay=(Math.random()*0.4)+'s';container.appendChild(p);}
-        }
-
-        // ===== 绑定掷骰按钮事件 =====
-        document.getElementById('rollBtn').addEventListener('click',function(){
-            if(rollState==='idle')startLottery();
-            else if(rollState==='rolling')onRollClick();
-            else if(rollState==='done'){
-                // 重置回空闲状态
-                hideResult();
-                switchOverlay('idle');
-                rollState='idle';
-            }
-        });
-
-        // ===== 隐藏结果回到空闲 =====
-        function hideResult(){
-            document.getElementById('resultShow').classList.remove('visible');
-            document.getElementById('poolOverlay').classList.remove('has-result');
-            document.getElementById('resParticles').innerHTML='';
-            document.getElementById('poolPlaceholder').style.display='';
-        }
-
-        // ===== 弹窗 =====
-        // isStar5Pending: 如果是五星，关闭弹窗后需要弹出选择奖励
-        function showModal(dice,isStar5Pending){
-            var tier; // 从最近的 drawHistory 获取
-            if(drawHistory.length>0)tier=drawHistory[0].tier;else tier='star3';
-            var info=TIER_INFO[tier],rewards=drawHistory.length>0?drawHistory[0].rewards:getRewards(tier);
-            document.getElementById('mIcon').textContent=info.icon;
-            document.getElementById('mBadge').className='result-tier-badge '+info.badgeCls;
-            document.getElementById('mBadge').textContent=info.name.toUpperCase();
-            document.getElementById('mName').textContent=info.name;
-            var rt=rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>');
-            document.getElementById('mRewards').innerHTML=rt;
-            document.getElementById('mDice').textContent=dice.map(function(d){return DICE_EMOJIS[d]}).join(' ')+' = '+dice.reduce(function(a,b){return a+b},0);
-            if(tier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
-            // 标记是否需要后续弹出五星选择
-            document.getElementById('resultModal').dataset.star5Pending=isStar5Pending?'1':'0';
-            document.getElementById('resultModal').classList.add('show');
-        }
-        function closeResultModal(){
-            var modal=document.getElementById('resultModal');
-            var star5Pending=modal.dataset.star5Pending==='1';
-            var tenResultsData=modal.dataset.tenResults;
-            modal.classList.remove('show');
-            if(tenState==='done'){closeTenPull();return}
-            // 如果是五星，关闭结果弹窗后弹出选择奖励弹窗
-            if(star5Pending){
-                // 十连抽：从存储的数据中恢复 pendingStar5Rewards
-                if(tenResultsData){
-                    try{
-                        var results=JSON.parse(tenResultsData);
-                        for(var ti=0;ti<results.length;ti++){
-                            if(results[ti].tier==='star5_grand'||results[ti].tier==='star5_normal'){
-                                var cfg=(REWARD_CONFIG&&REWARD_CONFIG[results[ti].tier])?REWARD_CONFIG[results[ti].tier]:(DEFAULT_REWARDS[results[ti].tier]||{zoneA:[],zoneB:[]});
-                                pendingStar5Rewards={tier:results[ti].tier,zoneA:cfg.zoneA||[],zoneB:cfg.zoneB||[]};
-                                break;
-                            }
-                        }
-                    }catch(e){}
-                }
-                setTimeout(function(){showStar5ChoiceModal()},300);
-                return;
-            }
-            hideResult();
-            switchOverlay('idle');
-            rollState='idle';
-            document.getElementById('rollBtn').disabled=false;
-        }
-        function openDetailModal(){document.getElementById('detailModal').classList.add('show');renderTierDetails()}
-        function closeDetailModal(){document.getElementById('detailModal').classList.remove('show')}
-        function switchSubTab(tab){
-            document.querySelectorAll('.subtab').forEach(function(b){b.classList.remove('active')});
-            document.querySelectorAll('.subpanel').forEach(function(p){p.classList.remove('active')});
-            document.querySelector('.subtab[data-tab="'+tab+'"]').classList.add('active');
-            document.getElementById('panel-'+tab).classList.add('active');
-            if(tab==='tiers')renderTierDetails();
-        }
-        function renderTierDetails(){
-            var tiers={star3:[],star4:[],star5_normal:[],star5_grand:[]};
-            for(var i=0;i<drawHistory.length;i++){var h=drawHistory[i];if(tiers[h.tier])tiers[h.tier].push(h)}
-            var tierMap={star3:'Star3',star4:'Star4',star5_normal:'Star5N',star5_grand:'Star5G'};
-            var rewardHtml=function(rewards){return rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>')};
-            var keys=['star3','star4','star5_normal','star5_grand'];
-            for(var t=0;t<keys.length;t++){
-                var key=keys[t],items=tiers[key];
-                document.getElementById('td'+tierMap[key]+'Count').textContent=items.length+' 次';
-                if(POOL_TIERS.indexOf(key)>=0){
-                    var pool=(REWARD_CONFIG&&REWARD_CONFIG[key])?REWARD_CONFIG[key]:(DEFAULT_REWARDS[key]||[]);
-                    var poolHtml='';
-                    if(Array.isArray(pool)&&pool.length>0){
-                        poolHtml='<div style="font-size:0.74rem;color:#9ca3af;margin-bottom:6px;">奖池（随机抽取1项）：</div>';
-                        for(var pi=0;pi<pool.length;pi++){var opt=pool[pi];var optText=Array.isArray(opt)?opt.map(function(r){return r.type==='item'?'🎁 '+r.name:(CURRENCY_NAMES[r.type]||r.type)+'+'+r.amount}).join(' / '):String(opt);poolHtml+='<div style="padding:3px 8px;background:rgba(0,0,0,0.2);border-radius:5px;border:1px solid rgba(255,255,255,0.08);font-size:0.78rem;color:rgba(255,255,255,0.7);margin-bottom:3px;">'+(pi+1)+'. '+optText+'</div>';}
-                    }
-                    document.getElementById('td'+tierMap[key]+'Rewards').innerHTML=poolHtml;
-                }else{document.getElementById('td'+tierMap[key]+'Rewards').innerHTML=rewardHtml(getRewards(key));}
-                var listEl=document.getElementById('td'+tierMap[key]+'List');
-                if(!items.length){listEl.innerHTML='<div style="text-align:center;padding:10px;color:rgba(255,255,255,0.3);font-size:0.78rem;">暂无记录</div>';continue}
-                listEl.innerHTML=items.slice(0,20).map(function(h){return '<div class="th-item"><span class="th-dice">'+h.dice.map(function(d){return DICE_EMOJIS[d]}).join('')+'</span><span style="font-size:0.7rem;color:rgba(255,255,255,0.4);">'+(h.sum!=null?'='+h.sum:'')+'</span>'+(h.trigger?'<span style="font-size:0.66rem;color:rgba(255,255,255,0.3);margin-left:4px;">'+h.trigger+'</span>':'')+'<span class="th-time">'+new Date(h.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span></div>'}).join('');
-            }
-        }
-
-        // ===== 统计 & 保底 =====
-        function updateStats(){
-            document.getElementById('totalDraws').textContent=totalDraws;
-            document.getElementById('star5GrandCount').textContent=drawHistory.filter(function(h){return h.tier==='star5_grand'}).length;
-            document.getElementById('star5NormalCount').textContent=drawHistory.filter(function(h){return h.tier==='star5_normal'}).length;
-            document.getElementById('star4Count').textContent=drawHistory.filter(function(h){return h.tier==='star4'}).length;
-        }
-        function updatePityUI(){
-            var p5=totalDraws-lastStar5Draw,p4=totalDraws-lastStar4Draw;
-            document.getElementById('pity5Fill').style.width=Math.min(100,(p5/90)*100)+'%';
-            var t5=p5+'/90';if(p5>=90)t5='必中!';
-            document.getElementById('pity5Count').textContent=t5;document.getElementById('pity5Dot').style.display=p5>=90?'':'none';
-            document.getElementById('pity4Fill').style.width=Math.min(100,(p4/10)*100)+'%';
-            var t4=p4+'/10';if(p4>=10)t4='已触发!';
-            document.getElementById('pity4Count').textContent=t4;document.getElementById('pity4Dot').style.display=p4>=10?'':'none';
-        }
-        function renderHistory(){
-            var el=document.getElementById('historyList');
-            if(!drawHistory||!drawHistory.length){el.innerHTML='<div style="text-align:center;padding:18px;color:rgba(255,255,255,0.3);font-size:0.84rem;">暂无记录，开始你的第一次抽奖吧~</div>';return}
-            el.innerHTML=drawHistory.slice(0,30).map(function(h){
-                var info=TIER_INFO[h.tier]||TIER_INFO.star3;
-                var dStr=h.dice.map(function(d){return DICE_EMOJIS[d]}).join('');
-                var time=new Date(h.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-                return '<div class="h-item"><div class="h-dice">'+dStr+'<span class="h-sum">'+(h.sum!=null?'='+h.sum:'')+'</span></div><div class="h-info"><span class="h-tag '+info.tagCls+'">'+info.icon+' '+info.name+'</span>'+(h.trigger?'<span class="h-trigger">'+h.trigger+'</span>':'')+'</div><span class="h-time">'+time+'</span></div>';
-            }).join('');
-        }
-
-        function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'ok')+' show';setTimeout(function(){t.classList.remove('show')},2500)}
-
-        // ===== 十连抽逻辑 =====
-        var tenState='idle', tenResults=[], hasAnyStar5=false;
-        var tenSwipeStartY=0, tenSwipeEl=null, tenIsSwiping=false;
-
-        // 计算十连抽单次结果（不扣券，不发放奖励，不写入历史）
-        // tenStateObj: 十连抽内部状态，包含临时保底计数和概率调整
-        function calcTenResult(results, tenStateObj){
-            var sum=results.reduce(function(a,b){return a+b},0);
-            var isPerfect18=(sum===18);
-
-            var tier='star3';
-            var triggerSource='';
-
-            // 基础骰子判定（应用概率调整）
-            var star4ProbAdjust=tenStateObj.star4ProbAdjust||0; // 四星概率调整（负值降低）
-            var star5ProbAdjust=tenStateObj.star5ProbAdjust||0; // 五星概率调整（负值降低）
-            
-            if(isPerfect18){tier='star5';triggerSource='sum18';}
-            else if(sum>=16){
-                // 四星基础概率约5-7%，应用递减调整
-                var effectiveStar4Prob=0.06+star4ProbAdjust;
-                if(Math.random()<effectiveStar4Prob/(1+effectiveStar4Prob)){tier='star4';triggerSource='sum16';}
-            }
-
-            // 保底判定（覆盖基础判定）
-            if(tier!=='star5'){
-                var pity5=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar5Draw;
-                if(pity5>=90){tier='star5';triggerSource='pity90';}
-            }
-            if(tier!=='star5'&&tier!=='star4'){
-                var pity4=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar4Draw;
-                if(pity4>=10){tier='star4';triggerSource='pity10';}
-            }
-
-            // 五星子类型判定（应用概率调整）
-            var finalTier=tier,star5SubType=null;
-            if(tier==='star5'){
-                var effectiveStar5GrandProb=0.5+star5ProbAdjust; // 基础50%，应用递减
-                if(triggerSource==='pity90'){
-                    star5SubType=Math.random()<effectiveStar5GrandProb?'grand':'normal';
-                }else{
-                    if(tenStateObj.tempLastStar5Type==='normal'){
-                        star5SubType='grand';
-                    }else{
-                        star5SubType=Math.random()<effectiveStar5GrandProb?'grand':'normal';
-                    }
-                }
-                finalTier=(star5SubType==='grand')?'star5_grand':'star5_normal';
-            }
-
-            // 获取奖励（三星/四星随机选一项，五星不发放）
-            var rewards=[];
-            if(finalTier!=='star5_normal'&&finalTier!=='star5_grand'){
-                rewards=getRewards(finalTier);
-            }
-
-            var triggerReasonMap={sum18:'点数和=18',sum16:'点数和≥16',pity90:'五星保底(90抽)',pity10:'四星保底(10抽)'};
-            var triggerReason=triggerReasonMap[triggerSource]||'默认';
-            var subReason='';
-            if(star5SubType){
-                if(triggerSource==='pity90'){
-                    subReason=star5SubType==='grand'?'50%(特级)':'50%(普通)';
-                }else{
-                    subReason=star5SubType==='grand'?(tenStateObj.tempLastStar5Type==='normal'?'补偿必中':'50%(特级)'):'普通';
-                }
-            }
-
+        // 创建新的周进度
+        function createNewWeeklyProgress() {
             return {
-                dice:results,
-                sum:sum,
-                tier:finalTier,
-                baseTier:tier,
-                star5SubType:star5SubType,
-                trigger:triggerReason+(subReason?(' · '+subReason):''),
-                rewards:rewards.map(function(r){return Object.assign({},r)})
+                completedDays: [], // 已完成的星期几 [1,2,3,4,5,6,0]
+                lastResetWeek: getWeekKey(),
+                lastClaimDate: null
             };
         }
 
-        function startTenPull(){
-            if(tenState!=='idle'||rollState!=='idle')return;
-            if(!useTicket(1600)){showToast('纪行券不足！需要 1600 张','err');return}
-            tenState='bouncing';
-            tenResults=[];hasAnyStar5=false;
-            document.getElementById('tenBtn').disabled=true;
-            document.getElementById('rollBtn').disabled=true;
-
-            switchOverlay('idle');
-            document.getElementById('overlayIdle').style.display='none';
-            document.getElementById('overlayRolling').style.display='none';
-            document.getElementById('overlayResult').style.display='none';
-            var tp=document.getElementById('overlayTenPull');
-            tp.style.display='';
-            resetTenPullUI();
-
-            // 先预计算10次结果（不扣券，不发放奖励，只计算结果）
-            // 十连抽内部状态：临时保底计数 + 概率调整
-            var tenStateObj={
-                tempTotalDraws: totalDraws,
-                tempLastStar5Draw: lastStar5Draw,
-                tempLastStar4Draw: lastStar4Draw,
-                tempLastStar5Type: lastStar5Type,
-                star4ProbAdjust: 0,      // 四星概率调整
-                star4ConsecutiveCount: 0, // 连续四星计数
-                star5ProbAdjust: 0,       // 五星概率调整
-                lastStar5Distance: 999    // 距离上次五星的抽数
+        // 获取本月统计
+        function getMonthlyStats() {
+            const data = localStorage.getItem(MONTHLY_STATS_KEY);
+            const currentMonth = getMonthKey();
+            if (data) {
+                const parsed = JSON.parse(data);
+                if (parsed.month === currentMonth) {
+                    return parsed;
+                }
+            }
+            return {
+                month: currentMonth,
+                zoneA: { days: 0, currency: 0 },
+                zoneB: { days: 0, currency: 0 }
             };
+        }
+
+        // 保存本月统计
+        function saveMonthlyStats(stats) {
+            localStorage.setItem(MONTHLY_STATS_KEY, JSON.stringify(stats));
+        }
+
+        // 获取周标识（用于判断是否需要重置）
+        function getWeekKey() {
+            const now = new Date();
+            const year = now.getFullYear();
+            // 获取本周一的日期
+            const dayOfWeek = now.getDay();
+            const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+            const monday = new Date(now.setDate(diff));
+            const month = String(monday.getMonth() + 1).padStart(2, '0');
+            const day = String(monday.getDate()).padStart(2, '0');
+            return `${year}-W${month}${day}`;
+        }
+
+        // 获取月份标识
+        function getMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        // 判断是否需要重置周进度
+        function shouldResetWeekly(lastResetWeek) {
+            if (!lastResetWeek) return true;
+            return lastResetWeek !== getWeekKey();
+        }
+
+        // 保存周进度
+        function saveWeeklyProgress(data) {
+            localStorage.setItem(JIXING_KEY, JSON.stringify(data));
+            if(typeof syncJixingProgressToCloud==='function')syncJixingProgressToCloud();
+        }
+
+        // 获取纪行券数量
+        function getJixingCurrency() {
+            return parseInt(localStorage.getItem(CURRENCY_KEY) || '0');
+        }
+
+        // 保存纪行券
+        function saveJixingCurrency(amount) {
+            localStorage.setItem(CURRENCY_KEY, amount.toString());
+        }
+
+        // 获取已购买的奖品
+        function getBoughtRewards() {
+            const data = localStorage.getItem(BOUGHT_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 保存已购买记录
+        function saveBoughtRewards(data) {
+            localStorage.setItem(BOUGHT_KEY, JSON.stringify(data));
+        }
+
+        // 初始化默认进度
+        function initializeDefaultProgress() {
+            if (localStorage.getItem(INIT_KEY) === 'true') {
+                return;
+            }
+            // 新用户获得初始纪行券
+            saveJixingCurrency(2);
+            localStorage.setItem(INIT_KEY, 'true');
+        }
+
+        // 获取今天的日期字符串
+        function getTodayStr() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 获取今天是星期几
+        function getTodayDayOfWeek() {
+            return new Date().getDay();
+        }
+
+        // 检查今天是否可以签到（检查每日任务奖励是否完成）
+        function canCheckInToday() {
+            const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
+            return localStorage.getItem(dailyRewardKey) === 'true';
+        }
+
+        // 检查今天是否已经签到
+        function hasCheckedInToday() {
+            const progress = getWeeklyProgress();
+            const todayDayOfWeek = getTodayDayOfWeek();
+            return progress.completedDays.includes(todayDayOfWeek);
+        }
+
+        // 获取今天的奖励数量
+        function getTodayReward() {
+            const todayDayOfWeek = getTodayDayOfWeek();
+            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
+            return dayConfig ? dayConfig.reward : 300;
+        }
+
+        // 今日签到
+        function checkInToday() {
+            if (hasCheckedInToday()) {
+                return { success: false, message: '今天已经签到过了！' };
+            }
+
+            if (!canCheckInToday()) {
+                alert('请先完成今日的"每日任务奖励"任务！');
+                return { success: false };
+            }
+
+            const progress = getWeeklyProgress();
+            const todayDayOfWeek = getTodayDayOfWeek();
+            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
+            const reward = dayConfig ? dayConfig.reward : 300;
+
+            // 更新周进度
+            progress.completedDays.push(todayDayOfWeek);
+            progress.lastClaimDate = getTodayStr();
+            saveWeeklyProgress(progress);
+
+            // 增加纪行券
+            const currentCurrency = getJixingCurrency();
+            saveJixingCurrency(currentCurrency + reward);
+
+            // 更新本月统计
+            const monthlyStats = getMonthlyStats();
+            if (dayConfig.zone === 'A') {
+                monthlyStats.zoneA.days++;
+                monthlyStats.zoneA.currency += reward;
+            } else {
+                monthlyStats.zoneB.days++;
+                monthlyStats.zoneB.currency += reward;
+            }
+            saveMonthlyStats(monthlyStats);
+
+            return { 
+                success: true, 
+                reward: reward,
+                zone: dayConfig.zone,
+                dayName: dayConfig.name
+            };
+        }
+
+        // 渲染进度
+        function renderProgress() {
+            const progress = getWeeklyProgress();
+            const completedCount = progress.completedDays.length;
+            const percentage = Math.min((completedCount / 7) * 100, 100);
+
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressCount').textContent = `${completedCount} / 7 天`;
+
+            // 渲染A区（周中：周一到周四）
+            const zoneAGrid = document.getElementById('zoneAGrid');
+            zoneAGrid.innerHTML = '';
+            const zoneADays = WEEK_DAYS.filter(d => d.zone === 'A');
+            const todayDayOfWeek = getTodayDayOfWeek();
             
-            for(var i=0;i<10;i++){
-                var d1=rollByProb(DICE_PROBS),d2=rollByProb(DICE_PROBS_2),d3=rollByProb(DICE_PROBS_3);
-                var res=[d1,d2,d3];
-                var resultInfo=calcTenResult(res, tenStateObj);
-                tenResults.push(resultInfo);
-                if(resultInfo.tier==='star5_grand'||resultInfo.tier==='star5_normal')hasAnyStar5=true;
-                
-                // 更新十连抽内部状态
-                tenStateObj.tempTotalDraws++;
-                if(resultInfo.tier==='star5_grand'||resultInfo.tier==='star5_normal'){
-                    tenStateObj.tempLastStar5Draw=tenStateObj.tempTotalDraws;
-                    tenStateObj.tempLastStar5Type=(resultInfo.tier==='star5_grand')?'grand':'normal';
-                    tenStateObj.lastStar5Distance=0;
-                    // 五星后重置四星连续计数
-                    tenStateObj.star4ConsecutiveCount=0;
-                    tenStateObj.star4ProbAdjust=0;
-                }else if(resultInfo.tier==='star4'){
-                    tenStateObj.tempLastStar4Draw=tenStateObj.tempTotalDraws;
-                    tenStateObj.star4ConsecutiveCount++;
-                    tenStateObj.lastStar5Distance++;
-                    // 连续四星概率递减：第2抽-3%，第3抽恢复
-                    if(tenStateObj.star4ConsecutiveCount===2){
-                        tenStateObj.star4ProbAdjust=-0.03;
-                    }else if(tenStateObj.star4ConsecutiveCount>=3){
-                        tenStateObj.star4ConsecutiveCount=0;
-                        tenStateObj.star4ProbAdjust=0;
+            zoneADays.forEach(day => {
+                const cell = createDayCell(day, progress, todayDayOfWeek);
+                zoneAGrid.appendChild(cell);
+            });
+
+            // 渲染B区（周末：周五到周日）
+            const zoneBGrid = document.getElementById('zoneBGrid');
+            zoneBGrid.innerHTML = '';
+            const zoneBDays = WEEK_DAYS.filter(d => d.zone === 'B');
+            
+            zoneBDays.forEach(day => {
+                const cell = createDayCell(day, progress, todayDayOfWeek);
+                zoneBGrid.appendChild(cell);
+            });
+
+            // 更新本月统计
+            renderMonthlyStats();
+        }
+
+        // 创建日期格子
+        function createDayCell(day, progress, todayDayOfWeek) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+
+            const isCompleted = progress.completedDays.includes(day.dayOfWeek);
+            const isToday = day.dayOfWeek === todayDayOfWeek;
+            const canCheckIn = isToday && !isCompleted;
+
+            if (isCompleted) cell.classList.add('completed');
+            if (isToday) cell.classList.add('today');
+
+            // 状态文字根据是否可签到变化
+            let statusText = '未完成';
+            if (isCompleted) {
+                statusText = '已完成';
+            } else if (isToday) {
+                statusText = canCheckInToday() ? '今日可领' : '需先完成任务';
+            }
+
+            cell.innerHTML = `
+                <div class="day-name">${day.name}</div>
+                <div class="day-reward">+${day.reward}</div>
+                <div class="day-status">${statusText}</div>
+            `;
+
+            // 今日格子始终可点击，点击时检查是否完成任务
+            if (canCheckIn) {
+                cell.onclick = function() {
+                    const result = checkInToday();
+                    if (result.success) {
+                        showSuccess(`${result.dayName}签到成功！获得${result.reward}张纪行券！`);
+                        renderProgress();
+                        updateCurrencyDisplay();
+                        updateShopItems();
                     }
-                }else{
-                    tenStateObj.star4ConsecutiveCount=0;
-                    tenStateObj.star4ProbAdjust=0;
-                    tenStateObj.lastStar5Distance++;
+                    // 如果未完成任务，checkInToday 内部会弹出提示
+                };
+            }
+
+            return cell;
+        }
+
+        // 渲染本月统计
+        function renderMonthlyStats() {
+            const stats = getMonthlyStats();
+            document.getElementById('zoneAStats').textContent = 
+                `${stats.zoneA.days} 天 / ${stats.zoneA.currency} 券`;
+            document.getElementById('zoneBStats').textContent = 
+                `${stats.zoneB.days} 天 / ${stats.zoneB.currency} 券`;
+        }
+
+        // 购买奖品
+        function buyReward(rewardId) {
+            const boughtRewards = getBoughtRewards();
+            
+            // 检查是否已购买
+            if (boughtRewards.includes(rewardId)) {
+                alert('您已经兑换过这个奖品了！');
+                return;
+            }
+
+            // 获取奖品价格
+            const price = getRewardPrice(rewardId);
+            const currentCurrency = getJixingCurrency();
+
+            // 检查纪行券是否足够
+            if (currentCurrency < price) {
+                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
+                return;
+            }
+
+            // 确认购买
+            if (!confirm(`确定使用${price}张纪行券兑换此奖品吗？`)) {
+                return;
+            }
+
+            // 扣除纪行券
+            saveJixingCurrency(currentCurrency - price);
+
+            // 记录已购买
+            boughtRewards.push(rewardId);
+            saveBoughtRewards(boughtRewards);
+
+            // 更新界面
+            updateCurrencyDisplay();
+            updateShopItems();
+            showCompleteAnimation('兑换成功！奖品将在活动结束后统一发放~');
+        }
+
+        // 获取奖品价格
+        function getRewardPrice(rewardId) {
+            if (rewardId === '4A') {
+                return 15;
+            }
+            if (rewardId === '4B') {
+                return 3;
+            }
+            return PRICE_PER_ITEM;
+        }
+
+        // 显示虚拟奖励选择弹窗
+        function showReward4Select() {
+            const boughtRewards = getBoughtRewards();
+            const currentCurrency = getJixingCurrency();
+
+            // 检查是否全部已兑换
+            if (boughtRewards.includes('4A') && boughtRewards.includes('4B')) {
+                alert('您已兑换过所有档位！');
+                return;
+            }
+
+            // 更新弹窗选项状态
+            const options = [
+                { id: 'choice4A-lottery', tier: '4A', price: 15 },
+                { id: 'choice4A-voucher', tier: '4A', price: 15 },
+                { id: 'choice4B-lottery', tier: '4B', price: 3 },
+                { id: 'choice4B-voucher', tier: '4B', price: 3 }
+            ];
+
+            options.forEach(opt => {
+                const el = document.getElementById(opt.id);
+                if (boughtRewards.includes(opt.tier)) {
+                    el.classList.add('sold-out');
+                } else if (currentCurrency < opt.price) {
+                    el.classList.add('sold-out');
+                    el.style.opacity = '0.5';
+                } else {
+                    el.classList.remove('sold-out');
+                    el.style.opacity = '1';
                 }
+            });
+
+            document.getElementById('choiceModal').classList.add('active');
+        }
+
+        // 选择虚拟奖励
+        function selectReward4(tier, type) {
+            const boughtRewards = getBoughtRewards();
+            if (boughtRewards.includes(tier)) {
+                alert('您已经兑换过这个档位了！');
+                return;
+            }
+
+            const currentCurrency = getJixingCurrency();
+            const price = tier === '4A' ? 15 : 3;
+
+            if (currentCurrency < price) {
+                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
+                return;
+            }
+
+            const amounts = {
+                '4A': { premiumLottery: 10, voucher: 12888 },
+                '4B': { premiumLottery: 2, voucher: 2488 }
+            };
+            const amount = amounts[tier][type];
+
+            // 扣除纪行券
+            saveJixingCurrency(currentCurrency - price);
+
+            // 记录已购买
+            boughtRewards.push(tier);
+            saveBoughtRewards(boughtRewards);
+
+            // 发放奖励
+            if (type === 'premiumLottery') {
+                const premiumLottery = parseInt(localStorage.getItem('premiumLottery') || '0');
+                localStorage.setItem('premiumLottery', premiumLottery + amount);
                 
-                // 五星后概率递减规则：1-4抽-0.7%，5-9抽-0.5%，10-15抽-0.2%，16+恢复
-                if(tenStateObj.lastStar5Distance>=1&&tenStateObj.lastStar5Distance<=4){
-                    tenStateObj.star5ProbAdjust=-0.007; // 1-4抽内-0.7%
-                }else if(tenStateObj.lastStar5Distance>=5&&tenStateObj.lastStar5Distance<=9){
-                    tenStateObj.star5ProbAdjust=-0.005; // 5-9抽内-0.5%
-                }else if(tenStateObj.lastStar5Distance>=10&&tenStateObj.lastStar5Distance<=15){
-                    tenStateObj.star5ProbAdjust=-0.002; // 10-15抽内-0.2%
-                }else{
-                    tenStateObj.star5ProbAdjust=0; // 16+恢复
-                }
-            }
-
-            // 开始跳动动画（1~6快速切换）
-            var dice=document.getElementById('tenDice');
-            // 根据最高星级决定闪光颜色：五星金光，四星紫光
-            var bestTier='star3';
-            for(var ti=0;ti<tenResults.length;ti++){
-                if(tenResults[ti].tier==='star5_grand'||tenResults[ti].tier==='star5_normal'){bestTier='star5';break}
-                else if(tenResults[ti].tier==='star4'&&bestTier!=='star5')bestTier='star4';
-            }
-            dice.className='ten-dice bouncing'+(bestTier==='star5'?'-gold':bestTier==='star4'?'-purple':'');
-            document.getElementById('tenProgressText').textContent='命运骰子正在凝聚...';
-
-            var bounceCount=0;
-            var bounceIv=setInterval(function(){
-                dice.textContent=DICE_EMOJIS[Math.floor(Math.random()*6)+1];
-                if(++bounceCount>=30){clearInterval(bounceIv)}
-            },100);
-
-            // 跳动约3秒后进入reveal态
-            setTimeout(function(){
-                clearInterval(bounceIv);
-                enterTenReveal();
-            },3000);
-        }
-
-        function enterTenReveal(){
-            tenState='revealed';
-            var dice=document.getElementById('tenDice');
-            dice.classList.remove('bouncing');
-            dice.classList.add('reveal');
-            dice.textContent='❓';
-            if(hasAnyStar5){
-                dice.classList.add('reveal-gold');
-            }else{
-                dice.classList.add('reveal-purple');
-            }
-
-            document.getElementById('tenProgressText').textContent=hasAnyStar5?'✨ 检测到五星命格！':'✨ 命运已锁定';
-
-            // 电脑端自动炸开，等待1秒后炸开
-            setTimeout(function(){triggerTenExplode()},1000);
-        }
-
-        function setupTenSwipe(el){
-            tenSwipeEl=el;
-            el.addEventListener('touchstart',onTenTouchStart,{passive:true});
-            el.addEventListener('touchmove',onTenTouchMove,{passive:true});
-            el.addEventListener('touchend',onTenTouchEnd,{passive:true});
-            el.addEventListener('mousedown',onTenMouseDown);
-            el.addEventListener('click',onTenClick);
-        }
-
-        function removeTenSwipeListeners(){
-            if(!tenSwipeEl)return;
-            tenSwipeEl.removeEventListener('touchstart',onTenTouchStart);
-            tenSwipeEl.removeEventListener('touchmove',onTenTouchMove);
-            tenSwipeEl.removeEventListener('touchend',onTenTouchEnd);
-            tenSwipeEl.removeEventListener('mousedown',onTenMouseDown);
-            tenSwipeEl.removeEventListener('click',onTenClick);
-            window.removeEventListener('mousemove',onTenMouseMove);
-            window.removeEventListener('mouseup',onTenMouseUp);
-            tenSwipeEl=null;
-        }
-
-        function onTenMouseDown(e){
-            if(tenState!=='revealed')return;
-            e.preventDefault();
-            tenSwipeStartY=e.clientY;
-            tenIsSwiping=true;
-            tenSwipeEl.style.cursor='grabbing';
-            tenSwipeEl.classList.add('swiping');
-            window.addEventListener('mousemove',onTenMouseMove);
-            window.addEventListener('mouseup',onTenMouseUp);
-        }
-        function onTenMouseMove(e){
-            if(!tenIsSwiping||tenState!=='revealed')return;
-            var diff=tenSwipeStartY-e.clientY;
-            if(diff>60){
-                tenIsSwiping=false;
-                triggerTenExplode();
-            }
-        }
-        function onTenMouseUp(e){
-            if(tenState!=='revealed')return;
-            tenIsSwiping=false;
-            if(tenSwipeEl){
-                tenSwipeEl.style.cursor='';
-                tenSwipeEl.classList.remove('swiping');
-            }
-            window.removeEventListener('mousemove',onTenMouseMove);
-            window.removeEventListener('mouseup',onTenMouseUp);
-        }
-        function onTenClick(e){
-            if(tenState==='revealed')triggerTenExplode();
-        }
-
-        function onTenTouchStart(e){
-            if(tenState!=='revealed')return;
-            tenSwipeStartY=e.touches[0].clientY;
-        }
-        function onTenTouchMove(e){
-            if(tenState!=='revealed')return;
-            var diff=tenSwipeStartY-e.touches[0].clientY;
-            if(diff>60){
-                e.preventDefault();
-                e.stopPropagation();
-                triggerTenExplode();
-            }
-        }
-        function onTenTouchEnd(e){
-            if(tenState!=='revealed')return;
-            e.preventDefault();
-        }
-
-        function triggerTenExplode(){
-            if(tenState!=='revealed')return;
-            tenState='exploding';
-            removeTenSwipeListeners();
-            document.getElementById('swipeHint').classList.remove('visible');
-            document.getElementById('tenProgressText').textContent='💥 炸开中...';
-
-            var dice=document.getElementById('tenDice');
-            dice.classList.remove('reveal','reveal-gold','reveal-purple');
-            dice.classList.add('exploding');
-
-            spawnExplosionParticles();
-
-            setTimeout(function(){
-                showTenResults();
-            },550);
-        }
-
-        function spawnExplosionParticles(){
-            var container=document.getElementById('explosionParticles');
-            container.innerHTML='';
-            var colors=hasAnyStar5?['#fcd34d','#f59e0b','#ecc94b','#fef3c7']:['#a78bfa','#7c3aed','#c4b5fd','#ede9fe'];
-            for(var i=0;i<24;i++){
-                var p=document.createElement('div');
-                p.className='ep-particle';
-                p.style.background=colors[i%colors.length];
-                var angle=(i/24)*Math.PI*2;
-                var dist=80+Math.random()*120;
-                p.style.setProperty('--tx',(Math.cos(angle)*dist)+'px');
-                p.style.setProperty('--ty',(Math.sin(angle)*dist)+'px');
-                container.appendChild(p);
-                (function(el){setTimeout(function(){el.classList.add('active')},i*15)})(p);
-            }
-        }
-
-        function showTenResults(){
-            tenState='done';
-            document.getElementById('tenDice').style.display='none';
-            document.getElementById('swipeHint').style.display='none';
-            document.getElementById('explosionParticles').style.display='none';
-            document.getElementById('tenProgressText').textContent='十连抽结果';
-
-            // 发放三星/四星奖励（五星不发放，后续弹窗选择）
-            var star5Count=0;
-            for(var i=0;i<tenResults.length;i++){
-                var r=tenResults[i];
-                if(r.tier==='star5_grand'||r.tier==='star5_normal'){
-                    star5Count++;
-                }else{
-                    // 三星/四星直接发放奖励
-                    grantRewards(r.rewards);
-                }
-                // 更新保底计数
-                totalDraws++;
-                if(r.tier==='star5_grand'||r.tier==='star5_normal'){
-                    lastStar5Draw=totalDraws;
-                    lastStar5Type=(r.tier==='star5_grand')?'grand':'normal';
-                }else if(r.tier==='star4'){
-                    lastStar4Draw=totalDraws;
-                }
-                // 写入历史
-                drawHistory.unshift({
-                    time:new Date().toISOString(),
-                    dice:r.dice,
-                    sum:r.sum,
-                    tier:r.tier,
-                    baseTier:r.baseTier,
-                    star5SubType:r.star5SubType,
-                    trigger:r.trigger,
-                    rewards:r.rewards.map(function(rw){return Object.assign({},rw)})
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: amount,
+                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
+                    type: 'add',
+                    currencyType: 'premiumLottery',
+                    currencyName: '高级抽奖券'
                 });
+                localStorage.setItem('history', JSON.stringify(history));
+
+                showCompleteAnimation(`兑换成功！获得 ${amount} 张高级抽奖券！`);
+            } else {
+                const voucher = parseInt(localStorage.getItem('voucher') || '0');
+                localStorage.setItem('voucher', voucher + amount);
+                syncCurrencyToCloud('voucher');
+                
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: amount,
+                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
+                    type: 'add',
+                    currencyType: 'voucher',
+                    currencyName: '兑换券'
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+
+                showCompleteAnimation(`兑换成功！获得 ${amount} 张兑换券！`);
             }
 
-            var grid=document.getElementById('tenResultsGrid');
-            grid.innerHTML='';
-            var tierMap={star3:'star3',star4:'star4',star5_normal:'star5n',star5_grand:'star5g'};
-            for(var i=0;i<tenResults.length;i++){
-                var r=tenResults[i];
-                var info=TIER_INFO[r.tier]||TIER_INFO.star3;
-                var cell=document.createElement('div');
-                cell.className='ten-result-cell';
-                cell.style.animationDelay=(i*60)+'ms';
-                cell.innerHTML='<div class="trc-icon">'+info.icon+'</div><span class="trc-tier '+tierMap[r.tier]+'">'+info.name+'</span>';
-                grid.appendChild(cell);
-            }
+            // 关闭选择弹窗
+            closeChoiceModal();
 
-            setTimeout(function(){grid.classList.add('visible')},50);
-
-            showTenSummary();
-            saveData();
-            updateStats();updatePityUI();renderHistory();
+            // 更新界面
+            updateCurrencyDisplay();
+            updateShopItems();
         }
 
-        function showTenSummary(){
-            var summary=document.getElementById('tenSummary');
-            var star5gCount=0,star5nCount=0,star4Count=0,star3Count=0;
-            var allRewards=[];
-            for(var i=0;i<tenResults.length;i++){
-                var r=tenResults[i];
-                if(r.tier==='star5_grand')star5gCount++;
-                else if(r.tier==='star5_normal')star5nCount++;
-                else if(r.tier==='star4')star4Count++;
-                else star3Count++;
-                if(r.rewards)for(var j=0;j<r.rewards.length;j++)allRewards.push(r.rewards[j]);
-            }
-            var titleParts=[];
-            if(star5gCount)titleParts.push('👑×'+star5gCount);
-            if(star5nCount)titleParts.push('⭐×'+star5nCount);
-            if(star4Count)titleParts.push('✨×'+star4Count);
-            if(star3Count)titleParts.push('🎲×'+star3Count);
-
-            document.getElementById('tsTitle').textContent=titleParts.join(' ')+' · 十连抽完成';
-
-            var rewardMap={};
-            for(var k=0;k<allRewards.length;k++){
-                var rw=allRewards[k];
-                var key=rw.type==='item'?'🎁 '+rw.name:(CURRENCY_NAMES[rw.type]||rw.type);
-                rewardMap[key]=(rewardMap[key]||0)+(rw.amount||0);
-            }
-            var rTexts=[];
-            for(var mk in rewardMap)rTexts.push(mk+' +'+rewardMap[mk]);
-            document.getElementById('tsRewards').innerHTML=rTexts.join('<br>')||'无额外奖励';
-
-            // 弹窗展示十连抽每抽详情
-            setTimeout(function(){
-                showTenDetailModal(tenResults,hasAnyStar5);
-            },800);
+        // 关闭选择弹窗
+        function closeChoiceModal() {
+            document.getElementById('choiceModal').classList.remove('active');
         }
 
-        // 十连抽详情弹窗：横向平铺卡片网格（与奖池图一致）
-        function showTenDetailModal(results,hasStar5){
-            var bestTier='star3';
-            for(var i=0;i<results.length;i++){if(results[i].tier==='star5_grand')bestTier='star5_grand';else if(results[i].tier==='star5_normal'&&bestTier!=='star5_grand')bestTier='star5_normal';else if(results[i].tier==='star4'&&bestTier==='star3')bestTier='star4'}
-            var info=TIER_INFO[bestTier],modal=document.getElementById('resultModal');
-            document.getElementById('mIcon').textContent=info.icon;
-            document.getElementById('mBadge').className='result-tier-badge '+info.badgeCls;
-            document.getElementById('mBadge').textContent='十连抽 · '+info.name.toUpperCase();
-            document.getElementById('mName').textContent='十连抽结果';
+        // 更新纪行券显示
+        function updateCurrencyDisplay() {
+            const currency = getJixingCurrency();
+            document.getElementById('jixingCurrency').textContent = currency;
+        }
 
-            // 横向平铺大卡片网格 - 显示每抽详细奖励
-            var tierMap={star3:'star3',star4:'star4',star5_normal:'star5n',star5_grand:'star5g'};
-            var gridHtml='<div class="modal-ten-grid">';
-            for(var idx=0;idx<results.length;idx++){
-                var r=results[idx];
-                var rInfo=TIER_INFO[r.tier]||TIER_INFO.star3;
-                // 显示实际获得的奖励（r.rewards 是实际随机到的奖励）
-                var rewardsHtml='';
-                if(r.tier==='star5_normal'||r.tier==='star5_grand'){
-                    // 五星显示 A区选项 + B区全部（从配置读取）
-                    var rewardCfg=(REWARD_CONFIG&&REWARD_CONFIG[r.tier])?REWARD_CONFIG[r.tier]:(DEFAULT_REWARDS[r.tier]||{zoneA:[],zoneB:[]});
-                    if(rewardCfg.zoneA&&rewardCfg.zoneA.length>0){
-                        rewardsHtml+='<span class="mtc-reward-item">🅰️ '+(rewardCfg.zoneA.length>1?'选1项':'')+'</span>';
-                    }
-                    if(rewardCfg.zoneB&&rewardCfg.zoneB.length>0){
-                        for(var bi=0;bi<rewardCfg.zoneB.length;bi++){
-                            var br=rewardCfg.zoneB[bi];
-                            var brName=br.type==='item'?(br.name||'实物'):(CURRENCY_NAMES[br.type]||br.type||'未知');
-                            var brAmt=br.amount||0;
-                            rewardsHtml+='<span class="mtc-reward-item">'+brName+' +'+brAmt+'</span>';
-                        }
-                    }
-                }else{
-                    // 三星/四星显示实际随机到的奖励（r.rewards）
-                    if(r.rewards&&r.rewards.length>0){
-                        for(var ri=0;ri<r.rewards.length;ri++){
-                            var rw=r.rewards[ri];
-                            var rwName=rw.type==='item'?(rw.name||'实物'):(CURRENCY_NAMES[rw.type]||rw.type||'未知');
-                            var rwAmt=rw.amount||0;
-                            rewardsHtml+='<span class="mtc-reward-item">'+rwName+' +'+rwAmt+'</span>';
-                        }
-                    }else{
-                        rewardsHtml+='<span class="mtc-reward-item">-</span>';
-                    }
+        // 更新商店物品状态
+        function updateShopItems() {
+            const boughtRewards = getBoughtRewards();
+            const currentCurrency = getJixingCurrency();
+
+            // 奖品1-3
+            for (let i = 1; i <= 3; i++) {
+                const item = document.getElementById(`reward${i}`);
+                const btn = item.querySelector('.btn-buy');
+                const price = getRewardPrice(i);
+                
+                if (boughtRewards.includes(i)) {
+                    item.classList.add('sold-out');
+                    btn.disabled = true;
+                    btn.textContent = '已兑换';
+                } else if (currentCurrency < price) {
+                    btn.disabled = true;
+                    btn.textContent = `需要${price}券`;
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = '兑换';
                 }
-                gridHtml+='<div class="modal-ten-cell '+tierMap[r.tier]+'" style="animation-delay:'+(idx*60)+'ms">'+
-                    '<div class="mtc-num">#'+(idx+1)+'</div>'+
-                    '<div class="mtc-icon">'+rInfo.icon+'</div>'+
-                    '<span class="mtc-tier">'+rInfo.name+'</span>'+
-                    '<div class="mtc-rewards">'+rewardsHtml+'</div>'+
-                    '</div>';
-            }
-            gridHtml+='</div>';
-
-            // 如果是五星，显示提示
-            if(hasStar5){
-                gridHtml+='<div style="margin-top:12px;padding:10px 14px;background:rgba(252,211,77,0.1);border:1px dashed rgba(252,211,77,0.3);border-radius:8px;font-size:0.82rem;color:#fcd34d;text-align:center;">🎁 关闭弹窗后选择五星奖励</div>';
             }
 
-            document.getElementById('mRewards').innerHTML=gridHtml;
-            document.getElementById('mDice').textContent='共10次抽奖';
-
-            if(bestTier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
-            modal.dataset.star5Pending=hasStar5?'1':'0';
-            modal.dataset.tenResults=JSON.stringify(results);
-            modal.classList.add('show');
+            // 虚拟奖励礼包
+            const item4 = document.getElementById('reward4');
+            const btn4 = item4.querySelector('.btn-buy');
+            const allBought = boughtRewards.includes('4A') && boughtRewards.includes('4B');
+            
+            if (allBought) {
+                item4.classList.add('sold-out');
+                btn4.disabled = true;
+                btn4.textContent = '已兑换';
+            } else {
+                btn4.disabled = false;
+                btn4.textContent = '兑换';
+            }
         }
 
-        function resetTenPullUI(){
-            var dice=document.getElementById('tenDice');
-            dice.style.display='';
-            dice.className='ten-dice';
-            dice.textContent='🎲';
-            document.getElementById('swipeHint').style.display='';
-            document.getElementById('swipeHint').classList.remove('visible');
-            document.getElementById('explosionParticles').style.display='';
-            document.getElementById('explosionParticles').innerHTML='';
-            document.getElementById('tenProgressText').textContent='正在凝聚命运...';
-            document.getElementById('tenResultsGrid').innerHTML='';
-            document.getElementById('tenResultsGrid').className='ten-results-grid';
-            document.getElementById('tenSummary').classList.remove('visible');
+        // 显示完成动画
+        function showCompleteAnimation(text) {
+            document.getElementById('successText').textContent = text;
+            document.getElementById('completeAnimation').classList.add('active');
+            createConfetti();
         }
 
-        function closeTenPull(){
-            document.getElementById('overlayTenPull').style.display='none';
-            document.getElementById('overlayIdle').style.display='';
-            tenState='idle';
-            document.getElementById('tenBtn').disabled=false;
-            document.getElementById('rollBtn').disabled=false;
-            rollState='idle';
-            switchOverlay('idle');
+        // 关闭动画
+        function closeAnimation() {
+            document.getElementById('completeAnimation').classList.remove('active');
+        }
+
+        // 创建彩带
+        function createConfetti() {
+            const colors = ['#4CAF50', '#66BB6A', '#81C784', '#a8e6cf', '#c8e6c9'];
+            const container = document.getElementById('completeAnimation');
+
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 1 + 's';
+                container.appendChild(confetti);
+
+                setTimeout(() => confetti.remove(), 2000);
+            }
+        }
+
+        // 显示成功提示
+        function showSuccess(message) {
+            const animation = document.getElementById('completeAnimation');
+            document.getElementById('successText').textContent = message;
+            animation.classList.add('active');
+            
+            setTimeout(() => {
+                animation.classList.remove('active');
+            }, 2000);
+        }
+
+        // 初始化
+        function init() {
+            const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
+            if (userId && typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
+
+            // 初始化默认进度（首次访问）
+            initializeDefaultProgress();
+
+            renderProgress();
+            updateCurrencyDisplay();
+            updateShopItems();
         }
 
         init();
