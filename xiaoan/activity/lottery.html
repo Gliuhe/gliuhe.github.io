@@ -71,7 +71,7 @@
 
         /* 奖池大框（画框效果）*/
         .pool-frame {
-            position: relative; width: 100%; height: 420px; border-radius: 16px; overflow: hidden;
+            position: relative; width: 100%; aspect-ratio: 4/3; max-height: 615px; border-radius: 16px; overflow: hidden;
             background: #0f0f1a;
             margin: -10px -10px 20px -10px;
             box-shadow:
@@ -674,17 +674,71 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
-        // ===== 背景图加载 =====
+        // ===== 背景图加载（带浏览器缓存） =====
         const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/gacha-bg.jpg';
+        const BG_CACHE_KEY='lottery_bg_cache';
+        const BG_CACHE_EXPIRE=7*24*60*60*1000; // 7天过期
+
         var poolImg=document.getElementById('poolBgImg');
-        var cached=localStorage.getItem('lottery_bg_cache');
-        if(cached){poolImg.src=cached;poolImg.onerror=function(){useFallbackBg()};}
-        else{loadPoolBg();}
+        
+        // 检查缓存是否有效
+        var cacheData=null;
+        try{
+            var raw=localStorage.getItem(BG_CACHE_KEY);
+            if(raw){
+                var parsed=JSON.parse(raw);
+                if(Date.now()-parsed.ts<BG_CACHE_EXPIRE){
+                    cacheData=parsed.data;
+                }
+            }
+        }catch(e){}
+        
+        if(cacheData){
+            poolImg.src=cacheData;
+            // 后台静默检查CDN是否有更新
+            refreshBgFromCdn();
+        }else{
+            loadPoolBg();
+        }
+        
         function loadPoolBg(){
             var img=new Image();img.crossOrigin='anonymous';
-            img.onload=function(){poolImg.src=BG_URL;try{var c=document.createElement('canvas');c.width=img.naturalWidth||1280;c.height=img.naturalHeight||720;c.getContext('2d').drawImage(img,0,0);var d=c.toDataURL('image/jpeg',0.8);if(d&&d.length>1000)localStorage.setItem('lottery_bg_cache',d);}catch(e){}}
-            img.onerror=useFallbackBg;img.src=BG_URL+'?v='+Date.now();setTimeout(useFallbackBg,8000);
+            img.onload=function(){
+                poolImg.src=BG_URL;
+                try{
+                    var c=document.createElement('canvas');
+                    c.width=img.naturalWidth||1280;
+                    c.height=img.naturalHeight||720;
+                    c.getContext('2d').drawImage(img,0,0);
+                    var d=c.toDataURL('image/jpeg',0.8);
+                    if(d&&d.length>1000){
+                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
+                    }
+                }catch(e){}
+            }
+            img.onerror=useFallbackBg;
+            img.src=BG_URL+'?v='+Date.now();
+            setTimeout(useFallbackBg,8000);
         }
+        
+        function refreshBgFromCdn(){
+            var img=new Image();img.crossOrigin='anonymous';
+            img.onload=function(){
+                try{
+                    var c=document.createElement('canvas');
+                    c.width=img.naturalWidth||1280;
+                    c.height=img.naturalHeight||720;
+                    c.getContext('2d').drawImage(img,0,0);
+                    var d=c.toDataURL('image/jpeg',0.8);
+                    if(d&&d.length>1000){
+                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
+                    }
+                }catch(e){}
+            };
+            img.onerror=function(){};
+            img.src=BG_URL;
+        }
+        
         function useFallbackBg(){if(!poolImg.src||poolImg.naturalHeight===0){poolImg.style.display='none';document.getElementById('poolPlaceholder').style.display='';document.getElementById('poolOverlay').style.background='#e5e7eb';}}
 
         // ===== 概率配置 =====
