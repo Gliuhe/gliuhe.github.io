@@ -768,6 +768,16 @@
             </div>
 
             <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="ruleIsSpecial" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>🔥 设为特需任务</span>
+                </label>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px; margin-left: 30px;">
+                    勾选后，完成此任务可直接领取每日任务奖励（无需完成其他每日任务）
+                </p>
+            </div>
+
+            <div class="form-group">
                 <label>显示星期 (留空表示每天显示)</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
@@ -855,6 +865,16 @@
             </div>
 
             <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="editRuleIsSpecial" style="width: 20px; height: 20px; cursor: pointer;">
+                    <span>🔥 设为特需任务</span>
+                </label>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 5px; margin-left: 30px;">
+                    勾选后，完成此任务可直接领取每日任务奖励（无需完成其他每日任务）
+                </p>
+            </div>
+
+            <div class="form-group">
                 <label>显示星期 (留空表示每天显示)</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     <label class="checkbox-wrapper" style="flex: 0 0 auto; width: auto;">
@@ -930,6 +950,20 @@
             </div>
             <button class="btn btn-danger" onclick="confirmResetToday()">确认清空</button>
             <button class="btn" onclick="closeResetTodayModal()">取消</button>
+        </div>
+    </div>
+    
+    <!-- 密码验证模态框 -->
+    <div class="modal" id="passwordVerifyModal">
+        <div class="modal-content">
+            <h2>🔐 密码验证</h2>
+            <p>请输入管理密码以访问规则管理页面</p>
+            <div class="form-group">
+                <label for="verifyPassword">密码</label>
+                <input type="password" id="verifyPassword" placeholder="请输入管理密码" onkeydown="if(event.key==='Enter')verifyPassword()">
+            </div>
+            <button class="btn" onclick="verifyPassword()">验证</button>
+            <button class="btn btn-danger" onclick="closePasswordVerifyModal()">取消</button>
         </div>
     </div>
     
@@ -1027,13 +1061,18 @@
             if (!localStorage.getItem('rules')) {
                 localStorage.setItem('rules', JSON.stringify(defaultRules));
             } else {
-                // 数据迁移：给旧规则添加isDaily属性
+                // 数据迁移：给旧规则添加isDaily和isSpecial属性
                 const rules = JSON.parse(localStorage.getItem('rules'));
                 let migrated = false;
                 rules.forEach(rule => {
                     if (rule.isDaily === undefined) {
                         // 旧数据：days为空的任务视为每日系列任务
                         rule.isDaily = (rule.days || []).length === 0;
+                        migrated = true;
+                    }
+                    if (rule.isSpecial === undefined) {
+                        // 旧数据：默认不是特需任务
+                        rule.isSpecial = false;
                         migrated = true;
                     }
                 });
@@ -1188,6 +1227,20 @@
             // ===== 固定任务：每日任务奖励 =====
             // 筛选每日系列任务（isDaily为true的任务）
             const dailyRules = rules.filter(rule => rule.isDaily === true);
+            
+            // 筛选今日特需任务（isSpecial为true且今日显示的任务）
+            const specialRulesToday = rules.filter(rule => {
+                if (rule.isSpecial !== true) return false;
+                const days = rule.days || [];
+                // 特需任务今日是否显示：空数组每天显示，或在指定日期显示
+                return days.length === 0 || days.includes(today);
+            });
+            
+            // 检查是否有已完成的特需任务
+            const hasCompletedSpecialTask = specialRulesToday.some(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                return taskStatus.status === 'completed';
+            });
 
             // 检查是否所有每日任务都处于显示状态
             const allDailyVisible = dailyRules.every(rule => {
@@ -1197,13 +1250,18 @@
                 return days.length === 0 || days.includes(today) || taskStatus.status === 'completed';
             });
 
-            // 只有当有每日任务且全部可见时才显示每日奖励
-            if (dailyRules.length > 0 && allDailyVisible) {
+            // 显示每日奖励的条件：有每日任务且全部可见，或者有特需任务
+            const shouldShowDailyReward = (dailyRules.length > 0 && allDailyVisible) || specialRulesToday.length > 0;
+
+            if (shouldShowDailyReward) {
                 // 检查是否所有每日系列任务都已完成
                 const allDailyCompleted = dailyRules.every(rule => {
                     const taskStatus = activeTasks[rule.id] || {};
                     return taskStatus.status === 'completed';
                 });
+                
+                // 是否可以领取奖励：完成所有每日任务，或完成特需任务
+                const canClaimReward = allDailyCompleted || hasCompletedSpecialTask;
 
                 // 检查每日任务奖励是否已领取
                 const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
@@ -1219,9 +1277,13 @@
                 if (dailyRewardClaimed) {
                     dailyRewardButton = `<button class="btn" disabled>✅ 已领取</button>`;
                     dailyRewardStatus = `<div class="task-status status-completed">奖励已领取</div>`;
-                } else if (allDailyCompleted) {
+                } else if (canClaimReward) {
                     dailyRewardButton = `<button class="btn" onclick="claimDailyReward()">🎁 领取奖励</button>`;
-                    dailyRewardStatus = `<div class="task-status status-completed">所有每日系列任务已完成</div>`;
+                    if (hasCompletedSpecialTask && !allDailyCompleted) {
+                        dailyRewardStatus = `<div class="task-status status-completed">已完成特需任务，可直接领取奖励</div>`;
+                    } else {
+                        dailyRewardStatus = `<div class="task-status status-completed">所有每日系列任务已完成</div>`;
+                    }
                 } else {
                     const completedCount = dailyRules.filter(rule => {
                         const taskStatus = activeTasks[rule.id] || {};
@@ -1229,6 +1291,12 @@
                     }).length;
                     dailyRewardButton = `<button class="btn" disabled>🔒 未完成</button>`;
                     dailyRewardStatus = `<div class="task-status status-in-progress">已完成 ${completedCount}/${dailyRules.length} 个每日系列任务</div>`;
+                }
+                
+                // 构建规则说明文字
+                let ruleContent = '完成所有【每日】系列任务即可领取300兑换券+1抽奖券！';
+                if (specialRulesToday.length > 0) {
+                    ruleContent += '<br><span style="color:#ff6b6b;">💡 今日完成特需任务也可直接领取奖励！</span>';
                 }
 
                 dailyRewardElement.innerHTML = `
@@ -1238,7 +1306,7 @@
                             奖励: 300 兑换券 + 1 抽奖券
                         </div>
                     </div>
-                    <div class="rule-content">完成所有【每日】系列任务即可领取300兑换券+1抽奖券！</div>
+                    <div class="rule-content">${ruleContent}</div>
                     ${dailyRewardStatus}
                     <div class="rule-actions">
                         ${dailyRewardButton}
@@ -1278,7 +1346,7 @@
 
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}</div>
                         <div class="rule-reward">
                     ${getRewardDisplayText(rule)}
                 </div>
@@ -1306,15 +1374,20 @@
                     const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
                     daysText = rule.days.map(d => dayNames[d]).join(' ');
                 }
+                
+                // 生成任务类型标签
+                let typeTags = '';
+                if (rule.isDaily) typeTags += ' | 📌 每日系列任务';
+                if (rule.isSpecial) typeTags += ' | 🔥 特需任务';
 
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}</div>
                         <div class="rule-reward">${getRewardDisplayText(rule)}</div>
                     </div>
                     <div class="rule-content">${rule.content}</div>
                     <div class="rule-content" style="color: #ff6b6b; font-size: 0.95rem;">
-                        📅 显示: ${daysText}${rule.isDaily ? ' | 📌 每日系列任务' : ''}
+                        📅 显示: ${daysText}${typeTags}
                     </div>
                     <div class="rule-actions">
                         <button class="btn" onclick="openEditRuleModal(${rule.id})">编辑</button>
@@ -1448,6 +1521,7 @@
             document.getElementById('ruleRewardType2').value = 'none';
             document.getElementById('ruleRewardAmount2').value = '0';
             document.getElementById('ruleIsDaily').checked = false;
+            document.getElementById('ruleIsSpecial').checked = false;
             for (let i = 0; i <= 6; i++) {
                 document.getElementById(`day${i}`).checked = false;
             }
@@ -1487,6 +1561,9 @@
 
             // 填充是否为每日系列任务
             document.getElementById('editRuleIsDaily').checked = rule.isDaily || false;
+            
+            // 填充是否为特需任务
+            document.getElementById('editRuleIsSpecial').checked = rule.isSpecial || false;
 
             // 显示模态框
             document.getElementById('editRuleModal').style.display = 'flex';
@@ -1593,6 +1670,9 @@
 
             // 获取是否为每日系列任务
             const isDaily = document.getElementById('ruleIsDaily').checked;
+            
+            // 获取是否为特需任务
+            const isSpecial = document.getElementById('ruleIsSpecial').checked;
 
             rules.push({
                 id: newId,
@@ -1603,7 +1683,8 @@
                 rewardAmount2: parseInt(document.getElementById('ruleRewardAmount2').value) || 0,
                 content: content,
                 days: days,
-                isDaily: isDaily
+                isDaily: isDaily,
+                isSpecial: isSpecial
             });
 
             localStorage.setItem('rules', JSON.stringify(rules));
@@ -1652,6 +1733,9 @@
 
             // 获取是否为每日系列任务
             const isDaily = document.getElementById('editRuleIsDaily').checked;
+            
+            // 获取是否为特需任务
+            const isSpecial = document.getElementById('editRuleIsSpecial').checked;
 
             rules[ruleIndex] = {
                 id: id,
@@ -1662,7 +1746,8 @@
                 rewardAmount2: parseInt(document.getElementById('editRuleRewardAmount2').value) || 0,
                 content: content,
                 days: days,
-                isDaily: isDaily
+                isDaily: isDaily,
+                isSpecial: isSpecial
             };
 
             localStorage.setItem('rules', JSON.stringify(rules));
