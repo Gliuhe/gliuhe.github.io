@@ -458,52 +458,116 @@
 
     <!-- 面板12：抽奖配置 -->
     <div class="tab-panel" id="panel-lottery">
-        <div style="max-width:800px;">
-            <h3 style="margin-bottom:16px;">🎰 纪行抽奖奖励配置</h3>
-            <p style="font-size:13px;color:#64748b;margin-bottom:20px;">
-                配置各星级奖励内容。规则：三连6→五星(二次判定50%特级) | 点数和≥15→四星 | 否则三星。五星保底70次(第65抽起+5%/抽)，四星保底10次(第8抽起递增)。五星触发后二次随机：普通(货币)或特级(实物)，上次普通则本次必特。<strong>五星奖励分为A区（用户选择其中一个）和B区（全部获取）</strong>。修改后点击「保存配置」生效。
-            </p>
+        <style>
+            .lc-container { max-width: 820px; }
+            .lc-header { margin-bottom: 24px; }
+            .lc-title { font-size: 1.25rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+            .lc-desc { font-size: 0.82rem; color: #94a3b8; line-height: 1.7; background: #f8fafc; padding: 12px 16px; border-radius: 10px; border-left: 3px solid #60a5fa; }
 
-            <!-- 三星奖励 -->
-            <fieldset style="margin-bottom:18px;border:1px dashed #cbd5e1;border-radius:10px;padding:14px 16px;">
-                <legend style="font-size:13px;font-weight:600;color:#a0aec0;">⭐ 三星奖励（点数和 &lt; 15）</legend>
-                <div id="lotteryStar3Config"></div>
-            </fieldset>
+            .lc-tier-card {
+                background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden; margin-bottom: 18px;
+                transition: box-shadow .2s;
+            }
+            .lc-tier-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+            .lc-tier-head {
+                display: flex; align-items: center; gap: 10px; padding: 14px 20px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .lc-tier-icon { font-size: 1.4rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0; }
+            .lc-tier-info { flex: 1; min-width: 0; }
+            .lc-tier-name { font-size: 1rem; font-weight: 700; color: #1e293b; }
+            .lc-tier-rule { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+            .lc-tier-badge { font-size: 0.68rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; text-transform: uppercase; flex-shrink: 0; }
 
-            <!-- 四星奖励 -->
-            <fieldset style="margin-bottom:18px;border:1px dashed #9f7aea;border-radius:10px;padding:14px 16px;">
-                <legend style="font-size:13px;font-weight:600;color:#9f7aea;">⭐⭐ 四星奖励（点数和 ≥ 15 或 四星保底/10次）</legend>
-                <div id="lotteryStar4Config"></div>
-            </fieldset>
+            /* 星级颜色 */
+            .lc-star3 .lc-tier-icon { background: linear-gradient(135deg,#f1f5f9,#e2e8f0); color: #64748b; }
+            .lc-star3 .lc-tier-badge { background: #f1f5f9; color: #64748b; }
+            .lc-star4 .lc-tier-icon { background: linear-gradient(135deg,#ede9fe,#ddd6fe); color: #7c3aed; }
+            .lc-star4 .lc-tier-badge { background: #ede9fe; color: #7c3aed; }
+            .lc-star5n .lc-tier-icon { background: linear-gradient(135deg,#fef3c9,#fde68a); color: #b45309; }
+            .lc-star5n .lc-tier-badge { background: #fef3c9; color: #b45309; }
+            .lc-star5g .lc-tier-icon { background: linear-gradient(135deg,#d1fae5,#a7f3d0); color: #047857; }
+            .lc-star5g .lc-tier-badge { background: #d1fae5; color: #047857; }
 
-            <!-- 普通五星 -->
-            <fieldset style="margin-bottom:18px;border:1px dashed #ecc94b;border-radius:10px;padding:14px 16px;">
-                <legend style="font-size:13px;font-weight:600;color:#ecc94b;">⭐⭐⭐ 普通五星（50%概率，上次特级则必普通）</legend>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:6px;">🅰️ A区奖励（用户选择其中一个）</div>
-                    <div id="lotteryStar5ConfigA"></div>
+            .lc-body { padding: 16px 20px; }
+
+            /* 分区容器 */
+            .lc-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+            @media(max-width:600px){ .lc-zones{grid-template-columns:1fr;} }
+            .lc-zone {
+                background: #fafafa; border-radius: 10px; padding: 12px 14px; border: 1px dashed #e2e8f0;
+                position: relative;
+            }
+            .lc-zone.zone-a { border-color: #fbbf24; background: linear-gradient(135deg,#fffbeb,#fef3c7); }
+            .lc-zone.zone-b { border-color: #34d399; background: linear-gradient(135deg,#ecfdf5,#d1fae5); }
+            .lc-zone-label {
+                font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+                margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+            }
+            .zone-a > .lc-zone-label { color: #d97706; }
+            .zone-b > .lc-zone-label { color: #059669; }
+            .lc-zone-hint { font-size: 0.68rem; opacity: 0.65; margin-left: auto; }
+
+            /* 奖励项 */
+            .lc-reward-list { display: flex; flex-direction: column; gap: 6px; }
+            .lc-reward-row {
+                display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+                background: rgba(255,255,255,0.7); border-radius: 8px; border: 1px solid transparent;
+                transition: all .15s;
+            }
+            .lc-reward-row:hover { border-color: #cbd5e1; background: #fff; }
+            .lc-reward-type {
+                padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 6px;
+                font-size: 0.78rem; font-weight: 600; cursor: pointer; background: #fff; color: #475569;
+                min-width: 90px; flex-shrink: 0;
+            }
+            .lc-reward-type:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,.2); }
+            .lc-reward-val {
+                flex: 1; padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 6px;
+                font-size: 0.82rem; min-width: 0;
+            }
+            .lc-reward-val:focus { outline: none; border-color: #60a5fa; box-shadow: 0 0 0 2px rgba(96,165,250,.2); }
+            .lc-rm-btn {
+                width: 26px; height: 26px; border: none; border-radius: 6px; background: #fef2f2; color: #ef4444;
+                font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0; transition: all .15s;
+            }
+            .lc-rm-btn:hover { background: #fee2e2; transform: scale(1.1); }
+
+            .lc-add-btn {
+                display: inline-flex; align-items: center; gap: 5px; padding: 7px 16px;
+                border: 1.5px dashed #cbd5e1; border-radius: 8px; background: none; color: #64748b;
+                font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all .2s; margin-top: 6px;
+            }
+            .lc-add-btn:hover { border-color: #60a5fa; color: #3b82f6; background: #eff6ff; }
+
+            .lc-save-bar {
+                display: flex; align-items: center; gap: 12px; margin-top: 24px; padding-top: 20px;
+                border-top: 1px solid #f1f5f9;
+            }
+            .lc-save-btn {
+                padding: 11px 32px; font-size: 0.92rem; font-weight: 700; border: none; border-radius: 10px;
+                background: linear-gradient(135deg,#3b82f6,#2563eb); color: #fff; cursor: pointer;
+                box-shadow: 0 4px 14px rgba(59,130,246,.35); transition: all .2s;
+            }
+            .lc-save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,.45); }
+        </style>
+        <div class="lc-container">
+            <div class="lc-header">
+                <div class="lc-title">🎰 纪行抽奖奖励配置</div>
+                <div class="lc-desc">
+                    规则：三连6 → 五星(二次判定50%特级) | 点数和≥15 → 四星 | 否则三星。<br>
+                    五星保底70次(第65抽起+5%/抽)，四星保底10次(第8抽起递增)。
+                    <strong style="color:#d97706;">五星奖励分为A区（用户选一个）+ B区（全部获取）。</strong>
+                    修改后点击「保存配置」生效。
                 </div>
-                <div>
-                    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">🅱️ B区奖励（全部获取）</div>
-                    <div id="lotteryStar5ConfigB"></div>
-                </div>
-            </fieldset>
-
-            <!-- 特级大奖 -->
-            <fieldset style="margin-bottom:18px;border:1px dashed #48bb78;border-radius:10px;padding:14px 16px;">
-                <legend style="font-size:13px;font-weight:600;color:#48bb78;">👑 特级大奖（50%概率/上次普通则必中，含实物奖励）</legend>
-                <div style="margin-bottom:12px;">
-                    <div style="font-size:12px;font-weight:600;color:#f59e0b;margin-bottom:6px;">🅰️ A区奖励（用户选择其中一个）</div>
-                    <div id="lotteryItemConfigA"></div>
-                </div>
-                <div>
-                    <div style="font-size:12px;font-weight:600;color:#10b981;margin-bottom:6px;">🅱️ B区奖励（全部获取）</div>
-                    <div id="lotteryItemConfigB"></div>
-                </div>
-            </fieldset>
-
-            <button class="btn-sm btn-primary" onclick="saveLotteryConfig()" style="padding:10px 28px; font-size:14px;">💾 保存配置</button>
-            <span id="lotterySaveStatus" style="margin-left:10px;font-size:13px;"></span>
+            </div>
+            <div id="lotteryConfigRoot"></div>
+            <div class="lc-save-bar">
+                <button class="lc-save-btn" onclick="saveLotteryConfig()">💾 保存配置到云端</button>
+                <span id="lotterySaveStatus"></span>
+            </div>
         </div>
     </div>
 </div>
@@ -844,7 +908,7 @@ function renderJixingTable() {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0=周日, 1=周一, ..., 5=周五, 6=周六
     const isJixingDay = dayOfWeek >= 1 && dayOfWeek <= 4; // 周一至周四
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
     // 纪行券从 user_currencies 表读取
     const currencies = allData.currencies?.data || [];
@@ -982,7 +1046,7 @@ function showUserDetail(userId) {
     const todayDate = new Date();
     const dayOfWeek = todayDate.getDay();
     const isJixingDay = dayOfWeek >= 1 && dayOfWeek <= 4;
-    const todayStr = todayDate.toISOString().split('T')[0];
+    const todayStr = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
     const jixingCompletedDays = jixing && Array.isArray(jixing.completed_days) ? jixing.completed_days : [];
     const jixingTodayDone = jixingCompletedDays.includes(todayStr);
     // 纪行券从 user_currencies 读取
@@ -1052,6 +1116,10 @@ function showUserDetail(userId) {
 <div class="modal" id="addCodeModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;justify-content:center;align-items:center;">
     <div style="background:white;border-radius:16px;padding:28px;width:90%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,0.25);border-top:4px solid var(--blue);">
         <h3 style="margin-bottom:18px;font-size:18px;color:var(--admin-dark);">创建兑换码</h3>
+        <div style="margin-bottom:14px;">
+            <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">兑换码（留空则自动生成）</label>
+            <input type="text" id="codeValue" placeholder="例如：NEWBIE2024、GIFT123" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;font-family:inherit;font-family:'Courier New',monospace;letter-spacing:1px;">
+        </div>
         <div style="margin-bottom:14px;">
             <label style="font-size:12px;font-weight:600;color:#64748b;display:block;margin-bottom:5px;">奖励描述（仅备注）</label>
             <input type="text" id="codeRewardDesc" placeholder="例如：新手礼包、活动奖励" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;outline:none;font-family:inherit;">
@@ -1233,6 +1301,7 @@ async function syncTasksToCloud() {
                 duration: r.duration || 0,
                 days: Array.isArray(r.days) ? r.days : [],
                 is_daily: !!r.isDaily,
+                is_special: !!r.isSpecial,
                 reward_amount: r.rewardAmount1 || 0,
                 sort_order: r.sortOrder ?? r.id ?? 0,
                 is_active: r.isActive !== false,
@@ -1366,10 +1435,28 @@ async function addExchangeCode() {
 
     if (!hasValid1 && !hasValid2) { alert('至少设置一种奖励！'); return; }
 
+    // 获取手动输入的兑换码或自动生成
+    const manualCode = document.getElementById('codeValue').value.trim();
+    
+    // 如果手动输入了兑换码但数量>1，提示用户
+    if (manualCode && count > 1) {
+        alert('手动输入兑换码时，数量只能为1！');
+        return;
+    }
+    
+    // 如果手动输入了兑换码，检查是否已存在
+    if (manualCode) {
+        const existingCodes = allData.codes?.data || [];
+        if (existingCodes.some(c => c.code === manualCode)) {
+            alert('该兑换码已存在，请更换！');
+            return;
+        }
+    }
+    
     const newCodes = [];
     for (let i = 0; i < count; i++) {
         const row = {
-            code: generateExchangeCode(),
+            code: manualCode || generateExchangeCode(),
             desc: document.getElementById('codeRewardDesc').value.trim(),
             reward_type1: rt1,
             reward_type2: rt2,
@@ -1601,7 +1688,14 @@ function escapeHtml(s) {
     return d.innerHTML;
 }
 
-// ===== 抽奖配置 =====
+// ===== 抽奖配置（重构）=====
+const LOTTERY_TIER_META = {
+    star3: { icon:'⭐', name:'三星奖励', rule:'点数和 < 15', cls:'lc-star3', badge:'3★', hasZones:false },
+    star4: { icon:'⭐⭐', name:'四星奖励', rule:'点数和 ≥ 15 或 四星保底/10次', cls:'lc-star4', badge:'4★', hasZones:false },
+    star5_normal: { icon:'⭐⭐⭐', name:'普通五星', rule:'50%概率，上次特级则必普通', cls:'lc-star5n', badge:'5★ 普通', hasZones:true },
+    star5_grand: { icon:'👑', name:'特级大奖', rule:'50%概率 / 上次普通则必中，含实物奖励', cls:'lc-star5g', badge:'5★ 特级', hasZones:true }
+};
+
 const LOTTERY_DEFAULT_CONFIG = {
     star3: [{ type: 'voucher', amount: 5, name: '兑换券' }, { type: 'lottery', amount: 1, name: '抽奖券' }],
     star4: [{ type: 'voucher', amount: 20, name: '兑换券' }, { type: 'premium', amount: 1, name: '高级抽奖券' }, { type: 'lottery', amount: 3, name: '抽奖券' }],
@@ -1615,219 +1709,228 @@ const LOTTERY_DEFAULT_CONFIG = {
     }
 };
 
-const CURRENCY_OPTIONS = ['voucher', 'lottery', 'premium', 'jixing_muchun_currency'];
+const CURRENCY_OPTIONS = ['voucher','lottery','premium','jixing_muchun_currency'];
 const CURRENCY_LABELS = { voucher:'兑换券', lottery:'抽奖券', premium:'高级抽奖券', jixing_muchun_currency:'纪行券' };
 
 let lotteryCurrentConfig = null;
 
 function renderLotteryConfigPanel() {
-    const tierIdMap = {
-        star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config'
-    };
-    const tierZoneMap = {
-        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
-        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
-    };
-    const tiers = ['star3','star4'];
-    for (const tier of tiers) {
-        const el = document.getElementById(tierIdMap[tier]);
-        if (!el) continue;
-        const rewards = (lotteryCurrentConfig && lotteryCurrentConfig[tier]) ? lotteryCurrentConfig[tier] : (LOTTERY_DEFAULT_CONFIG[tier] || []);
-        el.innerHTML = buildRewardEditor(tier, rewards);
+    const root = document.getElementById('lotteryConfigRoot');
+    if (!root) return;
+    const cfg = lotteryCurrentConfig || LOTTERY_DEFAULT_CONFIG;
+    let html = '';
+    for (const [tierKey, meta] of Object.entries(LOTTERY_TIER_META)) {
+        const tierData = (cfg && cfg[tierKey]) ? cfg[tierKey] : (LOTTERY_DEFAULT_CONFIG[tierKey] || []);
+        html += buildTierCard(tierKey, meta, tierData);
     }
-    const star5Tiers = ['star5_normal', 'star5_grand'];
-    for (const tier of star5Tiers) {
-        const zones = tierZoneMap[tier];
-        if (!zones) continue;
-        const config = (lotteryCurrentConfig && lotteryCurrentConfig[tier]) ? lotteryCurrentConfig[tier] : (LOTTERY_DEFAULT_CONFIG[tier] || {});
-        const zoneAEl = document.getElementById(zones.A);
-        const zoneBEl = document.getElementById(zones.B);
-        if (zoneAEl) zoneAEl.innerHTML = buildRewardEditor(tier + '_zoneA', config.zoneA || []);
-        if (zoneBEl) zoneBEl.innerHTML = buildRewardEditor(tier + '_zoneB', config.zoneB || []);
-    }
+    root.innerHTML = html;
 }
 
-function buildRewardEditor(tier, rewards) {
-    let html = '<div style="display:flex;flex-direction:column;gap:8px;">';
-    (rewards || []).forEach((r, i) => {
-        html += `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;" data-idx="${i}">
-            <select id="lt_${tier}_type${i}" style="padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">
-                ${CURRENCY_OPTIONS.map(o => `<option value="${o}" ${r.type===o?'selected':''}>${CURRENCY_LABELS[o]||o}</option>`).join('')}
-                <option value="item" ${r.type==='item'?'selected':''}>实物奖励</option>
-            </select>`;
-        if (r.type === 'item') {
-            html += `<input type="text" id="lt_${tier}_name${i}" placeholder="物品名称" value="${r.name||''}" style="flex:1;min-width:120px;padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">`;
-        } else {
-            html += `<input type="number" id="lt_${tier}_amount${i}" placeholder="数量" value="${r.amount||0}" min="0" style="width:70px;padding:5px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;">`;
+function buildTierCard(tierKey, meta, data) {
+    const isZone = meta.hasZones;
+    let bodyHtml = '';
+
+    if (isZone) {
+        bodyHtml = `<div class="lc-zones">`;
+        for (const z of ['A','B']) {
+            const zoneKey = z === 'A' ? 'zoneA' : 'zoneB';
+            const rewards = (data[zoneKey]) || [];
+            bodyHtml += `<div class="lc-zone zone-${z.toLowerCase()}">
+                <div class="lc-zone-label">
+                    ${z==='A'?'🅰️ A区':'🅱️ B区'}
+                    <span class="lc-zone-hint">${z==='A'?'选一个':'全领取'}</span>
+                </div>
+                <div class="lc-reward-list" data-tier="${tierKey}" data-zone="${zoneKey}">
+                    ${rewards.map((r,i) => buildRewardRow(tierKey+'_'+zoneKey, r, i)).join('')}
+                </div>
+                <button class="lc-add-btn" onclick="lcAddReward('${tierKey}','${zoneKey}')">+ 添加</button>
+            </div>`;
         }
-        html += `<button class="btn-sm" onclick="removeLotteryReward('${tier}',${i})" style="padding:4px 10px;font-size:11px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;">✕</button></div>`;
-    });
-    html += `<button class="btn-sm" onclick="addLotteryReward('${tier}')" style="padding:5px 14px;font-size:11px;background:#f0fdf4;color:#059669;border:1px solid #86efac;border-radius:6px;cursor:pointer;">+ 添加奖励</button></div>`;
-    return html;
+        bodyHtml += `</div>`;
+    } else {
+        const rewards = Array.isArray(data) ? data : [];
+        bodyHtml = `<div class="lc-reward-list" data-tier="${tierKey}" data-zone="">
+            ${rewards.map((r,i) => buildRewardRow(tierKey, r, i)).join('')}
+        </div>
+        <button class="lc-add-btn" onclick="lcAddReward('${tierKey}',null)">+ 添加奖励</button>`;
+    }
+
+    return `<div class="lc-tier-card ${meta.cls}">
+        <div class="lc-tier-head">
+            <div class="lc-tier-icon">${meta.icon}</div>
+            <div class="lc-tier-info">
+                <div class="lc-tier-name">${meta.name}</div>
+                <div class="lc-tier-rule">${meta.rule}</div>
+            </div>
+            <span class="lc-tier-badge">${meta.badge}</span>
+        </div>
+        <div class="lc-body">${bodyHtml}</div>
+    </div>`;
 }
 
-function addLotteryReward(tier) {
+function buildRewardRow(rowId, reward, idx) {
+    const isItem = reward.type === 'item';
+    const valHtml = isItem
+        ? `<input class="lc-reward-val" type="text" placeholder="物品名称" value="${reward.name||''}" data-field="name" style="flex:1.5;">
+           <input class="lc-reward-val" type="text" placeholder="兑换码" value="${reward.code||''}" data-field="code" style="flex:1;">`
+        : `<input class="lc-reward-val" type="number" placeholder="数量" value="${reward.amount||0}" min="0" data-field="amount">`;
+    const opts = CURRENCY_OPTIONS.map(o =>
+        `<option value="${o}" ${reward.type===o?'selected':''}>${CURRENCY_LABELS[o]}</option>`
+    ).join('') + `<option value="item" ${reward.type==='item'?'selected':''}>实物</option>`;
+
+    return `<div class="lc-reward-row" data-idx="${idx}">
+        <select class="lc-reward-type" data-field="type" onchange="lcOnTypeChange(this)">${opts}</select>
+        ${valHtml}
+        <button class="lc-rm-btn" onclick="this.closest('.lc-reward-row').remove()">✕</button>
+    </div>`;
+}
+
+// 类型切换时动态更新输入框
+function lcOnTypeChange(selectEl) {
+    const row = selectEl.closest('.lc-reward-row');
+    const type = selectEl.value;
+    const isItem = type === 'item';
+    
+    // 移除现有的值输入框（保留select和删除按钮）
+    const existingInputs = row.querySelectorAll('.lc-reward-val');
+    existingInputs.forEach(el => el.remove());
+    
+    const deleteBtn = row.querySelector('.lc-rm-btn');
+    
+    if (isItem) {
+        // 切换为实物：两个文本输入框（物品名称 + 兑换码）
+        const nameInput = document.createElement('input');
+        nameInput.className = 'lc-reward-val';
+        nameInput.type = 'text';
+        nameInput.placeholder = '物品名称';
+        nameInput.value = '';
+        nameInput.dataset.field = 'name';
+        nameInput.style.flex = '1.5';
+        
+        const codeInput = document.createElement('input');
+        codeInput.className = 'lc-reward-val';
+        codeInput.type = 'text';
+        codeInput.placeholder = '兑换码';
+        codeInput.value = '';
+        codeInput.dataset.field = 'code';
+        codeInput.style.flex = '1';
+        
+        deleteBtn.before(nameInput);
+        deleteBtn.before(codeInput);
+    } else {
+        // 切换为货币：数字输入框
+        const input = document.createElement('input');
+        input.className = 'lc-reward-val';
+        input.type = 'number';
+        input.placeholder = '数量';
+        input.value = '0';
+        input.min = '0';
+        input.dataset.field = 'amount';
+        
+        deleteBtn.before(input);
+    }
+}
+
+function lcAddReward(tierKey, zoneKey) {
     if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
-    syncTierFromDOM(tier);
-    if (!lotteryCurrentConfig[tier]) lotteryCurrentConfig[tier] = [];
-    lotteryCurrentConfig[tier].push({ type: 'voucher', amount: 10, name: '' });
+    lcReadDOM();
+    const newItem = { type: 'voucher', amount: 10, name: '' };
+    if (zoneKey) {
+        if (!lotteryCurrentConfig[tierKey]) lotteryCurrentConfig[tierKey] = { zoneA:[], zoneB:[] };
+        lotteryCurrentConfig[tierKey][zoneKey].push(newItem);
+    } else {
+        if (!lotteryCurrentConfig[tierKey]) lotteryCurrentConfig[tierKey] = [];
+        lotteryCurrentConfig[tierKey].push(newItem);
+    }
     renderLotteryConfigPanel();
 }
 
-function removeLotteryReward(tier, idx) {
-    if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
-    syncTierFromDOM(tier);
-    if (!lotteryCurrentConfig[tier]) {
-        lotteryCurrentConfig[tier] = (LOTTERY_DEFAULT_CONFIG[tier] || []).map(function(r) { return Object.assign({}, r); });
-    }
-    if (idx >= 0 && idx < lotteryCurrentConfig[tier].length) {
-        lotteryCurrentConfig[tier].splice(idx, 1);
-        renderLotteryConfigPanel();
-    }
-}
-
-function syncTierFromDOM(tier) {
-    const tierIdMap = {
-        star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config'
-    };
-    const tierZoneMap = {
-        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
-        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
-    };
-    if (tier.endsWith('_zoneA') || tier.endsWith('_zoneB')) {
-        const baseTier = tier.replace(/_zone[AB]$/, '');
-        const zone = tier.endsWith('_zoneA') ? 'zoneA' : 'zoneB';
-        const zones = tierZoneMap[baseTier];
-        if (!zones) return;
-        const container = document.getElementById(zones[zone === 'zoneA' ? 'A' : 'B']);
-        if (!container) return;
-        const rows = container.querySelectorAll('[data-idx]');
+function lcReadDOM() {
+    const root = document.getElementById('lotteryConfigRoot');
+    if (!root || !lotteryCurrentConfig) return;
+    root.querySelectorAll('.lc-reward-list').forEach(listEl => {
+        const tierKey = listEl.dataset.tier;
+        const zoneKey = listEl.dataset.zone || null;
+        const rows = listEl.querySelectorAll('.lc-reward-row');
         const rewards = [];
         rows.forEach(row => {
-            const idx = row.dataset.idx;
-            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
+            const typeEl = row.querySelector('[data-field="type"]');
             const type = typeEl ? typeEl.value : 'voucher';
             if (type === 'item') {
-                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
-                rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
+                const nameEl = row.querySelector('[data-field="name"]');
+                const codeEl = row.querySelector('[data-field="code"]');
+                rewards.push({ type, name: nameEl ? nameEl.value.trim() : '', code: codeEl ? codeEl.value.trim() : '', amount: 1 });
             } else {
-                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
+                const amtEl = row.querySelector('[data-field="amount"]');
                 rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
             }
         });
-        if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
-        if (!lotteryCurrentConfig[baseTier]) lotteryCurrentConfig[baseTier] = {};
-        lotteryCurrentConfig[baseTier][zone] = rewards;
-    } else {
-        const container = document.getElementById(tierIdMap[tier]);
-        if (!container) return;
-        const rows = container.querySelectorAll('[data-idx]');
-        const rewards = [];
-        rows.forEach(row => {
-            const idx = row.dataset.idx;
-            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
-            const type = typeEl ? typeEl.value : 'voucher';
-            if (type === 'item') {
-                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
-                rewards.push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
-            } else {
-                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
-                rewards.push({ type, amount: parseInt(amtEl?.value)||0 });
-            }
-        });
-        if (rewards.length > 0) lotteryCurrentConfig[tier] = rewards;
-    }
+        if (zoneKey) {
+            if (!lotteryCurrentConfig[tierKey]) lotteryCurrentConfig[tierKey] = {};
+            lotteryCurrentConfig[tierKey][zoneKey] = rewards;
+        } else {
+            lotteryCurrentConfig[tierKey] = rewards;
+        }
+    });
 }
 
 async function saveLotteryConfig() {
-    const tierIdMap = {
-        star3: 'lotteryStar3Config',
-        star4: 'lotteryStar4Config'
-    };
-    const tierZoneMap = {
-        star5_normal: { A: 'lotteryStar5ConfigA', B: 'lotteryStar5ConfigB' },
-        star5_grand: { A: 'lotteryItemConfigA', B: 'lotteryItemConfigB' }
-    };
-    const tiers = ['star3','star4'];
-    const config = {};
-    for (const tier of tiers) {
-        config[tier] = [];
-        const container = document.getElementById(tierIdMap[tier]);
-        if (!container) continue;
-        const rows = container.querySelectorAll('[data-idx]');
-        rows.forEach(row => {
-            const idx = row.dataset.idx;
-            const typeEl = document.getElementById(`lt_${tier}_type${idx}`);
-            const type = typeEl ? typeEl.value : 'voucher';
-            if (type === 'item') {
-                const nameEl = document.getElementById(`lt_${tier}_name${idx}`);
-                config[tier].push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
-            } else {
-                const amtEl = document.getElementById(`lt_${tier}_amount${idx}`);
-                config[tier].push({ type, amount: parseInt(amtEl?.value)||0 });
-            }
-        });
-    }
-    const star5Tiers = ['star5_normal', 'star5_grand'];
-    for (const tier of star5Tiers) {
-        const zones = tierZoneMap[tier];
-        if (!zones) continue;
-        config[tier] = { zoneA: [], zoneB: [] };
-        for (const [zoneKey, zoneId] of Object.entries(zones)) {
-            const container = document.getElementById(zoneId);
-            if (!container) continue;
-            const rows = container.querySelectorAll('[data-idx]');
-            rows.forEach(row => {
-                const idx = row.dataset.idx;
-                const typeEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_type${idx}`);
-                const type = typeEl ? typeEl.value : 'voucher';
-                if (type === 'item') {
-                    const nameEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_name${idx}`);
-                    config[tier][zoneKey === 'A' ? 'zoneA' : 'zoneB'].push({ type, name: nameEl ? nameEl.value.trim() : '未知物品', amount: 1 });
-                } else {
-                    const amtEl = document.getElementById(`lt_${tier}_${zoneKey === 'A' ? 'zoneA' : 'zoneB'}_amount${idx}`);
-                    config[tier][zoneKey === 'A' ? 'zoneA' : 'zoneB'].push({ type, amount: parseInt(amtEl?.value)||0 });
-                }
-            });
-        }
-    }
-
+    lcReadDOM();
+    const cfg = lotteryCurrentConfig || LOTTERY_DEFAULT_CONFIG;
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
         const { data: existing } = await sb.from('jisuan_data').select('*').eq('user_id', targetUserId).maybeSingle();
-        const updateData = { lottery_reward_config: JSON.stringify(config), updated_at: new Date().toISOString() };
+        const updateData = { lottery_reward_config: JSON.stringify(cfg), updated_at: new Date().toISOString() };
         if (existing) {
             await sb.from('jisuan_data').update(updateData).eq('user_id', targetUserId);
         } else {
             await sb.from('jisuan_data').insert({ user_id: targetUserId, ...updateData });
         }
 
-        lotteryCurrentConfig = config;
-        // 同时更新 localStorage 和云端，防止被 cloud-store.js 同步机制覆盖
-        localStorage.setItem('lottery_reward_config', JSON.stringify(config));
-        document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;">✅ 配置已保存！</span>';
+        lotteryCurrentConfig = cfg;
+        localStorage.setItem('lottery_reward_config', JSON.stringify(cfg));
+        document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;font-weight:600;">✅ 配置已保存到云端！</span>';
         setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 3000);
     } catch(e) {
-        document.getElementById('lotterySaveStatus').innerHTML = `<span style="color:#ef4444;">❌ 保存失败: ${e.message}</span>`;
+        document.getElementById('lotterySaveStatus').innerHTML = `<span style="color:#ef4444;font-weight:600;">❌ 保存失败: ${e.message}</span>`;
     }
 }
 
 async function loadLotteryConfig() {
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
-        // 优先读取 localStorage（本地最新），如果没有则从云端读取
-        const localConfig = localStorage.getItem('lottery_reward_config');
-        if (localConfig) {
-            try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
+        // 优先从云端加载最新配置
+        const { data, error } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
+        if (data && data.lottery_reward_config) {
+            try {
+                lotteryCurrentConfig = JSON.parse(data.lottery_reward_config);
+                // 同步更新本地存储
+                localStorage.setItem('lottery_reward_config', data.lottery_reward_config);
+            } catch(e) {
+                console.error('解析云端配置失败:', e);
+            }
+        } else if (error) {
+            console.error('加载云端配置失败:', error);
+            // 云端加载失败时，尝试从本地存储加载
+            const localConfig = localStorage.getItem('lottery_reward_config');
+            if (localConfig) {
+                try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
+            }
         } else {
-            const { data } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
-            if (data && data.lottery_reward_config) {
-                try { lotteryCurrentConfig = JSON.parse(data.lottery_reward_config); } catch(e) {}
+            // 云端没有配置，尝试从本地加载
+            const localConfig = localStorage.getItem('lottery_reward_config');
+            if (localConfig) {
+                try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
             }
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error('loadLotteryConfig error:', e);
+        // 出错时尝试本地存储作为后备
+        const localConfig = localStorage.getItem('lottery_reward_config');
+        if (localConfig) {
+            try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e2) {}
+        }
+    }
     renderLotteryConfigPanel();
 }
 </script>
