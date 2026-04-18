@@ -2369,6 +2369,87 @@
             }, 3000);
         }
         
+        // ========== 云端数据同步 ==========
+        const USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        
+        async function loadDataFromCloud() {
+            if (!window.supabase) {
+                console.warn('[AdvancedChoujiang] Supabase SDK 未加载');
+                return;
+            }
+            
+            try {
+                const sb = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+                );
+                
+                console.log('[AdvancedChoujiang] 📥 正在从云端加载数据...');
+                
+                // 并行加载货币和抽奖记录
+                const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
+                    sb.from('user_currencies').select('*').eq('user_id', USER_ID),
+                    sb.from('lottery_records').select('*').eq('user_id', USER_ID)
+                ]);
+                
+                let hasUpdate = false;
+                
+                // 同步货币
+                if (currencies && currencies.length > 0) {
+                    currencies.forEach(row => {
+                        const key = row.currency_type;
+                        if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
+                            const cloudVal = parseFloat(row.amount) || 0;
+                            const localVal = parseFloat(localStorage.getItem(key)) || 0;
+                            // 云端值大于本地值时，使用云端值
+                            if (cloudVal > localVal) {
+                                localStorage.setItem(key, String(cloudVal));
+                                console.log(`[AdvancedChoujiang] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
+                                hasUpdate = true;
+                            }
+                        }
+                    });
+                }
+                
+                // 同步高级抽奖记录
+                if (lotteryRecords && lotteryRecords.length > 0) {
+                    const advancedRecords = lotteryRecords.filter(r => r.pool_type === 'advanced');
+                    
+                    // 转换格式并保存
+                    const advancedFormatted = advancedRecords.map(r => ({
+                        prize: { name: r.prize_name, rewardType: 'item' },
+                        date: r.prize_date,
+                        used: r.used || false,
+                        rewardType: 'item'
+                    }));
+                    
+                    // 检查本地是否有记录，如果没有或云端更多，则使用云端
+                    const localAdvanced = JSON.parse(localStorage.getItem('advancedRecords') || '[]');
+                    
+                    if (advancedFormatted.length > localAdvanced.length) {
+                        localStorage.setItem('advancedRecords', JSON.stringify(advancedFormatted));
+                        console.log(`[AdvancedChoujiang] 🎁 同步高级抽奖记录: ${localAdvanced.length} → ${advancedFormatted.length}`);
+                        hasUpdate = true;
+                    }
+                }
+                
+                console.log('[AdvancedChoujiang] ✅ 云端数据同步完成');
+                
+                // 如果有更新，刷新UI
+                if (hasUpdate) {
+                    updateCurrencyDisplay();
+                    updateAdvancedRecords();
+                }
+                
+            } catch (e) {
+                console.error('[AdvancedChoujiang] ❌ 云端同步失败:', e);
+            }
+        }
+        
         // 确保DOM加载完成后初始化
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function() {
+            init();
+            // 从云端加载数据
+            loadDataFromCloud();
+        });
     </script>
