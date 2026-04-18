@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>纪行之骰：幸运大抽奖 - 超级兑换券乐园</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,6 +52,17 @@
             backdrop-filter: blur(10px);
         }
         .back-btn button:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+
+        .refresh-btn {
+            position: fixed; top: 16px; right: 16px; z-index: 100;
+        }
+        .refresh-btn button {
+            padding: 7px 14px; border-radius: 20px; border: 1px solid rgba(6,182,212,0.3);
+            background: rgba(6,182,212,0.12); color: #22d3ee; cursor: pointer; font-size: 0.8rem;
+            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+        .refresh-btn button:hover { background: rgba(6,182,212,0.2); border-color: rgba(6,182,212,0.5); }
 
         /* ===== 顶部栏 ===== */
         .top-bar {
@@ -457,6 +471,7 @@
 
     <div class="bg-blur-layer"></div>
     <div class="back-btn"><button onclick="window.location.href='../index.html'">← 返回</button></div>
+    <div class="refresh-btn" title="如果显示的是旧数据，点击刷新"><button onclick="forceRefreshPage()">🔄 刷新数据</button></div>
 
     <div class="top-bar">
         <div class="pool-title">🎲 纪行之骰</div>
@@ -675,68 +690,49 @@
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // ===== 背景图加载（带浏览器缓存） =====
-        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf .png';
+        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf.png';
         const BG_CACHE_KEY='lottery_bg_cache';
-        const BG_CACHE_EXPIRE=7*24*60*60*1000; // 7天过期
-
+        const BG_VERSION_KEY='lottery_bg_version';
+        
         var poolImg=document.getElementById('poolBgImg');
         
-        // 检查缓存是否有效
-        var cacheData=null;
-        try{
-            var raw=localStorage.getItem(BG_CACHE_KEY);
-            if(raw){
-                var parsed=JSON.parse(raw);
-                if(Date.now()-parsed.ts<BG_CACHE_EXPIRE){
-                    cacheData=parsed.data;
-                }
-            }
-        }catch(e){}
+        // 生成当前时间戳作为版本号（每小时更换）
+        var currentVersion=Math.floor(Date.now()/(60*60*1000));
+        var cachedVersion=parseInt(localStorage.getItem(BG_VERSION_KEY)||'0');
         
-        if(cacheData){
-            poolImg.src=cacheData;
-            // 后台静默检查CDN是否有更新
-            refreshBgFromCdn();
-        }else{
-            loadPoolBg();
+        // 检查是否需要强制刷新缓存（版本变化或手动刷新）
+        var forceRefresh=currentVersion!==cachedVersion;
+        
+        // 如果有URL参数强制刷新，也清除缓存
+        if(location.search.includes('refresh=')){
+            forceRefresh=true;
+            localStorage.removeItem(BG_CACHE_KEY);
+            console.log('[lottery] 强制刷新模式：已清除图片缓存');
         }
         
-        function loadPoolBg(){
-            var img=new Image();img.crossOrigin='anonymous';
-            img.onload=function(){
-                poolImg.src=BG_URL;
-                try{
-                    var c=document.createElement('canvas');
-                    c.width=img.naturalWidth||1280;
-                    c.height=img.naturalHeight||720;
-                    c.getContext('2d').drawImage(img,0,0);
-                    var d=c.toDataURL('image/jpeg',0.8);
-                    if(d&&d.length>1000){
-                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
-                    }
-                }catch(e){}
-            }
-            img.onerror=useFallbackBg;
-            img.src=BG_URL+'?v='+Date.now();
-            setTimeout(useFallbackBg,8000);
-        }
+        // 始终从CDN加载，不使用本地缓存的图片
+        loadPoolBg(forceRefresh);
         
-        function refreshBgFromCdn(){
+        function loadPoolBg(force){
             var img=new Image();img.crossOrigin='anonymous';
+            var url=BG_URL+(force?'?v='+Date.now():'');
+            
             img.onload=function(){
-                try{
-                    var c=document.createElement('canvas');
-                    c.width=img.naturalWidth||1280;
-                    c.height=img.naturalHeight||720;
-                    c.getContext('2d').drawImage(img,0,0);
-                    var d=c.toDataURL('image/jpeg',0.8);
-                    if(d&&d.length>1000){
-                        localStorage.setItem(BG_CACHE_KEY,JSON.stringify({data:d,ts:Date.now()}));
-                    }
-                }catch(e){}
+                poolImg.src=url;
+                // 更新版本号
+                localStorage.setItem(BG_VERSION_KEY,currentVersion);
+                console.log('[lottery] 奖池背景图已加载');
+            }
+            img.onerror=function(){
+                console.warn('[lottery] 奖池背景图加载失败');
+                useFallbackBg();
             };
-            img.onerror=function(){};
-            img.src=BG_URL;
+            img.src=url;
+            setTimeout(function(){
+                if(!poolImg.src||poolImg.naturalHeight===0){
+                    useFallbackBg();
+                }
+            },8000);
         }
         
         function useFallbackBg(){if(!poolImg.src||poolImg.naturalHeight===0){poolImg.style.display='none';document.getElementById('poolPlaceholder').style.display='';document.getElementById('poolOverlay').style.background='#e5e7eb';}}
@@ -770,29 +766,99 @@
 
         // ===== 初始化 =====
         function init(){
+            // 检查是否需要强制刷新配置（URL参数）
+            if(location.search.includes('clear=')){
+                console.log('[lottery] 强制清除模式：清除所有配置缓存');
+                localStorage.removeItem('lottery_reward_config');
+                localStorage.removeItem('lottery_config_version');
+                REWARD_CONFIG=null;
+            }
+            
             try{var o=JSON.parse(localStorage.getItem('lottery_data')||'{}');totalDraws=o.totalDraws||0;lastStar5Draw=o.lastStar5Draw||0;lastStar4Draw=o.lastStar4Draw||0;lastStar5Type=o.lastStar5Type||null;drawHistory=o.drawHistory||[];}catch(e){}
             try{REWARD_CONFIG=JSON.parse(localStorage.getItem('lottery_reward_config'))}catch(e){}
             document.getElementById('ticketCount').textContent=getTicketCount();
             updateStats();updatePityUI();renderHistory();
             renderPendingCodes(); // 渲染待使用兑换码
+            renderTierDetails(); // 先渲染本地配置
             fetchRewardConfigFromCloud();
         }
         async function fetchRewardConfigFromCloud(){
             try{
                 if(typeof window.supabase==='undefined')return;
-                var sb=window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
-                var {data,error}=await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7').maybeSingle();
+                
+                // 创建客户端时禁用缓存
+                var sb=window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',{
+                    db:{schema:'public'},
+                    global:{headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}}
+                });
+                
+                // 添加时间戳防止缓存
+                var {data,error}=await sb.from('jisuan_data')
+                    .select('lottery_reward_config,updated_at')
+                    .eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7')
+                    .maybeSingle();
+                    
                 if(!error&&data&&data.lottery_reward_config){
                     try{
-                        REWARD_CONFIG=JSON.parse(data.lottery_reward_config);
-                        localStorage.setItem('lottery_reward_config',data.lottery_reward_config);
-                        console.log('[lottery] ✅ 已从云端加载最新奖励配置');
+                        var newConfig=JSON.parse(data.lottery_reward_config);
+                        var oldConfigStr=localStorage.getItem('lottery_reward_config');
+                        var newConfigStr=data.lottery_reward_config;
+                        var oldUpdatedAt=localStorage.getItem('lottery_config_updated_at')||'';
+                        var newUpdatedAt=data.updated_at||'';
+                        
+                        // 检查配置是否有变化（比较内容或更新时间）
+                        var hasChanged=oldConfigStr!==newConfigStr||oldUpdatedAt!==newUpdatedAt;
+                        
+                        if(hasChanged||!REWARD_CONFIG){
+                            REWARD_CONFIG=newConfig;
+                            localStorage.setItem('lottery_reward_config',newConfigStr);
+                            localStorage.setItem('lottery_config_updated_at',newUpdatedAt);
+                            console.log('[lottery] ✅ 已从云端加载最新奖励配置，配置已更新');
+                            console.log('[lottery] 更新时间:',newUpdatedAt);
+                            // 重新渲染奖励详情
+                            renderTierDetails();
+                            
+                            // 显示更新提示
+                            showUpdateNotification();
+                        }else{
+                            REWARD_CONFIG=newConfig;
+                            console.log('[lottery] ✅ 云端配置与本地一致，无需更新');
+                        }
                     }catch(e){console.error('[lottery] 解析云端配置失败',e)}
                 }else if(error){
                     console.warn('[lottery] 云端查询出错:',error);
                 }
             }catch(e){console.warn('[lottery] 云端配置加载失败，使用本地缓存',e)}
         }
+        
+        function showUpdateNotification(){
+             // 创建更新提示
+             var notif=document.createElement('div');
+             notif.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(6,182,212,0.95);color:white;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
+             notif.innerHTML='✅ 奖励配置已更新为最新版本';
+             document.body.appendChild(notif);
+             setTimeout(function(){notif.style.opacity='0';notif.style.transition='opacity 0.5s';setTimeout(function(){notif.remove()},500)},3000);
+         }
+         
+         function forceRefreshPage(){
+             // 清除所有相关缓存
+             localStorage.removeItem('lottery_reward_config');
+             localStorage.removeItem('lottery_config_updated_at');
+             localStorage.removeItem('lottery_bg_cache');
+             localStorage.removeItem('lottery_bg_version');
+             REWARD_CONFIG=null;
+             
+             // 显示提示
+             var notif=document.createElement('div');
+             notif.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
+             notif.innerHTML='🔄 正在刷新数据...';
+             document.body.appendChild(notif);
+             
+             // 强制重新加载页面（带时间戳）
+             setTimeout(function(){
+                 window.location.href=window.location.pathname+'?clear='+Date.now();
+             },500);
+         }
         function saveData(){localStorage.setItem('lottery_data',JSON.stringify({totalDraws,lastStar5Draw,lastStar4Draw,lastStar5Type,drawHistory}))}
         function getRewards(t){
             var src=(REWARD_CONFIG&&REWARD_CONFIG[t])?REWARD_CONFIG[t]:(DEFAULT_REWARDS[t]||[]);
