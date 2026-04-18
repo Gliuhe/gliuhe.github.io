@@ -421,172 +421,116 @@
             font-size: 0.95rem;
         }
 
-        /* 纪行商店 */
-        .shop-section {
+        /* 抽奖模块 */
+        .lottery-section {
             background: rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 25px;
             padding: 30px;
             margin-bottom: 40px;
-            border: 2px solid rgba(76, 175, 80, 0.3);
+            border: 2px solid rgba(214, 158, 46, 0.3);
         }
 
-        .shop-title {
+        .lottery-title {
             font-size: 2rem;
             color: white;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
 
-        .shop-desc {
+        .lottery-desc {
             text-align: center;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             font-size: 1.1rem;
         }
 
-        .shop-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-        }
-
-        .shop-item {
-            background: rgba(255, 255, 255, 0.2);
+        .lottery-card {
+            position: relative;
             border-radius: 20px;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid rgba(214, 158, 46, 0.5);
+            box-shadow: 0 0 20px rgba(214, 158, 46, 0.2);
         }
 
-        .shop-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        .lottery-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 0 40px rgba(214, 158, 46, 0.4);
         }
 
-        .shop-item.sold-out {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        .item-image {
-            width: 100%;
+        .lottery-card-bg {
             height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: linear-gradient(135deg, #d69e2e, #e53e3e, #d69e2e);
+            position: relative;
             overflow: hidden;
         }
 
-        .item-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .item-info {
-            padding: 20px;
-        }
-
-        .item-name {
-            font-size: 1.3rem;
-            color: white;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .item-desc {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-
-        .item-price {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(76, 175, 80, 0.2);
-            border-radius: 10px;
-        }
-
-        .price-icon {
-            font-size: 1.5rem;
-        }
-
-        .price-amount {
-            font-size: 1.5rem;
-            color: #81C784;
-            font-weight: bold;
-        }
-
-        .btn-buy {
-            width: 100%;
-            background: linear-gradient(135deg, #66BB6A, #4CAF50);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-buy:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-        }
-
-        .btn-buy:disabled {
-            background: #999;
-            cursor: not-allowed;
-        }
-
-        .shop-item.sold-out .btn-buy {
-            background: #999;
-        }
-
-        .shop-item.sold-out .btn-buy::after {
-            content: ' ✓ 已兑换';
-        }
-
-        .choice-wide {
-            max-width: 500px;
-        }
-
-        .choice-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .choice-tier {
-            font-size: 0.75rem;
-            color: #FFD700;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        .choice-option.sold-out {
-            opacity: 0.4;
-            pointer-events: none;
-            background: rgba(100, 100, 100, 0.3);
-        }
-
-        .choice-option.sold-out::after {
-            content: ' ✓';
+        .lottery-card-bg::before {
+            content: '🎲';
             position: absolute;
-            top: 8px;
-            right: 8px;
-            font-size: 0.8rem;
-            color: #4CAF50;
+            font-size: 120px;
+            opacity: 0.15;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .lottery-card-content {
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            text-align: center;
+        }
+
+        .lottery-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .lottery-name {
+            font-size: 1.8rem;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .lottery-hint {
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+
+        .lottery-rewards-hint {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .lottery-rewards-hint span {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+
+        .lottery-btn {
+            background: linear-gradient(135deg, #d69e2e, #e53e3e);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(214, 158, 46, 0.4);
         }
 
         /* 规则说明 */
@@ -642,16 +586,8 @@
                 text-align: center;
             }
 
-            .shop-items {
-                grid-template-columns: 1fr;
-            }
-
             .currency-amount {
                 font-size: 2rem;
-            }
-
-            .item-image {
-                height: 180px;
             }
 
             .choice-message {
@@ -898,78 +834,24 @@
             </div>
             <p class="currency-tip">周中区（周一至周四）每日300券 | 周末区：周五600券/周六250券/周日50券</p>
         </div>
-        <div class="shop-section">
-            <h2 class="shop-title">🏪 纪行商店</h2>
-            <p class="shop-desc">使用纪行券兑换实物奖品和虚拟奖励</p>
+
+        <!-- 抽奖模块 -->
+        <div class="lottery-section">
+            <h2 class="lottery-title">🎰 纪行之骰：幸运大抽奖</h2>
+            <p class="lottery-desc">使用纪行券掷3颗骰子，试试你的运气！掷出三个6即中五星大奖！</p>
             
-            <div class="shop-items">
-                <!-- 奖品1 -->
-                <div class="shop-item" id="reward1">
-                    <div class="item-image">
-                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward1_jixing.png" alt="奖品1">
+            <div class="lottery-card" onclick="goToLottery()">
+                <div class="lottery-card-bg"></div>
+                <div class="lottery-card-content">
+                    <div class="lottery-icon">🎲</div>
+                    <div class="lottery-name">前往抽奖</div>
+                    <div class="lottery-hint">消耗纪行券，赢取丰厚奖励</div>
+                    <div class="lottery-rewards-hint">
+                        <span>⭐ 三星：兑换券/抽奖券</span>
+                        <span>✨ 四星：大量兑换券</span>
+                        <span>👑 五星：实物大奖/兑换券</span>
                     </div>
-                    <div class="item-info">
-                        <h3 class="item-name">Klee 联动套装</h3>
-                        <p class="item-desc">Klee 鲨鱼头套+立牌+夜光徽章+纪念票+2个弹弹乐</p>
-                        <div class="item-price">
-                            <span class="price-icon">🎫</span>
-                            <span class="price-amount">15</span>
-                        </div>
-                        <button class="btn btn-buy" onclick="buyReward(1)">兑换</button>
-                    </div>
-                </div>
-
-                <!-- 奖品2 -->
-                <div class="shop-item" id="reward2">
-                    <div class="item-image">
-                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward2_jixing.png" alt="奖品2">
-                    </div>
-                    <div class="item-info">
-                        <h3 class="item-name">透明展示盒，带灯</h3>
-                        <p class="item-desc">中等大小的透明展示盒，带灯</p>
-                        <div class="item-price">
-                            <span class="price-icon">🎫</span>
-                            <span class="price-amount">15</span>
-                        </div>
-                        <button class="btn btn-buy" onclick="buyReward(2)">兑换</button>
-                    </div>
-                </div>
-
-                <!-- 奖品3 -->
-                <div class="shop-item" id="reward3">
-                    <div class="item-image">
-                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward3_jixing.png" alt="奖品3">
-                    </div>
-                    <div class="item-info">
-                        <h3 class="item-name">Klee 联动随机2件零食（不含周边，可指定）</h3>
-                        <p class="item-desc">包含：草莓爆米花味/红茶黑巧味/黄油饼干味/浓郁黑巧味...
-                        </p>
-                        <div class="item-price">
-                            <span class="price-icon">🎫</span>
-                            <span class="price-amount">15</span>
-                        </div>
-                        <button class="btn btn-buy" onclick="buyReward(3)">兑换</button>
-                    </div>
-                </div>
-
-
-                <!-- 虚拟奖励礼包 -->
-                <div class="shop-item" id="reward4">
-                    <div class="item-image">
-                        <img src="https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward4_jixing.png" alt="虚拟奖励礼包">
-                    </div>
-                    <div class="item-info">
-                        <h3 class="item-name">虚拟奖励礼包</h3>
-                        <p class="item-desc">
-                            🎫 15券：10高级抽奖券 或 12888兑换券<br>
-                            🎫 3券：2高级抽奖券 或 2488兑换券
-                        </p>
-                        <div class="item-price">
-                            <span class="price-icon">🎫</span>
-                            <span class="price-amount">3/15</span>
-                        </div>
-                        <button class="btn btn-buy" onclick="showReward4Select()">兑换</button>
-                    </div>
+                    <div class="lottery-btn">🎰 开始抽奖</div>
                 </div>
             </div>
         </div>
@@ -981,64 +863,11 @@
                 <li><strong>周中区（周一至周四）：</strong>完成任务中心的"每日任务奖励"可获得300张纪行券</li>
                 <li><strong>周末区（周五至周日）：</strong>周五完成获得600券，周六完成获得250券，周日完成获得50券</li>
                 <li>每周一自动重置进度，开始新一周的纪行</li>
-                <li>累计获得纪行券可在纪行商店兑换奖品</li>
-                <li>实物奖品1-3每个需要15张纪行券</li>
-                <li>虚拟奖励礼包分两档（15券/3券），每档二选一</li>
-                <li>每个奖品限兑换一次，不可重复购买</li>
-                <li>虚拟奖励立即到账，实物奖品将在活动结束后统一发放</li>
+                <li>使用纪行券参与掷骰抽奖，点数越高奖励越好</li>
+                <li>掷出三个6即可获得五星大奖（含实物奖励）</li>
+                <li>四星奖励每10次必出（保底机制）</li>
+                <li>实物奖品将在活动结束后统一发放</li>
             </ul>
-        </div>
-    </div>
-
-    <!-- 完成动画 -->
-    <div class="complete-animation" id="completeAnimation">
-        <div class="success-message">
-            <h2>🎉 恭喜你！</h2>
-            <p id="successText">成功领取纪行大奖！</p>
-            <button class="btn btn-primary" onclick="closeAnimation()">确定</button>
-        </div>
-    </div>
-
-    <!-- 虚拟奖励选择弹窗 -->
-    <div class="complete-animation" id="choiceModal">
-        <div class="choice-message choice-wide">
-            <h2>🎁 选择你的奖励</h2>
-            <p class="choice-desc">每个档位限兑一次，请选择：</p>
-            <div class="choice-options choice-grid">
-                <div class="choice-option" onclick="selectReward4('4A', 'premiumLottery')" id="choice4A-lottery">
-                    <div class="choice-tier">🎫 15券</div>
-                    <div class="choice-icon">💎</div>
-                    <div class="choice-info">
-                        <h3>高级抽奖券 × 10</h3>
-                        <p>豪华版</p>
-                    </div>
-                </div>
-                <div class="choice-option" onclick="selectReward4('4A', 'voucher')" id="choice4A-voucher">
-                    <div class="choice-tier">🎫 15券</div>
-                    <div class="choice-icon">🎫</div>
-                    <div class="choice-info">
-                        <h3>兑换券 × 12888</h3>
-                        <p>豪华版</p>
-                    </div>
-                </div>
-                <div class="choice-option" onclick="selectReward4('4B', 'premiumLottery')" id="choice4B-lottery">
-                    <div class="choice-tier">🎫 3券</div>
-                    <div class="choice-icon">💎</div>
-                    <div class="choice-info">
-                        <h3>高级抽奖券 × 2</h3>
-                        <p>标准版</p>
-                    </div>
-                </div>
-                <div class="choice-option" onclick="selectReward4('4B', 'voucher')" id="choice4B-voucher">
-                    <div class="choice-tier">🎫 3券</div>
-                    <div class="choice-icon">🎫</div>
-                    <div class="choice-info">
-                        <h3>兑换券 × 2488</h3>
-                        <p>标准版</p>
-                    </div>
-                </div>
-            </div>
-            <button class="btn btn-secondary" onclick="closeChoiceModal()">取消</button>
         </div>
     </div>
 
@@ -1335,240 +1164,15 @@
                 `${stats.zoneB.days} 天 / ${stats.zoneB.currency} 券`;
         }
 
-        // 购买奖品
-        function buyReward(rewardId) {
-            const boughtRewards = getBoughtRewards();
-            
-            // 检查是否已购买
-            if (boughtRewards.includes(rewardId)) {
-                alert('您已经兑换过这个奖品了！');
-                return;
-            }
-
-            // 获取奖品价格
-            const price = getRewardPrice(rewardId);
-            const currentCurrency = getJixingCurrency();
-
-            // 检查纪行券是否足够
-            if (currentCurrency < price) {
-                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
-                return;
-            }
-
-            // 确认购买
-            if (!confirm(`确定使用${price}张纪行券兑换此奖品吗？`)) {
-                return;
-            }
-
-            // 扣除纪行券
-            saveJixingCurrency(currentCurrency - price);
-
-            // 记录已购买
-            boughtRewards.push(rewardId);
-            saveBoughtRewards(boughtRewards);
-
-            // 更新界面
-            updateCurrencyDisplay();
-            updateShopItems();
-            showCompleteAnimation('兑换成功！奖品将在活动结束后统一发放~');
-        }
-
-        // 获取奖品价格
-        function getRewardPrice(rewardId) {
-            if (rewardId === '4A') {
-                return 15;
-            }
-            if (rewardId === '4B') {
-                return 3;
-            }
-            return PRICE_PER_ITEM;
-        }
-
-        // 显示虚拟奖励选择弹窗
-        function showReward4Select() {
-            const boughtRewards = getBoughtRewards();
-            const currentCurrency = getJixingCurrency();
-
-            // 检查是否全部已兑换
-            if (boughtRewards.includes('4A') && boughtRewards.includes('4B')) {
-                alert('您已兑换过所有档位！');
-                return;
-            }
-
-            // 更新弹窗选项状态
-            const options = [
-                { id: 'choice4A-lottery', tier: '4A', price: 15 },
-                { id: 'choice4A-voucher', tier: '4A', price: 15 },
-                { id: 'choice4B-lottery', tier: '4B', price: 3 },
-                { id: 'choice4B-voucher', tier: '4B', price: 3 }
-            ];
-
-            options.forEach(opt => {
-                const el = document.getElementById(opt.id);
-                if (boughtRewards.includes(opt.tier)) {
-                    el.classList.add('sold-out');
-                } else if (currentCurrency < opt.price) {
-                    el.classList.add('sold-out');
-                    el.style.opacity = '0.5';
-                } else {
-                    el.classList.remove('sold-out');
-                    el.style.opacity = '1';
-                }
-            });
-
-            document.getElementById('choiceModal').classList.add('active');
-        }
-
-        // 选择虚拟奖励
-        function selectReward4(tier, type) {
-            const boughtRewards = getBoughtRewards();
-            if (boughtRewards.includes(tier)) {
-                alert('您已经兑换过这个档位了！');
-                return;
-            }
-
-            const currentCurrency = getJixingCurrency();
-            const price = tier === '4A' ? 15 : 3;
-
-            if (currentCurrency < price) {
-                alert(`纪行券不足！需要${price}张，当前只有${currentCurrency}张。`);
-                return;
-            }
-
-            const amounts = {
-                '4A': { premiumLottery: 10, voucher: 12888 },
-                '4B': { premiumLottery: 2, voucher: 2488 }
-            };
-            const amount = amounts[tier][type];
-
-            // 扣除纪行券
-            saveJixingCurrency(currentCurrency - price);
-
-            // 记录已购买
-            boughtRewards.push(tier);
-            saveBoughtRewards(boughtRewards);
-
-            // 发放奖励
-            if (type === 'premiumLottery') {
-                const premiumLottery = parseInt(localStorage.getItem('premiumLottery') || '0');
-                localStorage.setItem('premiumLottery', premiumLottery + amount);
-                
-                const history = JSON.parse(localStorage.getItem('history') || '[]');
-                history.push({
-                    date: new Date().toISOString(),
-                    amount: amount,
-                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
-                    type: 'add',
-                    currencyType: 'premiumLottery',
-                    currencyName: '高级抽奖券'
-                });
-                localStorage.setItem('history', JSON.stringify(history));
-
-                showCompleteAnimation(`兑换成功！获得 ${amount} 张高级抽奖券！`);
-            } else {
-                const voucher = parseInt(localStorage.getItem('voucher') || '0');
-                localStorage.setItem('voucher', voucher + amount);
-                syncCurrencyToCloud('voucher');
-                
-                const history = JSON.parse(localStorage.getItem('history') || '[]');
-                history.push({
-                    date: new Date().toISOString(),
-                    amount: amount,
-                    reason: '沐春望景纪行' + (tier === '4A' ? '豪华奖励礼包' : '奖励礼包'),
-                    type: 'add',
-                    currencyType: 'voucher',
-                    currencyName: '兑换券'
-                });
-                localStorage.setItem('history', JSON.stringify(history));
-
-                showCompleteAnimation(`兑换成功！获得 ${amount} 张兑换券！`);
-            }
-
-            // 关闭选择弹窗
-            closeChoiceModal();
-
-            // 更新界面
-            updateCurrencyDisplay();
-            updateShopItems();
-        }
-
-        // 关闭选择弹窗
-        function closeChoiceModal() {
-            document.getElementById('choiceModal').classList.remove('active');
+        // 前往抽奖页面
+        function goToLottery() {
+            window.location.href = 'lottery.html';
         }
 
         // 更新纪行券显示
         function updateCurrencyDisplay() {
             const currency = getJixingCurrency();
             document.getElementById('jixingCurrency').textContent = currency;
-        }
-
-        // 更新商店物品状态
-        function updateShopItems() {
-            const boughtRewards = getBoughtRewards();
-            const currentCurrency = getJixingCurrency();
-
-            // 奖品1-3
-            for (let i = 1; i <= 3; i++) {
-                const item = document.getElementById(`reward${i}`);
-                const btn = item.querySelector('.btn-buy');
-                const price = getRewardPrice(i);
-                
-                if (boughtRewards.includes(i)) {
-                    item.classList.add('sold-out');
-                    btn.disabled = true;
-                    btn.textContent = '已兑换';
-                } else if (currentCurrency < price) {
-                    btn.disabled = true;
-                    btn.textContent = `需要${price}券`;
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = '兑换';
-                }
-            }
-
-            // 虚拟奖励礼包
-            const item4 = document.getElementById('reward4');
-            const btn4 = item4.querySelector('.btn-buy');
-            const allBought = boughtRewards.includes('4A') && boughtRewards.includes('4B');
-            
-            if (allBought) {
-                item4.classList.add('sold-out');
-                btn4.disabled = true;
-                btn4.textContent = '已兑换';
-            } else {
-                btn4.disabled = false;
-                btn4.textContent = '兑换';
-            }
-        }
-
-        // 显示完成动画
-        function showCompleteAnimation(text) {
-            document.getElementById('successText').textContent = text;
-            document.getElementById('completeAnimation').classList.add('active');
-            createConfetti();
-        }
-
-        // 关闭动画
-        function closeAnimation() {
-            document.getElementById('completeAnimation').classList.remove('active');
-        }
-
-        // 创建彩带
-        function createConfetti() {
-            const colors = ['#4CAF50', '#66BB6A', '#81C784', '#a8e6cf', '#c8e6c9'];
-            const container = document.getElementById('completeAnimation');
-
-            for (let i = 0; i < 30; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.animationDelay = Math.random() * 1 + 's';
-                container.appendChild(confetti);
-
-                setTimeout(() => confetti.remove(), 2000);
-            }
         }
 
         // 显示成功提示
@@ -1592,7 +1196,6 @@
 
             renderProgress();
             updateCurrencyDisplay();
-            updateShopItems();
         }
 
         init();
