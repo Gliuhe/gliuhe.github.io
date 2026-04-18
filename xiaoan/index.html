@@ -2538,16 +2538,19 @@
         };
         
         // 初始化数据函数
-        function initializeData() {
+        function initializeData(skipDefaultValues = false) {
             // 初始化三种货币
-            if (!localStorage.getItem('voucher')) {
-                localStorage.setItem('voucher', '100');
-            }
-            if (!localStorage.getItem('lottery') || isNaN(parseInt(localStorage.getItem('lottery')))) {
-                localStorage.setItem('lottery', '0');
-            }
-            if (!localStorage.getItem('premium') || isNaN(parseInt(localStorage.getItem('premium')))) {
-                localStorage.setItem('premium', '0');
+            // 注意：如果 skipDefaultValues 为 true，则不设置默认值（用于云端同步后）
+            if (!skipDefaultValues) {
+                if (!localStorage.getItem('voucher')) {
+                    localStorage.setItem('voucher', '100');
+                }
+                if (!localStorage.getItem('lottery') || isNaN(parseInt(localStorage.getItem('lottery')))) {
+                    localStorage.setItem('lottery', '0');
+                }
+                if (!localStorage.getItem('premium') || isNaN(parseInt(localStorage.getItem('premium')))) {
+                    localStorage.setItem('premium', '0');
+                }
             }
             
             // 兼容旧版本的currency数据
@@ -4916,6 +4919,19 @@
             // 等待所有并行任务完成
             await Promise.all(loadTasks);
             console.log(`[Cloud] ✅ 云端数据加载完成 (${loadTasks.length} 个模块并行)`);
+            
+            // 云端同步完成后，如果货币数据仍为空，设置默认值
+            // 这确保新用户或清除数据后的用户有初始值
+            if (!localStorage.getItem('voucher')) {
+                localStorage.setItem('voucher', '100');
+                console.log('[Cloud] 💰 设置默认兑换券: 100');
+            }
+            if (!localStorage.getItem('lottery') || isNaN(parseInt(localStorage.getItem('lottery')))) {
+                localStorage.setItem('lottery', '0');
+            }
+            if (!localStorage.getItem('premium') || isNaN(parseInt(localStorage.getItem('premium')))) {
+                localStorage.setItem('premium', '0');
+            }
 
             // 检查是否需要显示练字提醒横幅
             checkWriteReminder();
@@ -5410,21 +5426,51 @@
         async function forceDownloadFromCloud() {
             const sbClient = window.__cloudClient;
             const userId = window.__cloudUserId;
-            if (!sbClient || !userId) { alert('❌ 未连接云端，请先登录'); return; }
+            if (!sbClient || !userId) { 
+                // 如果没有连接，尝试重新连接
+                const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+                try {
+                    const newClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                    window.__cloudClient = newClient;
+                    window.__cloudUserId = targetUserId;
+                    return forceDownloadFromCloud(); // 递归调用
+                } catch(e) {
+                    alert('❌ 未连接云端，请刷新页面后重试'); 
+                    return; 
+                }
+            }
 
             const ok = confirm(
                 '⚠️ 确定要从云端刷新数据吗？\n\n' +
                 '这将用云端的数据覆盖当前本地数据。\n' +
                 '适用于：\n' +
                 '• 其他设备上有更新的数据\n' +
-                '• 本地数据异常，想恢复云端备份'
+                '• 本地数据异常，想恢复云端备份\n' +
+                '• 清除数据后恢复云端数据'
             );
             if (!ok) return;
 
             _setCloudUIState('syncing', '⏳ 正在从云端拉取...');
 
             try {
+                // 先清除所有应用数据（强制从云端重新加载）
+                const appKeys = [
+                    'voucher', 'lottery', 'premium', 'bankTicket',
+                    'bankSavings', 'bankDeposit', 'bankInvestment',
+                    'savingsBalance', 'depositBalance', 'investmentBalance',
+                    'records', 'advancedRecords', 'lotteryRecords', 'advancedLotteryRecords',
+                    'jixingCurrency', 'jixingCompletedDays',
+                    'jisuanCompleted', 'jisuanScore', 'jisuanPassCards',
+                    'checkinDates', 'streakDays', 'totalCheckins',
+                    'products', 'history', 'activeTasks'
+                ];
+                
+                console.log('[Cloud] 🗑️ 强制刷新：清除本地数据...');
+                appKeys.forEach(key => localStorage.removeItem(key));
+                
+                // 然后从云端加载（此时本地为空，会完全使用云端数据）
                 await _loadAllFromCloud(sbClient, userId);
+                
                 localStorage.setItem('xiaoan_last_cloud_sync', String(Date.now()));
                 _setCloudUIState('connected', '✅ 已从云端刷新！');
                 alert('☁️ 数据已从云端刷新！\n页面将重新加载...');
