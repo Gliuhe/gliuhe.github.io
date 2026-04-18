@@ -1108,8 +1108,97 @@
             }
         });
 
+        // ========== 云端数据同步 ==========
+        const USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        
+        async function loadDataFromCloud() {
+            if (!window.supabase) {
+                console.warn('[Bag] Supabase SDK 未加载');
+                return;
+            }
+            
+            try {
+                const sb = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+                );
+                
+                console.log('[Bag] 📥 正在从云端加载数据...');
+                
+                // 并行加载货币和抽奖记录
+                const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
+                    sb.from('user_currencies').select('*').eq('user_id', USER_ID),
+                    sb.from('lottery_records').select('*').eq('user_id', USER_ID)
+                ]);
+                
+                // 同步货币
+                if (currencies && currencies.length > 0) {
+                    currencies.forEach(row => {
+                        const key = row.currency_type;
+                        if (['voucher', 'lottery', 'premium', 'bankTicket', 'jixing_muchun_currency'].includes(key)) {
+                            const cloudVal = parseFloat(row.amount) || 0;
+                            const localVal = parseFloat(localStorage.getItem(key)) || 0;
+                            // 云端值大于本地值时，使用云端值
+                            if (cloudVal > localVal) {
+                                localStorage.setItem(key, String(cloudVal));
+                                console.log(`[Bag] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
+                            }
+                        }
+                    });
+                }
+                
+                // 同步抽奖记录
+                if (lotteryRecords && lotteryRecords.length > 0) {
+                    const normalRecords = lotteryRecords.filter(r => r.pool_type === 'normal' || !r.pool_type);
+                    const advancedRecords = lotteryRecords.filter(r => r.pool_type === 'advanced');
+                    
+                    // 转换格式并保存
+                    const normalFormatted = normalRecords.map(r => ({
+                        prize: { name: r.prize_name, rewardType: 'item' },
+                        date: r.prize_date,
+                        used: r.used || false,
+                        rewardType: 'item'
+                    }));
+                    
+                    const advancedFormatted = advancedRecords.map(r => ({
+                        prize: { name: r.prize_name, rewardType: 'item' },
+                        date: r.prize_date,
+                        used: r.used || false,
+                        rewardType: 'item'
+                    }));
+                    
+                    // 检查本地是否有记录，如果没有或云端更多，则使用云端
+                    const localNormal = JSON.parse(localStorage.getItem('records') || '[]');
+                    const localAdvanced = JSON.parse(localStorage.getItem('advancedRecords') || '[]');
+                    
+                    if (normalFormatted.length > localNormal.length) {
+                        localStorage.setItem('records', JSON.stringify(normalFormatted));
+                        console.log(`[Bag] 🎁 同步普通抽奖记录: ${localNormal.length} → ${normalFormatted.length}`);
+                    }
+                    
+                    if (advancedFormatted.length > localAdvanced.length) {
+                        localStorage.setItem('advancedRecords', JSON.stringify(advancedFormatted));
+                        console.log(`[Bag] 🎁 同步高级抽奖记录: ${localAdvanced.length} → ${advancedFormatted.length}`);
+                    }
+                }
+                
+                console.log('[Bag] ✅ 云端数据同步完成');
+                
+                // 重新渲染页面
+                render();
+                renderStats();
+                
+            } catch (e) {
+                console.error('[Bag] ❌ 云端同步失败:', e);
+            }
+        }
+        
         // ========== 初始化 ==========
-        document.addEventListener('DOMContentLoaded', render);
+        document.addEventListener('DOMContentLoaded', function() {
+            render();
+            // 从云端加载数据
+            loadDataFromCloud();
+        });
     </script>
 </body>
 </html>
