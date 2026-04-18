@@ -2005,11 +2005,14 @@
         }
         
         // 初始化
+        // 固定用户ID（与其他页面保持一致）
+        const USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        
         async function initApp() {
-            // 先从云端加载 rules 和 activeTasks（如果已登录）
+            // 先从云端加载 rules 和 activeTasks
             try {
-                const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
-                if (userId && window.supabase) {
+                const userId = USER_ID;
+                if (window.supabase) {
                     if (typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
 
                     const sbClient = window.supabase.createClient(
@@ -2059,6 +2062,23 @@
                         });
                         localStorage.setItem('activeTasks', JSON.stringify(taskObj));
                         console.log('[rule] ✅ 从云端加载 active_tasks:', cloudTasks.length, '条');
+                    }
+                    
+                    // 加载货币数据
+                    const { data: currencies } = await sbClient.from('user_currencies').select('*').eq('user_id', userId);
+                    if (currencies && currencies.length > 0) {
+                        currencies.forEach(row => {
+                            const key = row.currency_type;
+                            if (['voucher', 'lottery', 'premium', 'bankTicket', 'jixing_muchun_currency'].includes(key)) {
+                                const cloudVal = parseFloat(row.amount) || 0;
+                                const localVal = parseFloat(localStorage.getItem(key)) || 0;
+                                // 云端值大于本地值时，使用云端值
+                                if (cloudVal > localVal) {
+                                    localStorage.setItem(key, String(cloudVal));
+                                    console.log(`[rule] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
+                                }
+                            }
+                        });
                     }
                 }
             } catch(e) {
