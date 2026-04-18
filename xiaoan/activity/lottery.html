@@ -675,7 +675,7 @@
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // ===== 背景图加载（带浏览器缓存） =====
-        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/gacha-bg.jpg';
+        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf .png';
         const BG_CACHE_KEY='lottery_bg_cache';
         const BG_CACHE_EXPIRE=7*24*60*60*1000; // 7天过期
 
@@ -761,6 +761,7 @@
         // ===== 状态变量 =====
         var totalDraws=0,lastStar5Draw=0,lastStar4Draw=0,lastStar5Type=null,drawHistory=[],isRolling=false;
         var pendingStar5Rewards=null;  // 待选择的五星奖励 {tier, zoneA, zoneB}
+        var drawsSinceLastStar5=999;   // 距离上次五星的抽数（用于概率调整）
 
         // 状态机: 'idle' | 'rolling' | 'done'
         var rollState='idle';
@@ -780,22 +781,39 @@
             try{
                 if(typeof window.supabase==='undefined')return;
                 var sb=window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
-                var {data,error}=await sb.from('jisuan_data').select('lottery_reward_config').eq('id','global').maybeSingle();
+                var {data,error}=await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7').maybeSingle();
                 if(!error&&data&&data.lottery_reward_config){
-                    REWARD_CONFIG=data.lottery_reward_config;
-                    localStorage.setItem('lottery_reward_config',JSON.stringify(REWARD_CONFIG));
-                    console.log('[lottery] ✅ 已从云端加载最新奖励配置');
+                    try{
+                        REWARD_CONFIG=JSON.parse(data.lottery_reward_config);
+                        localStorage.setItem('lottery_reward_config',data.lottery_reward_config);
+                        console.log('[lottery] ✅ 已从云端加载最新奖励配置');
+                    }catch(e){console.error('[lottery] 解析云端配置失败',e)}
+                }else if(error){
+                    console.warn('[lottery] 云端查询出错:',error);
                 }
             }catch(e){console.warn('[lottery] 云端配置加载失败，使用本地缓存',e)}
         }
         function saveData(){localStorage.setItem('lottery_data',JSON.stringify({totalDraws,lastStar5Draw,lastStar4Draw,lastStar5Type,drawHistory}))}
         function getRewards(t){
             var src=(REWARD_CONFIG&&REWARD_CONFIG[t])?REWARD_CONFIG[t]:(DEFAULT_REWARDS[t]||[]);
-            if(POOL_TIERS.indexOf(t)>=0){if(Array.isArray(src)&&src.length>0&&Array.isArray(src[0]))return src[Math.floor(Math.random()*src.length)];}
+            if(POOL_TIERS.indexOf(t)>=0){
+                if(Array.isArray(src)&&src.length>0){
+                    // 判断是嵌套数组还是扁平数组
+                    if(Array.isArray(src[0])){
+                        // 嵌套数组格式：[[{...},...], [{...},...], ...] — 随机选一个子数组
+                        return src[Math.floor(Math.random()*src.length)];
+                    }else if(typeof src[0]==='object'&&src[0]!==null){
+                        // 扁平数组格式：[{...}, {...}, ...] — 随机选一项作为奖励
+                        var selectedItem=src[Math.floor(Math.random()*src.length)];
+                        return [selectedItem]; // 返回数组格式，保持统一
+                    }
+                }
+            }
             return Array.isArray(src)?src:[];
         }
         function getTicketCount(){return parseInt(localStorage.getItem('jixing_muchun_currency')||'0')}
         function useTicket(n){var c=getTicketCount();if(c<n)return false;localStorage.setItem('jixing_muchun_currency',String(c-n));syncCurrencyToCloud('jixing_muchun_currency');return true}
+        function updateTicketDisplay(){var el=document.getElementById('ticketCount');if(el)el.textContent=getTicketCount()}
         function rollByProb(arr){var r=Math.random(),cum=0;for(var i=0;i<arr.length;i++){cum+=arr[i][1];if(r<=cum)return arr[i][0]}return arr[arr.length-1][0]}
         function delay(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
@@ -862,6 +880,35 @@
             updateProgressDots();
         }
 
+        // 获取调整后的骰子概率（根据距离上次五星的抽数）
+        function getAdjustedDiceProbs(index){
+            var baseProbs=ALL_PROBS[index];
+            // 只有第三颗骰子（index=2）的概率需要调整，因为它决定了sum=18的概率
+            if(index!==2)return baseProbs;
+            
+            // 根据距离上次五星的抽数调整掷出6的概率
+            var star5Prob=0.008; // 默认0.8%（三个6的概率约为0.4*0.2*0.1=0.008）
+            if(drawsSinceLastStar5>=1&&drawsSinceLastStar5<=3){
+                star5Prob=0.0005; // 0.05%
+            }else if(drawsSinceLastStar5>=4&&drawsSinceLastStar5<=7){
+                star5Prob=0.0008; // 0.08%
+            }else if(drawsSinceLastStar5>=8&&drawsSinceLastStar5<=12){
+                star5Prob=0.002; // 0.2%
+            }else if(drawsSinceLastStar5>=13&&drawsSinceLastStar5<=16){
+                star5Prob=0.005; // 0.5%
+            }else{
+                star5Prob=0.008; // 0.8%（正常概率）
+            }
+            
+            // 计算第三颗骰子需要掷出6的概率
+            // P(sum=18) = P(d1=6) * P(d2=6) * P(d3=6) = 0.4 * 0.2 * x = star5Prob
+            // x = star5Prob / (0.4 * 0.2) = star5Prob / 0.08
+            var p6=Math.min(star5Prob/0.08,0.5); // 限制最大50%
+            var pOther=(1-p6)/5; // 其他点数均分剩余概率
+            
+            return [[1,pOther],[2,pOther],[3,pOther],[4,pOther],[5,pOther],[6,p6]];
+        }
+
         // ===== 掷单颗骰子 =====
         async function rollOneDie(index){
             if(isRolling)return;
@@ -874,7 +921,7 @@
             el.textContent='?';
 
             // 滚动动画：快速切换数字
-            var probArr=ALL_PROBS[index];
+            var probArr=getAdjustedDiceProbs(index);
             var rollCount=0;
             var targetResult=rollByProb(probArr);
 
@@ -937,6 +984,7 @@
             // 延迟弹出详情弹窗
             setTimeout(function(){
                 var tier=drawHistory.length>0?drawHistory[0].tier:'star3';
+                console.log('[finishRolling] 准备显示结果弹窗, tier:', tier, 'drawHistory[0]:', drawHistory[0], 'pendingStar5Rewards:', pendingStar5Rewards);
                 if(tier==='star5_grand'||tier==='star5_normal'){
                     showModal(results,true);
                 }else{
@@ -961,14 +1009,31 @@
 
             // 保底判定（覆盖基础判定）
             if(tier!=='star5'){
-                if(pity5>=90){tier='star5';triggerSource='pity90';}
+                if(pity5>=90){
+                    tier='star5';
+                    triggerSource='pity90';
+                    // 修正骰子点数：五星保底 → 骰子和显示为18
+                    results=[6,6,6];
+                    sum=18;
+                }
             }
             if(tier!=='star5'&&tier!=='star4'){
-                if(pity4>=10){tier='star4';triggerSource='pity10';}
+                if(pity4>=10){
+                    tier='star4';
+                    triggerSource='pity10';
+                    // 修正骰子点数：四星保底 → 骰子和显示为16（5+5+6）
+                    results=[5,5,6];
+                    sum=16;
+                }
             }
 
             // 重置保底进度
-            if(tier==='star5')lastStar5Draw=totalDraws;
+            if(tier==='star5'){
+                lastStar5Draw=totalDraws;
+                drawsSinceLastStar5=0; // 重置距离计数
+            }else{
+                drawsSinceLastStar5++; // 增加距离计数
+            }
             if(tier==='star4')lastStar4Draw=totalDraws;
 
             // 五星子类型判定
@@ -994,7 +1059,8 @@
             if(finalTier==='star5_normal'||finalTier==='star5_grand'){
                 var rewardConfig=(REWARD_CONFIG&&REWARD_CONFIG[finalTier])?REWARD_CONFIG[finalTier]:(DEFAULT_REWARDS[finalTier]||{zoneA:[],zoneB:[]});
                 pendingStar5Rewards={tier:finalTier,zoneA:rewardConfig.zoneA||[],zoneB:rewardConfig.zoneB||[]};
-                setTimeout(function(){showStar5ChoiceModal()},1200);
+                console.log('[processResult] 设置pendingStar5Rewards:', pendingStar5Rewards);
+                // 五星奖励不立即发放，等用户关闭结果弹窗后再弹出选择弹窗
             }else{
                 grantRewards(rewards);
             }
@@ -1010,11 +1076,14 @@
                 }
             }
 
+            // 保存历史记录 - 三星/四星保存实际抽到的奖励，五星保存空数组（后续选择后更新）
+            var savedRewards=(finalTier==='star5_normal'||finalTier==='star5_grand')?[]:rewards.map(function(r){return Object.assign({},r)});
             drawHistory.unshift({time:new Date().toISOString(),dice:results,sum,tier:finalTier,baseTier:tier,star5SubType,triggerSource,
-                trigger:triggerReason+(subReason?(' · '+subReason):''),rewards:(finalTier==='star5_normal'||finalTier==='star5_grand')?[]:rewards.map(function(r){return Object.assign({},r)})});
+                trigger:triggerReason+(subReason?(' · '+subReason):''),rewards:savedRewards});
             if(drawHistory.length>50)drawHistory.pop();
             saveData();
 
+            updateTicketDisplay();
             updateStats();updatePityUI();renderHistory();
         }
 
@@ -1029,7 +1098,37 @@
 
         // ===== 五星奖励选择 =====
         function showStar5ChoiceModal(){
-            if(!pendingStar5Rewards)return;
+            console.log('[showStar5ChoiceModal] pendingStar5Rewards:', pendingStar5Rewards);
+            if(!pendingStar5Rewards){
+                console.log('[showStar5ChoiceModal] pendingStar5Rewards为空，直接返回');
+                return;
+            }
+            
+            // 检查zoneA是否为空，如果为空则使用默认配置
+            if(!pendingStar5Rewards.zoneA||pendingStar5Rewards.zoneA.length===0){
+                var defaultConfig=DEFAULT_REWARDS[pendingStar5Rewards.tier]||{zoneA:[],zoneB:[]};
+                pendingStar5Rewards.zoneA=defaultConfig.zoneA||[];
+                pendingStar5Rewards.zoneB=defaultConfig.zoneB||[];
+            }
+            
+            // 如果仍然没有zoneA选项，直接发放默认奖励
+            if(pendingStar5Rewards.zoneA.length===0){
+                var defaultRewards=[{type:'voucher',amount:80,name:'兑换券'}];
+                if(pendingStar5Rewards.zoneB&&pendingStar5Rewards.zoneB.length>0){
+                    defaultRewards=defaultRewards.concat(pendingStar5Rewards.zoneB);
+                }
+                grantRewards(defaultRewards);
+                
+                var lastRecord=drawHistory[0];
+                if(lastRecord){lastRecord.rewards=defaultRewards.map(function(r){return Object.assign({},r)});saveData();}
+                
+                pendingStar5Rewards=null;
+                updateTicketDisplay();
+                updateStats();renderHistory();
+                showToast('✅ 奖励已自动发放！','ok');
+                return;
+            }
+            
             var info=TIER_INFO[pendingStar5Rewards.tier]||TIER_INFO.star5_normal;
             document.getElementById('star5ChoiceIcon').textContent=info.icon;
             document.getElementById('star5ChoiceBadge').className='result-tier-badge '+info.badgeCls;
@@ -1089,6 +1188,7 @@
             document.getElementById('star5ChoiceModal').classList.remove('show');
             pendingStar5Rewards=null;
 
+            updateTicketDisplay();
             updateStats();renderHistory();
             showToast('✅ 奖励已领取！','ok');
         }
@@ -1197,7 +1297,18 @@
             document.getElementById('resName').textContent=info.name;
 
             var rewards=drawHistory.length>0?drawHistory[0].rewards:getRewards(tier);
-            var rt=rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>');
+            var rt='';
+            if(Array.isArray(rewards)&&rewards.length>0){
+                rt=rewards.map(function(r){
+                    if(typeof r==='object'&&r!==null){
+                        if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';
+                        return(CURRENCY_NAMES[r.type]||r.type||'未知')+' +'+(r.amount||0);
+                    }
+                    return String(r);
+                }).join('<br>');
+            }else{
+                rt='奖励待定（五星需选择）';
+            }
             document.getElementById('resRewards').innerHTML=rt;
             document.getElementById('resDice').textContent=dice.map(function(d){return DICE_EMOJIS[d]}).join(' ')+' = '+dice.reduce(function(a,b){return a+b},0);
 
@@ -1242,21 +1353,34 @@
             document.getElementById('mBadge').className='result-tier-badge '+info.badgeCls;
             document.getElementById('mBadge').textContent=info.name.toUpperCase();
             document.getElementById('mName').textContent=info.name;
-            var rt=rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>');
+            var rt='';
+            if(Array.isArray(rewards)&&rewards.length>0){
+                rt=rewards.map(function(r){
+                    if(typeof r==='object'&&r!==null){
+                        if(r.type==='item')return'<span style="color:#059669;font-weight:600;">🎁 '+r.name+'</span>';
+                        return(CURRENCY_NAMES[r.type]||r.type||'未知')+' +'+(r.amount||0);
+                    }
+                    return String(r);
+                }).join('<br>');
+            }else{
+                rt='奖励待定（五星需选择）';
+            }
             document.getElementById('mRewards').innerHTML=rt;
             document.getElementById('mDice').textContent=dice.map(function(d){return DICE_EMOJIS[d]}).join(' ')+' = '+dice.reduce(function(a,b){return a+b},0);
             if(tier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
             // 标记是否需要后续弹出五星选择
             document.getElementById('resultModal').dataset.star5Pending=isStar5Pending?'1':'0';
+            console.log('[showModal] star5Pending:', isStar5Pending, 'dataset:', document.getElementById('resultModal').dataset.star5Pending);
             document.getElementById('resultModal').classList.add('show');
         }
         function closeResultModal(){
             var modal=document.getElementById('resultModal');
             var star5Pending=modal.dataset.star5Pending==='1';
             var tenResultsData=modal.dataset.tenResults;
+            console.log('[closeResultModal] dataset.star5Pending:', modal.dataset.star5Pending, 'star5Pending:', star5Pending, 'pendingStar5Rewards:', pendingStar5Rewards, 'tenState:', tenState);
             modal.classList.remove('show');
-            if(tenState==='done'){closeTenPull();return}
-            // 如果是五星，关闭结果弹窗后弹出选择奖励弹窗
+            
+            // 如果是五星，关闭结果弹窗后弹出选择奖励弹窗（包括十连抽）
             if(star5Pending){
                 // 十连抽：从存储的数据中恢复 pendingStar5Rewards
                 if(tenResultsData){
@@ -1271,13 +1395,26 @@
                         }
                     }catch(e){}
                 }
+                console.log('[closeResultModal] 准备显示五星选择弹窗, pendingStar5Rewards:', pendingStar5Rewards);
                 setTimeout(function(){showStar5ChoiceModal()},300);
+                // 十连抽需要额外清理状态
+                if(tenState==='done'){
+                    setTimeout(function(){
+                        document.getElementById('overlayTenPull').style.display='none';
+                        tenState='idle';
+                        document.getElementById('tenBtn').disabled=false;
+                    }, 350);
+                }
                 return;
             }
+            
+            // 非五星情况下的清理
+            if(tenState==='done'){closeTenPull();return}
             hideResult();
             switchOverlay('idle');
             rollState='idle';
             document.getElementById('rollBtn').disabled=false;
+            updateTicketDisplay();
         }
         function openDetailModal(){document.getElementById('detailModal').classList.add('show');renderTierDetails()}
         function closeDetailModal(){document.getElementById('detailModal').classList.remove('show')}
@@ -1292,7 +1429,7 @@
             var tiers={star3:[],star4:[],star5_normal:[],star5_grand:[]};
             for(var i=0;i<drawHistory.length;i++){var h=drawHistory[i];if(tiers[h.tier])tiers[h.tier].push(h)}
             var tierMap={star3:'Star3',star4:'Star4',star5_normal:'Star5N',star5_grand:'Star5G'};
-            var rewardHtml=function(rewards){return rewards.map(function(r){if(r.type==='item')return'<span style="color:#059669;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type)+' +'+r.amount}).join('<br>')};
+            var rewardHtml=function(rewards){if(!Array.isArray(rewards)||rewards.length===0)return'暂无奖励';return rewards.map(function(r){if(typeof r==='object'&&r!==null){if(r.type==='item')return'<span style="color:#059669;">🎁 '+r.name+'</span>';return(CURRENCY_NAMES[r.type]||r.type||'未知')+' +'+(r.amount||0)}return String(r)}).join('<br>')};
             var keys=['star3','star4','star5_normal','star5_grand'];
             for(var t=0;t<keys.length;t++){
                 var key=keys[t],items=tiers[key];
@@ -1302,10 +1439,34 @@
                     var poolHtml='';
                     if(Array.isArray(pool)&&pool.length>0){
                         poolHtml='<div style="font-size:0.74rem;color:#9ca3af;margin-bottom:6px;">奖池（随机抽取1项）：</div>';
-                        for(var pi=0;pi<pool.length;pi++){var opt=pool[pi];var optText=Array.isArray(opt)?opt.map(function(r){return r.type==='item'?'🎁 '+r.name:(CURRENCY_NAMES[r.type]||r.type)+'+'+r.amount}).join(' / '):String(opt);poolHtml+='<div style="padding:3px 8px;background:rgba(0,0,0,0.2);border-radius:5px;border:1px solid rgba(255,255,255,0.08);font-size:0.78rem;color:rgba(255,255,255,0.7);margin-bottom:3px;">'+(pi+1)+'. '+optText+'</div>';}
+                        for(var pi=0;pi<pool.length;pi++){
+                            var opt=pool[pi];
+                            var optText='';
+                            if(Array.isArray(opt)){
+                                optText=opt.map(function(r){if(typeof r==='object'&&r!==null){return r.type==='item'?'🎁 '+r.name:(CURRENCY_NAMES[r.type]||r.type||'未知')+'+'+(r.amount||0)}return String(r)}).join(' / ');
+                            }else if(typeof opt==='object'&&opt!==null){
+                                optText=opt.type==='item'?'🎁 '+opt.name:(CURRENCY_NAMES[opt.type]||opt.type||'未知')+'+'+(opt.amount||0);
+                            }else{
+                                optText=String(opt);
+                            }
+                            poolHtml+='<div style="padding:3px 8px;background:rgba(0,0,0,0.2);border-radius:5px;border:1px solid rgba(255,255,255,0.08);font-size:0.78rem;color:rgba(255,255,255,0.7);margin-bottom:3px;">'+(pi+1)+'. '+optText+'</div>';
+                        }
                     }
                     document.getElementById('td'+tierMap[key]+'Rewards').innerHTML=poolHtml;
-                }else{document.getElementById('td'+tierMap[key]+'Rewards').innerHTML=rewardHtml(getRewards(key));}
+                }else{
+                    var star5Cfg=(REWARD_CONFIG&&REWARD_CONFIG[key])?REWARD_CONFIG[key]:(DEFAULT_REWARDS[key]||{zoneA:[],zoneB:[]});
+                    var star5Html='';
+                    if(star5Cfg.zoneA&&star5Cfg.zoneA.length>0){
+                        star5Html+='<div style="font-size:0.74rem;color:#fbbf24;margin-bottom:4px;">🅰️ A区（可选）：</div>';
+                        star5Html+=rewardHtml(star5Cfg.zoneA)+'<br>';
+                    }
+                    if(star5Cfg.zoneB&&star5Cfg.zoneB.length>0){
+                        star5Html+='<div style="font-size:0.74rem;color:#60a5fa;margin-bottom:4px;">🅱️ B区（全部获得）：</div>';
+                        star5Html+=rewardHtml(star5Cfg.zoneB);
+                    }
+                    if(!star5Html)star5Html='暂无配置';
+                    document.getElementById('td'+tierMap[key]+'Rewards').innerHTML=star5Html;
+                }
                 var listEl=document.getElementById('td'+tierMap[key]+'List');
                 if(!items.length){listEl.innerHTML='<div style="text-align:center;padding:10px;color:rgba(255,255,255,0.3);font-size:0.78rem;">暂无记录</div>';continue}
                 listEl.innerHTML=items.slice(0,20).map(function(h){return '<div class="th-item"><span class="th-dice">'+h.dice.map(function(d){return DICE_EMOJIS[d]}).join('')+'</span><span style="font-size:0.7rem;color:rgba(255,255,255,0.4);">'+(h.sum!=null?'='+h.sum:'')+'</span>'+(h.trigger?'<span style="font-size:0.66rem;color:rgba(255,255,255,0.3);margin-left:4px;">'+h.trigger+'</span>':'')+'<span class="th-time">'+new Date(h.time).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</span></div>'}).join('');
@@ -1368,11 +1529,21 @@
             // 保底判定（覆盖基础判定）
             if(tier!=='star5'){
                 var pity5=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar5Draw;
-                if(pity5>=90){tier='star5';triggerSource='pity90';}
+                if(pity5>=90){
+                    tier='star5';
+                    triggerSource='pity90';
+                    results=[6,6,6];
+                    sum=18;
+                }
             }
             if(tier!=='star5'&&tier!=='star4'){
                 var pity4=tenStateObj.tempTotalDraws-tenStateObj.tempLastStar4Draw;
-                if(pity4>=10){tier='star4';triggerSource='pity10';}
+                if(pity4>=10){
+                    tier='star4';
+                    triggerSource='pity10';
+                    results=[5,5,6];
+                    sum=16;
+                }
             }
 
             // 五星子类型判定（应用概率调整）
@@ -1422,6 +1593,7 @@
         function startTenPull(){
             if(tenState!=='idle'||rollState!=='idle')return;
             if(!useTicket(1600)){showToast('纪行券不足！需要 1600 张','err');return}
+            document.getElementById('ticketCount').textContent=getTicketCount();
             tenState='bouncing';
             tenResults=[];hasAnyStar5=false;
             document.getElementById('tenBtn').disabled=true;
@@ -1449,7 +1621,8 @@
             };
             
             for(var i=0;i<10;i++){
-                var d1=rollByProb(DICE_PROBS),d2=rollByProb(DICE_PROBS_2),d3=rollByProb(DICE_PROBS_3);
+                // 使用调整后的概率（根据drawsSinceLastStar5）
+                var d1=rollByProb(DICE_PROBS),d2=rollByProb(DICE_PROBS_2),d3=rollByProb(getAdjustedDiceProbs(2));
                 var res=[d1,d2,d3];
                 var resultInfo=calcTenResult(res, tenStateObj);
                 tenResults.push(resultInfo);
@@ -1663,7 +1836,11 @@
                 if(r.tier==='star5_grand'||r.tier==='star5_normal'){
                     lastStar5Draw=totalDraws;
                     lastStar5Type=(r.tier==='star5_grand')?'grand':'normal';
-                }else if(r.tier==='star4'){
+                    drawsSinceLastStar5=0; // 重置距离计数
+                }else{
+                    drawsSinceLastStar5++; // 增加距离计数
+                }
+                if(r.tier==='star4'){
                     lastStar4Draw=totalDraws;
                 }
                 // 写入历史
@@ -1800,6 +1977,19 @@
             if(bestTier==='star5_grand')spawnParticles(document.getElementById('mParticles'));
             modal.dataset.star5Pending=hasStar5?'1':'0';
             modal.dataset.tenResults=JSON.stringify(results);
+            
+            // 如果有五星，设置 pendingStar5Rewards 为第一个五星
+            if(hasStar5){
+                for(var fi=0;fi<results.length;fi++){
+                    if(results[fi].tier==='star5_grand'||results[fi].tier==='star5_normal'){
+                        var cfg=(REWARD_CONFIG&&REWARD_CONFIG[results[fi].tier])?REWARD_CONFIG[results[fi].tier]:(DEFAULT_REWARDS[results[fi].tier]||{zoneA:[],zoneB:[]});
+                        pendingStar5Rewards={tier:results[fi].tier,zoneA:cfg.zoneA||[],zoneB:cfg.zoneB||[]};
+                        console.log('[showTenDetailModal] 设置pendingStar5Rewards:', pendingStar5Rewards);
+                        break;
+                    }
+                }
+            }
+            
             modal.classList.add('show');
         }
 
