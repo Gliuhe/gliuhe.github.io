@@ -1090,9 +1090,12 @@
         function grantRewards(rewards){
             for(var i=0;i<rewards.length;i++){
                 var r=rewards[i];
-                if(r.type==='item'){
-                    try{var rs=JSON.parse(localStorage.getItem('records')||'[]');rs.push({prize:{name:r.name||'实物奖励',rewardType:'item'},source:'lottery',date:new Date().toISOString()});localStorage.setItem('records',JSON.stringify(rs))}catch(e){}
-                }else{var c=parseFloat(localStorage.getItem(r.type))||0;localStorage.setItem(r.type,String(c+(r.amount||0)));syncCurrencyToCloud(r.type)}
+                // 实物奖励不自动放入背包，通过兑换码机制发放
+                if(r.type!=='item'){
+                    var c=parseFloat(localStorage.getItem(r.type))||0;
+                    localStorage.setItem(r.type,String(c+(r.amount||0)));
+                    syncCurrencyToCloud(r.type);
+                }
             }
         }
 
