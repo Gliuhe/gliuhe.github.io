@@ -1575,11 +1575,11 @@
         async function syncJixingFromCloud(){
             try{
                 var sb=window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
-                var {data,error}=await sb.from('jixing_progress').select('currency').eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7').maybeSingle();
+                var {data,error}=await sb.from('user_currencies').select('amount').eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7').eq('currency_type','jixing_muchun_currency').maybeSingle();
                 if(error)throw error;
-                if(data&&data.currency!==undefined){
-                    localStorage.setItem('jixing_muchun_currency',String(data.currency));
-                    document.getElementById('currentJixingDisplay').textContent=data.currency;
+                if(data&&data.amount!==undefined){
+                    localStorage.setItem('jixing_muchun_currency',String(data.amount));
+                    document.getElementById('currentJixingDisplay').textContent=data.amount;
                     updateTicketDisplay();
                     showToast('✅ 已从云端同步','ok');
                 }else{
