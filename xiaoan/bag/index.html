@@ -1094,7 +1094,7 @@
 
                     // 查询兑换码
                     const { data: codeData, error } = await sbClient
-                        .from('redeem_codes')
+                        .from('exchange_codes')
                         .select('*')
                         .eq('code', code)
                         .single();
@@ -1131,7 +1131,7 @@
 
                     // 标记为已使用
                     await sbClient
-                        .from('redeem_codes')
+                        .from('exchange_codes')
                         .update({ 
                             is_used: true, 
                             used_at: new Date().toISOString(),
