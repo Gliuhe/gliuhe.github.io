@@ -587,7 +587,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (typeof window.supabase === 'undefined') {
         showError('SDK 未加载'); return;
     }
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        db: { schema: 'public' },
+        global: { headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' } }
+    });
 
     // 验证管理员身份
     const adminFlag = localStorage.getItem('xiaoan_is_admin');
@@ -1893,7 +1896,13 @@ async function saveLotteryConfig() {
         lotteryCurrentConfig = cfg;
         localStorage.setItem('lottery_reward_config', JSON.stringify(cfg));
         document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;font-weight:600;">✅ 配置已保存到云端！</span>';
-        setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 3000);
+        
+        // 保存成功后立即从云端重新加载，确保状态同步
+        setTimeout(async () => {
+            await loadLotteryConfig();
+            document.getElementById('lotterySaveStatus').innerHTML = '<span style="color:#38a169;font-weight:600;">✅ 配置已同步！</span>';
+            setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 2000);
+        }, 500);
     } catch(e) {
         document.getElementById('lotterySaveStatus').innerHTML = `<span style="color:#ef4444;font-weight:600;">❌ 保存失败: ${e.message}</span>`;
     }
@@ -1902,8 +1911,13 @@ async function saveLotteryConfig() {
 async function loadLotteryConfig() {
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
-        // 优先从云端加载最新配置
-        const { data, error } = await sb.from('jisuan_data').select('lottery_reward_config').eq('user_id', targetUserId).maybeSingle();
+        // 优先从云端加载最新配置（添加时间戳防止缓存）
+        const { data, error } = await sb.from('jisuan_data')
+            .select('lottery_reward_config,updated_at')
+            .eq('user_id', targetUserId)
+            .maybeSingle();
+        
+        console.log('[Dashboard] 加载云端配置:', { hasData: !!data, hasError: !!error, updated_at: data?.updated_at });
         if (data && data.lottery_reward_config) {
             try {
                 lotteryCurrentConfig = JSON.parse(data.lottery_reward_config);
