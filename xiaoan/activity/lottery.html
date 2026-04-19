@@ -11,7 +11,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+            background: url('bg_jixing.png') center/cover no-repeat fixed;
             color: #333;
             min-height: 100vh;
             display: flex;
@@ -67,6 +67,7 @@
         /* ===== 顶部栏 ===== */
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
+            position: relative;
             padding: 20px 24px 8px; max-width: 800px; margin: 0 auto;
             position: relative;
             z-index: 10;
@@ -77,6 +78,10 @@
             background: linear-gradient(135deg, rgba(254, 243, 199, 0.15), rgba(253, 230, 138, 0.1));
             border: 1px solid rgba(214, 158, 46, 0.4); border-radius: 20px; padding: 5px 16px; font-size: 0.88rem;
             backdrop-filter: blur(10px);
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
         .ticket-badge .val { color: #fcd34d; font-weight: bold; font-size: 1.1rem; }
 
@@ -201,6 +206,11 @@
             box-shadow: 0 4px 16px rgba(214,158,46,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
             transition: all 0.25s;
             line-height: 1.4;
+            animation: floatY 2s ease-in-out infinite;
+        }
+        @keyframes floatY {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
         }
         .pull-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(214,158,46,0.5); }
         .pull-btn:active:not(:disabled) { transform: translateY(0); }
@@ -347,6 +357,7 @@
             box-shadow: 0 4px 16px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
             transition: all 0.25s;
             line-height: 1.4;
+            animation: floatY 2s ease-in-out infinite;
         }
         .ten-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(124,58,237,0.45); }
         .ten-btn:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -474,6 +485,9 @@
     <div class="refresh-btn" title="如果显示的是旧数据，点击刷新"><button onclick="forceRefreshPage()">🔄 刷新数据</button></div>
     <div class="refresh-btn" style="top:56px;" title="清除奖池背景图缓存"><button onclick="clearBgCache()">🖼️ 清除背景缓存</button></div>
 
+    <!-- 背景音乐（带缓存） -->
+    <audio id="bgMusic" loop></audio>
+
     <div class="top-bar">
         <div class="pool-title">🎲 纪行之骰</div>
         <div class="ticket-badge">🎫 <span class="val" id="ticketCount">0</span>
@@ -490,7 +504,7 @@
 
                 <!-- 空闲态 -->
                 <div class="overlay-idle" id="overlayIdle">
-                    <div class="idle-text" id="poolPlaceholder">奖池图区域</div>
+                    <div class="idle-text" id="poolPlaceholder"></div>
                 </div>
 
                 <!-- 掷骰态 -->
@@ -695,6 +709,77 @@
         const BG_CACHE_KEY='lottery_bg_cache';
         const BG_VERSION_KEY='lottery_bg_version';
         
+        // ===== 背景音乐缓存 =====
+        const MUSIC_URL = 'bg_jixing.mp3';
+        const MUSIC_CACHE_KEY = 'lottery_music_cache';
+        const MUSIC_VERSION_KEY = 'lottery_music_version';
+        
+        // 加载背景音乐（带缓存）
+        loadBackgroundMusic();
+        
+        async function loadBackgroundMusic() {
+            const audio = document.getElementById('bgMusic');
+            if (!audio) return;
+            
+            try {
+                // 检查是否有缓存的音乐数据
+                const cachedMusic = localStorage.getItem(MUSIC_CACHE_KEY);
+                const cachedVersion = localStorage.getItem(MUSIC_VERSION_KEY);
+                const currentVersion = 'v1'; // 当音乐文件更新时，更改此版本号
+                
+                if (cachedMusic && cachedVersion === currentVersion) {
+                    // 使用缓存的音乐（Base64）
+                    audio.src = cachedMusic;
+                    console.log('[lottery] 🎵 使用缓存的背景音乐');
+                } else {
+                    // 从网络加载并缓存
+                    console.log('[lottery] 🎵 正在加载背景音乐...');
+                    const response = await fetch(MUSIC_URL);
+                    if (!response.ok) throw new Error('加载失败');
+                    
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const base64data = e.target.result;
+                        // 存储到 localStorage
+                        try {
+                            localStorage.setItem(MUSIC_CACHE_KEY, base64data);
+                            localStorage.setItem(MUSIC_VERSION_KEY, currentVersion);
+                            console.log('[lottery] 🎵 背景音乐已缓存');
+                        } catch (e) {
+                            console.warn('[lottery] 音乐缓存失败（可能超出存储限制）:', e);
+                        }
+                        audio.src = base64data;
+                    };
+                    
+                    reader.readAsDataURL(blob);
+                }
+                
+                // 尝试自动播放
+                audio.play().catch(e => {
+                    console.log('[lottery] 自动播放被阻止，等待用户交互');
+                    // 添加点击事件来启动音乐
+                    document.addEventListener('click', function startMusic() {
+                        audio.play().catch(() => {});
+                        document.removeEventListener('click', startMusic);
+                    }, { once: true });
+                });
+                
+            } catch (e) {
+                console.warn('[lottery] 背景音乐加载失败:', e);
+                // 使用原始 URL 作为后备
+                audio.src = MUSIC_URL;
+            }
+        }
+        
+        // 清除音乐缓存函数
+        function clearMusicCache() {
+            localStorage.removeItem(MUSIC_CACHE_KEY);
+            localStorage.removeItem(MUSIC_VERSION_KEY);
+            console.log('[lottery] 🎵 音乐缓存已清除');
+        }
+        
         var poolImg=document.getElementById('poolBgImg');
         
         // 生成当前时间戳作为版本号（每小时更换）
@@ -736,7 +821,18 @@
             },8000);
         }
         
-        function useFallbackBg(){if(!poolImg.src||poolImg.naturalHeight===0){poolImg.style.display='none';document.getElementById('poolPlaceholder').style.display='';document.getElementById('poolOverlay').style.background='#e5e7eb';}}
+        function useFallbackBg(){
+            if(!poolImg.src||poolImg.naturalHeight===0){
+                poolImg.style.display='none';
+                var placeholder=document.getElementById('poolPlaceholder');
+                if(placeholder){
+                    placeholder.style.display='flex';
+                    placeholder.innerHTML='<div style="text-align:center;color:#666;"><div style="font-size:3rem;margin-bottom:10px;">🎲</div><div>奖池背景图加载失败</div><div style="font-size:0.8rem;margin-top:5px;">请确保 reward_inf.png 已上传到 CDN</div></div>';
+                }
+                document.getElementById('poolOverlay').style.background='linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+                console.warn('[lottery] 奖池背景图加载失败，使用默认背景');
+            }
+        }
 
         // ===== 概率配置 =====
         var DICE_PROBS=[[1,0.12],[2,0.12],[3,0.12],[4,0.12],[5,0.12],[6,0.40]];
