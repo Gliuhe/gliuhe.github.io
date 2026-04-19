@@ -746,6 +746,7 @@
         <div style="display: flex; gap: 10px; margin-top: 15px; justify-content: center; flex-wrap: wrap;">
             <button class="btn btn-warning" id="homeBtn">返回主页</button>
             <button class="btn btn-premium" id="advancedBtn">✨ 前往高级抽奖</button>
+            <button class="btn btn-info" id="syncBtn">🔄 同步云端</button>
         </div>
     </div>
     
@@ -990,6 +991,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             // 确保有默认兑换券数据
             if (!localStorage.getItem('voucher')) {
                 localStorage.setItem('voucher', '100');
+                console.log('[Choujiang] initializeData: 设置默认 voucher = 100');
+            } else {
+                console.log('[Choujiang] initializeData: voucher 已存在 =', localStorage.getItem('voucher'));
             }
 
             // 初始化银行券（检查是否为有效数字）
@@ -1047,6 +1051,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             // 更新兑换券显示（使用voucher键名）
             const voucher = parseInt(localStorage.getItem('voucher') || '100');
             lotteryTickets = parseInt(localStorage.getItem('lottery') || '0');
+            console.log('[Choujiang] updateUI - voucher:', voucher, 'lottery:', lotteryTickets);
             document.getElementById('currencyAmount').textContent = voucher;
             document.getElementById('ticketAmount').textContent = lotteryTickets;
             
@@ -1060,8 +1065,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         
         // 更新抽奖奖品容器
         function updatePrizesContainer() {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
+            const prizes = JSON.parse(localStorage.getItem('prizes')) || [];
             const container = document.getElementById('prizesContainer');
+            if (!container) return;
             container.innerHTML = '';
             
             prizes.forEach(prize => {
@@ -1092,8 +1098,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         
         // 更新管理奖品容器
         function updateManagePrizesContainer() {
-            const prizes = JSON.parse(localStorage.getItem('prizes'));
+            const prizes = JSON.parse(localStorage.getItem('prizes')) || [];
             const container = document.getElementById('managePrizesContainer');
+            if (!container) return;
             container.innerHTML = '';
             
             prizes.forEach(prize => {
@@ -1161,8 +1168,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         
         // 更新抽奖记录
         function updateRecords() {
-            const records = JSON.parse(localStorage.getItem('records'));
+            const records = JSON.parse(localStorage.getItem('records')) || [];
             const recordsList = document.getElementById('recordsList');
+            if (!recordsList) return;
             recordsList.innerHTML = '';
             
             if (records.length === 0) {
@@ -2018,20 +2026,40 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     }
                 });
             });
-        }
-        
-        // 返回主页功能
-        document.getElementById('homeBtn').addEventListener('click', function() {
-            window.location.href = '/xiaoan';
-        });
 
-        // 前往高级抽奖功能
-        document.getElementById('advancedBtn').addEventListener('click', function() {
-            window.location.href = 'advanced_choujiang.html';
-        });
+            // 返回主页功能
+            document.getElementById('homeBtn').addEventListener('click', function() {
+                window.location.href = '/xiaoan';
+            });
+
+            // 前往高级抽奖功能
+            document.getElementById('advancedBtn').addEventListener('click', function() {
+                window.location.href = 'advanced_choujiang.html';
+            });
+
+            // 手动同步云端数据
+            document.getElementById('syncBtn').addEventListener('click', async function() {
+                console.log('[Choujiang] 🔄 手动触发云端同步...');
+                // 先禁用 CloudStore 同步，防止清除数据时触发同步到云端
+                const wasEnabled = window.CloudStore && window.CloudStore.enabled;
+                if (window.CloudStore) window.CloudStore.enabled = false;
+                
+                // 清除本地货币数据，强制从云端重新加载
+                localStorage.removeItem('voucher');
+                localStorage.removeItem('lottery');
+                localStorage.removeItem('premium');
+                localStorage.removeItem('bankTicket');
+                
+                // 重新启用 CloudStore 同步
+                if (window.CloudStore) window.CloudStore.enabled = wasEnabled;
+                
+                await loadDataFromCloud();
+                showStatus('云端同步完成！', 'success');
+            });
+        }
 
         // ========== 云端数据同步 ==========
-        const USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+        // 使用 cloud-sync-helper.js 中已定义的 USER_ID
         
         async function loadDataFromCloud() {
             if (!window.supabase) {
@@ -2048,22 +2076,27 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 console.log('[Choujiang] 📥 正在从云端加载数据...');
                 
                 // 并行加载货币和抽奖记录
-                const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
+                const [{ data: currencies, error: currenciesError }, { data: lotteryRecords, error: recordsError }] = await Promise.all([
                     sb.from('user_currencies').select('*').eq('user_id', USER_ID),
                     sb.from('lottery_records').select('*').eq('user_id', USER_ID)
                 ]);
                 
+                console.log('[Choujiang] 云端返回 - currencies:', currencies, 'error:', currenciesError);
+                console.log('[Choujiang] 云端返回 - lotteryRecords:', lotteryRecords, 'error:', recordsError);
+                
                 let hasUpdate = false;
                 
-                // 同步货币
+                // 同步货币 - 修复：只要云端有数据就使用云端值
                 if (currencies && currencies.length > 0) {
                     currencies.forEach(row => {
                         const key = row.currency_type;
                         if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
                             const cloudVal = parseFloat(row.amount) || 0;
-                            const localVal = parseFloat(localStorage.getItem(key)) || 0;
-                            // 云端值大于本地值时，使用云端值
-                            if (cloudVal > localVal) {
+                            const localRaw = localStorage.getItem(key);
+                            const localVal = localRaw !== null ? parseFloat(localRaw) : null;
+                            
+                            // 本地为空 或 云端值与本地值不同，都更新
+                            if (localVal === null || isNaN(localVal) || cloudVal !== localVal) {
                                 localStorage.setItem(key, String(cloudVal));
                                 console.log(`[Choujiang] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
                                 hasUpdate = true;
@@ -2095,12 +2128,11 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 }
                 
                 console.log('[Choujiang] ✅ 云端数据同步完成');
+                console.log('[Choujiang] 同步后 localStorage - voucher:', localStorage.getItem('voucher'), 'lottery:', localStorage.getItem('lottery'));
                 
-                // 如果有更新，刷新UI
-                if (hasUpdate) {
-                    updateUI();
-                    updateRecords();
-                }
+                // 刷新UI（无论是否有更新都刷新，确保显示正确）
+                updateUI();
+                updateRecords();
                 
             } catch (e) {
                 console.error('[Choujiang] ❌ 云端同步失败:', e);
@@ -2110,8 +2142,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         // 当DOM加载完成后启动应用
         document.addEventListener('DOMContentLoaded', function() {
             initApp();
-            // 从云端加载数据
-            loadDataFromCloud();
+            // 从云端加载数据（延迟一点确保Supabase已加载）
+            setTimeout(loadDataFromCloud, 100);
         });
 
     </script>
