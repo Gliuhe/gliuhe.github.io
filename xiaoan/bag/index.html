@@ -756,12 +756,12 @@
                         ${isExchangeItem ?
                             `<div class="exchange-info">
                                 <div class="exchange-progress">
-                                    <div class="exchange-bar"><div class="exchange-fill" style="width:${Math.min(xiaciTotalCount / 15 * 100, 100)}%"></div></div>
-                                    <span>${xiaciTotalCount}/15</span>
+                                    <div class="exchange-bar"><div class="exchange-fill" style="width:${Math.min(xiaciTotalCount / 20 * 100, 100)}%"></div></div>
+                                    <span>${xiaciTotalCount}/20</span>
                                 </div>
-                                ${xiaciTotalCount >= 15 ?
+                                ${xiaciTotalCount >= 20 ?
                                     `<button class="exchange-btn" data-prize="${displayName}">&#128176; 兑换</button>` :
-                                    `<div class="exchange-waiting">还需${15 - xiaciTotalCount}个</div>`
+                                    `<div class="exchange-waiting">还需${20 - xiaciTotalCount}个</div>`
                                 }
                             </div>` :
                             `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
@@ -785,7 +785,7 @@
 
         // ========== 交互逻辑 ==========
 
-        // 点击兑换按钮（15个"下次一定"换1张高级抽奖券）
+        // 点击兑换按钮（20个"下次一定"换1张高级抽奖券）
         function handleExchangeClick() {
             const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
             const advancedRecords = JSON.parse(localStorage.getItem('advancedRecords') || '[]');
@@ -807,14 +807,14 @@
 
             const totalCount = xiaciNormal.length + xiaciAdvanced.length;
 
-            if (totalCount < 15) {
-                showNotification(`数量不足，还需 ${15 - totalCount} 个才能兑换`, 'error');
+            if (totalCount < 20) {
+                showNotification(`数量不足，还需 ${20 - totalCount} 个才能兑换`, 'error');
                 return;
             }
 
             // 显示确认模态框
             document.getElementById('modalIcon').innerHTML = '&#128176;';
-            document.getElementById('modalItemName').textContent = `用15个"下次一定"兑换1张高级抽奖券`;
+            document.getElementById('modalItemName').textContent = `用20个"下次一定"兑换1张高级抽奖券`;
             document.querySelector('#useModal p').textContent = '确认兑换？消耗的"下次一定"将标记为已使用。';
             document.getElementById('confirmUseBtn').textContent = '✅ 确认兑换';
             document.getElementById('useModal').style.display = 'flex';
@@ -1014,9 +1014,9 @@
             document.getElementById('confirmUseBtn').addEventListener('click', function() {
                 if (!pendingUseItem) return;
 
-                // 兑换逻辑：15个"下次一定" → 1张高级抽奖券
+                // 兑换逻辑：20个"下次一定" → 1张高级抽奖券
                 if (pendingUseItem.type === 'exchange') {
-                    const items = pendingUseItem.items.slice(0, 15);
+                    const items = pendingUseItem.items.slice(0, 20);
 
                     // 按来源分组处理
                     const byListKey = {};
