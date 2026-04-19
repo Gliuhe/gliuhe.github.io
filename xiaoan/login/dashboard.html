@@ -1853,7 +1853,8 @@ function lcAddReward(tierKey, zoneKey) {
 
 function lcReadDOM() {
     const root = document.getElementById('lotteryConfigRoot');
-    if (!root || !lotteryCurrentConfig) return;
+    if (!root) return;
+    if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
     root.querySelectorAll('.lc-reward-list').forEach(listEl => {
         const tierKey = listEl.dataset.tier;
         const zoneKey = listEl.dataset.zone || null;
@@ -1881,16 +1882,22 @@ function lcReadDOM() {
 }
 
 async function saveLotteryConfig() {
+    // 确保 lotteryCurrentConfig 已初始化
+    if (!lotteryCurrentConfig) lotteryCurrentConfig = {};
     lcReadDOM();
     const cfg = lotteryCurrentConfig || LOTTERY_DEFAULT_CONFIG;
+    console.log('[Dashboard] 准备保存配置:', JSON.stringify(cfg).substring(0, 300) + '...');
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
-        const { data: existing } = await sb.from('jisuan_data').select('*').eq('user_id', targetUserId).maybeSingle();
-        const updateData = { lottery_reward_config: JSON.stringify(cfg), updated_at: new Date().toISOString() };
+        const { data: existing } = await sb.from('lottery_config').select('*').eq('user_id', targetUserId).maybeSingle();
+        const updateData = { reward_config: cfg, updated_at: new Date().toISOString() };
+        console.log('[Dashboard] 保存到云端:', { existing: !!existing, table: 'lottery_config' });
         if (existing) {
-            await sb.from('jisuan_data').update(updateData).eq('user_id', targetUserId);
+            const { error } = await sb.from('lottery_config').update(updateData).eq('user_id', targetUserId);
+            if (error) throw error;
         } else {
-            await sb.from('jisuan_data').insert({ user_id: targetUserId, ...updateData });
+            const { error } = await sb.from('lottery_config').insert({ user_id: targetUserId, ...updateData });
+            if (error) throw error;
         }
 
         lotteryCurrentConfig = cfg;
@@ -1904,48 +1911,82 @@ async function saveLotteryConfig() {
             setTimeout(() => { document.getElementById('lotterySaveStatus').innerHTML = ''; }, 2000);
         }, 500);
     } catch(e) {
+        console.error('[Dashboard] 保存失败:', e);
         document.getElementById('lotterySaveStatus').innerHTML = `<span style="color:#ef4444;font-weight:600;">❌ 保存失败: ${e.message}</span>`;
     }
 }
 
 async function loadLotteryConfig() {
+    // 先备份当前配置，防止清除后丢失
+    const backupConfig = lotteryCurrentConfig;
+    const backupLocalConfig = localStorage.getItem('lottery_reward_config');
+    
     try {
         const targetUserId = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
-        // 优先从云端加载最新配置（添加时间戳防止缓存）
-        const { data, error } = await sb.from('jisuan_data')
-            .select('lottery_reward_config,updated_at')
+        
+        // 优先从 lottery_config 表加载最新配置
+        let { data, error } = await sb.from('lottery_config')
+            .select('reward_config')
             .eq('user_id', targetUserId)
             .maybeSingle();
         
-        console.log('[Dashboard] 加载云端配置:', { hasData: !!data, hasError: !!error, updated_at: data?.updated_at });
-        if (data && data.lottery_reward_config) {
+        // 如果新表没有数据，尝试从旧表迁移
+        if (!data && !error) {
+            console.log('[Dashboard] 新表无数据，尝试从旧表迁移...');
+            const { data: oldData } = await sb.from('jisuan_data')
+                .select('lottery_reward_config')
+                .eq('user_id', targetUserId)
+                .maybeSingle();
+            if (oldData && oldData.lottery_reward_config) {
+                // 迁移数据到新表
+                await sb.from('lottery_config').insert({
+                    user_id: targetUserId,
+                    reward_config: JSON.parse(oldData.lottery_reward_config)
+                });
+                // 重新查询新表
+                const { data: newData } = await sb.from('lottery_config')
+                    .select('reward_config')
+                    .eq('user_id', targetUserId)
+                    .maybeSingle();
+                data = newData;
+                console.log('[Dashboard] 数据迁移完成');
+            }
+        }
+        
+        console.log('[Dashboard] 加载云端配置:', { hasData: !!data, hasError: !!error, table: 'lottery_config' });
+        
+        if (data && data.reward_config) {
+            // 云端有配置，使用云端配置
             try {
-                lotteryCurrentConfig = JSON.parse(data.lottery_reward_config);
-                // 同步更新本地存储
-                localStorage.setItem('lottery_reward_config', data.lottery_reward_config);
+                lotteryCurrentConfig = data.reward_config;
+                localStorage.setItem('lottery_reward_config', JSON.stringify(data.reward_config));
+                console.log('[Dashboard] 配置已加载:', JSON.stringify(lotteryCurrentConfig).substring(0, 200));
             } catch(e) {
                 console.error('解析云端配置失败:', e);
+                // 解析失败时使用备份
+                lotteryCurrentConfig = backupConfig;
             }
         } else if (error) {
+            // 查询出错，恢复备份
             console.error('加载云端配置失败:', error);
-            // 云端加载失败时，尝试从本地存储加载
-            const localConfig = localStorage.getItem('lottery_reward_config');
-            if (localConfig) {
-                try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
+            lotteryCurrentConfig = backupConfig;
+            if (backupLocalConfig) {
+                localStorage.setItem('lottery_reward_config', backupLocalConfig);
             }
         } else {
-            // 云端没有配置，尝试从本地加载
-            const localConfig = localStorage.getItem('lottery_reward_config');
-            if (localConfig) {
-                try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e) {}
+            // 云端没有数据，使用备份
+            console.log('[Dashboard] 云端没有配置数据，使用本地备份');
+            lotteryCurrentConfig = backupConfig;
+            if (backupLocalConfig) {
+                localStorage.setItem('lottery_reward_config', backupLocalConfig);
             }
         }
     } catch(e) {
         console.error('loadLotteryConfig error:', e);
-        // 出错时尝试本地存储作为后备
-        const localConfig = localStorage.getItem('lottery_reward_config');
-        if (localConfig) {
-            try { lotteryCurrentConfig = JSON.parse(localConfig); } catch(e2) {}
+        // 出错时恢复备份
+        lotteryCurrentConfig = backupConfig;
+        if (backupLocalConfig) {
+            localStorage.setItem('lottery_reward_config', backupLocalConfig);
         }
     }
     renderLotteryConfigPanel();
