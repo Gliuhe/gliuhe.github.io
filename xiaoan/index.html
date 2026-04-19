@@ -5453,7 +5453,11 @@
             _setCloudUIState('syncing', '⏳ 正在从云端拉取...');
 
             try {
-                // 先清除所有应用数据（强制从云端重新加载）
+                // 先禁用 CloudStore 同步，防止清除数据时触发同步到云端
+                const wasEnabled = window.CloudStore && window.CloudStore.enabled;
+                if (window.CloudStore) window.CloudStore.enabled = false;
+                
+                // 清除所有应用数据（强制从云端重新加载）
                 const appKeys = [
                     'voucher', 'lottery', 'premium', 'bankTicket',
                     'bankSavings', 'bankDeposit', 'bankInvestment',
@@ -5467,6 +5471,9 @@
                 
                 console.log('[Cloud] 🗑️ 强制刷新：清除本地数据...');
                 appKeys.forEach(key => localStorage.removeItem(key));
+                
+                // 重新启用 CloudStore 同步
+                if (window.CloudStore) window.CloudStore.enabled = wasEnabled;
                 
                 // 然后从云端加载（此时本地为空，会完全使用云端数据）
                 await _loadAllFromCloud(sbClient, userId);
