@@ -2040,21 +2040,33 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             // 手动同步云端数据
             document.getElementById('syncBtn').addEventListener('click', async function() {
                 console.log('[Choujiang] 🔄 手动触发云端同步...');
-                // 先禁用 CloudStore 同步，防止清除数据时触发同步到云端
-                const wasEnabled = window.CloudStore && window.CloudStore.enabled;
-                if (window.CloudStore) window.CloudStore.enabled = false;
+                const btn = document.getElementById('syncBtn');
+                btn.disabled = true;
+                btn.textContent = '🔄 同步中...';
                 
-                // 清除本地货币数据，强制从云端重新加载
-                localStorage.removeItem('voucher');
-                localStorage.removeItem('lottery');
-                localStorage.removeItem('premium');
-                localStorage.removeItem('bankTicket');
-                
-                // 重新启用 CloudStore 同步
-                if (window.CloudStore) window.CloudStore.enabled = wasEnabled;
-                
-                await loadDataFromCloud();
-                showStatus('云端同步完成！', 'success');
+                try {
+                    // 先禁用 CloudStore 同步，防止清除数据时触发同步到云端
+                    const wasEnabled = window.CloudStore && window.CloudStore.enabled;
+                    if (window.CloudStore) window.CloudStore.enabled = false;
+                    
+                    // 清除本地货币数据，强制从云端重新加载
+                    localStorage.removeItem('voucher');
+                    localStorage.removeItem('lottery');
+                    localStorage.removeItem('premium');
+                    localStorage.removeItem('bankTicket');
+                    
+                    // 重新启用 CloudStore 同步
+                    if (window.CloudStore) window.CloudStore.enabled = wasEnabled;
+                    
+                    await loadDataFromCloud();
+                    showStatus('云端同步完成！', 'success');
+                } catch(e) {
+                    console.error('[Choujiang] 同步失败:', e);
+                    showStatus('同步失败: ' + e.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 同步云端';
+                }
             });
         }
 
