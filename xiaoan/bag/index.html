@@ -785,17 +785,6 @@
 
         // ========== 交互逻辑 ==========
 
-        // 筛选标签切换
-        document.getElementById('filterTabs').addEventListener('click', function(e) {
-            const tab = e.target.closest('.filter-tab');
-            if (!tab) return;
-            
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentFilter = tab.dataset.filter;
-            render();
-        });
-
         // 点击兑换按钮（15个"下次一定"换1张高级抽奖券）
         function handleExchangeClick() {
             const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
@@ -861,73 +850,6 @@
             document.getElementById('useModal').style.display = 'flex';
         }
 
-        // 确认使用/兑换
-        document.getElementById('confirmUseBtn').addEventListener('click', function() {
-            if (!pendingUseItem) return;
-
-            // 兑换逻辑：15个"下次一定" → 1张高级抽奖券
-            if (pendingUseItem.type === 'exchange') {
-                const items = pendingUseItem.items.slice(0, 15);
-
-                // 按来源分组处理
-                const byListKey = {};
-                items.forEach(item => {
-                    if (!byListKey[item.listKey]) byListKey[item.listKey] = [];
-                    byListKey[item.listKey].push(item.index);
-                });
-
-                for (const [listKey, indices] of Object.entries(byListKey)) {
-                    const records = JSON.parse(localStorage.getItem(listKey) || '[]');
-                    indices.forEach(i => {
-                        if (records[i]) {
-                            records[i].used = true;
-                            records[i].usedTime = new Date().toISOString();
-                        }
-                    });
-                    localStorage.setItem(listKey, JSON.stringify(records));
-                }
-
-                // 增加1张高级抽奖券
-                const currentPremium = parseInt(localStorage.getItem('premium') || '0');
-                localStorage.setItem('premium', String(currentPremium + 1));
-
-                closeModal();
-                showNotification('🎉 兑换成功！获得1张高级抽奖券', 'success');
-                createConfetti();
-                setTimeout(render, 300);
-                return;
-            }
-
-            // 普通使用逻辑
-            const { listKey, originalIndex } = pendingUseItem;
-            const records = JSON.parse(localStorage.getItem(listKey) || '[]');
-
-            if (!records[originalIndex]) {
-                showNotification('物品不存在！', 'error');
-                closeModal();
-                return;
-            }
-
-            // 标记为已使用
-            records[originalIndex].used = true;
-            records[originalIndex].usedTime = new Date().toISOString();
-            localStorage.setItem(listKey, JSON.stringify(records));
-
-            closeModal();
-            showNotification(`&#127881; 成功使用：${typeof records[originalIndex].prize === 'object' ? records[originalIndex].prize.name : records[originalIndex].prize}`, 'success');
-
-            createConfetti();
-            setTimeout(render, 300);
-        });
-
-        // 取消使用
-        document.getElementById('cancelUseBtn').addEventListener('click', closeModal);
-
-        // 点击遮罩关闭
-        document.getElementById('useModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
         function closeModal() {
             document.getElementById('useModal').style.display = 'none';
             document.querySelector('#useModal p').textContent = '使用后该道具将被消耗，无法恢复。';
@@ -946,130 +868,6 @@
         function closeRedeemModal() {
             document.getElementById('redeemModal').style.display = 'none';
         }
-
-        // 确认兑换
-        document.getElementById('confirmRedeemBtn').addEventListener('click', async function() {
-            const btn = this;
-            if (btn.disabled) return;
-            
-            const code = document.getElementById('redeemCodeInput').value.trim();
-            if (!code) {
-                showNotification('请输入兑换码', 'error');
-                return;
-            }
-
-            if (!sbClient) {
-                showNotification('网络连接失败，请刷新重试', 'error');
-                return;
-            }
-
-            // 防重复点击
-            btn.disabled = true;
-
-            try {
-                // 从 Supabase 查询兑换码
-                const { data: codes, error } = await sbClient
-                    .from('exchange_codes')
-                    .select('*')
-                    .eq('code', code);
-
-                if (error || !codes || codes.length === 0) {
-                    showNotification('兑换码不存在', 'error');
-                    btn.disabled = false;
-                    return;
-                }
-
-                const codeData = codes[0];
-
-                if (codeData.redeemed) {
-                    showNotification('该兑换码已被使用', 'error');
-                    btn.disabled = false;
-                    return;
-                }
-                if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
-                    showNotification('该兑换码已过期', 'error');
-                    btn.disabled = false;
-                    return;
-                }
-
-                // 【关键】先标记已使用（原子操作，防止并发重复领取）
-                const { error: updateError } = await sbClient
-                    .from('exchange_codes')
-                    .update({
-                        redeemed: true,
-                        redeemed_at: new Date().toISOString(),
-                        redeemed_by: (await sbClient.auth.getUser())?.data?.user?.id || null
-                    })
-                    .eq('id', codeData.id);
-
-                if (updateError) {
-                    showNotification('兑换码状态更新失败，请重试', 'error');
-                    btn.disabled = false;
-                    return;
-                }
-
-                // 标记成功后，再发放奖励（Supabase 字段名：reward_type1/2, reward_amount1/2, reward_item1/2）
-                const typeNames = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', jixing_muchun_currency: '纪行券' };
-                let rewards = [];
-
-                // 奖励 1：实物奖励
-                if (codeData.reward_type1 === 'item' && codeData.reward_item1) {
-                    const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
-                    normalRecords.push({
-                        prize: { name: codeData.reward_item1, rewardType: 'item' },
-                        date: new Date().toISOString(),
-                        used: false,
-                        source: '兑换码'
-                    });
-                    localStorage.setItem('records', JSON.stringify(normalRecords));
-                    rewards.push(`🎁 ${codeData.reward_item1}`);
-                }
-                // 奖励 1：货币奖励
-                else if (codeData.reward_type1 && codeData.reward_type1 !== 'none' && codeData.reward_amount1 > 0) {
-                    const current = parseInt(localStorage.getItem(codeData.reward_type1) || '0');
-                    localStorage.setItem(codeData.reward_type1, String(current + codeData.reward_amount1));
-                    rewards.push(`${codeData.reward_amount1} ${typeNames[codeData.reward_type1] || codeData.reward_type1}`);
-                }
-
-                // 奖励 2：实物奖励
-                if (codeData.reward_type2 === 'item' && codeData.reward_item2) {
-                    const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
-                    normalRecords.push({
-                        prize: { name: codeData.reward_item2, rewardType: 'item' },
-                        date: new Date().toISOString(),
-                        used: false,
-                        source: '兑换码'
-                    });
-                    localStorage.setItem('records', JSON.stringify(normalRecords));
-                    rewards.push(`🎁 ${codeData.reward_item2}`);
-                }
-                // 奖励 2：货币奖励
-                else if (codeData.reward_type2 && codeData.reward_type2 !== 'none' && codeData.reward_amount2 > 0) {
-                    const current = parseInt(localStorage.getItem(codeData.reward_type2) || '0');
-                    localStorage.setItem(codeData.reward_type2, String(current + codeData.reward_amount2));
-                    rewards.push(`${codeData.reward_amount2} ${typeNames[codeData.reward_type2] || codeData.reward_type2}`);
-                }
-
-                closeRedeemModal();
-                showNotification(`🎉 兑换成功！获得 ${rewards.join(' + ') || '奖励'}`, 'success');
-                createConfetti();
-                renderStats(); // 刷新统计栏显示
-            } catch(e) {
-                console.error('兑换失败:', e);
-                showNotification('兑换出错，请稍后重试', 'error');
-            }
-            btn.disabled = false; // 恢复按钮
-        });
-
-        document.getElementById('cancelRedeemBtn').addEventListener('click', closeRedeemModal);
-        document.getElementById('redeemModal').addEventListener('click', function(e) {
-            if (e.target === this) closeRedeemModal();
-        });
-
-        // 回车键提交
-        document.getElementById('redeemCodeInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') document.getElementById('confirmRedeemBtn').click();
-        });
 
         // ========== 工具函数 ==========
 
@@ -1131,15 +929,17 @@
                     sb.from('lottery_records').select('*').eq('user_id', USER_ID)
                 ]);
                 
-                // 同步货币
+                // 同步货币 - 修复：只要云端有数据就使用云端值
                 if (currencies && currencies.length > 0) {
                     currencies.forEach(row => {
                         const key = row.currency_type;
                         if (['voucher', 'lottery', 'premium', 'bankTicket', 'jixing_muchun_currency'].includes(key)) {
                             const cloudVal = parseFloat(row.amount) || 0;
-                            const localVal = parseFloat(localStorage.getItem(key)) || 0;
-                            // 云端值大于本地值时，使用云端值
-                            if (cloudVal > localVal) {
+                            const localRaw = localStorage.getItem(key);
+                            const localVal = localRaw !== null ? parseFloat(localRaw) : null;
+                            
+                            // 本地为空 或 云端值与本地值不同，都更新
+                            if (localVal === null || isNaN(localVal) || cloudVal !== localVal) {
                                 localStorage.setItem(key, String(cloudVal));
                                 console.log(`[Bag] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
                             }
@@ -1195,6 +995,225 @@
         
         // ========== 初始化 ==========
         document.addEventListener('DOMContentLoaded', function() {
+            // 筛选标签切换
+            document.getElementById('filterTabs').addEventListener('click', function(e) {
+                const tab = e.target.closest('.filter-tab');
+                if (!tab) return;
+                
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                render();
+            });
+
+            // 确认使用/兑换
+            document.getElementById('confirmUseBtn').addEventListener('click', function() {
+                if (!pendingUseItem) return;
+
+                // 兑换逻辑：15个"下次一定" → 1张高级抽奖券
+                if (pendingUseItem.type === 'exchange') {
+                    const items = pendingUseItem.items.slice(0, 15);
+
+                    // 按来源分组处理
+                    const byListKey = {};
+                    items.forEach(item => {
+                        if (!byListKey[item.listKey]) byListKey[item.listKey] = [];
+                        byListKey[item.listKey].push(item.index);
+                    });
+
+                    for (const [listKey, indices] of Object.entries(byListKey)) {
+                        const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+                        indices.forEach(i => {
+                            if (records[i]) {
+                                records[i].used = true;
+                                records[i].usedTime = new Date().toISOString();
+                            }
+                        });
+                        localStorage.setItem(listKey, JSON.stringify(records));
+                    }
+
+                    // 增加高级抽奖券
+                    const currentPremium = parseInt(localStorage.getItem('premium') || '0');
+                    localStorage.setItem('premium', String(currentPremium + 1));
+
+                    closeModal();
+                    showNotification('🎉 兑换成功！获得1张高级抽奖券', 'success');
+                    createConfetti();
+                    render();
+                    renderStats();
+                    return;
+                }
+
+                // 普通使用逻辑
+                const { listKey, originalIndex, record } = pendingUseItem;
+                const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+
+                if (!records[originalIndex] || records[originalIndex].used) {
+                    showNotification('该物品已使用或不存在！', 'error');
+                    closeModal();
+                    return;
+                }
+
+                // 标记为已使用
+                records[originalIndex].used = true;
+                records[originalIndex].usedTime = new Date().toISOString();
+                localStorage.setItem(listKey, JSON.stringify(records));
+
+                // 如果奖品有实际效果，在这里处理
+                const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
+                showNotification(`使用了 ${prizeName}！`, 'success');
+
+                closeModal();
+                render();
+            });
+
+            document.getElementById('cancelUseBtn').addEventListener('click', closeModal);
+
+            // 点击遮罩关闭
+            document.getElementById('useModal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+
+            // 兑换码相关事件
+            document.getElementById('confirmRedeemBtn').addEventListener('click', async function() {
+                const btn = this;
+                if (btn.disabled) return;
+                btn.disabled = true;
+
+                try {
+                    const code = document.getElementById('redeemCodeInput').value.trim().toUpperCase();
+                    if (!code) {
+                        showNotification('请输入兑换码', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 查询兑换码
+                    const { data: codeData, error } = await sbClient
+                        .from('redeem_codes')
+                        .select('*')
+                        .eq('code', code)
+                        .single();
+
+                    if (error || !codeData) {
+                        showNotification('❌ 兑换码无效', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 检查是否已使用
+                    if (codeData.is_used) {
+                        showNotification('❌ 该兑换码已被使用', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 检查是否在有效期内
+                    const now = new Date();
+                    const startDate = codeData.start_date ? new Date(codeData.start_date) : null;
+                    const endDate = codeData.end_date ? new Date(codeData.end_date) : null;
+
+                    if (startDate && now < startDate) {
+                        showNotification('❌ 该兑换码尚未生效', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    if (endDate && now > endDate) {
+                        showNotification('❌ 该兑换码已过期', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    // 标记为已使用
+                    await sbClient
+                        .from('redeem_codes')
+                        .update({ 
+                            is_used: true, 
+                            used_at: new Date().toISOString(),
+                            used_by: USER_ID
+                        })
+                        .eq('code', code);
+
+                    // 发放奖励
+                    const rewards = [];
+                    const typeNames = {
+                        voucher: '兑换券',
+                        lottery: '抽奖券',
+                        premium: '高级券',
+                        bankTicket: '银行券',
+                        jixing_muchun_currency: '纪行券'
+                    };
+
+                    // 处理奖励1
+                    if (codeData.reward_type1) {
+                        if (codeData.reward_type1 === 'item' && codeData.reward_item1) {
+                            // 实物奖品，加入抽奖记录
+                            const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+                            normalRecords.push({
+                                prize: { name: codeData.reward_item1, rewardType: 'item' },
+                                date: new Date().toISOString(),
+                                used: false,
+                                rewardType: 'item'
+                            });
+                            localStorage.setItem('records', JSON.stringify(normalRecords));
+                            rewards.push(codeData.reward_item1);
+                        } else {
+                            // 货币奖励
+                            const current = parseInt(localStorage.getItem(codeData.reward_type1) || '0');
+                            localStorage.setItem(codeData.reward_type1, String(current + codeData.reward_amount1));
+                            rewards.push(`${codeData.reward_amount1} ${typeNames[codeData.reward_type1] || codeData.reward_type1}`);
+                        }
+                    }
+
+                    // 处理奖励2
+                    if (codeData.reward_type2) {
+                        if (codeData.reward_type2 === 'item' && codeData.reward_item2) {
+                            const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
+                            normalRecords.push({
+                                prize: { name: codeData.reward_item2, rewardType: 'item' },
+                                date: new Date().toISOString(),
+                                used: false,
+                                rewardType: 'item'
+                            });
+                            localStorage.setItem('records', JSON.stringify(normalRecords));
+                            rewards.push(codeData.reward_item2);
+                        } else {
+                            const current = parseInt(localStorage.getItem(codeData.reward_type2) || '0');
+                            localStorage.setItem(codeData.reward_type2, String(current + codeData.reward_amount2));
+                            rewards.push(`${codeData.reward_amount2} ${typeNames[codeData.reward_type2] || codeData.reward_type2}`);
+                        }
+                    }
+
+                    closeRedeemModal();
+                    showNotification(`🎉 兑换成功！获得 ${rewards.join(' + ') || '奖励'}`, 'success');
+                    createConfetti();
+                    renderStats();
+                } catch(e) {
+                    console.error('兑换失败:', e);
+                    showNotification('兑换出错，请稍后重试', 'error');
+                }
+                btn.disabled = false;
+            });
+
+            document.getElementById('cancelRedeemBtn').addEventListener('click', closeRedeemModal);
+            document.getElementById('redeemModal').addEventListener('click', function(e) {
+                if (e.target === this) closeRedeemModal();
+            });
+
+            // 回车键提交
+            document.getElementById('redeemCodeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') document.getElementById('confirmRedeemBtn').click();
+            });
+
+            // 监听 storage 变化实现跨页面同步
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'records' || e.key === 'advancedRecords') {
+                    render();
+                }
+            });
+
+            // 渲染页面
             render();
             // 从云端加载数据
             loadDataFromCloud();
