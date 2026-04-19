@@ -752,6 +752,12 @@
         <h1>✨ 高级抽奖系统 ✨</h1>
     </div>
     
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button class="btn" onclick="window.location.href='/xiaoan'">🏠 返回主页</button>
+        <button class="btn" onclick="window.location.href='index.html'">🎲 普通抽奖</button>
+        <button class="btn" id="syncBtn" onclick="forceSyncFromCloud()">🔄 同步云端</button>
+    </div>
+    
     <div class="container">
         <div class="nav-tabs">
             <div class="nav-tab active" data-tab="lottery">🎡 豪华抽奖</div>
@@ -2445,6 +2451,47 @@
                 
             } catch (e) {
                 console.error('[AdvancedChoujiang] ❌ 云端同步失败:', e);
+            }
+        }
+        
+        // 强制从云端同步数据
+        async function forceSyncFromCloud() {
+            const btn = document.getElementById('syncBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '🔄 同步中...';
+            }
+            
+            console.log('[AdvancedChoujiang] 🔄 强制从云端同步...');
+            
+            try {
+                // 清除本地货币数据，强制从云端重新加载
+                localStorage.removeItem('voucher');
+                localStorage.removeItem('lottery');
+                localStorage.removeItem('premium');
+                localStorage.removeItem('bankTicket');
+                
+                await loadDataFromCloud();
+                
+                // 显示成功提示
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
+                notification.textContent = '✅ 云端同步完成！';
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+                
+            } catch(e) {
+                console.error('[AdvancedChoujiang] 强制同步失败:', e);
+                const notification = document.createElement('div');
+                notification.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
+                notification.textContent = '❌ 同步失败: ' + e.message;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 同步云端';
+                }
             }
         }
         
