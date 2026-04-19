@@ -472,6 +472,7 @@
     <div class="bg-blur-layer"></div>
     <div class="back-btn"><button onclick="window.location.href='../index.html'">← 返回</button></div>
     <div class="refresh-btn" title="如果显示的是旧数据，点击刷新"><button onclick="forceRefreshPage()">🔄 刷新数据</button></div>
+    <div class="refresh-btn" style="top:56px;" title="清除奖池背景图缓存"><button onclick="clearBgCache()">🖼️ 清除背景缓存</button></div>
 
     <div class="top-bar">
         <div class="pool-title">🎲 纪行之骰</div>
@@ -781,6 +782,21 @@
             renderPendingCodes(); // 渲染待使用兑换码
             renderTierDetails(); // 先渲染本地配置
             fetchRewardConfigFromCloud();
+            
+            // ===== 绑定掷骰按钮事件（移到init中确保DOM已加载）=====
+            var rollBtn=document.getElementById('rollBtn');
+            if(rollBtn){
+                rollBtn.addEventListener('click',function(){
+                    if(rollState==='idle')startLottery();
+                    else if(rollState==='rolling')onRollClick();
+                    else if(rollState==='done'){
+                        // 重置回空闲状态
+                        hideResult();
+                        switchOverlay('idle');
+                        rollState='idle';
+                    }
+                });
+            }
         }
         async function fetchRewardConfigFromCloud(){
             try{
@@ -838,6 +854,23 @@
              notif.innerHTML='✅ 奖励配置已更新为最新版本';
              document.body.appendChild(notif);
              setTimeout(function(){notif.style.opacity='0';notif.style.transition='opacity 0.5s';setTimeout(function(){notif.remove()},500)},3000);
+         }
+         
+         function clearBgCache(){
+             // 清除奖池背景图缓存
+             localStorage.removeItem('lottery_bg_cache');
+             localStorage.removeItem('lottery_bg_version');
+             
+             // 显示提示
+             var notif=document.createElement('div');
+             notif.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(6,182,212,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
+             notif.innerHTML='🖼️ 背景缓存已清除，正在重新加载...';
+             document.body.appendChild(notif);
+             
+             // 强制重新加载页面（带时间戳）
+             setTimeout(function(){
+                 window.location.href=window.location.pathname+'?bgrefresh='+Date.now();
+             },500);
          }
          
          function forceRefreshPage(){
@@ -1391,18 +1424,6 @@
             var colors=['#10b981','#34d399','#6ee7b7','#f59e0b','#111827'];
             for(var i=0;i<18;i++){var p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'%';p.style.bottom='20px';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.animationDuration=(0.8+Math.random())+'s';p.style.animationDelay=(Math.random()*0.4)+'s';container.appendChild(p);}
         }
-
-        // ===== 绑定掷骰按钮事件 =====
-        document.getElementById('rollBtn').addEventListener('click',function(){
-            if(rollState==='idle')startLottery();
-            else if(rollState==='rolling')onRollClick();
-            else if(rollState==='done'){
-                // 重置回空闲状态
-                hideResult();
-                switchOverlay('idle');
-                rollState='idle';
-            }
-        });
 
         // ===== 隐藏结果回到空闲 =====
         function hideResult(){
