@@ -52,9 +52,9 @@
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
             position: relative;
-            padding: 20px 24px 8px; max-width: 800px; margin: 0 auto;
-            position: relative;
+            padding: 20px 0 8px; max-width: 820px; margin: 0 auto;
             z-index: 10;
+            width: 100%;
         }
         .pool-title { font-size: 1.3rem; font-weight: 700; color: #f3f4f6; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .ticket-badge {
@@ -63,7 +63,7 @@
             border: 1px solid rgba(214, 158, 46, 0.5); border-radius: 20px; padding: 5px 16px; font-size: 0.88rem;
             backdrop-filter: blur(10px);
             position: absolute;
-            right: 0;
+            right: 14px;
             top: 50%;
             transform: translateY(-50%);
         }
@@ -689,7 +689,8 @@
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // ===== 背景图加载（带浏览器缓存） =====
-        const BG_URL='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf.png';
+        const BG_URL_CDN='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf.png';
+        const BG_URL_GITHUB='https://gliuhe.github.io/xiaoan/activity/reward_inf.png';
         const BG_CACHE_KEY='lottery_bg_cache';
         const BG_VERSION_KEY='lottery_bg_version';
         
@@ -783,26 +784,45 @@
         // 始终从CDN加载，不使用本地缓存的图片
         loadPoolBg(forceRefresh);
         
-        function loadPoolBg(force){
+        function loadPoolBg(force, useGithub){
             var img=new Image();img.crossOrigin='anonymous';
-            var url=BG_URL+(force?'?v='+Date.now():'');
+            var url=(useGithub?BG_URL_GITHUB:BG_URL_CDN)+(force?'?v='+Date.now():'');
+            var startTime=Date.now();
+            var timeoutId=null;
             
             img.onload=function(){
+                if(timeoutId)clearTimeout(timeoutId);
                 poolImg.src=url;
                 // 更新版本号
                 localStorage.setItem(BG_VERSION_KEY,currentVersion);
-                console.log('[lottery] 奖池背景图已加载');
+                console.log('[lottery] 奖池背景图已加载，来源:',useGithub?'GitHub Pages':'CDN');
             }
             img.onerror=function(){
-                console.warn('[lottery] 奖池背景图加载失败');
-                useFallbackBg();
-            };
-            img.src=url;
-            setTimeout(function(){
-                if(!poolImg.src||poolImg.naturalHeight===0){
+                if(timeoutId)clearTimeout(timeoutId);
+                if(!useGithub){
+                    console.warn('[lottery] CDN加载失败，尝试GitHub Pages...');
+                    loadPoolBg(force,true);
+                }else{
+                    console.warn('[lottery] 奖池背景图加载失败');
                     useFallbackBg();
                 }
-            },8000);
+            };
+            
+            // 10秒超时检测
+            timeoutId=setTimeout(function(){
+                if(!poolImg.src||poolImg.naturalHeight===0){
+                    if(!useGithub){
+                        console.warn('[lottery] CDN加载超时(10s)，尝试GitHub Pages...');
+                        img.src=''; // 取消当前加载
+                        loadPoolBg(force,true);
+                    }else{
+                        console.warn('[lottery] GitHub Pages也超时，使用默认背景');
+                        useFallbackBg();
+                    }
+                }
+            },10000);
+            
+            img.src=url;
         }
         
         function useFallbackBg(){
@@ -811,7 +831,7 @@
                 var placeholder=document.getElementById('poolPlaceholder');
                 if(placeholder){
                     placeholder.style.display='flex';
-                    placeholder.innerHTML='<div style="text-align:center;color:#666;"><div style="font-size:3rem;margin-bottom:10px;">🎲</div><div>奖池背景图加载失败</div><div style="font-size:0.8rem;margin-top:5px;">请确保 reward_inf.png 已上传到 CDN</div></div>';
+                    placeholder.innerHTML='<div style="text-align:center;color:#666;"><div style="font-size:3rem;margin-bottom:10px;">🎲</div><div>奖池背景图加载失败</div><div style="font-size:0.8rem;margin-top:5px;">请确保 reward_inf.png 已上传</div></div>';
                 }
                 document.getElementById('poolOverlay').style.background='linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
                 console.warn('[lottery] 奖池背景图加载失败，使用默认背景');
@@ -856,11 +876,13 @@
             }
             
             try{var o=JSON.parse(localStorage.getItem('lottery_data')||'{}');totalDraws=o.totalDraws||0;lastStar5Draw=o.lastStar5Draw||0;lastStar4Draw=o.lastStar4Draw||0;lastStar5Type=o.lastStar5Type||null;drawHistory=o.drawHistory||[];}catch(e){}
+            // 先加载本地配置，然后从云端获取最新数据
             try{REWARD_CONFIG=JSON.parse(localStorage.getItem('lottery_reward_config'))}catch(e){}
             document.getElementById('ticketCount').textContent=getTicketCount();
             updateStats();updatePityUI();renderHistory();
             renderPendingCodes(); // 渲染待使用兑换码
-            renderTierDetails(); // 先渲染本地配置
+            // 先使用本地配置渲染，然后从云端获取最新数据
+            renderTierDetails();
             fetchRewardConfigFromCloud();
             
             // ===== 绑定掷骰按钮事件（移到init中确保DOM已加载）=====
@@ -879,6 +901,10 @@
             }
         }
         async function fetchRewardConfigFromCloud(){
+            // 备份当前配置
+            var backupConfig=REWARD_CONFIG;
+            var backupLocalConfig=localStorage.getItem('lottery_reward_config');
+            
             try{
                 if(typeof window.supabase==='undefined')return;
                 
@@ -890,45 +916,80 @@
                 
                 // 使用rpc或添加随机参数强制绕过缓存
                 var cacheBuster=Date.now()+Math.random();
-                var {data,error}=await sb.from('jisuan_data')
-                    .select('lottery_reward_config,updated_at')
+                
+                // 优先从新表 lottery_config 加载
+                var {data,error}=await sb.from('lottery_config')
+                    .select('reward_config')
                     .eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7')
                     .limit(1)
                     .maybeSingle();
                 
-                console.log('[lottery] 云端配置查询结果:',{hasData:!!data,hasError:!!error,cacheBuster:cacheBuster});
-                    
-                if(!error&&data&&data.lottery_reward_config){
-                    try{
-                        var newConfig=JSON.parse(data.lottery_reward_config);
-                        var oldConfigStr=localStorage.getItem('lottery_reward_config');
-                        var newConfigStr=data.lottery_reward_config;
-                        var oldUpdatedAt=localStorage.getItem('lottery_config_updated_at')||'';
-                        var newUpdatedAt=data.updated_at||'';
-                        
-                        // 检查配置是否有变化（比较内容或更新时间）
-                        var hasChanged=oldConfigStr!==newConfigStr||oldUpdatedAt!==newUpdatedAt;
-                        
-                        if(hasChanged||!REWARD_CONFIG){
-                            REWARD_CONFIG=newConfig;
-                            localStorage.setItem('lottery_reward_config',newConfigStr);
-                            localStorage.setItem('lottery_config_updated_at',newUpdatedAt);
-                            console.log('[lottery] ✅ 已从云端加载最新奖励配置，配置已更新');
-                            console.log('[lottery] 更新时间:',newUpdatedAt);
-                            // 重新渲染奖励详情
-                            renderTierDetails();
-                            
-                            // 显示更新提示
-                            showUpdateNotification();
-                        }else{
-                            REWARD_CONFIG=newConfig;
-                            console.log('[lottery] ✅ 云端配置与本地一致，无需更新');
-                        }
-                    }catch(e){console.error('[lottery] 解析云端配置失败',e)}
-                }else if(error){
-                    console.warn('[lottery] 云端查询出错:',error);
+                // 如果新表没有数据，尝试从旧表迁移
+                if(!data&&!error){
+                    console.log('[lottery] 新表无数据，尝试从旧表迁移...');
+                    var {data:oldData}=await sb.from('jisuan_data')
+                        .select('lottery_reward_config')
+                        .eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7')
+                        .maybeSingle();
+                    if(oldData&&oldData.lottery_reward_config){
+                        // 迁移数据到新表
+                        await sb.from('lottery_config').insert({
+                            user_id:'d71f9173-bd5d-4d30-a033-0429ae162fd7',
+                            reward_config:JSON.parse(oldData.lottery_reward_config)
+                        });
+                        // 重新查询新表
+                        var {data:newData}=await sb.from('lottery_config')
+                            .select('reward_config')
+                            .eq('user_id','d71f9173-bd5d-4d30-a033-0429ae162fd7')
+                            .maybeSingle();
+                        data=newData;
+                        console.log('[lottery] 数据迁移完成');
+                    }
                 }
-            }catch(e){console.warn('[lottery] 云端配置加载失败，使用本地缓存',e)}
+                
+                console.log('[lottery] 云端配置查询结果:',{hasData:!!data,hasError:!!error,cacheBuster:cacheBuster,hasConfig:!!(data&&data.reward_config),table:'lottery_config'});
+                    
+                if(!error&&data&&data.reward_config){
+                    // 云端有配置，使用云端配置
+                    try{
+                        REWARD_CONFIG=data.reward_config;
+                        localStorage.setItem('lottery_reward_config',JSON.stringify(data.reward_config));
+                        console.log('[lottery] ✅ 已从云端加载最新奖励配置，配置已更新');
+                        // 重新渲染奖励详情
+                        renderTierDetails();
+                        
+                        // 显示更新提示
+                        showUpdateNotification();
+                    }catch(e){
+                        console.error('[lottery] 解析云端配置失败',e);
+                        // 解析失败时恢复备份
+                        REWARD_CONFIG=backupConfig;
+                        if(backupLocalConfig){
+                            localStorage.setItem('lottery_reward_config',backupLocalConfig);
+                        }
+                    }
+                }else if(error){
+                    // 查询出错，恢复备份
+                    console.warn('[lottery] 云端查询出错，恢复本地配置:',error);
+                    REWARD_CONFIG=backupConfig;
+                    if(backupLocalConfig){
+                        localStorage.setItem('lottery_reward_config',backupLocalConfig);
+                    }
+                }else{
+                    // 云端没有数据
+                    console.log('[lottery] 云端没有配置数据，使用本地配置');
+                    REWARD_CONFIG=backupConfig;
+                    if(backupLocalConfig){
+                        localStorage.setItem('lottery_reward_config',backupLocalConfig);
+                    }
+                }
+            }catch(e){
+                console.warn('[lottery] 云端配置加载失败，恢复本地配置:',e);
+                REWARD_CONFIG=backupConfig;
+                if(backupLocalConfig){
+                    localStorage.setItem('lottery_reward_config',backupLocalConfig);
+                }
+            }
         }
         
         function showUpdateNotification(){
@@ -960,7 +1021,6 @@
          function forceRefreshPage(){
              // 清除所有相关缓存
              localStorage.removeItem('lottery_reward_config');
-             localStorage.removeItem('lottery_config_updated_at');
              localStorage.removeItem('lottery_bg_cache');
              localStorage.removeItem('lottery_bg_version');
              REWARD_CONFIG=null;
