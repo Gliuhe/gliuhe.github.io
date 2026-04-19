@@ -12,7 +12,7 @@ function syncCurrencyToCloud(key){
         if(['voucher','lottery','premium','bankTicket'].indexOf(key)>=0){
             sb.from('user_currencies').upsert({user_id:USER_ID,currency_type:key,amount:val},{onConflict:'user_id,currency_type'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 货币同步失败:',key,r.error.message)});
         }else if(key==='jixing_muchun_currency'){
-            sb.from('jisuan_data').upsert({id:'global',jixing_muchun_currency:val},{onConflict:'id'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 纪行券同步失败:',r.error.message)});
+            sb.from('jisuan_data').upsert({user_id:USER_ID,jixing_muchun_currency:val},{onConflict:'user_id'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 纪行券同步失败:',r.error.message)});
         }
     }catch(e){}
 }
