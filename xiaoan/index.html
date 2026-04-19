@@ -4475,7 +4475,10 @@
                     throw new Error('Supabase SDK 未加载');
                 }
 
-                const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                    db: { schema: 'public' },
+                    global: { headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' } }
+                });
                 console.log('[Cloud] 🚀 后台连接 Supabase, userId:', userId);
 
                 // ===== 立即初始化实时通知（不等云同步完成）=====
