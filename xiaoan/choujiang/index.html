@@ -849,6 +849,7 @@
                     <option value="item">实物奖品</option>
                     <option value="currency">兑换券</option>
                     <option value="bankTicket">银行券</option>
+                    <option value="jixing">纪行券</option>
                 </select>
             </div>
             <div class="form-group" id="currencyAmountGroup" style="display:none;">
@@ -1082,6 +1083,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
                 } else if (prize.rewardType === 'bankTicket') {
                     rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
+                } else if (prize.rewardType === 'jixing') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>`;
+                } else if (prize.rewardType === 'jixing') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>`;
                 }
 
                 prizeCard.innerHTML = `
@@ -1116,6 +1121,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     rewardTag = `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>`;
                 } else if (prize.rewardType === 'bankTicket') {
                     rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
+                } else if (prize.rewardType === 'jixing') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>`;
                 }
 
                 // 创建确认删除层
@@ -1187,14 +1194,16 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 const usedTime = record.usedTime ? new Date(record.usedTime).toLocaleString() : '';
 
                 // 检查是否可使用(如果记录没有usable属性，默认为true)
-                // 银行券和兑换券是货币类型，不可使用
-                const isUsable = record.usable !== false && record.rewardType !== 'currency' && record.rewardType !== 'bankTicket';
+                // 银行券、兑换券和纪行券是货币类型，不可使用
+                const isUsable = record.usable !== false && record.rewardType !== 'currency' && record.rewardType !== 'bankTicket' && record.rewardType !== 'jixing';
 
                 let rewardTag = '';
                 if (record.rewardType === 'currency') {
                     rewardTag = `<div class="reward-tag">${record.currencyAmount}兑换券</div>`;
                 } else if (record.rewardType === 'bankTicket') {
                     rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${record.currencyAmount || 0}银行券</div>`;
+                } else if (record.rewardType === 'jixing') {
+                    rewardTag = `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${record.currencyAmount || 0}纪行券</div>`;
                 }
 
                 // 如果是奖品、可使用且未使用，显示使用按钮；否则显示已使用状态或不可使用不显示按钮
@@ -1498,6 +1507,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             const records = JSON.parse(localStorage.getItem('records'));
             let currencyEarned = 0;
             let bankTicketEarned = 0;
+            let jixingEarned = 0;
 
             prizes.forEach(prize => {
                 records.push({
@@ -1512,6 +1522,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     currencyEarned += prize.currencyAmount;
                 } else if (prize.rewardType === 'bankTicket') {
                     bankTicketEarned += prize.currencyAmount;
+                } else if (prize.rewardType === 'jixing') {
+                    jixingEarned += prize.currencyAmount;
                 }
                 
                 // 减少库存
@@ -1565,6 +1577,24 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
 
                 rewardMessages.push(`${bankTicketEarned}银行券`);
             }
+            if (jixingEarned > 0) {
+                const jixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0') || 0;
+                const newJixing = jixing + jixingEarned;
+
+                // 安全检查：确保newJixing是有效数字
+                if (!isNaN(newJixing) && newJixing >= 0) {
+                    localStorage.setItem('jixing_muchun_currency', newJixing.toString());
+                    syncCurrencyToCloud('jixing_muchun_currency');
+
+                    // 触发storage事件同步到其他页面
+                    window.dispatchEvent(new StorageEvent('storage', {
+                        key: 'jixing_muchun_currency',
+                        newValue: newJixing.toString()
+                    }));
+                }
+
+                rewardMessages.push(`${jixingEarned}纪行券`);
+            }
             if (rewardMessages.length > 0) {
                 showStatus(`成功获得${rewardMessages.join('、')}！`, "success");
             }
@@ -1605,6 +1635,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                                 `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center;">${prize.currencyAmount || 0}兑换券</div>` : ''}
                             ${prize.rewardType === 'bankTicket' ?
                                 `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
+                            ${prize.rewardType === 'jixing' ?
+                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -1628,6 +1660,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     <div style="font-size: 1.5rem; margin-bottom:10px;">${prize.name}</div>
                     ${prize.rewardType === 'currency' ?
                         `<div class="reward-tag">${prize.currencyAmount || 0}兑换券</div>` : ''}
+                    ${prize.rewardType === 'bankTicket' ?
+                        `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
+                    ${prize.rewardType === 'jixing' ?
+                        `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>` : ''}
                 </div>
             `;
 
@@ -1636,6 +1672,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount || 0}兑换券</div>`;
             } else if (prize.rewardType === 'bankTicket') {
                 rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
+            } else if (prize.rewardType === 'jixing') {
+                rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>`;
             } else {
                 rewardTags.innerHTML = `<div class="reward-tag">实物奖品</div>`;
             }
@@ -1651,6 +1689,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 message += ` (${prize.currencyAmount || 0}兑换券)`;
             } else if (prize.rewardType === 'bankTicket') {
                 message += ` (${prize.currencyAmount || 0}银行券)`;
+            } else if (prize.rewardType === 'jixing') {
+                message += ` (${prize.currencyAmount || 0}纪行券)`;
             }
             showStatus(message, "success");
         }
@@ -1714,7 +1754,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             const usable = document.getElementById('prizeUsable').value === 'true'; // 是否可使用
             let currencyAmount = 0;
 
-            if (rewardType === 'currency' || rewardType === 'bankTicket') {
+            if (rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') {
                 currencyAmount = parseInt(document.getElementById('currencyAmountInput').value);
             }
 
@@ -1735,8 +1775,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 return;
             }
 
-            if ((rewardType === 'currency' || rewardType === 'bankTicket') && (!currencyAmount || currencyAmount <= 0)) {
-                const currencyName = rewardType === 'currency' ? '兑换券' : '银行券';
+            if ((rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') && (!currencyAmount || currencyAmount <= 0)) {
+                let currencyName = '兑换券';
+                if (rewardType === 'bankTicket') currencyName = '银行券';
+                else if (rewardType === 'jixing') currencyName = '纪行券';
                 showStatus(`请输入有效的${currencyName}数量！`, "error");
                 return;
             }
@@ -1804,7 +1846,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             document.getElementById('prizeDescription').value = prize.description || '';
 
             // 显示货币数量输入框（如果需要）
-            if (prize.rewardType === 'currency' || prize.rewardType === 'bankTicket') {
+            if (prize.rewardType === 'currency' || prize.rewardType === 'bankTicket' || prize.rewardType === 'jixing') {
                 document.getElementById('currencyAmountGroup').style.display = 'block';
                 document.getElementById('currencyAmountInput').value = prize.currencyAmount || 0;
             } else {
@@ -1824,7 +1866,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             const description = document.getElementById('prizeDescription').value;
 
             let currencyAmount = 0;
-            if (rewardType === 'currency' || rewardType === 'bankTicket') {
+            if (rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') {
                 currencyAmount = parseInt(document.getElementById('currencyAmountInput').value);
             }
 
@@ -1843,8 +1885,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 return;
             }
 
-            if ((rewardType === 'currency' || rewardType === 'bankTicket') && (!currencyAmount || currencyAmount <= 0)) {
-                const currencyName = rewardType === 'currency' ? '兑换券' : '银行券';
+            if ((rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') && (!currencyAmount || currencyAmount <= 0)) {
+                let currencyName = '兑换券';
+                if (rewardType === 'bankTicket') currencyName = '银行券';
+                else if (rewardType === 'jixing') currencyName = '纪行券';
                 showStatus(`请输入有效的${currencyName}数量！`, "error");
                 return;
             }
@@ -1996,7 +2040,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             
             // 奖励类型变更事件
             document.getElementById('prizeRewardType').addEventListener('change', function() {
-                const isCurrency = this.value === 'currency' || this.value === 'bankTicket';
+                const isCurrency = this.value === 'currency' || this.value === 'bankTicket' || this.value === 'jixing';
                 document.getElementById('currencyAmountGroup').style.display = isCurrency ? 'block' : 'none';
                 
                 // 动态更新标签文本
@@ -2008,6 +2052,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 } else if (this.value === 'bankTicket') {
                     label.textContent = '银行券数量';
                     input.placeholder = '请输入银行券数量';
+                } else if (this.value === 'jixing') {
+                    label.textContent = '纪行券数量';
+                    input.placeholder = '请输入纪行券数量';
                 }
             });
             
