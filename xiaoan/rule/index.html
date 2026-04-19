@@ -684,6 +684,7 @@
     </div>
     <div style="text-align: center; margin-bottom: 20px;">
         <button class="btn" onclick="window.location.href='/xiaoan'">🏠 返回主页</button>
+        <button class="btn" onclick="forceSyncFromCloud()" title="强制从云端同步数据">🔄 同步数据</button>
     </div>
     
     <div class="container">
@@ -2117,6 +2118,114 @@
                         verifyPassword();
                     }
                 });
+            }
+        }
+
+        // 强制从云端同步数据
+        async function forceSyncFromCloud() {
+            const btn = document.querySelector('button[onclick="forceSyncFromCloud()"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '🔄 同步中...';
+            }
+            
+            showStatus('正在从云端同步数据...', 'info');
+            console.log('[rule] 🔄 强制从云端同步数据...');
+            
+            try {
+                const userId = USER_ID;
+                if (!window.supabase) {
+                    showStatus('Supabase 未加载', 'error');
+                    return;
+                }
+                
+                const sbClient = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
+                    {
+                        db: { schema: 'public' },
+                        global: { headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' } }
+                    }
+                );
+                
+                // 清除本地缓存，强制从云端重新加载
+                localStorage.removeItem('rules');
+                localStorage.removeItem('activeTasks');
+                
+                // 加载 rules
+                console.log('[rule] 📥 强制同步：正在从云端加载 rules...');
+                const { data: cloudRules, error: rulesError } = await sbClient.from('rules').select('*').order('sort_order', { ascending: true });
+                
+                if (rulesError) {
+                    console.error('[rule] ❌ 同步 rules 失败:', rulesError);
+                    showStatus('同步失败: ' + rulesError.message, 'error');
+                    return;
+                }
+                
+                if (cloudRules && cloudRules.length > 0) {
+                    const mappedRules = cloudRules.map(r => {
+                        let parsedReward = {};
+                        if (typeof r.reward === 'string' && r.reward) {
+                            try { parsedReward = JSON.parse(r.reward); } catch(e) {}
+                        }
+                        return {
+                            id: r.id,
+                            title: r.name || r.title || '',
+                            rewardType1: parsedReward.type1 || r.reward_type_1,
+                            rewardAmount1: parsedReward.amount1 ?? r.reward_amount_1 ?? 0,
+                            rewardType2: parsedReward.type2 || r.reward_type_2,
+                            rewardAmount2: parsedReward.amount2 ?? r.reward_amount_2 ?? 0,
+                            content: r.content || '',
+                            days: Array.isArray(r.days) ? r.days : [],
+                            isDaily: !!r.is_daily,
+                            duration: r.duration || 0,
+                            isActive: r.is_active !== false,
+                            sortOrder: r.sort_order ?? r.id ?? 0
+                        };
+                    });
+                    localStorage.setItem('rules', JSON.stringify(mappedRules));
+                    console.log('[rule] ✅ 强制同步：已加载 rules:', mappedRules.length, '条');
+                } else {
+                    console.log('[rule] ⚠️ 云端没有 rules 数据');
+                }
+                
+                // 加载 active_tasks
+                console.log('[rule] 📥 强制同步：正在从云端加载 active_tasks...');
+                const { data: cloudTasks, error: tasksError } = await sbClient.from('active_tasks').select('*').eq('user_id', userId);
+                
+                if (tasksError) {
+                    console.error('[rule] ❌ 同步 active_tasks 失败:', tasksError);
+                } else if (cloudTasks && cloudTasks.length > 0) {
+                    const taskObj = {};
+                    cloudTasks.forEach(t => {
+                        taskObj[t.rule_id] = {
+                            status: t.status || 'pending',
+                            startTime: t.start_time,
+                            endTime: t.end_time,
+                            rewardText: t.reward_text
+                        };
+                    });
+                    localStorage.setItem('activeTasks', JSON.stringify(taskObj));
+                    console.log('[rule] ✅ 强制同步：已加载 active_tasks:', cloudTasks.length, '条');
+                } else {
+                    console.log('[rule] ⚠️ 云端没有 active_tasks 数据');
+                }
+                
+                // 重新初始化数据并更新UI
+                initializeData();
+                updateUI();
+                
+                showStatus('✅ 数据同步完成！', 'success');
+                console.log('[rule] ✅ 强制同步完成');
+                
+            } catch(e) {
+                console.error('[rule] ❌ 强制同步失败:', e);
+                showStatus('同步失败: ' + e.message, 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '🔄 同步数据';
+                }
             }
         }
 
