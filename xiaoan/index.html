@@ -6431,12 +6431,29 @@
                 showNotificationBanner(`🎉 领取成功！获得：${rewards.join(', ')}`, 'success');
                 playNotificationSound('success');
 
+                // 立即更新缓存中的领取状态，避免重复领取
+                if (_mailCache && _mailCache.claimedIds) {
+                    _mailCache.claimedIds.add(_currentMailId);
+                }
+                
+                // 立即更新UI显示已领取状态
+                const btn = document.getElementById('claimRewardBtn');
+                if (btn) { 
+                    btn.textContent = '✅ 已领取'; 
+                    btn.disabled = true; 
+                    btn.style.background = '#94a3b8'; 
+                }
+                
+                // 更新邮件列表中的已领取标记
+                const mailItem = document.querySelector(`.mail-item[onclick="showMailDetail('${_currentMailId}')"]`);
+                if (mailItem) mailItem.classList.add('claimed');
+
                 // 刷新 UI（刷新列表 + 刷新详情面板按钮状态）
                 updateUI();
                 _activeMailId = _currentMailId; // 保持选中
+                // 清除缓存强制重新加载
+                _mailCache = null;
                 await loadMails();
-                if (_currentMailId) showMailDetail(_currentMailId); // 刷新右侧详情
-                loadMails();
 
             } catch(e) {
                 alert('❌ 领取失败: ' + e.message);
