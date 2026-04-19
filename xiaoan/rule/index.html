@@ -2241,9 +2241,17 @@
 
             const rules = JSON.parse(localStorage.getItem('rules')) || [];
             const activeTasks = JSON.parse(localStorage.getItem('activeTasks')) || {};
+            const today = new Date().getDay();
 
             // 筛选每日系列任务（isDaily为true的任务）
             const dailyRules = rules.filter(rule => rule.isDaily === true);
+
+            // 筛选今日特需任务（isSpecial为true且今日显示的任务）
+            const specialRulesToday = rules.filter(rule => {
+                if (rule.isSpecial !== true) return false;
+                const days = rule.days || [];
+                return days.length === 0 || days.includes(today);
+            });
 
             // 检查是否所有每日系列任务都已完成
             const allDailyCompleted = dailyRules.every(rule => {
@@ -2251,8 +2259,14 @@
                 return taskStatus.status === 'completed';
             });
 
-            if (!allDailyCompleted) {
-                showStatus('请先完成所有每日系列任务！', "error");
+            // 检查是否有已完成的特需任务
+            const hasCompletedSpecialTask = specialRulesToday.some(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                return taskStatus.status === 'completed';
+            });
+
+            if (!allDailyCompleted && !hasCompletedSpecialTask) {
+                showStatus('请先完成所有每日系列任务或特需任务！', "error");
                 return;
             }
 
