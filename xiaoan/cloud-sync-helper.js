@@ -9,10 +9,8 @@ function syncCurrencyToCloud(key){
     try{
         var sb=_getSb();if(!sb)return;
         var val=parseInt(localStorage.getItem(key))||0;
-        if(['voucher','lottery','premium','bankTicket'].indexOf(key)>=0){
+        if(['voucher','lottery','premium','bankTicket','jixing_muchun_currency'].indexOf(key)>=0){
             sb.from('user_currencies').upsert({user_id:USER_ID,currency_type:key,amount:val},{onConflict:'user_id,currency_type'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 货币同步失败:',key,r.error.message)});
-        }else if(key==='jixing_muchun_currency'){
-            sb.from('jixing_progress').upsert({user_id:USER_ID,currency:val},{onConflict:'user_id'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 纪行券同步失败:',r.error.message)});
         }
     }catch(e){}
 }
