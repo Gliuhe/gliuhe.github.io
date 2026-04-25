@@ -686,122 +686,46 @@
     <div class="toast" id="toast"></div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cache-manager.js"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
-        // ===== 背景图加载（带浏览器缓存） =====
+        // ===== 使用新的缓存管理器加载资源 =====
         const BG_URL_CDN='https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/reward_inf.png';
         const BG_URL_GITHUB='https://gliuhe.github.io/xiaoan/activity/reward_inf.png';
-        const BG_CACHE_KEY='lottery_bg_cache';
-        const BG_VERSION_KEY='lottery_bg_version';
-        
-        // ===== 背景音乐缓存 =====
         const MUSIC_URL = 'bg_jixing.mp3';
-        const MUSIC_CACHE_KEY = 'lottery_music_cache';
-        const MUSIC_VERSION_KEY = 'lottery_music_version';
-        
-        // 加载背景音乐（带缓存）
-        loadBackgroundMusic();
-        
-        async function loadBackgroundMusic() {
-            const audio = document.getElementById('bgMusic');
-            if (!audio) return;
-            
-            try {
-                // 检查是否有缓存的音乐数据
-                const cachedMusic = localStorage.getItem(MUSIC_CACHE_KEY);
-                const cachedVersion = localStorage.getItem(MUSIC_VERSION_KEY);
-                const currentVersion = 'v1'; // 当音乐文件更新时，更改此版本号
-                
-                if (cachedMusic && cachedVersion === currentVersion) {
-                    // 使用缓存的音乐（Base64）
-                    audio.src = cachedMusic;
-                    console.log('[lottery] 🎵 使用缓存的背景音乐');
-                } else {
-                    // 从网络加载并缓存
-                    console.log('[lottery] 🎵 正在加载背景音乐...');
-                    const response = await fetch(MUSIC_URL);
-                    if (!response.ok) throw new Error('加载失败');
-                    
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-                    
-                    reader.onload = function(e) {
-                        const base64data = e.target.result;
-                        // 存储到 localStorage
-                        try {
-                            localStorage.setItem(MUSIC_CACHE_KEY, base64data);
-                            localStorage.setItem(MUSIC_VERSION_KEY, currentVersion);
-                            console.log('[lottery] 🎵 背景音乐已缓存');
-                        } catch (e) {
-                            console.warn('[lottery] 音乐缓存失败（可能超出存储限制）:', e);
-                        }
-                        audio.src = base64data;
-                    };
-                    
-                    reader.readAsDataURL(blob);
-                }
-                
-                // 尝试自动播放
-                audio.play().catch(e => {
-                    console.log('[lottery] 自动播放被阻止，等待用户交互');
-                    // 添加点击事件来启动音乐
-                    document.addEventListener('click', function startMusic() {
-                        audio.play().catch(() => {});
-                        document.removeEventListener('click', startMusic);
-                    }, { once: true });
-                });
-                
-            } catch (e) {
-                console.warn('[lottery] 背景音乐加载失败:', e);
-                // 使用原始 URL 作为后备
-                audio.src = MUSIC_URL;
-            }
-        }
-        
-        // 清除音乐缓存函数
-        function clearMusicCache() {
-            localStorage.removeItem(MUSIC_CACHE_KEY);
-            localStorage.removeItem(MUSIC_VERSION_KEY);
-            console.log('[lottery] 🎵 音乐缓存已清除');
-        }
         
         var poolImg=document.getElementById('poolBgImg');
         
-        // 生成当前时间戳作为版本号（每小时更换）
-        var currentVersion=Math.floor(Date.now()/(60*60*1000));
-        var cachedVersion=parseInt(localStorage.getItem(BG_VERSION_KEY)||'0');
-        
-        // 检查是否需要强制刷新缓存（版本变化或手动刷新）
-        var forceRefresh=currentVersion!==cachedVersion;
-        
-        // 如果有URL参数强制刷新，也清除缓存
-        if(location.search.includes('refresh=')){
-            forceRefresh=true;
-            localStorage.removeItem(BG_CACHE_KEY);
-            console.log('[lottery] 强制刷新模式：已清除图片缓存');
+        // 加载背景图（使用 IndexedDB 缓存）
+        async function loadPoolBgWithCache() {
+            try {
+                // 尝试使用缓存管理器加载
+                const cachedUrl = await CacheManager.cacheImage(BG_URL_CDN, { maxAge: 7 * 24 * 60 * 60 * 1000 });
+                poolImg.src = cachedUrl;
+                console.log('[lottery] 🖼️ 奖池背景图已加载（使用缓存）');
+            } catch (e) {
+                console.warn('[lottery] 缓存加载失败，使用直接加载:', e);
+                // 后备方案：直接加载
+                loadPoolBgDirect();
+            }
         }
         
-        // 始终从CDN加载，不使用本地缓存的图片
-        loadPoolBg(forceRefresh);
-        
-        function loadPoolBg(force, useGithub){
+        // 直接加载背景图（后备方案）
+        function loadPoolBgDirect(useGithub){
             var img=new Image();img.crossOrigin='anonymous';
-            var url=(useGithub?BG_URL_GITHUB:BG_URL_CDN)+(force?'?v='+Date.now():'');
-            var startTime=Date.now();
+            var url=(useGithub?BG_URL_GITHUB:BG_URL_CDN)+'?v='+Date.now();
             var timeoutId=null;
             
             img.onload=function(){
                 if(timeoutId)clearTimeout(timeoutId);
                 poolImg.src=url;
-                // 更新版本号
-                localStorage.setItem(BG_VERSION_KEY,currentVersion);
                 console.log('[lottery] 奖池背景图已加载，来源:',useGithub?'GitHub Pages':'CDN');
             }
             img.onerror=function(){
                 if(timeoutId)clearTimeout(timeoutId);
                 if(!useGithub){
                     console.warn('[lottery] CDN加载失败，尝试GitHub Pages...');
-                    loadPoolBg(force,true);
+                    loadPoolBgDirect(true);
                 }else{
                     console.warn('[lottery] 奖池背景图加载失败');
                     useFallbackBg();
@@ -813,8 +737,8 @@
                 if(!poolImg.src||poolImg.naturalHeight===0){
                     if(!useGithub){
                         console.warn('[lottery] CDN加载超时(10s)，尝试GitHub Pages...');
-                        img.src=''; // 取消当前加载
-                        loadPoolBg(force,true);
+                        img.src='';
+                        loadPoolBgDirect(true);
                     }else{
                         console.warn('[lottery] GitHub Pages也超时，使用默认背景');
                         useFallbackBg();
@@ -837,6 +761,57 @@
                 console.warn('[lottery] 奖池背景图加载失败，使用默认背景');
             }
         }
+        
+        // 加载背景音乐（使用 IndexedDB 缓存）
+        async function loadBackgroundMusic() {
+            const audio = document.getElementById('bgMusic');
+            if (!audio) return;
+            
+            try {
+                console.log('[lottery] 🎵 正在加载背景音乐...');
+                const cachedUrl = await CacheManager.cacheAudio(MUSIC_URL, { maxAge: 30 * 24 * 60 * 60 * 1000 });
+                audio.src = cachedUrl;
+                console.log('[lottery] 🎵 背景音乐已加载（使用缓存）');
+                
+                // 尝试自动播放
+                audio.play().catch(e => {
+                    console.log('[lottery] 自动播放被阻止，等待用户交互');
+                    document.addEventListener('click', function startMusic() {
+                        audio.play().catch(() => {});
+                        document.removeEventListener('click', startMusic);
+                    }, { once: true });
+                });
+            } catch (e) {
+                console.warn('[lottery] 背景音乐缓存加载失败:', e);
+                audio.src = MUSIC_URL;
+            }
+        }
+        
+        // 清除所有缓存
+        async function clearAllCaches() {
+            try {
+                await CacheManager.clear();
+                console.log('[lottery] ✅ 所有缓存已清除');
+                alert('缓存已清除，页面将刷新');
+                location.reload();
+            } catch (e) {
+                console.error('[lottery] 清除缓存失败:', e);
+            }
+        }
+        
+        // 清除音乐缓存（兼容旧版本）
+        function clearMusicCache() {
+            clearAllCaches();
+        }
+        
+        // 清除背景缓存（兼容旧版本）
+        function clearBgCache() {
+            clearAllCaches();
+        }
+        
+        // 启动加载
+        loadPoolBgWithCache();
+        loadBackgroundMusic();
 
         // ===== 概率配置 =====
         var DICE_PROBS=[[1,0.12],[2,0.12],[3,0.12],[4,0.12],[5,0.12],[6,0.40]];
@@ -866,7 +841,11 @@
         var rolledResults=[];     // 已掷出的结果 [d1, d2, d3]
 
         // ===== 初始化 =====
-        function init(){
+        async function init(){
+            // 检查是否被封禁（纪行功能）
+            var isBanned = await checkPageBan('jixing');
+            if (isBanned) return;
+            
             // 检查是否需要强制刷新配置（URL参数）
             if(location.search.includes('clear=')){
                 console.log('[lottery] 强制清除模式：清除所有配置缓存');
@@ -2274,6 +2253,9 @@
         }
 
         init();
+        
+        // 初始化页面同步（进入/退出时自动同步）
+        initPageSync('lottery');
     </script>
 </body>
 </html>
