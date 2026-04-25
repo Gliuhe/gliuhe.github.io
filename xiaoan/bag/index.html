@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的背包</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cache-manager.js"></script>
+    <script src="../cache-utils.js"></script>
+    <script src="../cloud-sync-helper.js"></script>
     <script>
     const SB_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I';
@@ -1092,6 +1095,14 @@
                         return;
                     }
 
+                    // 检查本地缓存（防止同一设备重复使用）
+                    const usedCodes = JSON.parse(localStorage.getItem('usedExchangeCodes') || '[]');
+                    if (usedCodes.includes(code)) {
+                        showNotification('❌ 该兑换码已被使用', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+
                     // 查询兑换码
                     const { data: codeData, error } = await sbClient
                         .from('exchange_codes')
@@ -1130,7 +1141,7 @@
                     }
 
                     // 标记为已使用
-                    await sbClient
+                    const { error: updateError } = await sbClient
                         .from('exchange_codes')
                         .update({ 
                             is_used: true, 
@@ -1138,6 +1149,17 @@
                             used_by: USER_ID
                         })
                         .eq('code', code);
+                    
+                    if (updateError) {
+                        console.error('标记兑换码已使用失败:', updateError);
+                        showNotification('兑换失败，请稍后重试', 'error');
+                        btn.disabled = false;
+                        return;
+                    }
+                    
+                    // 记录到本地缓存（防止同一设备重复使用）
+                    usedCodes.push(code);
+                    localStorage.setItem('usedExchangeCodes', JSON.stringify(usedCodes));
 
                     // 发放奖励
                     const rewards = [];
@@ -1221,6 +1243,9 @@
             render();
             // 从云端加载数据
             loadDataFromCloud();
+            
+            // 初始化页面同步（进入/退出时自动同步）
+            initPageSync('bag');
         });
     </script>
 </body>
