@@ -2510,6 +2510,10 @@
     <!-- Supabase SDK（必须先于 cloud-store.js 加载） -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
+    <!-- 缓存管理器 -->
+    <script src="cache-manager.js"></script>
+    <script src="cache-utils.js"></script>
+
     <!-- 云存储适配器（依赖 Supabase SDK） -->
     <script src="cloud-store.js"></script>
 
@@ -2985,7 +2989,14 @@
         }
         
         // 兑换商品
-        function exchangeProduct(productId) {
+        async function exchangeProduct(productId) {
+            // 检查是否被封禁（商店功能）
+            const banInfo = await checkUserBan('shop');
+            if (banInfo.banned) {
+                showBanMessage(banInfo);
+                return;
+            }
+            
             // 检查是否有逾期罚款
             const hasOverdueFines = checkExchangeRestriction();
             if (hasOverdueFines) {
@@ -5634,9 +5645,13 @@
         // 退出登录
         function doLogout() {
             if (!confirm('确定要退出登录吗？')) return;
+            // 只清除登录状态，不清除业务数据
+            // 业务数据会在下次登录时根据用户ID自动处理（_loadAllFromCloud中的用户切换检测）
             sessionStorage.removeItem('xiaoan_user_id');
             localStorage.removeItem('xiaoan_user_id');
             localStorage.removeItem(_avatarCacheKey());
+            // 清除上次用户记录，这样下次登录时会重新判断是否需要清理数据
+            sessionStorage.removeItem('_cloud_last_user_id');
             window.location.replace('login/index.html');
         }
         
@@ -6529,6 +6544,9 @@
             const pad = n => String(n).padStart(2,'0');
             return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
+        
+        // 初始化页面同步（进入/退出时自动同步）
+        initPageSync('index');
     </script>
     <!-- 邮箱模态框（游戏分栏风格） -->
     <div class="modal" id="mailModal" style="display:none;">
