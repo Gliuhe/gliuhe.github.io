@@ -6677,27 +6677,17 @@
                 }
             }
             
-            // 禁用纪行
+            // 禁用纪行（只禁用前往纪行抽奖页面，不禁用任务中心）
             if (restrictions.jixing) {
-                // 禁用活动中心按钮
-                const activityBtns = document.querySelectorAll('button[onclick*="activity/index.html"], button[onclick*="activity/lottery.html"]');
+                // 禁用活动中心按钮（指向activity/index.html的）
+                const activityBtns = document.querySelectorAll('button[onclick*="activity/index.html"]');
                 activityBtns.forEach(btn => {
                     btn.disabled = true;
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
-                    btn.title = '您已被禁止进入纪行';
+                    btn.title = '您已被禁止参与纪行抽奖';
                     btn.textContent = '🚫 活动中心(已封禁)';
                 });
-                
-                // 禁用任务中心按钮
-                const ruleBtn = document.querySelector('button[onclick*="rule/index.html"]');
-                if (ruleBtn) {
-                    ruleBtn.disabled = true;
-                    ruleBtn.style.opacity = '0.5';
-                    ruleBtn.style.cursor = 'not-allowed';
-                    ruleBtn.title = '您已被禁止进入任务中心';
-                    ruleBtn.textContent = '🚫 任务中心(已封禁)';
-                }
             }
         }
         
