@@ -1165,8 +1165,59 @@
         }
 
         // 前往抽奖页面
-        function goToLottery() {
+        async function goToLottery() {
+            // 检查是否被封禁（纪行抽奖功能）
+            const banInfo = await checkUserBan('jixing');
+            if (banInfo.banned) {
+                alert('🚫 您已被禁止参与纪行抽奖\n\n原因：' + (banInfo.reason || '违反规则') + 
+                      '\n到期时间：' + (banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : '永久封禁'));
+                return;
+            }
             window.location.href = 'lottery.html';
+        }
+        
+        // 检查封禁状态并更新UI
+        async function checkBanStatusAndUpdateUI() {
+            try {
+                const banInfo = await checkUserBan('jixing');
+                if (banInfo.banned) {
+                    // 禁用前往抽奖卡片
+                    const lotteryCard = document.querySelector('.lottery-card');
+                    if (lotteryCard) {
+                        lotteryCard.style.opacity = '0.5';
+                        lotteryCard.style.pointerEvents = 'none';
+                        lotteryCard.style.cursor = 'not-allowed';
+                        lotteryCard.title = '您已被禁止参与纪行抽奖';
+                        
+                        // 修改按钮文字
+                        const lotteryBtn = lotteryCard.querySelector('.lottery-btn');
+                        if (lotteryBtn) {
+                            lotteryBtn.textContent = '🚫 已封禁';
+                            lotteryBtn.style.background = '#999';
+                        }
+                    }
+                    
+                    // 显示封禁提示
+                    const lotterySection = document.querySelector('.lottery-section');
+                    if (lotterySection) {
+                        const banNotice = document.createElement('div');
+                        banNotice.style.cssText = `
+                            background: linear-gradient(135deg, #dc2626, #b91c1c);
+                            color: white;
+                            padding: 12px 20px;
+                            border-radius: 12px;
+                            margin-bottom: 15px;
+                            text-align: center;
+                            font-weight: 600;
+                            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+                        `;
+                        banNotice.innerHTML = `🚫 您已被禁止参与纪行抽奖 | 原因：${banInfo.reason || '违反规则'} | 到期：${banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : '永久'}`;
+                        lotterySection.insertBefore(banNotice, lotterySection.firstChild);
+                    }
+                }
+            } catch (e) {
+                console.warn('[BanCheck] 检查封禁状态失败:', e);
+            }
         }
 
         // 更新纪行券显示
@@ -1187,7 +1238,7 @@
         }
 
         // 初始化
-        function init() {
+        async function init() {
             const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
             if (userId && typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
 
@@ -1196,6 +1247,9 @@
 
             renderProgress();
             updateCurrencyDisplay();
+            
+            // 检查封禁状态并更新UI
+            await checkBanStatusAndUpdateUI();
         }
 
         init();
