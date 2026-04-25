@@ -6564,13 +6564,16 @@
         // 检查封禁状态并更新UI
         async function checkBanStatusAndUpdateUI() {
             try {
+                console.log('[BanCheck] 开始检查封禁状态...');
                 const banInfo = await checkUserBan();
+                console.log('[BanCheck] 封禁状态:', banInfo);
                 
                 // 缓存封禁状态供其他函数使用
                 window._shopBanned = banInfo.banned && banInfo.restrictions && banInfo.restrictions.shop;
                 window._banReason = banInfo.reason || '';
                 
                 if (banInfo.banned) {
+                    console.log('[BanCheck] 用户被封禁，显示封禁UI');
                     // 显示封禁提示横幅
                     showBanBanner(banInfo);
                     
@@ -6579,6 +6582,13 @@
                     
                     // 刷新商品列表以显示封禁状态
                     updateUI();
+                } else {
+                    console.log('[BanCheck] 用户未被封禁');
+                    // 清除之前的封禁横幅
+                    const existingBanner = document.getElementById('banBanner');
+                    if (existingBanner) {
+                        existingBanner.remove();
+                    }
                 }
             } catch (e) {
                 console.warn('[BanCheck] 检查封禁状态失败:', e);
@@ -6641,17 +6651,37 @@
                     productsTab.style.pointerEvents = 'none';
                     productsTab.style.cursor = 'not-allowed';
                     productsTab.title = '您已被禁止兑换商品';
+                    productsTab.onclick = null;
                 }
+                
+                // 禁用兑换商品按钮
+                const exchangeBtns = document.querySelectorAll('button[onclick*="switchTab(\'products\')"], button[onclick*="switchTab(&quot;products&quot;)"]');
+                exchangeBtns.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.title = '您已被禁止兑换商品';
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止兑换商品');
+                        return false;
+                    };
+                });
             }
             
             // 禁用抽奖
             if (restrictions.lottery) {
                 const lotteryBtn = document.querySelector('button[onclick*="choujiang/index.html"]');
                 if (lotteryBtn) {
-                    lotteryBtn.disabled = true;
                     lotteryBtn.style.opacity = '0.5';
                     lotteryBtn.style.cursor = 'not-allowed';
                     lotteryBtn.title = '您已被禁止抽奖';
+                    lotteryBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止抽奖');
+                        return false;
+                    };
                 }
             }
             
@@ -6659,10 +6689,15 @@
             if (restrictions.bank) {
                 const bankBtn = document.querySelector('button[onclick*="bank/index.html"]');
                 if (bankBtn) {
-                    bankBtn.disabled = true;
                     bankBtn.style.opacity = '0.5';
                     bankBtn.style.cursor = 'not-allowed';
                     bankBtn.title = '您已被禁止进入银行';
+                    bankBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止进入银行');
+                        return false;
+                    };
                 }
             }
             
@@ -6671,17 +6706,22 @@
                 // 禁用活动中心按钮（指向activity/index.html的）
                 const activityBtns = document.querySelectorAll('button[onclick*="activity/index.html"]');
                 activityBtns.forEach(btn => {
-                    btn.disabled = true;
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
                     btn.title = '您已被禁止参与纪行抽奖';
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止参与纪行抽奖');
+                        return false;
+                    };
                 });
             }
         }
         
-        // 页面加载时检查封禁状态
+        // 页面加载时检查封禁状态（延迟执行确保页面渲染完成）
         document.addEventListener('DOMContentLoaded', function() {
-            checkBanStatusAndUpdateUI();
+            setTimeout(checkBanStatusAndUpdateUI, 500);
         });
         
         // 初始化页面同步（进入/退出时自动同步）
