@@ -902,6 +902,7 @@
     <div class="status-notification" id="statusNotification"></div>
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="../cache-manager.js"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // 常量定义
@@ -1427,6 +1428,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 // 直接使用抽奖券
                 lotteryTickets--;
                 localStorage.setItem('lottery', lotteryTickets.toString());
+                // 同步到云端
+                if (typeof syncCurrencyToCloud === 'function') {
+                    syncCurrencyToCloud('lottery');
+                }
                 updateUI();
                 performLottery(1);
             } else {
@@ -1449,6 +1454,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 // 直接使用抽奖券
                 lotteryTickets -= 10;
                 localStorage.setItem('lottery', lotteryTickets.toString());
+                // 同步到云端
+                if (typeof syncCurrencyToCloud === 'function') {
+                    syncCurrencyToCloud('lottery');
+                }
                 updateUI();
                 performLottery(10);
             } else {
@@ -2203,10 +2212,17 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         }
         
         // 当DOM加载完成后启动应用
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 检查是否被封禁（抽奖功能）
+            var isBanned = await checkPageBan('lottery');
+            if (isBanned) return;
+            
             initApp();
             // 从云端加载数据（延迟一点确保Supabase已加载）
             setTimeout(loadDataFromCloud, 100);
+            
+            // 初始化页面同步（进入/退出时自动同步）
+            initPageSync('choujiang');
         });
 
     </script>
