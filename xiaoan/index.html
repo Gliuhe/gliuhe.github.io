@@ -4831,12 +4831,13 @@
             // 8. 罚款 + 计算挑战 + 纪行 + 清明活动（并行）
             loadTasks.push((async () => {
                 try {
-                    const [fines, jsn, jx, qm] = await Promise.all([
+                    const [finesRes, jsn, jx, qm] = await Promise.all([
                         sbClient.from('fine_items').select('*').eq('user_id', userId).order('created_at',{ascending:true}).catch(()=>({data:null})),
                         sbClient.from('jisuan_data').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null})),
                         sbClient.from('jixing_progress').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null})),
                         sbClient.from('qingming_data').select('*').eq('user_id', userId).maybeSingle().catch(()=>({data:null}))
                     ]);
+                    const fines = finesRes?.data;
                     if (fines?.length > 0) {
                         localStorage.setItem('fineItems', JSON.stringify(fines.map(f=>({
                             id:f.id, reason:f.reason, total:f.original_amount,
@@ -6641,16 +6642,6 @@
                     productsTab.style.cursor = 'not-allowed';
                     productsTab.title = '您已被禁止兑换商品';
                 }
-                
-                // 禁用兑换商品按钮
-                const exchangeBtn = document.querySelector('button[onclick*="switchTab(\'products\')"]');
-                if (exchangeBtn) {
-                    exchangeBtn.disabled = true;
-                    exchangeBtn.style.opacity = '0.5';
-                    exchangeBtn.style.cursor = 'not-allowed';
-                    exchangeBtn.title = '您已被禁止兑换商品';
-                    exchangeBtn.textContent = '🚫 兑换商品(已封禁)';
-                }
             }
             
             // 禁用抽奖
@@ -6661,7 +6652,6 @@
                     lotteryBtn.style.opacity = '0.5';
                     lotteryBtn.style.cursor = 'not-allowed';
                     lotteryBtn.title = '您已被禁止抽奖';
-                    lotteryBtn.textContent = '🚫 前往抽奖(已封禁)';
                 }
             }
             
@@ -6673,7 +6663,6 @@
                     bankBtn.style.opacity = '0.5';
                     bankBtn.style.cursor = 'not-allowed';
                     bankBtn.title = '您已被禁止进入银行';
-                    bankBtn.textContent = '🚫 银行理财(已封禁)';
                 }
             }
             
@@ -6686,7 +6675,6 @@
                     btn.style.opacity = '0.5';
                     btn.style.cursor = 'not-allowed';
                     btn.title = '您已被禁止参与纪行抽奖';
-                    btn.textContent = '🚫 活动中心(已封禁)';
                 });
             }
         }
