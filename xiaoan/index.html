@@ -2664,6 +2664,10 @@
 
             // 检查是否有逾期罚款
             const hasOverdueFines = checkExchangeRestriction();
+            
+            // 检查是否被封禁（商店功能）- 异步检查，使用缓存结果
+            const isShopBanned = window._shopBanned || false;
+            const banReason = window._banReason || '';
 
             products.forEach(product => {
                 const days = product.days || [];
@@ -2678,10 +2682,21 @@
 
                 const todayExchanges = dailyExchange[product.id] || 0;
                 const remaining = product.dailyLimit > 0 ? product.dailyLimit - todayExchanges : Infinity;
-                const isDisabled = remaining <= 0 || hasOverdueFines;
+                const isDisabled = remaining <= 0 || hasOverdueFines || isShopBanned;
 
                 const productElement = document.createElement('div');
                 productElement.className = 'product';
+                
+                // 确定按钮显示文本
+                let buttonText = '兑换';
+                if (isShopBanned) {
+                    buttonText = '🚫 已封禁';
+                } else if (hasOverdueFines) {
+                    buttonText = '逾期罚款，禁止兑换';
+                } else if (remaining <= 0) {
+                    buttonText = '已达限额';
+                }
+                
                 productElement.innerHTML = `
                     <h3>${product.name}</h3>
                     <p>${product.price} 兑换券</p>
@@ -2689,7 +2704,7 @@
                         `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` :
                         ''}
                     <button class="btn" onclick="exchangeProduct(${product.id})" ${isDisabled ? 'disabled' : ''}>
-                        ${hasOverdueFines ? '逾期罚款，禁止兑换' : (isDisabled ? '已达限额' : '兑换')}
+                        ${buttonText}
                     </button>
                 `;
                 productsList.appendChild(productElement);
@@ -6544,6 +6559,152 @@
             const pad = n => String(n).padStart(2,'0');
             return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
         }
+        
+        // 检查封禁状态并更新UI
+        async function checkBanStatusAndUpdateUI() {
+            try {
+                const banInfo = await checkUserBan();
+                
+                // 缓存封禁状态供其他函数使用
+                window._shopBanned = banInfo.banned && banInfo.restrictions && banInfo.restrictions.shop;
+                window._banReason = banInfo.reason || '';
+                
+                if (banInfo.banned) {
+                    // 显示封禁提示横幅
+                    showBanBanner(banInfo);
+                    
+                    // 禁用相关功能按钮
+                    disableBannedFeatures(banInfo.restrictions || {});
+                    
+                    // 刷新商品列表以显示封禁状态
+                    updateUI();
+                }
+            } catch (e) {
+                console.warn('[BanCheck] 检查封禁状态失败:', e);
+            }
+        }
+        
+        // 显示封禁提示横幅
+        function showBanBanner(banInfo) {
+            const banner = document.createElement('div');
+            banner.id = 'banBanner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #dc2626, #b91c1c);
+                color: white;
+                padding: 12px 20px;
+                text-align: center;
+                font-weight: 600;
+                z-index: 99999;
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            `;
+            
+            const restrictions = banInfo.restrictions || {};
+            const restrictedFeatures = [];
+            if (restrictions.lottery) restrictedFeatures.push('抽奖');
+            if (restrictions.jixing) restrictedFeatures.push('纪行');
+            if (restrictions.bank) restrictedFeatures.push('银行');
+            if (restrictions.shop) restrictedFeatures.push('商店兑换');
+            
+            let expiresText = '';
+            if (banInfo.expiresAt) {
+                expiresText = ` | 到期时间: ${new Date(banInfo.expiresAt).toLocaleString()}`;
+            } else {
+                expiresText = ' | 永久封禁';
+            }
+            
+            banner.innerHTML = `
+                🚫 您已被封禁 | 原因: ${banInfo.reason || '违反规则'} | 限制功能: ${restrictedFeatures.join('、')}${expiresText}
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // 调整页面顶部边距
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                navbar.style.marginTop = '44px';
+            }
+        }
+        
+        // 禁用被封禁的功能按钮
+        function disableBannedFeatures(restrictions) {
+            // 禁用商店兑换
+            if (restrictions.shop) {
+                // 禁用兑换商品标签页
+                const productsTab = document.querySelector('.nav-tab[onclick*="products"]');
+                if (productsTab) {
+                    productsTab.style.opacity = '0.5';
+                    productsTab.style.pointerEvents = 'none';
+                    productsTab.style.cursor = 'not-allowed';
+                    productsTab.title = '您已被禁止兑换商品';
+                }
+                
+                // 禁用兑换商品按钮
+                const exchangeBtn = document.querySelector('button[onclick*="switchTab(\'products\')"]');
+                if (exchangeBtn) {
+                    exchangeBtn.disabled = true;
+                    exchangeBtn.style.opacity = '0.5';
+                    exchangeBtn.style.cursor = 'not-allowed';
+                    exchangeBtn.title = '您已被禁止兑换商品';
+                    exchangeBtn.textContent = '🚫 兑换商品(已封禁)';
+                }
+            }
+            
+            // 禁用抽奖
+            if (restrictions.lottery) {
+                const lotteryBtn = document.querySelector('button[onclick*="choujiang/index.html"]');
+                if (lotteryBtn) {
+                    lotteryBtn.disabled = true;
+                    lotteryBtn.style.opacity = '0.5';
+                    lotteryBtn.style.cursor = 'not-allowed';
+                    lotteryBtn.title = '您已被禁止抽奖';
+                    lotteryBtn.textContent = '🚫 前往抽奖(已封禁)';
+                }
+            }
+            
+            // 禁用银行
+            if (restrictions.bank) {
+                const bankBtn = document.querySelector('button[onclick*="bank/index.html"]');
+                if (bankBtn) {
+                    bankBtn.disabled = true;
+                    bankBtn.style.opacity = '0.5';
+                    bankBtn.style.cursor = 'not-allowed';
+                    bankBtn.title = '您已被禁止进入银行';
+                    bankBtn.textContent = '🚫 银行理财(已封禁)';
+                }
+            }
+            
+            // 禁用纪行
+            if (restrictions.jixing) {
+                // 禁用活动中心按钮
+                const activityBtns = document.querySelectorAll('button[onclick*="activity/index.html"], button[onclick*="activity/lottery.html"]');
+                activityBtns.forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.title = '您已被禁止进入纪行';
+                    btn.textContent = '🚫 活动中心(已封禁)';
+                });
+                
+                // 禁用任务中心按钮
+                const ruleBtn = document.querySelector('button[onclick*="rule/index.html"]');
+                if (ruleBtn) {
+                    ruleBtn.disabled = true;
+                    ruleBtn.style.opacity = '0.5';
+                    ruleBtn.style.cursor = 'not-allowed';
+                    ruleBtn.title = '您已被禁止进入任务中心';
+                    ruleBtn.textContent = '🚫 任务中心(已封禁)';
+                }
+            }
+        }
+        
+        // 页面加载时检查封禁状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBanStatusAndUpdateUI();
+        });
         
         // 初始化页面同步（进入/退出时自动同步）
         initPageSync('index');
