@@ -233,6 +233,7 @@
         <button class="tab-btn" onclick="switchTab('tasks')">✅ 任务/签到</button>
         <button class="tab-btn" onclick="switchTab('bank')">🏦 银行数据</button>
         <button class="tab-btn" onclick="switchTab('fines')">📝 罚款记录</button>
+        <button class="tab-btn" onclick="switchTab('bans')">🚫 封禁管理</button>
         <button class="tab-btn" onclick="switchTab('jixing')">🗺️ 纪行进度</button>
         <button class="tab-btn" onclick="switchTab('codes')">🎫 兑换码</button>
         <button class="tab-btn" onclick="switchTab('notify')">📬 发送邮件</button>
@@ -354,7 +355,52 @@
         </div>
     </div>
 
-    <!-- 面板8：纪行进度 -->
+    <!-- 面板8：封禁管理 -->
+    <div class="tab-panel" id="panel-bans">
+        <h3 style="margin-bottom:12px;font-size:16px;">🚫 封禁用户</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;padding:14px;background:#fef2f2;border:2px solid #ef4444;border-radius:10px;">
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f1f5f9;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <span style="color:#64748b;">用户:</span>
+                <code style="font-family:monospace;color:#1e293b;font-weight:600;">d71f9173-bd5d-4d30-a033-0429ae162fd7</code>
+            </div>
+            <input type="text" id="banReason" placeholder="封禁原因" style="flex:1.5;min-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" />
+            <select id="banDuration" style="padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="7200000">2小时</option>
+                <option value="18000000">5小时</option>
+                <option value="43200000">12小时</option>
+                <option value="64800000">18小时</option>
+                <option value="86400000">1天</option>
+                <option value="259200000">3天</option>
+            </select>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+                    <input type="checkbox" id="banLottery" checked> 抽奖
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+                    <input type="checkbox" id="banJixing" checked> 纪行
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+                    <input type="checkbox" id="banBank" checked> 银行
+                </label>
+                <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+                    <input type="checkbox" id="banShop" checked> 商店
+                </label>
+            </div>
+            <button onclick="createBan()" style="padding:8px 18px;background:#dc2626;color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">🚫 封禁</button>
+        </div>
+        
+        <h3 style="margin-bottom:12px;font-size:16px;">📋 封禁列表</h3>
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead><tr>
+                    <th>用户ID</th><th>封禁原因</th><th>封禁时间</th><th>到期时间</th><th>限制功能</th><th>状态</th><th>操作</th>
+                </tr></thead>
+                <tbody id="bansBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 面板9：纪行进度 -->
     <div class="tab-panel" id="panel-jixing">
         <div class="data-table-container">
             <table class="data-table">
@@ -607,6 +653,117 @@ window.addEventListener('DOMContentLoaded', async () => {
     await refreshAllData();
 });
 
+// ===== 封禁管理功能 =====
+const FIXED_USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+
+async function createBan() {
+    const reason = document.getElementById('banReason').value.trim();
+    const duration = parseInt(document.getElementById('banDuration').value);
+    
+    if (!reason) {
+        alert('请输入封禁原因');
+        return;
+    }
+    
+    // 获取限制的功能
+    const restrictions = {
+        lottery: document.getElementById('banLottery').checked,
+        jixing: document.getElementById('banJixing').checked,
+        bank: document.getElementById('banBank').checked,
+        shop: document.getElementById('banShop').checked
+    };
+    
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + duration).toISOString();
+    
+    try {
+        const { error } = await sb.from('user_bans').insert({
+            user_id: FIXED_USER_ID,
+            reason: reason,
+            banned_at: now.toISOString(),
+            expires_at: expiresAt,
+            restrictions: restrictions,
+            banned_by: 'admin'
+        });
+        
+        if (error) throw error;
+        
+        alert('✅ 封禁成功');
+        document.getElementById('banReason').value = '';
+        loadBansTable();
+    } catch (e) {
+        console.error('[Admin] 封禁失败:', e);
+        alert('❌ 封禁失败: ' + e.message);
+    }
+}
+
+async function loadBansTable() {
+    try {
+        const { data, error } = await sb.from('user_bans')
+            .select('*')
+            .order('banned_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const tbody = document.getElementById('bansBody');
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无封禁记录</td></tr>';
+            return;
+        }
+        
+        const now = new Date();
+        tbody.innerHTML = data.map(ban => {
+            const bannedAt = new Date(ban.banned_at);
+            const expiresAt = ban.expires_at ? new Date(ban.expires_at) : null;
+            const isExpired = expiresAt && expiresAt < now;
+            const isActive = !isExpired;
+            
+            const restrictions = ban.restrictions || {};
+            const restrictionText = [];
+            if (restrictions.lottery) restrictionText.push('抽奖');
+            if (restrictions.jixing) restrictionText.push('纪行');
+            if (restrictions.bank) restrictionText.push('银行');
+            if (restrictions.shop) restrictionText.push('商店');
+            
+            const statusClass = isActive ? 'badge-red' : 'badge-gray';
+            const statusText = isActive ? '封禁中' : (isExpired ? '已过期' : '已解除');
+            
+            return `<tr>
+                <td><span class="user-id-short">${ban.user_id.substring(0, 8)}...</span></td>
+                <td>${ban.reason}</td>
+                <td>${bannedAt.toLocaleString()}</td>
+                <td>${expiresAt ? expiresAt.toLocaleString() : '永久'}</td>
+                <td>${restrictionText.join(', ') || '无'}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    ${isActive ? `<button class="btn-sm" style="background:#22c55e;color:white;" onclick="unbanUser('${ban.id}')">解除</button>` : '-'}
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (e) {
+        console.error('[Admin] 加载封禁列表失败:', e);
+        document.getElementById('bansBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:#ef4444;">加载失败: ${e.message}</td></tr>`;
+    }
+}
+
+async function unbanUser(banId) {
+    if (!confirm('确定要解除该用户的封禁吗？')) return;
+    
+    try {
+        const { error } = await sb.from('user_bans')
+            .delete()
+            .eq('id', banId);
+        
+        if (error) throw error;
+        
+        alert('✅ 已解除封禁');
+        loadBansTable();
+    } catch (e) {
+        console.error('[Admin] 解除封禁失败:', e);
+        alert('❌ 解除失败: ' + e.message);
+    }
+}
+
 // ===== 数据加载 =====
 async function refreshAllData() {
     showLoading(true);
@@ -622,7 +779,8 @@ async function refreshAllData() {
             sb.from('fine_items').select('*'),
             sb.from('jixing_progress').select('*'),
             sb.from('bank_transactions').select('*'),
-            sb.from('exchange_codes').select('*')
+            sb.from('exchange_codes').select('*'),
+            sb.from('user_bans').select('*')
         ]);
 
         // 安全提取结果
@@ -641,6 +799,7 @@ async function refreshAllData() {
         renderJixingTable();
         renderCodesTable();
         loadLotteryConfig();
+        loadBansTable();
 
         showLoading(false);
     } catch(e) {
