@@ -2436,8 +2436,12 @@
         }
 
         // 页面加载时初始化
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             console.log("[诊断] DOMContentLoaded 事件触发");
+            
+            // 检查是否被封禁（银行功能）
+            var isBanned = await checkPageBan('bank');
+            if (isBanned) return;
 
             // 检查按钮绑定
             console.log("[诊断] 检查按钮绑定状态");
@@ -2839,6 +2843,9 @@
             }
             console.log("[模拟次日] 模拟次日模态框已关闭");
         }
+        
+        // 初始化页面同步（进入/退出时自动同步）
+        initPageSync('bank');
     </script>
 </body>
 </html>
