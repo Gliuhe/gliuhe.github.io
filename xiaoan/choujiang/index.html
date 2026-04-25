@@ -1967,85 +1967,124 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             updateUI();
             updateRecords();
             
-            // 事件绑定
-            document.getElementById('singleLotteryBtn').addEventListener('click', startSingleLottery);
-            document.getElementById('multiLotteryBtn').addEventListener('click', startMultiLottery);
-            document.getElementById('confirmResultBtn').addEventListener('click', confirmResult);
-            document.getElementById('addPrizeBtn').addEventListener('click', openAddPrizeModal);
-            document.getElementById('confirmAddPrizeBtn').addEventListener('click', function() {
-                if (editingPrizeId !== null) {
-                    editPrize();
-                } else {
-                    addPrize();
-                }
-            });
-            document.getElementById('cancelAddPrizeBtn').addEventListener('click', closeAddPrizeModal);
-            document.getElementById('clearRecordsBtn').addEventListener('click', function() {
-                document.getElementById('clearRecordsModal').style.display = 'flex';
-                document.getElementById('clearRecordsPassword').value = '';
-            });
-            document.getElementById('confirmClearRecordsBtn').addEventListener('click', clearRecords);
-            document.getElementById('cancelClearRecordsBtn').addEventListener('click', function() {
-                document.getElementById('clearRecordsModal').style.display = 'none';
-            });
-            document.getElementById('confirmPasswordBtn').addEventListener('click', verifyPassword);
-            document.getElementById('cancelPasswordBtn').addEventListener('click', function() {
-                document.getElementById('passwordModal').style.display = 'none';
-            });
-            document.getElementById('confirmExchangeBtn').addEventListener('click', function() {
-                const modalText = document.getElementById('exchangeModalText').textContent;
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                
-                // 解析需要购买的抽奖券数量
-                let ticketsToBuy = 1;
-                if (modalText.includes('补充')) {
-                    const match = modalText.match(/需要补充(\d+)张/);
-                    if (match) ticketsToBuy = parseInt(match[1]);
-                }
-                
-                const totalCost = ticketsToBuy * EXCHANGE_RATE;
-                
-                if (voucher >= totalCost) {
-                    // 扣除兑换券
-                    const newVoucher = voucher - totalCost;
-                    localStorage.setItem('voucher', newVoucher.toString());
-                    syncCurrencyToCloud('voucher');
-
-                    // 增加抽奖券
-                    lotteryTickets += ticketsToBuy;
-                    localStorage.setItem('lottery', lotteryTickets.toString());
-                    syncCurrencyToCloud('lottery');
-                    
-                    // 更新UI
-                    updateUI();
-                    document.getElementById('exchangeModal').style.display = 'none';
-                    showStatus(`成功购买${ticketsToBuy}张抽奖券！`, "success");
-                    
-                    // 自动开始抽奖
-                    if (modalText.includes('1张抽奖券')) {
-                        startSingleLottery();
-                    } else if (modalText.includes('10抽奖券') || modalText.includes('补充')) {
-                        startMultiLottery();
+            // 事件绑定 - 添加null检查防止报错
+            const singleLotteryBtn = document.getElementById('singleLotteryBtn');
+            const multiLotteryBtn = document.getElementById('multiLotteryBtn');
+            const confirmResultBtn = document.getElementById('confirmResultBtn');
+            const addPrizeBtn = document.getElementById('addPrizeBtn');
+            const confirmAddPrizeBtn = document.getElementById('confirmAddPrizeBtn');
+            const cancelAddPrizeBtn = document.getElementById('cancelAddPrizeBtn');
+            const clearRecordsBtn = document.getElementById('clearRecordsBtn');
+            const confirmClearRecordsBtn = document.getElementById('confirmClearRecordsBtn');
+            const cancelClearRecordsBtn = document.getElementById('cancelClearRecordsBtn');
+            const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
+            const cancelPasswordBtn = document.getElementById('cancelPasswordBtn');
+            const confirmExchangeBtn = document.getElementById('confirmExchangeBtn');
+            const cancelExchangeBtn = document.getElementById('cancelExchangeBtn');
+            const navTabs = document.querySelector('.nav-tabs');
+            
+            if (singleLotteryBtn) singleLotteryBtn.addEventListener('click', startSingleLottery);
+            if (multiLotteryBtn) multiLotteryBtn.addEventListener('click', startMultiLottery);
+            if (confirmResultBtn) confirmResultBtn.addEventListener('click', confirmResult);
+            if (addPrizeBtn) addPrizeBtn.addEventListener('click', openAddPrizeModal);
+            if (confirmAddPrizeBtn) {
+                confirmAddPrizeBtn.addEventListener('click', function() {
+                    if (editingPrizeId !== null) {
+                        editPrize();
+                    } else {
+                        addPrize();
                     }
-                } else {
-                    showStatus('兑换券不足！', "error");
-                }
-            });
-            document.getElementById('cancelExchangeBtn').addEventListener('click', function() {
-                document.getElementById('exchangeModal').style.display = 'none';
-            });
+                });
+            }
+            if (cancelAddPrizeBtn) cancelAddPrizeBtn.addEventListener('click', closeAddPrizeModal);
+            if (clearRecordsBtn) {
+                clearRecordsBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('clearRecordsModal');
+                    const pwdInput = document.getElementById('clearRecordsPassword');
+                    if (modal) modal.style.display = 'flex';
+                    if (pwdInput) pwdInput.value = '';
+                });
+            }
+            if (confirmClearRecordsBtn) confirmClearRecordsBtn.addEventListener('click', clearRecords);
+            if (cancelClearRecordsBtn) {
+                cancelClearRecordsBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('clearRecordsModal');
+                    if (modal) modal.style.display = 'none';
+                });
+            }
+            if (confirmPasswordBtn) confirmPasswordBtn.addEventListener('click', verifyPassword);
+            if (cancelPasswordBtn) {
+                cancelPasswordBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('passwordModal');
+                    if (modal) modal.style.display = 'none';
+                });
+            }
+            if (confirmExchangeBtn) {
+                confirmExchangeBtn.addEventListener('click', function() {
+                    const modalTextEl = document.getElementById('exchangeModalText');
+                    const modalEl = document.getElementById('exchangeModal');
+                    if (!modalTextEl) return;
+                    
+                    const modalText = modalTextEl.textContent;
+                    const voucher = parseInt(localStorage.getItem('voucher') || '100');
+                    
+                    // 解析需要购买的抽奖券数量
+                    let ticketsToBuy = 1;
+                    if (modalText.includes('补充')) {
+                        const match = modalText.match(/需要补充(\d+)张/);
+                        if (match) ticketsToBuy = parseInt(match[1]);
+                    }
+                    
+                    const totalCost = ticketsToBuy * EXCHANGE_RATE;
+                    
+                    if (voucher >= totalCost) {
+                        // 扣除兑换券
+                        const newVoucher = voucher - totalCost;
+                        localStorage.setItem('voucher', newVoucher.toString());
+                        syncCurrencyToCloud('voucher');
+
+                        // 增加抽奖券
+                        lotteryTickets += ticketsToBuy;
+                        localStorage.setItem('lottery', lotteryTickets.toString());
+                        syncCurrencyToCloud('lottery');
+                        
+                        // 更新UI
+                        updateUI();
+                        if (modalEl) modalEl.style.display = 'none';
+                        showStatus(`成功购买${ticketsToBuy}张抽奖券！`, "success");
+                        
+                        // 自动开始抽奖
+                        if (modalText.includes('1张抽奖券')) {
+                            startSingleLottery();
+                        } else if (modalText.includes('10抽奖券') || modalText.includes('补充')) {
+                            startMultiLottery();
+                        }
+                    } else {
+                        showStatus('兑换券不足！', "error");
+                    }
+                });
+            }
+            if (cancelExchangeBtn) {
+                cancelExchangeBtn.addEventListener('click', function() {
+                    const modal = document.getElementById('exchangeModal');
+                    if (modal) modal.style.display = 'none';
+                });
+            }
             
             // 标签页切换事件
-            document.querySelector('.nav-tabs').addEventListener('click', function(e) {
-                const tab = e.target.closest('.nav-tab');
-                if (tab) {
-                    if (tab.dataset.tab === 'management') {
-                        document.getElementById('passwordModal').style.display = 'flex';
-                    } else {
-                        switchTab(tab.dataset.tab);
+            if (navTabs) {
+                navTabs.addEventListener('click', function(e) {
+                    const tab = e.target.closest('.nav-tab');
+                    if (tab) {
+                        if (tab.dataset.tab === 'management') {
+                            const modal = document.getElementById('passwordModal');
+                            if (modal) modal.style.display = 'flex';
+                        } else {
+                            switchTab(tab.dataset.tab);
+                        }
                     }
-                }
-            });
+                });
+            }
             
             // 奖励类型变更事件
             document.getElementById('prizeRewardType').addEventListener('change', function() {
@@ -2202,6 +2241,9 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 console.log('[Choujiang] ✅ 云端数据同步完成');
                 console.log('[Choujiang] 同步后 localStorage - voucher:', localStorage.getItem('voucher'), 'lottery:', localStorage.getItem('lottery'));
                 
+                // 同步后更新 lotteryTickets 变量
+                lotteryTickets = parseInt(localStorage.getItem('lottery') || '0');
+                
                 // 刷新UI（无论是否有更新都刷新，确保显示正确）
                 updateUI();
                 updateRecords();
@@ -2213,11 +2255,13 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         
         // 当DOM加载完成后启动应用
         document.addEventListener('DOMContentLoaded', async function() {
+            // 先初始化应用（绑定事件等）
+            initApp();
+            
             // 检查是否被封禁（抽奖功能）
             var isBanned = await checkPageBan('lottery');
             if (isBanned) return;
             
-            initApp();
             // 从云端加载数据（延迟一点确保Supabase已加载）
             setTimeout(loadDataFromCloud, 100);
             
