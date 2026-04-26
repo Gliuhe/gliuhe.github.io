@@ -4481,12 +4481,30 @@
                 (savedUsername ? savedUsername.substring(0,1) : userId.substring(0,1)).toUpperCase();
             // 尝试加载用户头像
             loadUserAvatar(userId);
-            document.getElementById('userStatus').textContent = '☁️ 连接中...';
+            
+            // 设备验证（仅限制特定UUID）
+            const RESTRICTED_USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+            const ALLOWED_DEVICE_ID = 'ipad_mof93ub2_2v0f9t';
+            
+            if (userId === RESTRICTED_USER_ID) {
+                let currentDeviceId = localStorage.getItem('deviceId');
+                if (!currentDeviceId) {
+                    const timestamp = Date.now().toString(36);
+                    const random = Math.random().toString(36).substr(2, 6);
+                    currentDeviceId = 'dev_' + timestamp + '_' + random;
+                    localStorage.setItem('deviceId', currentDeviceId);
+                }
+                if (currentDeviceId !== ALLOWED_DEVICE_ID) {
+                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:18px;color:#dc2626;text-align:center;padding:20px;"><div>🚫 此设备未授权<br><br>当前设备ID：<br><code style="font-size:14px;background:#f3f4f6;padding:4px 8px;border-radius:4px;">' + currentDeviceId + '</code><br><br>请联系管理员绑定设备</div></div>';
+                    return;
+                }
+            }
+            
+            document.getElementById('userStatus').textContent = '✅ 已连接';
 
             // 5. 直接初始化云端连接（不再依赖 CloudStore 类的 init 方法）
-            cloudStatusEl.style.display = 'block';
-            cloudStatusEl.style.background = '#ffd166';
-            cloudStatusEl.textContent = '☁️ 连接中...';
+            // 静默连接，不显示状态
+            cloudStatusEl.style.display = 'none';
 
             const SUPABASE_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
             const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc';
