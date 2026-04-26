@@ -133,17 +133,18 @@ async function loadLotteryConfigFromCloud() {
         if (!sb) return null;
         
         var { data, error } = await sb.from('lottery_config')
-            .select('*')
-            .eq('id', 1)
+            .select('reward_config')
+            .eq('user_id', USER_ID)
+            .limit(1)
             .maybeSingle();
         
         if (error) throw error;
         
-        if (data && data.config) {
-            localStorage.setItem('lottery_reward_config', JSON.stringify(data.config));
-            localStorage.setItem('lottery_config_version', String(data.updated_at || Date.now()));
+        if (data && data.reward_config) {
+            localStorage.setItem('lottery_reward_config', JSON.stringify(data.reward_config));
+            localStorage.setItem('lottery_config_version', String(Date.now()));
             console.log('[sync] ✅ 奖池配置已加载');
-            return data.config;
+            return data.reward_config;
         }
         
         return null;
@@ -162,10 +163,10 @@ async function saveLotteryConfigToCloud(config) {
         var now = new Date().toISOString();
         
         var { error } = await sb.from('lottery_config').upsert({
-            id: 1,
-            config: config,
+            user_id: USER_ID,
+            reward_config: config,
             updated_at: now
-        }, { onConflict: 'id' });
+        }, { onConflict: 'user_id' });
         
         if (error) throw error;
         
@@ -187,15 +188,30 @@ async function loadMailsFromCloud() {
         var sb = _getSb();
         if (!sb) return [];
         
-        var { data, error } = await sb.from('mails')
+        var { data, error } = await sb.from('notifications')
             .select('*')
-            .eq('user_id', USER_ID)
+            .or(`target_user_id.is.null,target_user_id.eq.${USER_ID}`)
             .order('created_at', { ascending: false })
             .limit(100);
         
         if (error) throw error;
         
-        return data || [];
+        // 构建附件数据
+        return (data || []).map(function(m) {
+            var attachment = null;
+            if (m.attachment_type1 && m.attachment_type1 !== 'none') {
+                if (m.attachment_type1 === 'physical') {
+                    attachment = { type: 'physical', code: m.attachment_data1 };
+                } else {
+                    attachment = { type: m.attachment_type1, amount: m.attachment_amount1 };
+                }
+            }
+            return {
+                ...m,
+                content: m.content,
+                attachment: attachment
+            };
+        });
     } catch (e) {
         console.warn('[sync] ⚠️ 加载邮件失败:', e);
         return [];
@@ -208,7 +224,7 @@ async function markMailRead(mailId) {
         var sb = _getSb();
         if (!sb) return false;
         
-        var { error } = await sb.from('mails')
+        var { error } = await sb.from('notifications')
             .update({ is_read: true, read_at: new Date().toISOString() })
             .eq('id', mailId);
         
@@ -226,7 +242,7 @@ async function claimMailReward(mailId) {
         var sb = _getSb();
         if (!sb) return false;
         
-        var { error } = await sb.from('mails')
+        var { error } = await sb.from('notifications')
             .update({ reward_claimed: true, claimed_at: new Date().toISOString() })
             .eq('id', mailId);
         
@@ -244,15 +260,30 @@ async function sendNotification(userId, type, title, body, attachment) {
         var sb = _getSb();
         if (!sb) return false;
         
-        var { error } = await sb.from('notifications').insert({
-            user_id: userId,
-            type: type,
+        // 构建插入数据
+        var insertData = {
+            target_user_id: userId,
+            notification_type: type,
             title: title,
-            body: body,
-            attachment: attachment || null,
+            content: body,
             created_at: new Date().toISOString(),
-            is_read: false
-        });
+            read_at: null
+        };
+        
+        // 如果有附件，添加附件信息
+        if (attachment) {
+            if (attachment.type === 'physical') {
+                insertData.attachment_type1 = 'physical';
+                insertData.attachment_data1 = attachment.code;
+            } else {
+                insertData.attachment_type1 = attachment.type;
+                insertData.attachment_amount1 = attachment.amount;
+            }
+        } else {
+            insertData.attachment_type1 = 'none';
+        }
+        
+        var { error } = await sb.from('notifications').insert(insertData);
         
         if (error) throw error;
         return true;
@@ -385,6 +416,20 @@ function initPageSync(pageName) {
     }
 }
 
+// 同步货币到云端（精简版，仅记录日志）
+function syncCurrencyToCloud(currencyType) {
+    var value = localStorage.getItem(currencyType);
+    console.log('[sync] 💰 货币同步:', currencyType, '=', value);
+    // 精简模式下不主动上传到云端，仅记录日志
+}
+
+// 同步银行账户到云端（精简版，仅记录日志）
+function syncBankAccountToCloud(accountKey) {
+    var value = localStorage.getItem(accountKey);
+    console.log('[sync] 🏦 银行账户同步:', accountKey, '=', value);
+    // 精简模式下不主动上传到云端，仅记录日志
+}
+
 // ===== 导出函数到全局 =====
 window.checkUserBan = checkUserBan;
 window.showBanMessage = showBanMessage;
@@ -396,3 +441,5 @@ window.loadFinesFromCloud = loadFinesFromCloud;
 window.sendNotification = sendNotification;
 window.loadMailsFromCloud = loadMailsFromCloud;
 window.initPageSync = initPageSync;
+window.syncCurrencyToCloud = syncCurrencyToCloud;
+window.syncBankAccountToCloud = syncBankAccountToCloud;
