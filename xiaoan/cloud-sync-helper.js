@@ -384,3 +384,15 @@ function initPageSync(pageName) {
         syncOnPageEnter(pageName);
     }
 }
+
+// ===== 导出函数到全局 =====
+window.checkUserBan = checkUserBan;
+window.showBanMessage = showBanMessage;
+window.checkPageBan = checkPageBan;
+window.loadLotteryConfigFromCloud = loadLotteryConfigFromCloud;
+window.saveLotteryConfigToCloud = saveLotteryConfigToCloud;
+window.loadFinesFromCloud = loadFinesFromCloud;
+
+window.sendNotification = sendNotification;
+window.loadMailsFromCloud = loadMailsFromCloud;
+window.initPageSync = initPageSync;
