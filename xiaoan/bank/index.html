@@ -1179,8 +1179,8 @@
         const RISK_CONFIG = {
             minLoss: parseFloat(localStorage.getItem('riskMinLoss') || '-0.18'),
             maxProfit: parseFloat(localStorage.getItem('riskMaxProfit') || '0.25'),
-            lossProbability: 0.38,
-            profitProbability: 0.57,
+            lossProbability: 0.47,
+            profitProbability: 0.48,
             zeroProbability: 0.05
         };
 
@@ -1287,12 +1287,12 @@
                                 const random = Math.random();
                                 
                                 if (random < RISK_CONFIG.lossProbability) {
-                                    // 38%概率亏损：-18%到0%
+                                    // 47%概率亏损：-18%到0%
                                     fluctuationType = 'loss';
                                     actualRate = RISK_CONFIG.minLoss * Math.random(); // 均匀分布在最小亏损到0之间
                                     console.log(`[利息计算] ${config.name} 第${day + 1}天亏损波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
                                 } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
-                                    // 57%概率盈利：0%到25%
+                                    // 48%概率盈利：0%到25%
                                     fluctuationType = 'profit';
                                     actualRate = RISK_CONFIG.maxProfit * Math.random(); // 均匀分布在0到最大盈利之间
                                     console.log(`[利息计算] ${config.name} 第${day + 1}天盈利波动，实际利率: ${(actualRate * 100).toFixed(2)}%`);
@@ -2515,21 +2515,62 @@
         // 根据总余额计算超级快进费用
         function calculateSuperFastForwardCost(totalDeposits) {
             if (totalDeposits < 2500) {
-                return { type: 'bankTicket', amount: 1, name: '银行券' };
-            } else if (totalDeposits < 5500) {
                 return { type: 'bankTicket', amount: 2, name: '银行券' };
-            } else if (totalDeposits < 10000) {
-                return { type: 'bankTicket', amount: 4, name: '银行券' };
-            } else if (totalDeposits < 15000) {
+            } else if (totalDeposits < 6000) {
                 return { type: 'bankTicket', amount: 7, name: '银行券' };
+            } else if (totalDeposits < 9000) {
+                return { type: 'bankTicket', amount: 14, name: '银行券' };
+            } else if (totalDeposits < 13000) {
+                return { type: 'bankTicket', amount: 25, name: '银行券' };
             } else {
-                return { type: 'bankTicket', amount: 12, name: '银行券' };
+                return { type: 'bankTicket', amount: 40, name: '银行券' };
+            }
+        }
+        
+        // 超级快进每日限制
+        const SUPER_FAST_FORWARD_DAILY_LIMIT = 6;
+        const SUPER_FAST_FORWARD_COUNT_KEY = 'superFastForwardCount';
+        const SUPER_FAST_FORWARD_DATE_KEY = 'superFastForwardDate';
+        
+        // 获取今日超级快进使用次数
+        function getTodaySuperFastForwardCount() {
+            const today = new Date().toDateString();
+            const savedDate = localStorage.getItem(SUPER_FAST_FORWARD_DATE_KEY);
+            const savedCount = parseInt(localStorage.getItem(SUPER_FAST_FORWARD_COUNT_KEY) || '0');
+            
+            if (savedDate !== today) {
+                // 新的一天，重置计数
+                localStorage.setItem(SUPER_FAST_FORWARD_DATE_KEY, today);
+                localStorage.setItem(SUPER_FAST_FORWARD_COUNT_KEY, '0');
+                return 0;
+            }
+            return savedCount;
+        }
+        
+        // 增加超级快进使用次数
+        function incrementSuperFastForwardCount() {
+            const today = new Date().toDateString();
+            const savedDate = localStorage.getItem(SUPER_FAST_FORWARD_DATE_KEY);
+            
+            if (savedDate !== today) {
+                localStorage.setItem(SUPER_FAST_FORWARD_DATE_KEY, today);
+                localStorage.setItem(SUPER_FAST_FORWARD_COUNT_KEY, '1');
+            } else {
+                const currentCount = parseInt(localStorage.getItem(SUPER_FAST_FORWARD_COUNT_KEY) || '0');
+                localStorage.setItem(SUPER_FAST_FORWARD_COUNT_KEY, String(currentCount + 1));
             }
         }
         
         // 打开超级快进模态框
         function simulateNextDay() {
             console.log("[超级快进] 打开超级快进模态框");
+            
+            // 检查今日使用次数
+            const todayCount = getTodaySuperFastForwardCount();
+            if (todayCount >= SUPER_FAST_FORWARD_DAILY_LIMIT) {
+                alert(`🚫 今日超级快进次数已达上限 (${SUPER_FAST_FORWARD_DAILY_LIMIT}次)\n请明日再来！`);
+                return;
+            }
             
             // 计算总存款余额
             const totalDeposits = calculateTotalDeposits();
@@ -2556,18 +2597,6 @@
             confirmBtn.textContent = '确认快进';
             confirmBtn.style.display = 'none';
             
-            // 重置按钮状态
-            confirmBtn.textContent = '确认快进';
-            confirmBtn.style.display = 'none';
-            
-            // 重置按钮状态
-            confirmBtn.textContent = '确认快进';
-            confirmBtn.style.display = 'none';
-            
-            // 重置按钮状态
-            confirmBtn.textContent = '确认快进';
-            confirmBtn.style.display = 'none';
-            
             if (currentAmount < cost.amount) {
                 // 货币不足的情况
                 content.innerHTML = `
@@ -2581,11 +2610,11 @@
                             <p style="margin: 5px 0;"><strong>当前总存款：</strong>${totalDeposits}兑换券</p>
                             <p style="margin: 5px 0;"><strong>费用阶梯：</strong></p>
                             <ul style="text-align: left; margin: 5px 0; font-size: 12px;">
-                                <li>总存款 &lt; 2500：1银行券/次</li>
-                                <li>2500 ≤ 总存款 &lt; 5500：2银行券/次</li>
-                                <li>5500 ≤ 总存款 &lt; 10000：4银行券/次</li>
-                                <li>10000 ≤ 总存款 &lt; 15000：7银行券/次</li>
-                                <li>总存款 ≥ 15000：12银行券/次</li>
+                                <li>总存款 &lt; 2500：2银行券/次</li>
+                                <li>2500 ≤ 总存款 &lt; 6000：7银行券/次</li>
+                                <li>6000 ≤ 总存款 &lt; 9000：14银行券/次</li>
+                                <li>9000 ≤ 总存款 &lt; 13000：25银行券/次</li>
+                                <li>总存款 ≥ 13000：40银行券/次</li>
                             </ul>
                         </div>
                     </div>
@@ -2593,6 +2622,8 @@
                 confirmBtn.style.display = 'none';
             } else {
                 // 货币足够的情况
+                const todayCount = getTodaySuperFastForwardCount();
+                const remainingCount = SUPER_FAST_FORWARD_DAILY_LIMIT - todayCount;
                 content.innerHTML = `
                     <div style="text-align: center; padding: 20px;">
                         <div style="font-size: 48px; margin-bottom: 15px;">🚀</div>
@@ -2604,14 +2635,19 @@
                             <p style="margin: 5px 0;"><strong>当前剩余：</strong>${currentAmount}张</p>
                             <p style="margin: 5px 0;"><strong>操作后剩余：</strong>${currentAmount - cost.amount}张</p>
                         </div>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #ffc107;">
+                            <p style="margin: 0; color: #856404; font-weight: bold;">
+                                📊 今日剩余次数：${remainingCount}/${SUPER_FAST_FORWARD_DAILY_LIMIT} 次
+                            </p>
+                        </div>
                         <div style="background: #f0f8ff; padding: 10px; border-radius: 8px; margin: 10px 0;">
                             <p style="font-size: 12px; color: #666; margin-bottom: 5px;"><strong>费用阶梯：</strong></p>
                             <ul style="text-align: left; margin: 0; font-size: 11px; padding-left: 15px;">
-                                <li>&lt;2500：1银行券</li>
-                                <li>2500-5499：2银行券</li>
-                                <li>5500-9999：4银行券</li>
-                                <li>10000-14999：7银行券</li>
-                                <li>≥15000：12银行券</li>
+                                <li>&lt;2500：2银行券</li>
+                                <li>2500-5999：7银行券</li>
+                                <li>6000-8999：14银行券</li>
+                                <li>9000-12999：25银行券</li>
+                                <li>≥13000：40银行券</li>
                             </ul>
                         </div>
                     </div>
@@ -2629,6 +2665,11 @@
         // 执行超级快进操作（模拟次日利息计算）
         function executeSimulateNextDay(currentAmount, cost) {
             console.log("[超级快进] 开始执行超级快进操作");
+            
+            // 增加今日使用次数
+            incrementSuperFastForwardCount();
+            const newCount = getTodaySuperFastForwardCount();
+            console.log(`[超级快进] 今日使用次数: ${newCount}/${SUPER_FAST_FORWARD_DAILY_LIMIT}`);
             
             // 扣除相应货币
             const newAmount = currentAmount - cost.amount;
@@ -2687,10 +2728,10 @@
                             const random = Math.random();
                             
                             if (random < RISK_CONFIG.lossProbability) {
-                                // 38%概率亏损：-18%到0%
+                                // 47%概率亏损：-18%到0%
                                 actualRate = RISK_CONFIG.minLoss * Math.random();
                             } else if (random < RISK_CONFIG.lossProbability + RISK_CONFIG.profitProbability) {
-                                // 57%概率盈利：0%到25%
+                                // 48%概率盈利：0%到25%
                                 actualRate = RISK_CONFIG.maxProfit * Math.random();
                             } else {
                                 // 5%概率零收益
