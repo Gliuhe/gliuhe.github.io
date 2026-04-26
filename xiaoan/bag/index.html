@@ -910,13 +910,15 @@
         });
 
         // ========== 云端数据同步 ==========
-        const USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
         
         async function loadDataFromCloud() {
             if (!window.supabase) {
                 console.warn('[Bag] Supabase SDK 未加载');
                 return;
             }
+            
+            // 使用全局 USER_ID（来自 cloud-sync-helper.js）
+            const userId = typeof USER_ID !== 'undefined' ? USER_ID : 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
             
             try {
                 const sb = window.supabase.createClient(
@@ -932,8 +934,8 @@
                 
                 // 并行加载货币和抽奖记录
                 const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
-                    sb.from('user_currencies').select('*').eq('user_id', USER_ID),
-                    sb.from('lottery_records').select('*').eq('user_id', USER_ID)
+                    sb.from('user_currencies').select('*').eq('user_id', userId),
+                    sb.from('lottery_records').select('*').eq('user_id', userId)
                 ]);
                 
                 // 同步货币 - 修复：只要云端有数据就使用云端值
@@ -1141,12 +1143,13 @@
                     }
 
                     // 标记为已使用
+                    const currentUserId = typeof USER_ID !== 'undefined' ? USER_ID : 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
                     const { error: updateError } = await sbClient
                         .from('exchange_codes')
                         .update({ 
                             is_used: true, 
                             used_at: new Date().toISOString(),
-                            used_by: USER_ID
+                            used_by: currentUserId
                         })
                         .eq('code', code);
                     
