@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>获取设备ID</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .device-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+        .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        #deviceId {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.5;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        .success-msg {
+            text-align: center;
+            color: #06d6a0;
+            margin-top: 15px;
+            font-weight: 600;
+            display: none;
+        }
+        .hint {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #856404;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 设备ID获取</h1>
+        <p class="subtitle">请在需要绑定的设备上操作</p>
+        
+        <div class="device-box">
+            <div class="label">您的设备ID：</div>
+            <div id="deviceId">生成中...</div>
+        </div>
+        
+        <button class="btn btn-primary" onclick="copyDeviceId()">
+            📋 复制设备ID
+        </button>
+        
+        <div class="success-msg" id="successMsg">
+            ✅ 已复制！请发给管理员
+        </div>
+        
+        <div class="hint">
+            <strong>操作步骤：</strong><br>
+            1. 点击"复制设备ID"按钮<br>
+            2. 将设备ID发送给管理员<br>
+            3. 等待管理员完成绑定<br>
+            4. 绑定完成后即可正常使用
+        </div>
+    </div>
+
+    <script>
+        // 生成设备ID
+        function generateDeviceId() {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                const timestamp = Date.now().toString(36);
+                const random = Math.random().toString(36).substr(2, 6);
+                deviceId = 'ipad_' + timestamp + '_' + random;
+                localStorage.setItem('deviceId', deviceId);
+            }
+            return deviceId;
+        }
+
+        // 显示设备ID
+        document.getElementById('deviceId').textContent = generateDeviceId();
+
+        // 复制设备ID
+        async function copyDeviceId() {
+            const deviceId = localStorage.getItem('deviceId');
+            
+            try {
+                // 尝试使用 Clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(deviceId);
+                } else {
+                    // 备用方案
+                    const textarea = document.createElement('textarea');
+                    textarea.value = deviceId;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                }
+                
+                // 显示成功消息
+                const msg = document.getElementById('successMsg');
+                msg.style.display = 'block';
+                
+                // 震动反馈（如果支持）
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+            } catch (e) {
+                alert('复制失败，请手动复制：\n' + deviceId);
+            }
+        }
+    </script>
+</body>
+</html>
