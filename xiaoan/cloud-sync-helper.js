@@ -1,239 +1,268 @@
-var CLOUD_SYNC_KEYS=['voucher','lottery','premium','bankTicket','jixing_muchun_currency'];
-var BANK_ACC_MAP={bankSavings:'savings',savingsBalance:'savings',bankDeposit:'deposit',depositBalance:'deposit',bankInvestment:'investment',investmentBalance:'investment'};
-var USER_ID='d71f9173-bd5d-4d30-a033-0429ae162fd7';
-var _syncInitialized=false;
+/**
+ * 精简版云同步助手 - 只保留核心功能
+ * 保留：罚款、登录、奖池配置、兑换码、邮件/通知、封禁
+ * UUID固定: d71f9173-bd5d-4d30-a033-0429ae162fd7
+ */
 
-function _getSb(){
-    if(typeof window.supabase==='undefined')return null;
-    return window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
-}
-function syncCurrencyToCloud(key){
-    try{
-        var sb=_getSb();if(!sb)return;
-        var val=parseInt(localStorage.getItem(key))||0;
-        if(['voucher','lottery','premium','bankTicket','jixing_muchun_currency'].indexOf(key)>=0){
-            sb.from('user_currencies').upsert({user_id:USER_ID,currency_type:key,amount:val},{onConflict:'user_id,currency_type'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 货币同步失败:',key,r.error.message)});
-        }
-    }catch(e){}
-}
-function syncBankAccountToCloud(key){
-    try{
-        var sb=_getSb();if(!sb)return;
-        var accType=BANK_ACC_MAP[key];
-        if(accType){
-            var val=parseInt(localStorage.getItem(key))||0;
-            sb.from('bank_accounts').upsert({user_id:USER_ID,account_type:accType,balance:val},{onConflict:'user_id,account_type'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 银行账户同步失败:',key,r.error.message)});
-        }
-        if(key==='depositStartDate'){
-            sb.from('bank_accounts').upsert({user_id:USER_ID,account_type:'deposit',start_date:localStorage.getItem(key)||''},{onConflict:'user_id,account_type'}).then(function(){});
-        }
-        if(key==='investmentStartDate'){
-            sb.from('bank_accounts').upsert({user_id:USER_ID,account_type:'investment',start_date:localStorage.getItem(key)||''},{onConflict:'user_id,account_type'}).then(function(){});
-        }
-    }catch(e){}
-}
-function syncBankHistoryToCloud(){
-    try{
-        var sb=_getSb();if(!sb)return;
-        var raw=localStorage.getItem('bankTransactions')||localStorage.getItem('bankHistory')||'[]';
-        var arr=typeof raw==='string'?JSON.parse(raw):raw;
-        if(!Array.isArray(arr)||arr.length===0)return;
-        var txns=arr.map(function(h){return{user_id:USER_ID,type:h.type||'deposit',account_type:h.accountType||'savings',amount:parseFloat(h.amount)||0,description:h.description||'',transaction_date:h.date||h.time||new Date().toISOString()}});
-        sb.from('bank_transactions').delete().eq('user_id',USER_ID).then(function(){
-            sb.from('bank_transactions').insert(txns).then(function(r){if(r.error)console.warn('[sync] ⚠️ 银行历史同步失败:',r.error.message)});
-        });
-    }catch(e){}
-}
-function syncAllCurrenciesToCloud(){
-    for(var i=0;i<CLOUD_SYNC_KEYS.length;i++)syncCurrencyToCloud(CLOUD_SYNC_KEYS[i]);
-}
-function syncAllBankToCloud(){
-    var keys=Object.keys(BANK_ACC_MAP);
-    for(var i=0;i<keys.length;i++)syncBankAccountToCloud(keys[i]);
-    syncBankHistoryToCloud();
-}
-function syncJixingProgressToCloud(){
-    try{
-        var sb=_getSb();if(!sb)return;
-        var raw=localStorage.getItem('jixingCompletedDays');
-        if(!raw)return;
-        var days=typeof raw==='string'?JSON.parse(raw):raw;
-        if(!Array.isArray(days))return;
-        sb.from('jixing_progress').upsert({user_id:USER_ID,completed_days:days},{onConflict:'user_id'}).then(function(r){if(r.error)console.warn('[sync] ⚠️ 纪行进度同步失败:',r.error.message)});
-    }catch(e){}
-}
-function syncActiveTasksToCloud(){
-    try{
-        var sb=_getSb();if(!sb)return;
-        var raw=localStorage.getItem('activeTasks');
-        if(!raw)return;
-        var tasks=typeof raw==='string'?JSON.parse(raw):raw;
-        if(!tasks||typeof tasks!=='object')return;
-        sb.from('active_tasks').delete().eq('user_id',USER_ID).then(function(){
-            var rows=[];
-            for(var ruleId in tasks){
-                var td=tasks[ruleId];
-                if(td&&typeof td==='object'){
-                    rows.push({user_id:USER_ID,rule_id:parseInt(ruleId)||0,status:td.status||'pending',start_time:td.startTime||null,end_time:td.endTime||null,reward_text:td.rewardText||''});
-                }
-            }
-            if(rows.length>0)sb.from('active_tasks').insert(rows).then(function(r){if(r.error)console.warn('[sync] ⚠️ 任务同步失败:',r.error.message)});
-        });
-    }catch(e){}
+var USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+
+function _getSb() {
+    if (typeof window.supabase === 'undefined') return null;
+    return window.supabase.createClient('https://qhnudlhpwmdzdxufcqjc.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc');
 }
 
-// ===== 页面进入/退出同步功能 =====
+// ===== 罚款同步 =====
 
-// 从云端加载所有货币数据
-async function loadAllCurrenciesFromCloud() {
+// 从云端加载罚款数据
+async function loadFinesFromCloud() {
     try {
         var sb = _getSb();
-        if (!sb) return;
+        if (!sb) return [];
         
-        var { data, error } = await sb.from('user_currencies')
-            .select('currency_type, amount')
-            .eq('user_id', USER_ID);
-        
-        if (error) {
-            console.warn('[sync] ⚠️ 加载货币失败:', error.message);
-            return;
-        }
-        
-        if (data && data.length > 0) {
-            data.forEach(function(row) {
-                if (CLOUD_SYNC_KEYS.indexOf(row.currency_type) >= 0) {
-                    localStorage.setItem(row.currency_type, String(row.amount || 0));
-                    console.log('[sync] 📥 加载货币:', row.currency_type, '=', row.amount);
-                }
-            });
-        }
-    } catch (e) {
-        console.warn('[sync] ⚠️ 加载货币异常:', e);
-    }
-}
-
-// 从云端加载银行数据
-async function loadBankFromCloud() {
-    try {
-        var sb = _getSb();
-        if (!sb) return;
-        
-        var { data, error } = await sb.from('bank_accounts')
+        var { data, error } = await sb.from('fine_items')
             .select('*')
-            .eq('user_id', USER_ID);
+            .eq('user_id', USER_ID)
+            .order('created_at', { ascending: true });
         
-        if (error) {
-            console.warn('[sync] ⚠️ 加载银行数据失败:', error.message);
-            return;
-        }
+        if (error) throw error;
         
         if (data && data.length > 0) {
-            data.forEach(function(row) {
-                var localKey = Object.keys(BANK_ACC_MAP).find(function(k) { 
-                    return BANK_ACC_MAP[k] === row.account_type; 
-                });
-                if (localKey && row.balance !== undefined) {
-                    localStorage.setItem(localKey, String(row.balance));
-                    console.log('[sync] 📥 加载银行账户:', localKey, '=', row.balance);
-                }
-            });
+            localStorage.setItem('fineItems', JSON.stringify(data.map(function(f) {
+                return {
+                    id: f.id,
+                    reason: f.reason,
+                    total: f.original_amount,
+                    remaining: f.remaining,
+                    created: f.created_at,
+                    dueDate: f.due_date,
+                    penaltyApplied: f.penalty_applied || false,
+                    isPaid: f.is_paid === true,
+                    paidAmount: f.paid_amount || 0
+                };
+            })));
         }
+        
+        window._finesCache = data || [];
+        console.log('[sync] ✅ 罚款数据已加载');
+        return data || [];
     } catch (e) {
-        console.warn('[sync] ⚠️ 加载银行数据异常:', e);
+        console.warn('[sync] ⚠️ 加载罚款失败:', e);
+        return [];
     }
 }
 
-// 页面进入时同步（从云端读取数据）
-async function syncOnPageEnter(pageName) {
-    console.log('[sync] 🚀 页面进入同步:', pageName || document.location.pathname);
-    
+// 更新罚款到云端（缴纳罚款）
+async function updateFineToCloud(fineId, updates) {
     try {
-        // 并行加载所有数据
-        await Promise.all([
-            loadAllCurrenciesFromCloud(),
-            loadBankFromCloud()
-        ]);
+        var sb = _getSb();
+        if (!sb) return false;
         
-        console.log('[sync] ✅ 页面进入同步完成');
+        var { error } = await sb.from('fine_items')
+            .update(updates)
+            .eq('id', fineId);
+        
+        if (error) throw error;
+        
+        // 刷新本地缓存
+        await loadFinesFromCloud();
+        return true;
     } catch (e) {
-        console.warn('[sync] ⚠️ 页面进入同步失败:', e);
+        console.error('[sync] ❌ 更新罚款失败:', e);
+        return false;
     }
 }
 
-// 页面退出时同步（上传数据到云端）
-function syncOnPageExit(pageName) {
-    console.log('[sync] 📤 页面退出同步:', pageName || document.location.pathname);
-    
+// ===== 兑换码同步 =====
+
+// 验证兑换码
+async function validateExchangeCode(code) {
     try {
-        // 同步所有货币
-        syncAllCurrenciesToCloud();
+        var sb = _getSb();
+        if (!sb) return { valid: false, error: '无法连接服务器' };
         
-        // 同步银行数据
-        syncAllBankToCloud();
+        var { data, error } = await sb.from('exchange_codes')
+            .select('*')
+            .eq('code', code.toUpperCase())
+            .maybeSingle();
         
-        // 同步任务状态
-        syncActiveTasksToCloud();
+        if (error) throw error;
         
-        // 同步纪行进度
-        syncJixingProgressToCloud();
+        if (!data) {
+            return { valid: false, error: '兑换码无效' };
+        }
         
-        console.log('[sync] ✅ 页面退出同步完成');
+        if (data.is_used) {
+            return { valid: false, error: '该兑换码已被使用' };
+        }
+        
+        return { valid: true, codeData: data };
     } catch (e) {
-        console.warn('[sync] ⚠️ 页面退出同步失败:', e);
+        console.error('[sync] ⚠️ 验证兑换码失败:', e);
+        return { valid: false, error: e.message };
     }
 }
 
-// 初始化页面同步（自动注册进入/退出事件）
-function initPageSync(pageName) {
-    if (_syncInitialized) {
-        console.log('[sync] 已初始化，跳过重复初始化');
-        return;
+// 标记兑换码已使用
+async function markExchangeCodeUsed(code, userId) {
+    try {
+        var sb = _getSb();
+        if (!sb) return false;
+        
+        var { error } = await sb.from('exchange_codes')
+            .update({
+                is_used: true,
+                used_at: new Date().toISOString(),
+                used_by: userId
+            })
+            .eq('code', code);
+        
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error('[sync] ❌ 标记兑换码失败:', e);
+        return false;
     }
-    _syncInitialized = true;
-    
-    // 页面加载时同步
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            syncOnPageEnter(pageName);
+}
+
+// ===== 奖池配置同步 (lottery_config) =====
+
+// 加载奖池配置
+async function loadLotteryConfigFromCloud() {
+    try {
+        var sb = _getSb();
+        if (!sb) return null;
+        
+        var { data, error } = await sb.from('lottery_config')
+            .select('*')
+            .eq('id', 1)
+            .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data && data.config) {
+            localStorage.setItem('lottery_reward_config', JSON.stringify(data.config));
+            localStorage.setItem('lottery_config_version', String(data.updated_at || Date.now()));
+            console.log('[sync] ✅ 奖池配置已加载');
+            return data.config;
+        }
+        
+        return null;
+    } catch (e) {
+        console.warn('[sync] ⚠️ 加载奖池配置失败:', e);
+        return null;
+    }
+}
+
+// 保存奖池配置到云端
+async function saveLotteryConfigToCloud(config) {
+    try {
+        var sb = _getSb();
+        if (!sb) return false;
+        
+        var now = new Date().toISOString();
+        
+        var { error } = await sb.from('lottery_config').upsert({
+            id: 1,
+            config: config,
+            updated_at: now
+        }, { onConflict: 'id' });
+        
+        if (error) throw error;
+        
+        localStorage.setItem('lottery_reward_config', JSON.stringify(config));
+        localStorage.setItem('lottery_config_version', now);
+        console.log('[sync] ✅ 奖池配置已保存');
+        return true;
+    } catch (e) {
+        console.error('[sync] ❌ 保存奖池配置失败:', e);
+        return false;
+    }
+}
+
+// ===== 邮件/通知同步 =====
+
+// 加载邮件列表
+async function loadMailsFromCloud() {
+    try {
+        var sb = _getSb();
+        if (!sb) return [];
+        
+        var { data, error } = await sb.from('mails')
+            .select('*')
+            .eq('user_id', USER_ID)
+            .order('created_at', { ascending: false })
+            .limit(100);
+        
+        if (error) throw error;
+        
+        return data || [];
+    } catch (e) {
+        console.warn('[sync] ⚠️ 加载邮件失败:', e);
+        return [];
+    }
+}
+
+// 标记邮件已读
+async function markMailRead(mailId) {
+    try {
+        var sb = _getSb();
+        if (!sb) return false;
+        
+        var { error } = await sb.from('mails')
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq('id', mailId);
+        
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error('[sync] ❌ 标记邮件已读失败:', e);
+        return false;
+    }
+}
+
+// 领取邮件附件奖励
+async function claimMailReward(mailId) {
+    try {
+        var sb = _getSb();
+        if (!sb) return false;
+        
+        var { error } = await sb.from('mails')
+            .update({ reward_claimed: true, claimed_at: new Date().toISOString() })
+            .eq('id', mailId);
+        
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error('[sync] ❌ 领取附件失败:', e);
+        return false;
+    }
+}
+
+// 发送通知
+async function sendNotification(userId, type, title, body, attachment) {
+    try {
+        var sb = _getSb();
+        if (!sb) return false;
+        
+        var { error } = await sb.from('notifications').insert({
+            user_id: userId,
+            type: type,
+            title: title,
+            body: body,
+            attachment: attachment || null,
+            created_at: new Date().toISOString(),
+            is_read: false
         });
-    } else {
-        syncOnPageEnter(pageName);
+        
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error('[sync] ❌ 发送通知失败:', e);
+        return false;
     }
-    
-    // 页面隐藏时同步（切换标签页/最小化）
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            syncOnPageExit(pageName);
-        }
-    });
-    
-    // 页面卸载前同步（关闭页面/跳转）
-    window.addEventListener('beforeunload', function() {
-        syncOnPageExit(pageName);
-    });
-    
-    // 页面卸载时同步（后备）
-    window.addEventListener('unload', function() {
-        syncOnPageExit(pageName);
-    });
-    
-    console.log('[sync] ✅ 页面同步已初始化:', pageName || document.location.pathname);
 }
 
-// 手动触发完整同步
-async function forceFullSync() {
-    console.log('[sync] 🔄 手动触发完整同步...');
-    
-    // 先上传
-    syncOnPageExit('manual');
-    
-    // 再下载
-    await syncOnPageEnter('manual');
-    
-    console.log('[sync] ✅ 完整同步完成');
-}
-
-// ===== 封禁检查功能 =====
+// ===== 封禁系统同步 =====
 
 // 检查用户是否被封禁
 async function checkUserBan(feature) {
@@ -247,10 +276,7 @@ async function checkUserBan(feature) {
             .order('banned_at', { ascending: false })
             .limit(1);
         
-        if (error) {
-            console.warn('[sync] ⚠️ 检查封禁状态失败:', error.message);
-            return { banned: false };
-        }
+        if (error) throw error;
         
         if (!data || data.length === 0) {
             return { banned: false };
@@ -265,9 +291,7 @@ async function checkUserBan(feature) {
             return { banned: false };
         }
         
-        // 检查是否限制指定功能
-        var restrictions = ban.restrictions || {};
-        if (feature && !restrictions[feature]) {
+        if (feature && ban.restrictions && !ban.restrictions[feature]) {
             return { banned: false };
         }
         
@@ -275,10 +299,10 @@ async function checkUserBan(feature) {
             banned: true,
             reason: ban.reason,
             expiresAt: ban.expires_at,
-            restrictions: restrictions
+            restrictions: ban.restrictions || {}
         };
     } catch (e) {
-        console.warn('[sync] ⚠️ 检查封禁状态异常:', e);
+        console.warn('[sync] ⚠️ 检查封禁状态失败:', e);
         return { banned: false };
     }
 }
@@ -287,31 +311,29 @@ async function checkUserBan(feature) {
 function showBanMessage(banInfo) {
     var message = '🚫 您已被封禁\n\n';
     message += '原因：' + (banInfo.reason || '违反规则') + '\n';
+    
     if (banInfo.expiresAt) {
         message += '到期时间：' + new Date(banInfo.expiresAt).toLocaleString() + '\n';
     } else {
         message += '封禁类型：永久封禁\n';
     }
     
+    var restrictions = banInfo.restrictions || {};
     var restrictedFeatures = [];
-    if (banInfo.restrictions) {
-        if (banInfo.restrictions.lottery) restrictedFeatures.push('抽奖');
-        if (banInfo.restrictions.jixing) restrictedFeatures.push('纪行');
-        if (banInfo.restrictions.bank) restrictedFeatures.push('银行');
-        if (banInfo.restrictions.shop) restrictedFeatures.push('商店');
-    }
+    if (restrictions.lottery) restrictedFeatures.push('抽奖');
+    if (restrictions.jixing) restrictedFeatures.push('纪行');
+    if (restrictions.bank) restrictedFeatures.push('银行');
+    if (restrictions.shop) restrictedFeatures.push('商店');
     
     if (restrictedFeatures.length > 0) {
         message += '\n限制功能：' + restrictedFeatures.join('、');
     }
     
     alert(message);
-    
-    // 跳转到主页
     window.location.href = '../index.html';
 }
 
-// 页面封禁检查（在受限制页面调用）
+// 页面封禁检查
 async function checkPageBan(feature) {
     var banInfo = await checkUserBan(feature);
     if (banInfo.banned) {
@@ -319,4 +341,46 @@ async function checkPageBan(feature) {
         return true;
     }
     return false;
+}
+
+// ===== 页面同步初始化（精简版）=====
+var _syncInitialized = false;
+
+async function syncOnPageEnter(pageName) {
+    console.log('[sync] 📥 页面进入同步:', pageName);
+    
+    try {
+        // 根据页面类型加载必要数据
+        switch (pageName) {
+            case 'index':
+            case 'bag':
+                await loadFinesFromCloud();
+                break;
+            case 'lottery':
+                await loadLotteryConfigFromCloud();
+                break;
+        }
+        
+        console.log('[sync] ✅ 页面进入同步完成');
+    } catch (e) {
+        console.warn('[sync] ⚠️ 页面进入同步失败:', e);
+    }
+}
+
+function syncOnPageExit(pageName) {
+    console.log('[sync] 📤 页面退出同步:', pageName);
+    // 精简模式下退出时不需要主动上传
+}
+
+function initPageSync(pageName) {
+    if (_syncInitialized) return;
+    _syncInitialized = true;
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            syncOnPageEnter(pageName);
+        });
+    } else {
+        syncOnPageEnter(pageName);
+    }
 }
