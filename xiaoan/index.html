@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="max-age=3600, must-revalidate">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="theme-color" content="#06d6a0">
     <title>超级兑换券乐园 - v1.4.7</title>
     <style>
@@ -2516,6 +2518,7 @@
 
     <!-- 云存储适配器（依赖 Supabase SDK） -->
     <script src="cloud-store.js"></script>
+    <script src="cloud-sync-helper.js"></script>
 
     <!-- 云端状态指示器 -->
     <div id="cloudStatus" style="position:fixed;top:8px;right:8px;z-index:9999;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;display:none;pointer-events:none;">🌐</div>
