@@ -4911,31 +4911,13 @@
                 } catch(e) { console.warn('[Cloud] ⚠️ 其他模块加载失败:', e.message); }
             })());
 
-            // 9. 兑换历史 + 任务规则 + 活跃任务（并行）
+            // 9. 任务规则 + 活跃任务（并行）- 交易历史仅使用本地存储
             loadTasks.push((async () => {
                 try {
-                    const [hist, rules, atasks] = await Promise.all([
-                        sbClient.from('histories').select('*').eq('user_id', userId).order('created_at',{ascending:true}).limit(500).catch(()=>({data:null})),
+                    const [rules, atasks] = await Promise.all([
                         sbClient.from('rules').select('*').order('sort_order',{ascending:true}).catch(()=>({data:null})),
                         sbClient.from('active_tasks').select('*').eq('user_id', userId).catch(()=>({data:null}))
                     ]);
-                    // 加载兑换历史
-                    if (hist?.data?.length > 0) {
-                        const localHist = JSON.parse(localStorage.getItem('history') || '[]');
-                        // 合并：云端有而本地没有的追加
-                        const localIds = new Set(localHist.map(h => h.date + '_' + h.reason));
-                        for (const h of hist.data) {
-                            const key = h.created_at + '_' + h.reason;
-                            if (!localIds.has(key)) {
-                                localHist.push({
-                                    date: h.created_at, amount: h.amount, reason: h.reason,
-                                    type: h.type, currencyType: h.currency_type,
-                                    currencyName: h.currency_name, balanceAfter: h.balance_after
-                                });
-                            }
-                        }
-                        localStorage.setItem('history', JSON.stringify(localHist));
-                    }
                     // 加载任务规则（全局共享，不按用户过滤）
                     if (rules?.data?.length > 0) {
                         localStorage.setItem('rules', JSON.stringify(rules.data.map(r => ({
@@ -5274,29 +5256,7 @@
                     return;
                 }
 
-                // ========== 兑换历史 → histories 表 ==========
-                if (key === 'history') {
-                    const historyArr = typeof value === 'string' ? JSON.parse(value) : value;
-                    if (!Array.isArray(historyArr) || historyArr.length === 0) {
-                        console.log(`[Cloud] ⏭️ history 为空，跳过`);
-                        return;
-                    }
-                    await sbClient.from('histories').delete().eq('user_id', userId);
-                    const records = historyArr.map(h => ({
-                        user_id: userId,
-                        amount: parseInt(h.amount) || 0,
-                        reason: h.reason || '',
-                        type: h.type || 'exchange',
-                        currency_type: h.currencyType || 'voucher',
-                        currency_name: h.currencyName || '代金券',
-                        balance_after: parseInt(h.balanceAfter) || 0,
-                        created_at: h.date || h.time || new Date().toISOString()
-                    }));
-                    const { error } = await sbClient.from('histories').insert(records);
-                    if (error) throw new Error(error.message);
-                    console.log(`[Cloud] ✅ 已写入 history → ${records.length} 条兑换历史`);
-                    return;
-                }
+
 
                 // ========== 任务规则 → rules 表 ==========
                 if (key === 'rules') {
