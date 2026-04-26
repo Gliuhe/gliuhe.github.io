@@ -382,30 +382,36 @@
             const listId = zone ? `${tier}_${zone}_list` : `${tier}_list`;
             const container = document.getElementById(listId);
             if (!container) return;
-            
+
             if (items.length === 0) {
                 container.innerHTML = '<p style="color:#94a3b8;padding:10px;">暂无奖品，请添加</p>';
                 return;
             }
-            
+
             container.innerHTML = items.map((item, index) => `
-                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;">
-                    <input type="text" placeholder="奖品名称" value="${item.name || ''}" 
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;flex-wrap:wrap;">
+                    <input type="text" placeholder="奖品名称" value="${item.name || ''}"
                         onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'name', this.value)"
-                        style="flex:1;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                        style="flex:1;min-width:120px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
                     <select onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'type', this.value)"
                         style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                        <option value="item" ${item.type === 'item' ? 'selected' : ''}>🎁 道具</option>
-                        <option value="voucher" ${item.type === 'voucher' ? 'selected' : ''}>🎫 兑换券</option>
-                        <option value="physical" ${item.type === 'physical' ? 'selected' : ''}>📦 实物</option>
-                        <option value="currency" ${item.type === 'currency' ? 'selected' : ''}>💰 货币</option>
+                        <option value="voucher" ${item.type === 'voucher' ? 'selected' : ''}>兑换券</option>
+                        <option value="lottery_ticket" ${item.type === 'lottery_ticket' ? 'selected' : ''}>抽奖券</option>
+                        <option value="premium_lottery_ticket" ${item.type === 'premium_lottery_ticket' ? 'selected' : ''}>高级抽奖券</option>
+                        <option value="jixing_ticket" ${item.type === 'jixing_ticket' ? 'selected' : ''}>纪行券</option>
+                        <option value="physical" ${item.type === 'physical' ? 'selected' : ''}>实物</option>
                     </select>
-                    ${item.type === 'voucher' || item.type === 'currency' ? `
-                        <input type="number" placeholder="数量" value="${item.amount || ''}" 
+                    ${item.type === 'voucher' || item.type === 'lottery_ticket' || item.type === 'premium_lottery_ticket' || item.type === 'jixing_ticket' ? `
+                        <input type="number" placeholder="数量" value="${item.amount || ''}"
                             onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'amount', this.value)"
                             style="width:80px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
                     ` : ''}
-                    <button onclick="removePrizeItem('${tier}', '${zone || ''}', ${index})" 
+                    ${item.type === 'physical' ? `
+                        <input type="text" placeholder="兑换码" value="${item.code || ''}"
+                            onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'code', this.value)"
+                            style="width:120px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                    ` : ''}
+                    <button onclick="removePrizeItem('${tier}', '${zone || ''}', ${index})"
                         style="padding:8px 12px;background:#ef4446;color:white;border:none;border-radius:6px;cursor:pointer;">删除</button>
                 </div>
             `).join('');
@@ -413,7 +419,7 @@
         
         // 添加奖品
         function addPrizeItem(tier, zone) {
-            const newItem = { name: '', type: 'item' };
+            const newItem = { name: '', type: 'voucher', amount: 1 };
             
             if (tier.startsWith('star5')) {
                 if (!currentLotteryConfig[tier]) currentLotteryConfig[tier] = { zoneA: [], zoneB: [] };
@@ -440,6 +446,10 @@
                 } else {
                     currentLotteryConfig[tier][index][field] = value;
                 }
+            }
+            // 如果修改的是类型，重新渲染以显示对应的输入框
+            if (field === 'type') {
+                renderAllPrizeLists();
             }
         }
         
