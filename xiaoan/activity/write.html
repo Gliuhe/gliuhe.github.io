@@ -765,12 +765,12 @@
     <script>
         // ===== 配置 =====
         const DICE_PROBABILITIES = [
-            { num: 1, prob: 0.15 },
-            { num: 2, prob: 0.26 },
-            { num: 3, prob: 0.11 },
-            { num: 4, prob: 0.28 },
-            { num: 5, prob: 0.15 },
-            { num: 6, prob: 0.05 }
+            { num: 1, prob: 1/6 },
+            { num: 2, prob: 1/6 },
+            { num: 3, prob: 1/6 },
+            { num: 4, prob: 1/6 },
+            { num: 5, prob: 1/6 },
+            { num: 6, prob: 1/6 }
         ];
 
         const TASKS = {
@@ -803,19 +803,19 @@
                 isTripleRollMode: true
             },
             4: {
-                icon: '🌅',
-                title: '晨曦挥毫',
+                icon: '🛡️',
+                title: '别被罚款',
                 difficulty: '中等',
-                desc: '在18点前完成一篇练字，把握清晨的黄金时间！',
-                reward: [{ type: 'journeyTicket', amount: 1, name: '纪行券' }],
-                timeLimit: 18,
+                desc: '当日21点30前不被罚款即可领奖，保持良好表现！',
+                reward: [{ type: 'journeyTicket', amount: 80, name: '纪行券' }],
+                timeLimit: 21.5,
                 hasTimeCondition: true
             },
             5: {
                 icon: '⏱️',
                 title: '时间竞速',
                 difficulty: '挑战',
-                desc: '在不同时间段完成所有每日任务（含数学单元卷），奖励随时间变化！<br><small style="opacity:0.7;">⏰ 18点前：500兑换券<br>⏰ 19点前：400兑换券<br>⏰ 20点前：250兑换券<br>⏰ 21点前：100兑换券<br>⏰ 22点前：-300兑换券</small>',
+                desc: '在不同时间段完成所有每日任务（含数学单元卷），奖励随时间变化！<br><small style="opacity:0.7;">⏰ 18点前：500兑换券<br>⏰ 19点前：400兑换券<br>⏰ 20点前：250兑换券<br>⏰ 21点前：100兑换券<br>⏰ 21点40前：-300兑换券<br>⏰ 21点40后：-500兑换券 + -100纪行券</small>',
                 reward: null,
                 timeLimit: null,
                 hasTimeCondition: false,
@@ -827,7 +827,7 @@
                 difficulty: '特殊',
                 desc: '在学校完成作业，收获双倍奖励！',
                 reward: [
-                    { type: 'journeyTicket', amount: 1, name: '纪行券' },
+                    { type: 'journeyTicket', amount: 150, name: '纪行券' },
                     { type: 'premium', amount: 1, name: '高级抽奖券' }
                 ],
                 timeLimit: null,
@@ -1495,31 +1495,32 @@
         function completeTimeRaceTask(diceNum) {
             const task = TASKS[diceNum];
             const currentHour = getCurrentHour();
+            const currentMinute = new Date().getMinutes();
+            const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
-            let voucherAmount = 0;
+            let rewards = [];
             let timeLabel = '';
 
-            if (currentHour < 18) {
-                voucherAmount = 500;
+            if (currentTimeInMinutes < 18 * 60) {
+                rewards.push({ type: 'voucher', amount: 500, name: '兑换券' });
                 timeLabel = '18点前（⭐⭐⭐⭐⭐）';
-            } else if (currentHour < 19) {
-                voucherAmount = 400;
+            } else if (currentTimeInMinutes < 19 * 60) {
+                rewards.push({ type: 'voucher', amount: 400, name: '兑换券' });
                 timeLabel = '19点前（⭐⭐⭐⭐）';
-            } else if (currentHour < 20) {
-                voucherAmount = 250;
+            } else if (currentTimeInMinutes < 20 * 60) {
+                rewards.push({ type: 'voucher', amount: 250, name: '兑换券' });
                 timeLabel = '20点前（⭐⭐⭐）';
-            } else if (currentHour < 21) {
-                voucherAmount = 100;
+            } else if (currentTimeInMinutes < 21 * 60) {
+                rewards.push({ type: 'voucher', amount: 100, name: '兑换券' });
                 timeLabel = '21点前（⭐⭐）';
-            } else if (currentHour < 22) {
-                voucherAmount = -300;
-                timeLabel = '22点前（⚠️ 扣分）';
+            } else if (currentTimeInMinutes < 21 * 60 + 40) {
+                rewards.push({ type: 'voucher', amount: -300, name: '兑换券' });
+                timeLabel = '21点40前（⚠️ 扣分）';
             } else {
-                voucherAmount = -300;
-                timeLabel = '22点后（⚠️ 扣分）';
+                rewards.push({ type: 'voucher', amount: -500, name: '兑换券' });
+                rewards.push({ type: 'journeyTicket', amount: -100, name: '纪行券' });
+                timeLabel = '21点40后（⚠️ 重扣）';
             }
-
-            const rewards = [{ type: 'voucher', amount: voucherAmount, name: '兑换券' }];
 
             grantReward(rewards);
             markTaskCompleted(diceNum);
@@ -1531,7 +1532,7 @@
 
             updateStats();
 
-            const emoji = voucherAmount >= 0 ? '⏱️' : '😅';
+            const emoji = rewards.every(r => r.amount >= 0) ? '⏱️' : '😅';
             showModal(
                 emoji,
                 '时间竞速结算！',
