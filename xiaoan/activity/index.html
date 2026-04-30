@@ -464,6 +464,10 @@
                 background: linear-gradient(135deg, #48bb78, #38a169);
             }
 
+            .activity-nav-item.laodong .nav-icon {
+                background: linear-gradient(135deg, #ff6b35, #f7931e);
+            }
+
             .nav-label {
                 font-size: 0.85rem;
                 font-weight: bold;
@@ -578,6 +582,10 @@
 
             .activity-detail.write .detail-bg::before {
                 background-image: url('https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/write.png');
+            }
+
+            .activity-detail.laodong .detail-bg::before {
+                background-image: url('laodong.png');
             }
 
 
@@ -1026,6 +1034,11 @@
                         <div class="activity-nav-item write" data-activity="write">
                             <div class="nav-icon">✍️</div>
                             <div class="nav-label">练字</div>
+                            <div class="nav-status hot">热门</div>
+                        </div>
+                        <div class="activity-nav-item laodong" data-activity="laodong">
+                            <div class="nav-icon">🌞</div>
+                            <div class="nav-label">劳动节</div>
                             <div class="nav-status hot">热门</div>
                         </div>
                     </div>
@@ -1638,6 +1651,18 @@
                     disabled: false,
                     image: 'https://cdn.jsdelivr.net/gh/Gliuhe/gliuhe.github.io@main/xiaoan/activity/write.png',
                     bgColor: '#38a169'
+                },
+                'laodong': {
+                    icon: '🌞',
+                    title: '盛夏逐光',
+                    status: 'limited',
+                    statusText: '热门活动 进行中',
+                    desc: '劳动节特别活动 - 完成任务赢取丰厚奖励！远足迎夏、运动盛夏、文明留夏三大板块等你挑战。',
+                    rewardsHint: '可能获得的奖励：🎯(纪行) 🎫(兑换) 🎲(抽奖)',
+                    url: '/xiaoan/activity/laodong.html',
+                    disabled: false,
+                    image: 'laodong.png',
+                    bgColor: '#ff6b35'
                 }
             };
 
