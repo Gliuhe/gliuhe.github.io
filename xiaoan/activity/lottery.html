@@ -183,6 +183,15 @@
             backdrop-filter: blur(10px);
         }
         .detail-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.25); }
+        .jixing-exchange-btn {
+            background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(5,150,105,0.1));
+            border-color: rgba(16,185,129,0.3);
+            color: #6ee7b7;
+        }
+        .jixing-exchange-btn:hover {
+            background: linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.15));
+            border-color: rgba(16,185,129,0.5);
+        }
         .pull-btn {
             padding: 10px 28px; font-size: 0.95rem; font-weight: 700; letter-spacing: 1px;
             border: none; border-radius: 50px; cursor: pointer;
@@ -537,6 +546,7 @@
             <div class="btn-row">
                 <div class="left">
                     <button class="detail-btn" onclick="openDetailModal()">📊 详情</button>
+                    <button class="detail-btn jixing-exchange-btn" onclick="openJixingShopModal()" title="使用纪行券兑换商品">🛒 纪行兑换</button>
                 </div>
                 <div class="right">
                     <button class="pull-btn" id="rollBtn">掷骰1次<br>🎫160</button>
@@ -680,6 +690,448 @@
             <input type="number" class="exchange-input" id="exAmount" placeholder="输入兑换数量" min="1" max="2000">
             <div class="exchange-week-limit">📅 本周已兑换：<strong id="exWeekUsed">0</strong> / 2000（上限）</div>
             <button class="lc-save-btn" onclick="confirmExchange()" style="width:100%;margin-top:16px;padding:12px;">确认兑换</button>
+        </div>
+    </div>
+
+    <!-- 纪行商城弹窗 - 全屏优化版 -->
+    <style>
+        .jixing-shop-modal {
+            width: 94vw;
+            height: 92vh;
+            max-width: 1400px;
+            max-height: 900px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 主容器：左右分栏 */
+        .shop-main-container {
+            display: flex;
+            gap: 0;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+        
+        /* 左侧分类导航栏 */
+        .shop-sidebar {
+            width: 220px;
+            min-width: 200px;
+            background: rgba(255,255,255,0.03);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 16px 12px;
+        }
+        
+        .shop-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .shop-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+        }
+        
+        .sidebar-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding: 0 8px;
+        }
+        
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .25s ease;
+            border: 1.5px solid transparent;
+            background: rgba(255,255,255,0.04);
+            user-select: none;
+        }
+        
+        .category-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.1);
+            transform: translateX(2px);
+        }
+        
+        .category-item.active {
+            background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.1));
+            border-color: rgba(16,185,129,0.4);
+            box-shadow: 0 0 20px rgba(16,185,129,0.15);
+        }
+        
+        .category-icon {
+            font-size: 1.3rem;
+            width: 28px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .category-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .category-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.85);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .category-count {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+        }
+        
+        .category-item.active .category-name {
+            color: #6ee7b7;
+        }
+        .category-item.active .category-count {
+            color: rgba(110,231,183,0.6);
+        }
+        
+        /* 右侧内容区 */
+        .shop-content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            padding: 20px 24px;
+        }
+        
+        .jixing-shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        
+        .jixing-shop-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .jixing-shop-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.6);
+            transition: all .2s;
+        }
+        
+        .jixing-shop-close:hover {
+            background: rgba(255,255,255,0.15);
+            color: #f3f4f6;
+            transform: rotate(90deg);
+        }
+        
+        .jixing-balance-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, rgba(254,243,199,0.35), rgba(253,230,138,0.25));
+            border: 1px solid rgba(214,158,46,0.5);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+        
+        .jixing-balance-label {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 600;
+        }
+        
+        .jixing-balance-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fcd34d;
+        }
+        
+        /* 商品网格区域 */
+        .shop-products-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            min-height: 0;
+            padding-right: 8px;
+        }
+        
+        .shop-products-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+        .shop-products-wrapper::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        
+        .shop-products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+            padding-bottom: 20px;
+        }
+        
+        .shop-product-card {
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all .25s;
+            display: flex;
+            flex-direction: column;
+            animation: cardFadeIn 0.35s ease forwards;
+            opacity: 0;
+        }
+        
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .shop-product-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(16,185,129,0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+        
+        .product-icon {
+            font-size: 2.8rem;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .product-name {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .product-desc {
+            font-size: 0.84rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+            margin-bottom: 14px;
+            flex: 1;
+        }
+        
+        .product-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .product-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fcd34d;
+        }
+        
+        .product-buy-btn {
+            padding: 9px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 0.87rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        
+        .product-buy-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+        
+        .product-buy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .shop-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 1rem;
+        }
+        
+        .shop-error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ef4444;
+            font-size: 0.95rem;
+        }
+        
+        .shop-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.95rem;
+        }
+
+        /* 分类加载状态 */
+        .categories-loading {
+            text-align: center;
+            padding: 40px 12px;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+        }
+
+        @media(max-width: 900px){
+            .jixing-shop-modal {
+                width: 96vw;
+                height: 94vh;
+                max-height: none;
+            }
+            
+            .shop-main-container {
+                flex-direction: column;
+            }
+            
+            .shop-sidebar {
+                width: 100%;
+                min-width: unset;
+                min-height: unset;
+                max-height: 120px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.08);
+                padding: 12px 16px;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                gap: 8px;
+            }
+            
+            .shop-sidebar::-webkit-scrollbar {
+                height: 4px;
+                width: 0;
+            }
+            
+            .category-list {
+                flex-direction: row;
+                gap: 8px;
+            }
+            
+            .category-item {
+                padding: 8px 16px;
+                white-space: nowrap;
+            }
+            
+            .category-item:hover {
+                transform: translateY(-2px);
+            }
+            
+            .category-count {
+                display: none;
+            }
+            
+            .sidebar-title {
+                display: none;
+            }
+            
+            .shop-products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 14px;
+            }
+        }
+        
+        @media(max-width: 600px){
+            .shop-content-area {
+                padding: 16px;
+            }
+            
+            .jixing-shop-header {
+                margin-bottom: 14px;
+            }
+            
+            .jixing-shop-title {
+                font-size: 1.2rem;
+            }
+            
+            .shop-products-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .product-card {
+                padding: 16px;
+            }
+        }
+    </style>
+
+    <div class="modal-overlay" id="jixingShopModal" onclick="if(event.target===this)closeJixingShopModal()">
+        <div class="modal-card jixing-shop-modal" onclick="event.stopPropagation()">
+            <div class="shop-main-container">
+                <!-- 左侧分类导航 -->
+                <div class="shop-sidebar">
+                    <div class="sidebar-title">📂 商品分类</div>
+                    <div class="category-list" id="categoryList">
+                        <div class="categories-loading">⏳ 加载中...</div>
+                    </div>
+                </div>
+                
+                <!-- 右侧内容区 -->
+                <div class="shop-content-area">
+                    <div class="jixing-shop-header">
+                        <div class="jixing-shop-title">
+                            🛒 <span id="currentCategoryTitle">全部商品</span>
+                        </div>
+                        <button class="jixing-shop-close" onclick="closeJixingShopModal()">✕</button>
+                    </div>
+
+                    <div class="jixing-balance-bar">
+                        <span class="jixing-balance-label">🎫 当前纪行券</span>
+                        <span class="jixing-balance-value" id="shopJixingBalance">0</span>
+                    </div>
+
+                    <div class="shop-products-wrapper" id="shopProductsContainer">
+                        <div class="shop-loading">⏳ 正在加载商品...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -2253,9 +2705,524 @@
         }
 
         init();
+    
+    // 初始化页面同步（进入/退出时自动同步）
+    initPageSync('lottery');
+
+    // ===== 纪行商城功能（全屏优化版 - 支持分类） =====
+    var shopProductsCache = null;
+    var shopCacheTime = 0;
+    var SHOP_CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+    
+    var shopCategoriesCache = null;
+    var categoriesCacheTime = 0;
+    var CATEGORIES_CACHE_DURATION = 10 * 60 * 1000; // 分类缓存10分钟
+    
+    var currentCategoryId = 'all'; // 当前选中的分类ID，'all'表示全部
+
+    function openJixingShopModal() {
+        document.getElementById('jixingShopModal').classList.add('show');
+        updateShopBalance();
         
-        // 初始化页面同步（进入/退出时自动同步）
-        initPageSync('lottery');
+        // 并行加载分类和商品
+        loadCategories();
+        loadShopProducts();
+    }
+
+    function closeJixingShopModal() {
+        document.getElementById('jixingShopModal').classList.remove('show');
+    }
+
+    function updateShopBalance() {
+        var balance = getTicketCount();
+        document.getElementById('shopJixingBalance').textContent = balance;
+    }
+    
+    // ===== 分类管理功能 =====
+    
+    async function loadCategories() {
+        var container = document.getElementById('categoryList');
+        
+        // 检查缓存
+        var now = Date.now();
+        if (shopCategoriesCache && (now - categoriesCacheTime) < CATEGORIES_CACHE_DURATION) {
+            console.log('[Shop] 使用缓存的分类数据');
+            renderCategories(shopCategoriesCache);
+            return;
+        }
+
+        container.innerHTML = '<div class="categories-loading">⏳ 加载分类...</div>';
+
+        try {
+            if (typeof window.supabase === 'undefined') {
+                throw new Error('Supabase 未加载');
+            }
+
+            var sb = window.supabase.createClient(
+                'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+            );
+
+            // 从 Supabase 读取分类列表
+            var { data: categories, error } = await sb
+                .from('jixing_shop_categories')
+                .select('*')
+                .eq('is_active', true)
+                .order('sort_order', { ascending: true });
+
+            if (error) throw error;
+
+            // 如果没有分类数据，使用默认分类
+            if (!categories || categories.length === 0) {
+                categories = [
+                    { id: 'default_1', name: '全部商品', icon: '🎁', sort_order: 0 },
+                    { id: 'default_2', name: '道具材料', icon: '⚔️', sort_order: 1 },
+                    { id: 'default_3', name: '外观装饰', icon: '🎨', sort_order: 2 },
+                    { id: 'default_4', name: '特权服务', icon: '👑', sort_order: 3 }
+                ];
+            }
+
+            // 更新缓存
+            shopCategoriesCache = categories;
+            categoriesCacheTime = now;
+
+            renderCategories(categories);
+
+        } catch (e) {
+            console.error('[Shop] 加载分类失败:', e);
+            
+            // 加载失败时使用默认分类
+            var defaultCategories = [
+                { id: 'all', name: '全部商品', icon: '🎁' }
+            ];
+            renderCategories(defaultCategories);
+        }
+    }
+    
+    function renderCategories(categories) {
+        var container = document.getElementById('categoryList');
+        
+        // 始终在顶部添加"全部"选项
+        var html = '<div class="category-item ' + (currentCategoryId === 'all' ? 'active' : '') + '" onclick="selectCategory(\'all\', this)">' +
+            '<span class="category-icon">🎁</span>' +
+            '<div class="category-info">' +
+                '<div class="category-name">全部商品</div>' +
+                '<div class="category-count">' + getTotalProductCount() + ' 件</div>' +
+            '</div>' +
+        '</div>';
+        
+        // 渲染其他分类
+        for (var i = 0; i < categories.length; i++) {
+            var cat = categories[i];
+            if (cat.id === 'all') continue; // 跳过重复的"全部"
+            
+            var count = getCategoryProductCount(cat.id);
+            html += '<div class="category-item ' + (currentCategoryId === cat.id ? 'active' : '') + '" onclick="selectCategory(\'' + cat.id + '\', this)">' +
+                '<span class="category-icon">' + (cat.icon || '📦') + '</span>' +
+                '<div class="category-info">' +
+                    '<div class="category-name">' + escapeHtml(cat.name) + '</div>' +
+                    '<div class="category-count">' + count + ' 件</div>' +
+                '</div>' +
+            '</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    function selectCategory(categoryId, element) {
+        // 更新当前分类
+        currentCategoryId = categoryId;
+        
+        // 更新UI状态
+        document.querySelectorAll('.category-item').forEach(function(item) {
+            item.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+        // 更新标题
+        var categoryName = element.querySelector('.category-name').textContent;
+        document.getElementById('currentCategoryTitle').textContent = categoryName;
+        
+        // 重新加载商品（带动画效果）
+        loadShopProductsByCategory(categoryId);
+    }
+    
+    function getCategoryProductCount(categoryId) {
+        if (!shopProductsCache) return 0;
+        
+        if (categoryId === 'all') {
+            return shopProductsCache.filter(p => p.is_active).length;
+        } else {
+            return shopProductsCache.filter(p => p.category_id === categoryId && p.is_active).length;
+        }
+    }
+    
+    function getTotalProductCount() {
+        if (!shopProductsCache) return 0;
+        return shopProductsCache.filter(p => p.is_active).length;
+    }
+
+    async function loadShopProducts() {
+        await loadShopProductsByCategory(currentCategoryId);
+    }
+    
+    async function loadShopProductsByCategory(categoryId) {
+        var container = document.getElementById('shopProductsContainer');
+        
+        // 检查缓存
+        var now = Date.now();
+        if (shopProductsCache && (now - shopCacheTime) < SHOP_CACHE_DURATION) {
+            console.log('[Shop] 使用缓存的商品数据');
+            filterAndRenderProducts(shopProductsCache, categoryId);
+            return;
+        }
+
+        container.innerHTML = '<div class="shop-products-wrapper"><div class="shop-loading">⏳ 正在加载商品...</div></div>';
+
+        try {
+            if (typeof window.supabase === 'undefined') {
+                throw new Error('Supabase 未加载');
+            }
+
+            var sb = window.supabase.createClient(
+                'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+            );
+
+            // 只读取商品数据（只读权限）
+            var { data: products, error } = await sb
+                .from('jixing_shop_products')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            if (!products || products.length === 0) {
+                container.innerHTML = '<div class="shop-products-wrapper"><div class="shop-empty">🏪 商城暂无商品，敬请期待~</div></div>';
+                return;
+            }
+
+            // 更新缓存
+            shopProductsCache = products;
+            shopCacheTime = now;
+
+            filterAndRenderProducts(products, categoryId);
+
+        } catch (e) {
+            console.error('[Shop] 加载商品失败:', e);
+            container.innerHTML = '<div class="shop-products-wrapper"><div class="shop-error">❌ 加载失败：' + e.message + '<br><br><button onclick="loadShopProducts()" style="padding:8px 20px;background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);border-radius:6px;color:#fca5a5;cursor:pointer;font-size:0.85rem;">🔄 重试</button></div></div>';
+        }
+    }
+    
+    function filterAndRenderProducts(products, categoryId) {
+        var container = document.getElementById('shopProductsContainer');
+        
+        // 根据分类过滤商品
+        var filteredProducts = categoryId === 'all' 
+            ? products 
+            : products.filter(p => p.category_id === categoryId);
+        
+        if (filteredProducts.length === 0) {
+            container.innerHTML = '<div class="shop-products-wrapper"><div class="shop-empty">📭 该分类下暂无商品</div></div>';
+            return;
+        }
+        
+        // 货币类型映射
+        var currencyMap = {
+            'jixing_muchun_currency': { icon: '🎫', name: '纪行券', color: '#fcd34d' },
+            'voucher': { icon: '🎫', name: '兑换券', color: '#f59e0b' },
+            'lottery': { icon: '🎲', name: '抽奖券', color: '#a78bfa' },
+            'premium': { icon: '⭐', name: '高级券', color: '#f472b6' },
+            'bank_currency': { icon: '💰', name: '银行货币', color: '#60a5fa' }
+        };
+        
+        // 商品类型映射
+        var typeMap = {
+            'physical': { icon: '🎁', name: '实物', badgeColor: '#10b981' },
+            'voucher': { icon: '🎫', name: '兑换券', badgeColor: '#f59e0b' },
+            'lottery_ticket': { icon: '🎲', name: '抽奖券', badgeColor: '#8b5cf6' },
+            'premium_ticket': { icon: '⭐', name: '高级券', badgeColor: '#ec4899' },
+            'bank_note': { icon: '💰', name: '银行券', badgeColor: '#3b82f6' },
+            'jixing_ticket': { icon: '🎪', name: '纪行券', badgeColor: '#ef4444' },
+            'custom': { icon: '📦', name: '自定义', badgeColor: '#6b7280' }
+        };
+        
+        // 渲染商品网格
+        var wrapperHtml = '<div class="shop-products-grid">';
+        
+        for (var i = 0; i < filteredProducts.length; i++) {
+            var p = filteredProducts[i];
+            
+            // 获取货币和类型信息
+            var currencyInfo = currencyMap[p.currency_type] || currencyMap['jixing_muchun_currency'];
+            var typeInfo = typeMap[p.product_type] || typeMap['physical'];
+            
+            // 检查对应货币的余额
+            var currentBalance = getCurrencyBalance(p.currency_type || 'jixing_muchun_currency');
+            var canAfford = currentBalance >= p.price;
+            
+            // 判断是否为货币类商品（需要显示获得数量）
+            var isCurrencyProduct = ['voucher', 'lottery_ticket', 'premium_ticket', 'bank_note', 'jixing_ticket'].includes(p.product_type);
+            
+            // 为每个卡片添加延迟动画
+            var delay = Math.min(i * 50, 500); // 最大延迟500ms
+            
+            // 构建价格显示区域
+            var priceDisplayHtml = '';
+            if (isCurrencyProduct && p.reward_amount) {
+                // 货币类商品：显示支付 → 获得
+                var rewardCurrencyType = p.reward_currency_type || getRewardCurrencyByProductType(p.product_type);
+                var rewardCurrencyInfo = currencyMap[rewardCurrencyType] || currencyInfo;
+                
+                priceDisplayHtml = 
+                    '<div style="display:flex;flex-direction:column;gap:4px;padding:8px;background:rgba(254,243,199,0.15);border:1px solid rgba(214,158,46,0.3);border-radius:8px;width:100%;">' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:rgba(255,255,255,0.5);">' +
+                            '<span>💸 支付</span>' +
+                        '</div>' +
+                        '<div style="font-size:0.95rem;font-weight:bold;color:' + currencyInfo.color + ';">' + 
+                            currencyInfo.icon + ' ' + p.price +
+                        '</div>' +
+                        '<div style="height:1px;background:rgba(255,255,255,0.1);margin:6px 0;"></div>' +
+                        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;color:#10b981;">' +
+                            '<span>🎁 获得</span>' +
+                        '</div>' +
+                        '<div style="font-size:1.05rem;font-weight:bold;color:#10b981;">' + 
+                            rewardCurrencyInfo.icon + ' ' + p.reward_amount +
+                        '</div>' +
+                    '</div>';
+            } else {
+                // 实物/自定义商品：只显示支付价格
+                priceDisplayHtml = 
+                    '<div style="display:flex;flex-direction:column;gap:2px;">' +
+                        '<span class="product-price" style="color:' + currencyInfo.color + ';">' + currencyInfo.icon + ' ' + p.price + '</span>' +
+                        '<span style="font-size:0.7rem;color:rgba(255,255,255,0.35);">' + currencyInfo.name + '</span>' +
+                    '</div>';
+            }
+            
+            wrapperHtml += '<div class="shop-product-card" style="animation-delay:' + delay + 'ms">' +
+                '<div class="product-icon">' + (p.icon || '🎁') + '</div>' +
+                '<div class="product-name">' + escapeHtml(p.name) + '</div>' +
+                
+                // 商品类型标签
+                '<div style="display:flex;justify-content:center;margin-bottom:8px;">' +
+                    '<span style="font-size:0.72rem;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:' + typeInfo.badgeColor + ';font-weight:600;">' +
+                        typeInfo.icon + ' ' + typeInfo.name +
+                    '</span>' +
+                '</div>' +
+                
+                '<div class="product-desc">' + escapeHtml(p.description || '') + '</div>' +
+                '<div class="product-price-row">' +
+                    priceDisplayHtml +
+                    '<button class="product-buy-btn" onclick="buyShopProduct(\'' + p.id + '\', ' + p.price + ', \'' + escapeHtml(p.name).replace(/'/g, "\\'") + '\', \'' + (p.currency_type || 'jixing_muchun_currency') + '\', \'' + (p.product_type || 'physical') + '\', ' + (p.reward_amount || 0) + ', \'' + (p.reward_currency_type || '') + '\')" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? '立即兑换' : '余额不足') + '</button>' +
+                '</div>' +
+            '</div>';
+        }
+        
+        wrapperHtml += '</div>';
+        container.innerHTML = '<div class="shop-products-wrapper">' + wrapperHtml + '</div>';
+        
+        // 更新分类计数
+        if (shopCategoriesCache) {
+            renderCategories(shopCategoriesCache);
+        }
+    }
+    
+    // 根据商品类型自动匹配奖励货币类型
+    function getRewardCurrencyByProductType(productType) {
+        var mapping = {
+            'voucher': 'voucher',
+            'lottery_ticket': 'lottery',
+            'premium_ticket': 'premium',
+            'bank_note': 'bank_currency',
+            'jixing_ticket': 'jixing_muchun_currency'
+        };
+        return mapping[productType] || 'jixing_muchun_currency';
+    }
+    
+    // 获取指定货币类型的余额
+    function getCurrencyBalance(currencyType) {
+        switch(currencyType) {
+            case 'jixing_muchun_currency':
+                return getTicketCount();
+            case 'voucher':
+                return parseInt(localStorage.getItem('voucher') || '0');
+            case 'lottery':
+                return parseInt(localStorage.getItem('lottery') || '0');
+            case 'premium':
+                return parseInt(localStorage.getItem('premium') || '0');
+            case 'bank_currency':
+                return parseInt(localStorage.getItem('bank_currency') || '0');
+            default:
+                return getTicketCount(); // 默认返回纪行券
+        }
+    }
+
+    async function buyShopProduct(productId, price, productName, currencyType, productType, rewardAmount, rewardCurrencyType) {
+        currencyType = currencyType || 'jixing_muchun_currency';
+        productType = productType || 'physical';
+        rewardAmount = rewardAmount || 0;
+        rewardCurrencyType = rewardCurrencyType || '';
+        
+        var currentBalance = getCurrencyBalance(currencyType);
+        
+        if (currentBalance < price) {
+            var currencyNames = {
+                'jixing_muchun_currency': '纪行券',
+                'voucher': '兑换券',
+                'lottery': '抽奖券',
+                'premium': '高级券',
+                'bank_currency': '银行货币'
+            };
+            var currencyName = currencyNames[currencyType] || '货币';
+            showToast('❌ ' + currencyName + '不足！需要 ' + price + '，当前 ' + currentBalance, 'err');
+            return;
+        }
+
+        // 构建确认提示信息
+        var typeNames = {
+            'physical': '实物商品',
+            'voucher': '兑换券',
+            'lottery_ticket': '抽奖券',
+            'premium_ticket': '高级抽奖券',
+            'bank_note': '银行券',
+            'jixing_ticket': '纪行券',
+            'custom': '自定义奖励'
+        };
+        var typeName = typeNames[productType] || '商品';
+        
+        var currencyNames = {
+            'jixing_muchun_currency': '🎫 纪行券',
+            'voucher': '🎫 兑换券',
+            'lottery': '🎲 抽奖券',
+            'premium': '⭐ 高级券',
+            'bank_currency': '💰 银行货币'
+        };
+        var currencyName = currencyNames[currencyType] || '🎫 货币';
+        
+        // 构建确认消息
+        var confirmMessage = '确定要花费 ' + currencyName + ' ×' + price + ' 兑换「' + productName + '」吗？\n\n类型：' + typeName;
+        
+        // 如果是货币类商品，额外显示获得信息
+        if (rewardAmount > 0) {
+            if (!rewardCurrencyType) {
+                rewardCurrencyType = getRewardCurrencyByProductType(productType);
+            }
+            
+            var rewardCurrencyInfo = currencyNames[rewardCurrencyType] || '🎁 奖励';
+            confirmMessage += '\n\n💸 支付：' + currencyName + ' ×' + price;
+            confirmMessage += '\n🎁 获得：' + rewardCurrencyInfo + ' ×' + rewardAmount;
+        }
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            // 第一步：扣减支付货币
+            var success = deductCurrency(currencyType, price);
+            
+            if (!success) {
+                showToast('❌ 扣除' + (currencyNames[currencyType] || '货币') + '失败', 'err');
+                return;
+            }
+            
+            // 第二步：如果是货币类商品，发放奖励货币
+            if (rewardAmount > 0 && rewardCurrencyType) {
+                addCurrency(rewardCurrencyType, rewardAmount);
+                
+                var rewardCurrencyDisplayName = currencyNames[rewardCurrencyType] || '奖励';
+                showToast('✅ 兑换成功！获得 ' + rewardCurrencyDisplayName + ' ×' + rewardAmount, 'ok');
+            } else {
+                showToast('✅ 成功兑换「' + productName + '」！', 'ok');
+            }
+
+            // 更新显示
+            updateShopBalance();
+            updateTicketDisplay();
+
+            // 记录兑换历史到 localStorage（包含奖励信息）
+            saveExchangeHistory(productId, productName, price, currencyType, productType, rewardAmount, rewardCurrencyType);
+
+            // 重新渲染商品列表以更新按钮状态
+            if (shopProductsCache) {
+                filterAndRenderProducts(shopProductsCache, currentCategoryId);
+            }
+
+        } catch (e) {
+            console.error('[Shop] 兑换失败:', e);
+            showToast('❌ 兑换失败：' + e.message, 'err');
+        }
+    }
+    
+    // 发放指定类型的货币
+    function addCurrency(currencyType, amount) {
+        try {
+            var currentAmount = parseInt(localStorage.getItem(currencyType) || '0');
+            localStorage.setItem(currencyType, String(currentAmount + amount));
+            
+            // 同步到云端
+            syncCurrencyToCloud(currencyType);
+            
+            return true;
+        } catch (e) {
+            console.error('[Shop] 发放货币失败:', e);
+            return false;
+        }
+    }
+    
+    // 扣除指定类型的货币
+    function deductCurrency(currencyType, amount) {
+        try {
+            var currentAmount = parseInt(localStorage.getItem(currencyType) || '0');
+            
+            if (currentAmount < amount) {
+                return false; // 余额不足
+            }
+            
+            localStorage.setItem(currencyType, String(currentAmount - amount));
+            
+            // 同步到云端
+            syncCurrencyToCloud(currencyType);
+            
+            return true;
+        } catch (e) {
+            console.error('[Shop] 扣除货币失败:', e);
+            return false;
+        }
+    }
+
+    function saveExchangeHistory(productId, productName, price, currencyType, productType, rewardAmount, rewardCurrencyType) {
+        try {
+            var history = JSON.parse(localStorage.getItem('jixing_exchange_history') || '[]');
+            history.unshift({
+                id: productId,
+                name: productName,
+                price: price,
+                currency_type: currencyType || 'jixing_muchun_currency',
+                product_type: productType || 'physical',
+                // 新增奖励字段
+                reward_amount: rewardAmount || 0,
+                reward_currency_type: rewardCurrencyType || '',
+                time: new Date().toISOString()
+            });
+            
+            // 只保留最近50条记录
+            if (history.length > 50) history = history.slice(0, 50);
+            
+            localStorage.setItem('jixing_exchange_history', JSON.stringify(history));
+        } catch (e) {
+            console.error('[Shop] 保存兑换历史失败:', e);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     </script>
 </body>
 </html>
