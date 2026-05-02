@@ -82,6 +82,7 @@
     <div class="main-content">
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('lottery', this)">🎰 抽奖配置</button>
+            <button class="tab-btn" onclick="switchTab('shop', this)">🛒 商城管理</button>
             <button class="tab-btn" onclick="switchTab('notify', this)">📬 邮件管理</button>
             <button class="tab-btn" onclick="switchTab('fines', this)">💰 罚款管理</button>
             <button class="tab-btn" onclick="switchTab('bans', this)">🚫 封禁管理</button>
@@ -167,6 +168,84 @@
             </div>
         </div>
 
+        <!-- 面板1.5：商城管理 -->
+        <div class="tab-panel" id="panel-shop">
+            <div class="section-header">
+                <span class="section-title">🛒 纪行商城商品管理</span>
+                <button class="btn btn-primary" onclick="showAddProductModal()">➕ 添加商品</button>
+            </div>
+
+            <!-- 子标签：商品管理 / 分类管理 -->
+            <div style="display:flex;gap:8px;margin-bottom:20px;background:#fff;padding:6px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <button class="tab-btn active" onclick="switchShopSubTab('products', this)" id="shopTabProducts" style="border-radius:8px;padding:8px 16px;font-size:13px;">📦 商品列表</button>
+                <button class="tab-btn" onclick="switchShopSubTab('categories', this)" id="shopTabCategories" style="border-radius:8px;padding:8px 16px;font-size:13px;">📂 分类管理</button>
+            </div>
+
+            <!-- 子面板1：商品列表 -->
+            <div class="shop-sub-panel active" id="shopPanel-products">
+                <!-- 商品统计 -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+                    <div style="background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:2rem;font-weight:bold;color:var(--admin-dark);" id="totalProductsCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;">总商品数</div>
+                    </div>
+                    <div style="background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:2rem;font-weight:bold;color:var(--green);" id="activeProductsCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;">上架中</div>
+                    </div>
+                    <div style="background:#fff;padding:20px;border-radius:12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:2rem;font-weight:bold;color:var(--orange);" id="inactiveProductsCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;">已下架</div>
+                    </div>
+                </div>
+
+                <!-- 商品列表 -->
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>图标</th>
+                                <th>商品名称</th>
+                                <th>描述</th>
+                                <th>价格（纪行券）</th>
+                                <th>状态</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shopProductsListBody">
+                            <tr><td colspan="7" style="text-align:center;color:#94a3b8;">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 子面板2：分类管理 -->
+            <div class="shop-sub-panel" id="shopPanel-categories" style="display:none;">
+                <div class="section-header">
+                    <span class="section-title" style="font-size:14px;">📂 商品分类管理</span>
+                    <button class="btn btn-primary" onclick="showAddCategoryModal()" style="padding:8px 18px;font-size:13px;">➕ 添加分类</button>
+                </div>
+
+                <!-- 分类统计卡片 -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:var(--admin-dark);" id="totalCategoriesCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">总分类数</div>
+                    </div>
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:var(--green);" id="activeCategoriesCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">已启用</div>
+                    </div>
+                </div>
+
+                <!-- 分类列表（卡片式展示） -->
+                <div id="categoriesListContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
+                    <div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">加载中...</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 面板2：邮件管理 -->
         <div class="tab-panel" id="panel-notify">
             <div class="section-header">
@@ -195,8 +274,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>附件奖励（可选，JSON格式）</label>
-                    <input type="text" id="mailAttachment" placeholder='{"voucher": 100}' style="font-family:monospace;">
+                    <label>附件奖励（可选）</label>
+                    <div id="mailAttachmentContainer" style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:flex;gap:10px;align-items:center;">
+                            <select id="attachmentType" onchange="toggleAttachmentFields()" style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                                <option value="">无附件</option>
+                                <option value="voucher">兑换券</option>
+                                <option value="lottery_ticket">抽奖券</option>
+                                <option value="premium_lottery_ticket">高级抽奖券</option>
+                                <option value="jixing_ticket">纪行券</option>
+                                <option value="physical">实物</option>
+                            </select>
+                            <input type="number" id="attachmentAmount" placeholder="数量" style="width:80px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;display:none;">
+                            <input type="text" id="attachmentCode" placeholder="兑换码" style="width:120px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;display:none;">
+                        </div>
+                    </div>
                 </div>
                 
                 <button class="btn btn-success" onclick="sendMail()" style="width:100%;">📤 发送邮件</button>
@@ -297,6 +389,161 @@
         </div>
     </div>
 
+    <!-- 商品编辑模态框 - 增强版（支持双数量） -->
+    <div class="modal" id="productModal">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-title" id="productModalTitle">添加商品</div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label>商品图标（Emoji）</label>
+                    <input type="text" id="productIcon" placeholder="例如：🎁 🎫 🎮 📚" maxlength="2" style="font-size:24px;text-align:center;">
+                </div>
+
+                <div class="form-group">
+                    <label>商品所属分类</label>
+                    <select id="productCategory" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="">-- 未分类 --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>商品名称 *</label>
+                <input type="text" id="productName" placeholder="输入商品名称">
+            </div>
+
+            <div class="form-group">
+                <label>商品描述</label>
+                <textarea id="productDesc" placeholder="输入商品描述（可选）"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label>商品类型 *</label>
+                    <select id="productType" onchange="toggleProductTypeFields()" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="physical">🎁 实物商品</option>
+                        <option value="voucher">🎫 兑换券</option>
+                        <option value="lottery_ticket">🎲 抽奖券</option>
+                        <option value="premium_ticket">⭐ 高级抽奖券</option>
+                        <option value="bank_note">💰 银行券</option>
+                        <option value="jixing_ticket">🎪 纪行券</option>
+                        <option value="custom">📦 自定义</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>支付货币 *</label>
+                    <select id="productCurrency" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="jixing_muchun_currency">🎫 纪行券</option>
+                        <option value="voucher">🎫 兑换券</option>
+                        <option value="lottery">🎲 抽奖券</option>
+                        <option value="premium">⭐ 高级券</option>
+                        <option value="bank_currency">💰 银行货币</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>支付价格 *</label>
+                    <input type="number" id="productPrice" placeholder="需要花费的数量" min="1" max="99999">
+                    <div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">用户需要支付的货币数量</div>
+                </div>
+            </div>
+
+            <!-- 货币类商品的“获得数量”字段（默认隐藏，选择货币类时显示） -->
+            <div id="rewardAmountSection" style="display:none;margin-top:12px;padding:16px;background:#fef3c7;border:2px dashed #f59e0b;border-radius:10px;">
+                <div style="font-weight:700;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                    🎁 获得奖励设置
+                    <span style="font-size:0.78rem;font-weight:normal;color:#a16207;">（货币类商品必填）</span>
+                </div>
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>获得货币类型</label>
+                        <select id="rewardCurrencyType" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                            <option value="auto">⚡ 自动匹配（与商品类型一致）</option>
+                            <option value="voucher">🎫 兑换券</option>
+                            <option value="lottery">🎲 抽奖券</option>
+                            <option value="premium">⭐ 高级券</option>
+                            <option value="bank_currency">💰 银行货币</option>
+                            <option value="jixing_muchun_currency">🎪 纪行券</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>获得数量 *</label>
+                        <input type="number" id="rewardAmount" placeholder="兑换后获得的数量" min="1" max="999999">
+                        <div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">用户实际获得的该货币数量</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top:10px;padding:10px;background:white;border-radius:6px;font-size:0.85rem;color:#374151;">
+                    <strong>💡 示例：</strong><br>
+                    如果商品是「🎫 兑换券包」，支付500纪行券 → 获得1000兑换券
+                </div>
+            </div>
+
+            <!-- 自定义类型的额外字段（默认隐藏） -->
+            <div id="customTypeFields" style="display:none;margin-top:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label>自定义奖励内容（JSON格式）</label>
+                    <textarea id="customRewardContent" placeholder='例如：{"type":"voucher","amount":100,"name":"特殊兑换券"}' style="font-family:monospace;font-size:13px;"></textarea>
+                    <div style="font-size:0.78rem;color:#94a3b8;margin-top:4px;">提示：用于自定义类型的复杂奖励结构，留空则使用基础字段</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="productActive" checked style="width:18px;height:18px;">
+                    上架（用户可见）
+                </label>
+            </div>
+
+            <input type="hidden" id="productId">
+
+            <div class="modal-actions">
+                <button class="btn" onclick="closeProductModal()" style="background:#94a3b8;color:white;">取消</button>
+                <button class="btn btn-primary" onclick="saveProduct()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分类编辑模态框 -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-title" id="categoryModalTitle">添加分类</div>
+            
+            <div class="form-group">
+                <label>分类图标（Emoji）*</label>
+                <input type="text" id="categoryIcon" placeholder="例如：🎁 ⚔️ 🎨 👑" maxlength="2" style="font-size:28px;text-align:center;">
+            </div>
+
+            <div class="form-group">
+                <label>分类名称 *</label>
+                <input type="text" id="categoryName" placeholder="输入分类名称">
+            </div>
+
+            <div class="form-group">
+                <label>排序权重（数字越小越靠前）</label>
+                <input type="number" id="categorySortOrder" placeholder="默认为 0" value="0" min="0" max="999">
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="categoryActive" checked style="width:18px;height:18px;">
+                    启用（用户可见）
+                </label>
+            </div>
+
+            <input type="hidden" id="categoryId">
+
+            <div class="modal-actions">
+                <button class="btn" onclick="closeCategoryModal()" style="background:#94a3b8;color:white;">取消</button>
+                <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-sync-helper.js?v=2"></script>
     
@@ -322,9 +569,25 @@
             
             // 加载数据
             if (tabId === 'lottery') loadLotteryConfig();
+            if (tabId === 'shop') loadShopProducts();
             if (tabId === 'notify') loadMailList();
             if (tabId === 'fines') loadFinesList();
             if (tabId === 'bans') loadBansList();
+        }
+        
+        // 切换商城子标签（商品/分类）
+        function switchShopSubTab(subTabId, btnElement) {
+            // 更新按钮状态
+            document.querySelectorAll('#panel-shop .tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+            
+            // 更新面板显示
+            document.getElementById('shopPanel-products').style.display = subTabId === 'products' ? 'block' : 'none';
+            document.getElementById('shopPanel-categories').style.display = subTabId === 'categories' ? 'block' : 'none';
+            
+            // 加载对应数据
+            if (subTabId === 'products') loadShopProducts();
+            if (subTabId === 'categories') loadCategoriesList();
         }
         
         // ===== 抽奖配置功能 =====
@@ -474,30 +737,62 @@
         }
         
         // ===== 邮件功能 =====
-        
+
+        // 切换附件输入框显示
+        function toggleAttachmentFields() {
+            const type = document.getElementById('attachmentType').value;
+            const amountInput = document.getElementById('attachmentAmount');
+            const codeInput = document.getElementById('attachmentCode');
+
+            if (type === '') {
+                amountInput.style.display = 'none';
+                codeInput.style.display = 'none';
+            } else if (type === 'physical') {
+                amountInput.style.display = 'none';
+                codeInput.style.display = 'block';
+            } else {
+                amountInput.style.display = 'block';
+                codeInput.style.display = 'none';
+            }
+        }
+
         async function sendMail() {
             const type = document.getElementById('mailType').value;
             const title = document.getElementById('mailTitle').value.trim();
             const body = document.getElementById('mailBody').value.trim();
             let attachment = null;
-            
+
             if (!title || !body) {
                 alert('请填写标题和内容');
                 return;
             }
-            
-            const attachmentStr = document.getElementById('mailAttachment').value.trim();
-            if (attachmentStr) {
-                try { attachment = JSON.parse(attachmentStr); } catch(e) {}
+
+            // 构建附件对象
+            const attachmentType = document.getElementById('attachmentType').value;
+            if (attachmentType) {
+                if (attachmentType === 'physical') {
+                    const code = document.getElementById('attachmentCode').value.trim();
+                    if (code) {
+                        attachment = { type: 'physical', code: code };
+                    }
+                } else {
+                    const amount = parseInt(document.getElementById('attachmentAmount').value) || 0;
+                    if (amount > 0) {
+                        attachment = { type: attachmentType, amount: amount };
+                    }
+                }
             }
-            
+
             const success = await sendNotification(USER_ID, type, title, body, attachment);
-            
+
             if (success) {
                 alert('✅ 邮件发送成功！');
                 document.getElementById('mailTitle').value = '';
                 document.getElementById('mailBody').value = '';
-                document.getElementById('mailAttachment').value = '';
+                document.getElementById('attachmentType').value = '';
+                document.getElementById('attachmentAmount').value = '';
+                document.getElementById('attachmentCode').value = '';
+                toggleAttachmentFields();
                 loadMailList();
             } else {
                 alert('❌ 发送失败');
@@ -689,6 +984,566 @@
             if (!confirm('确定退出？')) return;
             sessionStorage.removeItem('_cloud_last_user_id');
             window.location.href = '../index.html';
+        }
+        
+        // ===== 商城管理功能 =====
+
+        // 加载商品列表
+        async function loadShopProducts() {
+            try {
+                const { data: products, error } = await sb
+                    .from('jixing_shop_products')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+
+                const tbody = document.getElementById('shopProductsListBody');
+                
+                // 更新统计
+                const total = products ? products.length : 0;
+                const active = products ? products.filter(p => p.is_active).length : 0;
+                const inactive = total - active;
+                
+                document.getElementById('totalProductsCount').textContent = total;
+                document.getElementById('activeProductsCount').textContent = active;
+                document.getElementById('inactiveProductsCount').textContent = inactive;
+
+                if (!products || products.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无商品，点击上方按钮添加</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = products.map(p => {
+                    // 获取商品类型和货币类型的显示名称
+                    const typeMap = {
+                        'physical': { icon: '🎁', name: '实物', color: '#10b981' },
+                        'voucher': { icon: '🎫', name: '兑换券', color: '#f59e0b' },
+                        'lottery_ticket': { icon: '🎲', name: '抽奖券', color: '#8b5cf6' },
+                        'premium_ticket': { icon: '⭐', name: '高级券', color: '#ec4899' },
+                        'bank_note': { icon: '💰', name: '银行券', color: '#3b82f6' },
+                        'jixing_ticket': { icon: '🎪', name: '纪行券', color: '#ef4444' },
+                        'custom': { icon: '📦', name: '自定义', color: '#6b7280' }
+                    };
+                    
+                    const currencyMap = {
+                        'jixing_muchun_currency': '🎫 纪行券',
+                        'voucher': '🎫 兑换券',
+                        'lottery': '🎲 抽奖券',
+                        'premium': '⭐ 高级券',
+                        'bank_currency': '💰 银行货币'
+                    };
+                    
+                    const typeInfo = typeMap[p.product_type] || typeMap['physical'];
+                    const currencyName = currencyMap[p.currency_type] || p.currency_type || '纪行券';
+                    
+                    return `<tr>
+                        <td style="font-size:1.5rem;text-align:center;">${p.icon || '🎁'}</td>
+                        <td>
+                            <strong>${escapeHtml(p.name)}</strong>
+                            ${p.category_id ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">已分类</div>` : ''}
+                        </td>
+                        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(p.description || '-')}</td>
+                        <td>
+                            <div style="display:flex;flex-direction:column;gap:2px;">
+                                <span style="color:var(--orange);font-weight:bold;">${currencyName} ×${p.price}</span>
+                                <span style="font-size:0.72rem;color:${typeInfo.color};">${typeInfo.icon} ${typeInfo.name}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${p.is_active ? 'badge-green' : 'badge-gray'}">
+                                ${p.is_active ? '上架中' : '已下架'}
+                            </span>
+                        </td>
+                        <td style="white-space:nowrap;">${p.created_at ? new Date(p.created_at).toLocaleString('zh-CN') : '-'}</td>
+                        <td>
+                            <div style="display:flex;gap:6px;">
+                                <button class="btn" onclick="editProduct('${p.id}')" style="padding:4px 12px;font-size:12px;background:var(--blue);color:white;">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteProduct('${p.id}', '${escapeHtml(p.name)}')" style="padding:4px 12px;font-size:12px;">删除</button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+                
+            } catch (e) {
+                console.error('[Admin] 加载商品列表失败:', e);
+                alert('❌ 加载商品失败: ' + e.message);
+            }
+        }
+
+        // 显示添加商品模态框
+        async function showAddProductModal() {
+            document.getElementById('productModalTitle').textContent = '添加商品';
+            document.getElementById('productIcon').value = '';
+            document.getElementById('productName').value = '';
+            document.getElementById('productDesc').value = '';
+            document.getElementById('productPrice').value = '';
+            document.getElementById('productActive').checked = true;
+            document.getElementById('productId').value = '';
+            
+            // 新增字段
+            document.getElementById('productCategory').value = '';
+            document.getElementById('productType').value = 'physical';
+            document.getElementById('productCurrency').value = 'jixing_muchun_currency';
+            document.getElementById('customRewardContent').value = '';
+            
+            // 获得奖励字段（新增）
+            document.getElementById('rewardCurrencyType').value = 'auto';
+            document.getElementById('rewardAmount').value = '';
+            
+            // 初始化字段显示状态
+            toggleProductTypeFields();
+            
+            // 加载分类列表到下拉框
+            await loadCategoriesToSelect();
+            
+            document.getElementById('productModal').style.display = 'flex';
+        }
+        
+        // 切换商品类型时显示/隐藏对应字段
+        function toggleProductTypeFields() {
+            const typeSelect = document.getElementById('productType');
+            const rewardSection = document.getElementById('rewardAmountSection');
+            const customFields = document.getElementById('customTypeFields');
+            
+            // 货币类商品类型列表（需要显示“获得数量”字段）
+            const currencyTypes = ['voucher', 'lottery_ticket', 'premium_ticket', 'bank_note', 'jixing_ticket'];
+            
+            if (currencyTypes.includes(typeSelect.value)) {
+                // 货币类商品：显示获得数量区域
+                rewardSection.style.display = 'block';
+                customFields.style.display = 'none';
+                
+                // 自动设置默认的奖励货币类型为auto（与商品类型匹配）
+                document.getElementById('rewardCurrencyType').value = 'auto';
+            } else if (typeSelect.value === 'custom') {
+                // 自定义类型：显示自定义JSON区域
+                rewardSection.style.display = 'none';
+                customFields.style.display = 'block';
+            } else {
+                // 实物商品：都隐藏
+                rewardSection.style.display = 'none';
+                customFields.style.display = 'none';
+            }
+        }
+        
+        // 加载分类到下拉选择框
+        async function loadCategoriesToSelect() {
+            try {
+                const { data: categories, error } = await sb
+                    .from('jixing_shop_categories')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+                
+                if (error) throw error;
+                
+                const select = document.getElementById('productCategory');
+                
+                // 保留默认选项
+                select.innerHTML = '<option value="">-- 未分类 --</option>';
+                
+                if (categories && categories.length > 0) {
+                    categories.forEach(cat => {
+                        select.innerHTML += `<option value="${cat.id}">${cat.icon || '📦'} ${escapeHtml(cat.name)}</option>`;
+                    });
+                }
+                
+            } catch (e) {
+                console.error('[Admin] 加载分类列表失败:', e);
+            }
+        }
+        
+        // 切换自定义类型显示
+        function toggleCurrencyInput() {
+            const typeSelect = document.getElementById('productType');
+            const customFields = document.getElementById('customTypeFields');
+            
+            if (typeSelect.value === 'custom') {
+                customFields.style.display = 'block';
+            } else {
+                customFields.style.display = 'none';
+            }
+        }
+
+        // 编辑商品
+        async function editProduct(productId) {
+            try {
+                const { data: product, error } = await sb
+                    .from('jixing_shop_products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single();
+                
+                if (error) throw error;
+                if (!product) {
+                    alert('❌ 商品不存在');
+                    return;
+                }
+
+                document.getElementById('productModalTitle').textContent = '编辑商品';
+                document.getElementById('productIcon').value = product.icon || '';
+                document.getElementById('productName').value = product.name || '';
+                document.getElementById('productDesc').value = product.description || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productActive').checked = product.is_active;
+                document.getElementById('productId').value = product.id;
+                
+                // 新增字段回填
+                document.getElementById('productCategory').value = product.category_id || '';
+                document.getElementById('productType').value = product.product_type || 'physical';
+                document.getElementById('productCurrency').value = product.currency_type || 'jixing_muchun_currency';
+                document.getElementById('customRewardContent').value = product.custom_reward || '';
+                
+                // 获得奖励字段回填（新增）
+                document.getElementById('rewardCurrencyType').value = product.reward_currency_type || 'auto';
+                document.getElementById('rewardAmount').value = product.reward_amount || '';
+                
+                // 根据类型显示/隐藏对应字段
+                toggleProductTypeFields();
+                
+                // 确保分类列表已加载
+                await loadCategoriesToSelect();
+                
+                // 设置选中的分类
+                if (product.category_id) {
+                    document.getElementById('productCategory').value = product.category_id;
+                }
+                
+                document.getElementById('productModal').style.display = 'flex';
+
+            } catch (e) {
+                console.error('[Admin] 获取商品信息失败:', e);
+                alert('❌ 获取商品信息失败: ' + e.message);
+            }
+        }
+
+        // 关闭模态框
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        // 保存商品（新增或更新）
+        async function saveProduct() {
+            const icon = document.getElementById('productIcon').value.trim();
+            const name = document.getElementById('productName').value.trim();
+            const description = document.getElementById('productDesc').value.trim();
+            const price = parseInt(document.getElementById('productPrice').value);
+            const isActive = document.getElementById('productActive').checked;
+            const productId = document.getElementById('productId').value;
+            
+            // 新增字段
+            const categoryId = document.getElementById('productCategory').value || null;
+            const productType = document.getElementById('productType').value;
+            const currencyType = document.getElementById('productCurrency').value;
+            const customReward = document.getElementById('customRewardContent').value.trim();
+            
+            // 获得奖励字段（新增）
+            const rewardCurrencyType = document.getElementById('rewardCurrencyType').value || 'auto';
+            const rewardAmount = parseInt(document.getElementById('rewardAmount').value) || null;
+
+            // 验证必填字段
+            if (!name) {
+                alert('请输入商品名称');
+                return;
+            }
+            if (!price || price <= 0) {
+                alert('请输入有效支付价格');
+                return;
+            }
+            
+            // 如果是货币类商品，验证获得数量
+            const currencyTypes = ['voucher', 'lottery_ticket', 'premium_ticket', 'bank_note', 'jixing_ticket'];
+            if (currencyTypes.includes(productType)) {
+                if (!rewardAmount || rewardAmount <= 0) {
+                    alert('❌ 货币类商品必须填写"获得数量"！');
+                    document.getElementById('rewardAmount').focus();
+                    return;
+                }
+            }
+            
+            // 如果是自定义类型，验证JSON格式
+            if (productType === 'custom' && customReward) {
+                try {
+                    JSON.parse(customReward);
+                } catch (e) {
+                    alert('❌ 自定义奖励内容格式错误，请输入有效的JSON格式');
+                    return;
+                }
+            }
+
+            try {
+                const productData = {
+                    icon: icon || '🎁',
+                    name: name,
+                    description: description,
+                    price: price,
+                    is_active: isActive,
+                    category_id: categoryId,
+                    product_type: productType,
+                    currency_type: currencyType,
+                    custom_reward: customReward || null,
+                    // 新增字段
+                    reward_currency_type: rewardCurrencyType === 'auto' ? null : rewardCurrencyType,
+                    reward_amount: rewardAmount,
+                    updated_at: new Date().toISOString()
+                };
+
+                if (productId) {
+                    // 更新现有商品
+                    const { error } = await sb
+                        .from('jixing_shop_products')
+                        .update(productData)
+                        .eq('id', productId);
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ 商品更新成功！');
+                } else {
+                    // 添加新商品
+                    productData.id = generateUUID();
+                    productData.created_at = new Date().toISOString();
+                    
+                    const { error } = await sb
+                        .from('jixing_shop_products')
+                        .insert(productData);
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ 商品添加成功！');
+                }
+
+                closeProductModal();
+                loadShopProducts();
+
+            } catch (e) {
+                console.error('[Admin] 保存商品失败:', e);
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
+
+        // 删除商品
+        async function deleteProduct(productId, productName) {
+            if (!confirm(`确定要删除商品「${productName}」吗？此操作不可恢复！`)) {
+                return;
+            }
+
+            try {
+                const { error } = await sb
+                    .from('jixing_shop_products')
+                    .delete()
+                    .eq('id', productId);
+
+                if (error) throw error;
+
+                alert('✅ 商品已删除');
+                loadShopProducts();
+
+            } catch (e) {
+                console.error('[Admin] 删除商品失败:', e);
+                alert('❌ 删除失败: ' + e.message);
+            }
+        }
+
+        // 生成 UUID
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ===== 分类管理功能 =====
+
+        // 加载分类列表
+        async function loadCategoriesList() {
+            try {
+                const { data: categories, error } = await sb
+                    .from('jixing_shop_categories')
+                    .select('*')
+                    .order('sort_order', { ascending: true });
+                
+                if (error) throw error;
+
+                // 更新统计
+                const total = categories ? categories.length : 0;
+                const active = categories ? categories.filter(c => c.is_active).length : 0;
+                
+                document.getElementById('totalCategoriesCount').textContent = total;
+                document.getElementById('activeCategoriesCount').textContent = active;
+
+                const container = document.getElementById('categoriesListContainer');
+                
+                if (!categories || categories.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">暂无分类，点击上方按钮添加</div>';
+                    return;
+                }
+
+                container.innerHTML = categories.map(cat => `
+                    <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border-left:4px solid ${cat.is_active ? 'var(--green)' : '#94a3b8'};">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <span style="font-size:2rem;">${cat.icon || '📦'}</span>
+                                <div>
+                                    <div style="font-size:1.05rem;font-weight:700;color:var(--text);">${escapeHtml(cat.name)}</div>
+                                    <div style="font-size:0.8rem;color:var(--text-light);">排序权重: ${cat.sort_order || 0}</div>
+                                </div>
+                            </div>
+                            <span class="badge ${cat.is_active ? 'badge-green' : 'badge-gray'}">
+                                ${cat.is_active ? '已启用' : '已禁用'}
+                            </span>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:12px;">
+                            <button class="btn" onclick="editCategory('${cat.id}')" style="flex:1;padding:7px;font-size:13px;background:var(--blue);color:white;">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteCategory('${cat.id}', '${escapeHtml(cat.name)}')" style="flex:1;padding:7px;font-size:13px;">删除</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (e) {
+                console.error('[Admin] 加载分类列表失败:', e);
+                document.getElementById('categoriesListContainer').innerHTML = 
+                    '<div style="text-align:center;color:#ef4444;padding:40px;grid-column:1/-1;">❌ 加载失败: ' + e.message + '</div>';
+            }
+        }
+
+        // 显示添加分类模态框
+        function showAddCategoryModal() {
+            document.getElementById('categoryModalTitle').textContent = '添加分类';
+            document.getElementById('categoryIcon').value = '';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categorySortOrder').value = '0';
+            document.getElementById('categoryActive').checked = true;
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+
+        // 编辑分类
+        async function editCategory(categoryId) {
+            try {
+                const { data: category, error } = await sb
+                    .from('jixing_shop_categories')
+                    .select('*')
+                    .eq('id', categoryId)
+                    .single();
+                
+                if (error) throw error;
+                if (!category) {
+                    alert('❌ 分类不存在');
+                    return;
+                }
+
+                document.getElementById('categoryModalTitle').textContent = '编辑分类';
+                document.getElementById('categoryIcon').value = category.icon || '';
+                document.getElementById('categoryName').value = category.name || '';
+                document.getElementById('categorySortOrder').value = category.sort_order || 0;
+                document.getElementById('categoryActive').checked = category.is_active;
+                document.getElementById('categoryId').value = category.id;
+                document.getElementById('categoryModal').style.display = 'flex';
+
+            } catch (e) {
+                console.error('[Admin] 获取分类信息失败:', e);
+                alert('❌ 获取分类信息失败: ' + e.message);
+            }
+        }
+
+        // 关闭分类模态框
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+
+        // 保存分类（新增或更新）
+        async function saveCategory() {
+            const icon = document.getElementById('categoryIcon').value.trim();
+            const name = document.getElementById('categoryName').value.trim();
+            const sortOrder = parseInt(document.getElementById('categorySortOrder').value) || 0;
+            const isActive = document.getElementById('categoryActive').checked;
+            const categoryId = document.getElementById('categoryId').value;
+
+            // 验证必填字段
+            if (!icon) {
+                alert('请输入分类图标');
+                return;
+            }
+            if (!name) {
+                alert('请输入分类名称');
+                return;
+            }
+
+            try {
+                if (categoryId) {
+                    // 更新现有分类
+                    const { error } = await sb
+                        .from('jixing_shop_categories')
+                        .update({
+                            icon: icon,
+                            name: name,
+                            sort_order: sortOrder,
+                            is_active: isActive,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', categoryId);
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ 分类更新成功！');
+                } else {
+                    // 添加新分类
+                    const { error } = await sb
+                        .from('jixing_shop_categories')
+                        .insert({
+                            id: generateUUID(),
+                            icon: icon,
+                            name: name,
+                            sort_order: sortOrder,
+                            is_active: isActive,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        });
+                    
+                    if (error) throw error;
+                    
+                    alert('✅ 分类添加成功！');
+                }
+
+                closeCategoryModal();
+                loadCategoriesList();
+
+            } catch (e) {
+                console.error('[Admin] 保存分类失败:', e);
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
+
+        // 删除分类
+        async function deleteCategory(categoryId, categoryName) {
+            if (!confirm(`确定要删除分类「${categoryName}」吗？\n\n⚠️ 注意：该分类下的商品将变为未分类状态！`)) {
+                return;
+            }
+
+            try {
+                const { error } = await sb
+                    .from('jixing_shop_categories')
+                    .delete()
+                    .eq('id', categoryId);
+
+                if (error) throw error;
+
+                alert('✅ 分类已删除');
+                loadCategoriesList();
+
+            } catch (e) {
+                console.error('[Admin] 删除分类失败:', e);
+                alert('❌ 删除失败: ' + e.message);
+            }
         }
         
         // 初始化
