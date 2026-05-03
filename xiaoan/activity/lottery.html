@@ -1146,18 +1146,53 @@
         const BG_URL_GITHUB='https://gliuhe.github.io/xiaoan/activity/reward_inf.png';
         const MUSIC_URL = 'bg_jixing.mp3';
         
+        // 缓存版本号（更新此值可强制所有用户刷新缓存）
+        var CACHE_VERSION = 'v2026.0502';  // 格式：vYYYY.MMDD
+        
         var poolImg=document.getElementById('poolBgImg');
         
-        // 加载背景图（使用 IndexedDB 缓存）
+        // 检查是否需要强制刷新（清除缓存后）
+        function shouldForceRefresh() {
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                if (key && key.startsWith('_force_refresh_')) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // 加载背景图（使用 IndexedDB 缓存 + 缓存破坏机制）
         async function loadPoolBgWithCache() {
             try {
-                // 尝试使用缓存管理器加载
-                const cachedUrl = await CacheManager.cacheImage(BG_URL_CDN, { maxAge: 7 * 24 * 60 * 60 * 1000 });
-                poolImg.src = cachedUrl;
-                console.log('[lottery] 🖼️ 奖池背景图已加载（使用缓存）');
+                let finalUrl = BG_URL_CDN;
+                
+                // 如果刚刚清除了缓存，添加 cache-buster 参数
+                if (shouldForceRefresh()) {
+                    finalUrl += '?' + generateCacheBuster() + '&_v=' + CACHE_VERSION;
+                    console.log('[lottery] 🔄 检测到强制刷新标记，使用新URL加载背景图');
+                    poolImg.src = finalUrl;
+                    console.log('[lottery] 🖼️ 奖池背景图已加载（强制刷新模式）');
+                    return;
+                } else {
+                    // 正常情况下尝试使用缓存
+                    try {
+                        const cachedUrl = await CacheManager.cacheImage(BG_URL_CDN, { maxAge: 7 * 24 * 60 * 60 * 1000 });
+                        poolImg.src = cachedUrl;
+                        console.log('[lottery] 🖼️ 奖池背景图已加载（使用缓存）');
+                        return; // 成功使用缓存，直接返回
+                    } catch (e) {
+                        console.warn('[lottery] 缓存加载失败，直接加载:', e);
+                        // 继续执行下面的后备方案
+                    }
+                }
+                
+                // 后备方案：直接加载（带版本参数）
+                poolImg.src = finalUrl + '?_v=' + CACHE_VERSION;
+                console.log('[lottery] 🖼️ 奖池背景图已加载（后备模式）');
+                
             } catch (e) {
-                console.warn('[lottery] 缓存加载失败，使用直接加载:', e);
-                // 后备方案：直接加载
+                console.warn('[lottery] 背景图加载异常，使用后备方案:', e);
                 loadPoolBgDirect();
             }
         }
@@ -1165,7 +1200,7 @@
         // 直接加载背景图（后备方案）
         function loadPoolBgDirect(useGithub){
             var img=new Image();img.crossOrigin='anonymous';
-            var url=(useGithub?BG_URL_GITHUB:BG_URL_CDN)+'?v='+Date.now();
+            var url=(useGithub?BG_URL_GITHUB:BG_URL_CDN)+'?'+generateCacheBuster()+'&_v='+CACHE_VERSION;
             var timeoutId=null;
             
             img.onload=function(){
@@ -1214,40 +1249,130 @@
             }
         }
         
-        // 加载背景音乐（使用 IndexedDB 缓存）
+        // 加载背景音乐（使用 IndexedDB 缓存 + 缓存破坏机制）
         async function loadBackgroundMusic() {
             const audio = document.getElementById('bgMusic');
             if (!audio) return;
             
             try {
                 console.log('[lottery] 🎵 正在加载背景音乐...');
-                const cachedUrl = await CacheManager.cacheAudio(MUSIC_URL, { maxAge: 30 * 24 * 60 * 60 * 1000 });
-                audio.src = cachedUrl;
-                console.log('[lottery] 🎵 背景音乐已加载（使用缓存）');
                 
-                // 尝试自动播放
-                audio.play().catch(e => {
-                    console.log('[lottery] 自动播放被阻止，等待用户交互');
-                    document.addEventListener('click', function startMusic() {
-                        audio.play().catch(() => {});
-                        document.removeEventListener('click', startMusic);
-                    }, { once: true });
-                });
+                let finalUrl = MUSIC_URL;
+                
+                // 如果刚刚清除了缓存，强制重新加载
+                if (shouldForceRefresh()) {
+                    finalUrl += '?' + generateCacheBuster() + '&_v=' + CACHE_VERSION;
+                    audio.src = finalUrl;
+                    console.log('[lottery] 🎵 背景音乐已强制重新加载（绕过缓存）');
+                    
+                    // 尝试自动播放
+                    attemptAutoPlay(audio);
+                    return;
+                }
+                
+                // 正常情况：尝试使用缓存
+                try {
+                    const cachedUrl = await CacheManager.cacheAudio(MUSIC_URL, { maxAge: 30 * 24 * 60 * 60 * 1000 });
+                    audio.src = cachedUrl;
+                    console.log('[lottery] 🎵 背景音乐已加载（使用缓存）');
+                    
+                    // 尝试自动播放
+                    attemptAutoPlay(audio);
+                    
+                } catch (e) {
+                    console.warn('[lottery] 背景音乐缓存加载失败:', e);
+                    // 后备：直接加载（带版本号）
+                    audio.src = MUSIC_URL + '?_v=' + CACHE_VERSION;
+                    attemptAutoPlay(audio);
+                }
+                
             } catch (e) {
-                console.warn('[lottery] 背景音乐缓存加载失败:', e);
+                console.warn('[lottery] 背景音乐加载异常:', e);
                 audio.src = MUSIC_URL;
+                attemptAutoPlay(audio);
             }
         }
         
-        // 清除所有缓存
+        // 自动播放辅助函数
+        function attemptAutoPlay(audio) {
+            audio.play().catch(e => {
+                console.log('[lottery] 自动播放被阻止，等待用户交互');
+                document.addEventListener('click', function startMusic() {
+                    audio.play().catch(() => {});
+                    document.removeEventListener('click', startMusic);
+                }, { once: true });
+            });
+        }
+        
+        // ===== 彻底的缓存清除系统（增强版）=====
+        
+        // 生成唯一的缓存破坏参数
+        function generateCacheBuster() {
+            return '_cb=' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // 清除所有缓存（彻底版）
         async function clearAllCaches() {
             try {
-                await CacheManager.clear();
-                console.log('[lottery] ✅ 所有缓存已清除');
-                alert('缓存已清除，页面将刷新');
-                location.reload();
+                console.log('[lottery] 🧹 开始彻底清除所有缓存...');
+                
+                // 第1步：清除 IndexedDB 缓存（CacheManager）
+                if (typeof CacheManager !== 'undefined' && typeof CacheManager.clear === 'function') {
+                    try {
+                        await CacheManager.clear();
+                        console.log('[lottery]   ✅ IndexedDB 缓存已清除');
+                    } catch (e) {
+                        console.warn('[lottery]   ⚠️ IndexedDB 清除失败:', e.message);
+                    }
+                }
+                
+                // 第2步：清除 Service Worker 缓存
+                if ('serviceWorker' in navigator) {
+                    try {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                            await registration.unregister();
+                            console.log('[lottery]   ✅ Service Worker 已注销');
+                        }
+                    } catch (e) {
+                        console.warn('[lottery]   ⚠️ Service Worker 清除失败:', e.message);
+                    }
+                }
+                
+                // 第3步：清除 localStorage 中与媒体相关的缓存键
+                const mediaCacheKeys = [
+                    'bg_image_cache',
+                    'music_cache',
+                    'bg_image_url',
+                    'music_url',
+                    'bg_image_timestamp',
+                    'music_timestamp',
+                    'cache_version'
+                ];
+                
+                mediaCacheKeys.forEach(key => {
+                    if (localStorage.getItem(key)) {
+                        localStorage.removeItem(key);
+                    }
+                });
+                console.log('[lottery]   ✅ localStorage 媒体缓存已清除 (' + mediaCacheKeys.length + ' 个键)');
+                
+                // 第4步：在 sessionStorage 中标记需要强制刷新
+                sessionStorage.setItem('_force_refresh_' + Date.now(), 'true');
+                
+                // 第5步：显示成功提示并执行强制刷新
+                console.log('[lottery] 🎉 所有缓存已彻底清除，即将强制刷新页面...');
+                
+                alert('✅ 缓存已彻底清除！\n\n正在强制刷新页面以加载最新资源...\n\n（如果仍显示旧内容，请按 Ctrl+Shift+R 强制刷新）');
+                
+                // 使用 true 参数强制刷新，绕过所有缓存
+                setTimeout(function() {
+                    location.reload(true);
+                }, 500);
+                
             } catch (e) {
-                console.error('[lottery] 清除缓存失败:', e);
+                console.error('[lottery] ❌ 清除缓存过程中出错:', e);
+                alert('❌ 清除缓存时发生错误: ' + e.message + '\n\n请尝试手动刷新页面（Ctrl+Shift+R）');
             }
         }
         
@@ -1259,6 +1384,47 @@
         // 清除背景缓存（兼容旧版本）
         function clearBgCache() {
             clearAllCaches();
+        }
+        
+        // 强制重新加载背景图（带缓存破坏）
+        function forceReloadBackground() {
+            const poolImg = document.getElementById('poolBgImg');
+            if (!poolImg) return;
+            
+            const url = (BG_URL_CDN || '') + '?' + generateCacheBuster();
+            
+            // 先移除当前图片，强制浏览器释放内存缓存
+            poolImg.src = '';
+            poolImg.style.display = 'none';
+            
+            // 短暂延迟后加载新图片
+            setTimeout(() => {
+                poolImg.style.display = 'block';
+                poolImg.src = url;
+                console.log('[lottery] 🖼️ 背景图已强制重新加载:', url);
+            }, 100);
+        }
+        
+        // 强制重新加载音乐（带缓存破坏）
+        function forceReloadMusic() {
+            const audio = document.getElementById('bgMusic');
+            if (!audio) return;
+            
+            const url = MUSIC_URL + '?' + generateCacheBuster();
+            
+            // 先停止并释放当前音频
+            audio.pause();
+            audio.src = '';
+            
+            // 短暂延迟后加载新音乐
+            setTimeout(() => {
+                audio.src = url;
+                audio.load();
+                audio.play().catch(e => {
+                    console.log('[lottery] 自动播放被阻止');
+                });
+                console.log('[lottery] 🎵 音乐已强制重新加载:', url);
+            }, 100);
         }
         
         // 启动加载
@@ -2965,6 +3131,9 @@
             // 判断是否为货币类商品（需要显示获得数量）
             var isCurrencyProduct = ['voucher', 'lottery_ticket', 'premium_ticket', 'bank_note', 'jixing_ticket'].includes(p.product_type);
             
+            // 判断是否启用了限购
+            var hasPurchaseLimit = p.enable_purchase_limit === true || p.enable_purchase_limit === 1;
+            
             // 为每个卡片添加延迟动画
             var delay = Math.min(i * 50, 500); // 最大延迟500ms
             
@@ -3000,7 +3169,23 @@
                     '</div>';
             }
             
-            wrapperHtml += '<div class="shop-product-card" style="animation-delay:' + delay + 'ms">' +
+            // 构建限购信息显示区域
+            var limitInfoHtml = '';
+            var limitDataAttr = '';
+            if (hasPurchaseLimit) {
+                var periodName = getPeriodDisplayName(p.limit_period_type || 'daily');
+                var limitQty = p.limit_quantity || 0;
+                
+                limitInfoHtml = 
+                    '<div id="limit-info-' + p.id + '" style="margin-top:10px;padding:8px;background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(37,99,235,0.1));border:1px solid rgba(59,130,246,0.3);border-radius:8px;text-align:center;">' +
+                        '<div style="font-size:0.75rem;color:#93c5fd;margin-bottom:4px;font-weight:600;">🛡️ ' + periodName + '限购</div>' +
+                        '<div id="limit-remaining-' + p.id + '" style="font-size:0.85rem;color:#60a5fa;font-weight:700;">⏳ 查询中...</div>' +
+                    '</div>';
+                
+                limitDataAttr = ' data-has-limit="true" data-product-id="' + p.id + '" data-limit-period="' + (p.limit_period_type || 'daily') + '" data-limit-qty="' + limitQty + '"';
+            }
+            
+            wrapperHtml += '<div class="shop-product-card" style="animation-delay:' + delay + 'ms"' + limitDataAttr + '>' +
                 '<div class="product-icon">' + (p.icon || '🎁') + '</div>' +
                 '<div class="product-name">' + escapeHtml(p.name) + '</div>' +
                 
@@ -3012,10 +3197,18 @@
                 '</div>' +
                 
                 '<div class="product-desc">' + escapeHtml(p.description || '') + '</div>' +
+                
+                // 价格区域
                 '<div class="product-price-row">' +
                     priceDisplayHtml +
-                    '<button class="product-buy-btn" onclick="buyShopProduct(\'' + p.id + '\', ' + p.price + ', \'' + escapeHtml(p.name).replace(/'/g, "\\'") + '\', \'' + (p.currency_type || 'jixing_muchun_currency') + '\', \'' + (p.product_type || 'physical') + '\', ' + (p.reward_amount || 0) + ', \'' + (p.reward_currency_type || '') + '\')" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? '立即兑换' : '余额不足') + '</button>' +
+                    (canAfford ? 
+                        '<button class="product-buy-btn" id="buy-btn-' + p.id + '" onclick="handleBuyWithLimitCheck(\'' + p.id + '\', ' + p.price + ', \'' + escapeHtml(p.name).replace(/'/g, "\\'") + '\', \'' + (p.currency_type || 'jixing_muchun_currency') + '\', \'' + (p.product_type || 'physical') + '\', ' + (p.reward_amount || 0) + ', \'' + (p.reward_currency_type || '') + '\')">立即兑换</button>' :
+                        '<button class="product-buy-btn" disabled>余额不足</button>'
+                    ) +
                 '</div>' +
+                
+                // 限购信息区域（如果有）
+                limitInfoHtml +
             '</div>';
         }
         
@@ -3025,6 +3218,56 @@
         // 更新分类计数
         if (shopCategoriesCache) {
             renderCategories(shopCategoriesCache);
+        }
+        
+        // 异步加载每个商品的限购状态（不阻塞主流程）
+        setTimeout(function() {
+            updateAllProductsLimitStatus(filteredProducts);
+        }, 100); // 延迟100ms让DOM先渲染完成
+    }
+    
+    // 批量更新所有商品的限购状态
+    async function updateAllProductsLimitStatus(products) {
+        for (var i = 0; i < products.length; i++) {
+            var p = products[i];
+            if (p.enable_purchase_limit === true || p.enable_purchase_limit === 1) {
+                await updateSingleProductLimitStatus(p);
+            }
+        }
+    }
+    
+    // 更新单个商品的限购状态
+    async function updateSingleProductLimitStatus(product) {
+        try {
+            var limitResult = await checkPurchaseLimit(product);
+            var remainingEl = document.getElementById('limit-remaining-' + product.id);
+            var buyBtn = document.getElementById('buy-btn-' + product.id);
+            
+            if (remainingEl) {
+                if (limitResult.canBuy) {
+                    remainingEl.innerHTML = '✅ 还可购买 <strong>' + limitResult.remaining + '/' + limitResult.limitQuantity + '</strong> 件';
+                    remainingEl.style.color = '#10b981'; // 绿色
+                } else {
+                    remainingEl.innerHTML = '⛔ 已达上限 <strong>' + limitResult.purchasedCount + '/' + limitResult.limitQuantity + '</strong>';
+                    remainingEl.style.color = '#ef4444'; // 红色
+                    
+                    // 禁用购买按钮
+                    if (buyBtn) {
+                        buyBtn.disabled = true;
+                        buyBtn.textContent = '已达限购上限';
+                        buyBtn.style.opacity = '0.5';
+                        buyBtn.style.cursor = 'not-allowed';
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[Limit] 更新产品限购状态失败:', product.id, e);
+            
+            var remainingEl = document.getElementById('limit-remaining-' + product.id);
+            if (remainingEl) {
+                remainingEl.innerHTML = '❌ 查询失败';
+                remainingEl.style.color = '#f59e0b'; // 橙色警告
+            }
         }
     }
     
@@ -3038,6 +3281,215 @@
             'jixing_ticket': 'jixing_muchun_currency'
         };
         return mapping[productType] || 'jixing_muchun_currency';
+    }
+    
+    // ===== 限购系统核心功能 =====
+    
+    // 获取当前用户ID
+    function getCurrentUserId() {
+        return sessionStorage.getItem('_cloud_last_user_id') || localStorage.getItem('user_id') || 'anonymous';
+    }
+    
+    // 计算当前周期的起始时间（用于限购重置）
+    function getPeriodStartTime(periodType) {
+        var now = new Date();
+        var periodStart = new Date();
+        
+        switch(periodType) {
+            case 'daily':
+                // 每日：今天的00:00:00
+                periodStart.setHours(0, 0, 0, 0);
+                break;
+            case 'weekly':
+                // 每周：本周一的00:00:00
+                var dayOfWeek = now.getDay(); // 0=周日, 1=周一, ..., 6=周六
+                var diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 周一为一周开始
+                periodStart.setDate(diff);
+                periodStart.setHours(0, 0, 0, 0);
+                break;
+            case 'monthly':
+                // 每月：本月1日的00:00:00
+                periodStart.setDate(1);
+                periodStart.setHours(0, 0, 0, 0);
+                break;
+            default:
+                periodStart.setHours(0, 0, 0, 0);
+        }
+        
+        return periodStart.toISOString();
+    }
+    
+    // 获取周期显示名称
+    function getPeriodDisplayName(periodType) {
+        var names = {
+            'daily': '每日',
+            'weekly': '每周',
+            'monthly': '每月'
+        };
+        return names[periodType] || '';
+    }
+    
+    // 从云端获取用户当前周期内的购买次数
+    async function getUserPurchaseCount(productId, periodType) {
+        try {
+            if (typeof window.supabase === 'undefined') {
+                console.warn('[Limit] Supabase 未加载，使用本地缓存');
+                return getLocalPurchaseCount(productId, periodType);
+            }
+            
+            var userId = getCurrentUserId();
+            var periodStart = getPeriodStartTime(periodType);
+            
+            var sb = window.supabase.createClient(
+                'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+            );
+            
+            // 查询该用户在该商品、该周期内的购买记录数量
+            const { count, error } = await sb
+                .from('jixing_purchase_records')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+                .eq('product_id', productId)
+                .gte('purchase_time', periodStart);
+            
+            if (error) {
+                console.error('[Limit] 查询购买记录失败:', error);
+                return getLocalPurchaseCount(productId, periodType); // 降级到本地
+            }
+            
+            return count || 0;
+            
+        } catch (e) {
+            console.error('[Limit] 获取购买次数异常:', e);
+            return getLocalPurchaseCount(productId, periodType);
+        }
+    }
+    
+    // 本地缓存降级方案（防止网络问题时无法购买）
+    function getLocalPurchaseCount(productId, periodType) {
+        try {
+            var cacheKey = 'purchase_limit_' + productId + '_' + periodType;
+            var cachedData = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+            
+            // 检查缓存是否过期（5分钟）
+            if (cachedData.timestamp && (Date.now() - cachedData.timestamp < 5 * 60 * 1000)) {
+                return cachedData.count || 0;
+            }
+            
+            // 缓存过期或不存在，返回0（允许购买，后续会同步到云端）
+            return 0;
+        } catch (e) {
+            console.error('[Limit] 读取本地缓存失败:', e);
+            return 0;
+        }
+    }
+    
+    // 记录购买到云端和本地
+    async function recordPurchase(productId) {
+        try {
+            if (typeof window.supabase !== 'undefined') {
+                var userId = getCurrentUserId();
+                
+                var sb = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
+                );
+                
+                // 插入购买记录到云端
+                const { error } = await sb
+                    .from('jixing_purchase_records')
+                    .insert({
+                        id: generateUUID(),
+                        user_id: userId,
+                        product_id: productId,
+                        purchase_time: new Date().toISOString(),
+                        created_at: new Date().toISOString()
+                    });
+                
+                if (error) {
+                    console.error('[Limit] 记录购买失败:', error);
+                }
+            }
+            
+            // 同时更新本地缓存（作为备份）
+            updateLocalPurchaseCache(productId);
+            
+        } catch (e) {
+            console.error('[Limit] 记录购买异常:', e);
+            // 即使云端失败，也更新本地缓存
+            updateLocalPurchaseCache(productId);
+        }
+    }
+    
+    // 更新本地购买缓存
+    function updateLocalPurchaseCache(productId) {
+        try {
+            // 尝试更新所有周期的缓存
+            ['daily', 'weekly', 'monthly'].forEach(function(periodType) {
+                var cacheKey = 'purchase_limit_' + productId + '_' + periodType;
+                var cachedData = JSON.parse(localStorage.getItem(cacheKey) || '{"count":0,"timestamp":0}');
+                
+                // 如果缓存未过期，增加计数
+                if (Date.now() - cachedData.timestamp < 5 * 60 * 1000) {
+                    cachedData.count = (cachedData.count || 0) + 1;
+                    cachedData.timestamp = Date.now();
+                    localStorage.setItem(cacheKey, JSON.stringify(cachedData));
+                } else {
+                    // 缓存过期，重新初始化
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        count: 1,
+                        timestamp: Date.now()
+                    }));
+                }
+            });
+        } catch (e) {
+            console.error('[Limit] 更新本地缓存失败:', e);
+        }
+    }
+    
+    // 校验是否可以购买（返回对象：{ canBuy: boolean, remaining: number, message: string })
+    async function checkPurchaseLimit(product) {
+        // 如果没有启用限购，直接返回可购买
+        if (!product.enable_purchase_limit) {
+            return { 
+                canBuy: true, 
+                remaining: Infinity, 
+                message: '', 
+                hasLimit: false 
+            };
+        }
+        
+        var limitQuantity = product.limit_quantity || 0;
+        var periodType = product.limit_period_type || 'daily';
+        
+        // 获取当前已购买次数
+        var purchasedCount = await getUserPurchaseCount(product.id, periodType);
+        var remaining = Math.max(0, limitQuantity - purchasedCount);
+        
+        if (remaining <= 0) {
+            var periodName = getPeriodDisplayName(periodType);
+            return { 
+                canBuy: false, 
+                remaining: 0, 
+                message: '⛔ 已达到' + periodName + '限购上限（' + limitQuantity + '件）', 
+                hasLimit: true,
+                limitQuantity: limitQuantity,
+                purchasedCount: purchasedCount,
+                periodType: periodType
+            };
+        }
+        
+        var periodName = getPeriodDisplayName(periodType);
+        return { 
+            canBuy: true, 
+            remaining: remaining, 
+            message: '📊 ' + periodName + '还可购买 ' + remaining + '/' + limitQuantity + ' 件', 
+            hasLimit: true,
+            limitQuantity: limitQuantity,
+            purchasedCount: purchasedCount,
+            periodType: periodType
+        };
     }
     
     // 获取指定货币类型的余额
@@ -3055,6 +3507,60 @@
                 return parseInt(localStorage.getItem('bank_currency') || '0');
             default:
                 return getTicketCount(); // 默认返回纪行券
+        }
+    }
+    
+    // 带限购校验的购买处理函数
+    async function handleBuyWithLimitCheck(productId, price, productName, currencyType, productType, rewardAmount, rewardCurrencyType) {
+        try {
+            // 1. 从商品缓存中获取该商品的完整信息（包含限购配置）
+            var product = null;
+            if (shopProductsCache) {
+                for (var i = 0; i < shopProductsCache.length; i++) {
+                    if (shopProductsCache[i].id === productId) {
+                        product = shopProductsCache[i];
+                        break;
+                    }
+                }
+            }
+            
+            if (!product) {
+                showToast('❌ 商品信息加载失败，请刷新页面', 'err');
+                return;
+            }
+            
+            // 2. 进行限购校验
+            var limitResult = await checkPurchaseLimit(product);
+            
+            if (limitResult.hasLimit && !limitResult.canBuy) {
+                showToast(limitResult.message, 'err');
+                
+                // 更新按钮状态为已禁用
+                var buyBtn = document.getElementById('buy-btn-' + productId);
+                if (buyBtn) {
+                    buyBtn.disabled = true;
+                    buyBtn.textContent = '已达限购上限';
+                    buyBtn.style.opacity = '0.5';
+                    buyBtn.style.cursor = 'not-allowed';
+                }
+                
+                return; // 阻止购买
+            }
+            
+            // 3. 限购校验通过，执行购买流程
+            await buyShopProduct(productId, price, productName, currencyType, productType, rewardAmount, rewardCurrencyType);
+            
+            // 4. 购买成功后，记录购买并更新限购状态
+            if (limitResult.hasLimit) {
+                await recordPurchase(productId);
+                
+                // 更新该商品的限购显示状态
+                await updateSingleProductLimitStatus(product);
+            }
+            
+        } catch (e) {
+            console.error('[Limit] 购买处理失败:', e);
+            showToast('❌ 购买失败：' + e.message, 'err');
         }
     }
 
