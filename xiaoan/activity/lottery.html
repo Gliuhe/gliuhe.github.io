@@ -1149,40 +1149,86 @@
         // 缓存版本号（更新此值可强制所有用户刷新缓存）
         var CACHE_VERSION = 'v2026.0502';  // 格式：vYYYY.MMDD
         
+        // 全局强制刷新标记（抗Tracking Prevention）
+        window._forceBgRefresh = window._forceBgRefresh || false;
+        
         var poolImg=document.getElementById('poolBgImg');
         
-        // 检查是否需要强制刷新（清除缓存后）
+        // 检查是否需要强制刷新（清除缓存后）- 增强版
         function shouldForceRefresh() {
-            for (let i = 0; i < sessionStorage.length; i++) {
-                const key = sessionStorage.key(i);
-                if (key && key.startsWith('_force_refresh_')) {
-                    return true;
-                }
+            // 优先检查全局变量（最可靠）
+            if (window._forceBgRefresh === true) {
+                console.log('[lottery] 🔄 检测到全局强制刷新标记');
+                return true;
             }
+            
+            // 备选：检查 sessionStorage 标记
+            try {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.startsWith('_force_refresh_') || key.startsWith('_force_'))) {
+                        console.log('[lottery] 🔄 检测到sessionStorage强制刷新标记:', key);
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('[lottery] ⚠️ 读取sessionStorage失败:', e.message);
+            }
+            
             return false;
         }
         
-        // 加载背景图（使用 IndexedDB 缓存 + 缓存破坏机制）
+        // 加载背景图（使用 IndexedDB 缓存 + 缓存破坏机制）- 修复版
         async function loadPoolBgWithCache() {
             try {
                 let finalUrl = BG_URL_CDN;
                 
-                // 如果刚刚清除了缓存，添加 cache-buster 参数
+                // 如果刚刚清除了缓存，完全绕过 CacheManager，直接加载原始URL
                 if (shouldForceRefresh()) {
-                    finalUrl += '?' + generateCacheBuster() + '&_v=' + CACHE_VERSION;
-                    console.log('[lottery] 🔄 检测到强制刷新标记，使用新URL加载背景图');
+                    finalUrl += '?' + generateCacheBuster() + '&_v=' + CACHE_VERSION + '&_no_cache=true';
+                    console.log('[lottery] 🔄 检测到强制刷新标记，完全绕过缓存直接加载');
                     poolImg.src = finalUrl;
-                    console.log('[lottery] 🖼️ 奖池背景图已加载（强制刷新模式）');
+                    console.log('[lottery] 🖼️ 奖池背景图已加载（强制刷新模式 - 原始URL）');
+                    
+                    // 清除强制刷新标记（避免每次都强制刷新）
+                    setTimeout(() => {
+                        window._forceBgRefresh = false;
+                        try {
+                            // 清除所有强制刷新标记
+                            const keysToRemove = [];
+                            for (let i = 0; i < sessionStorage.length; i++) {
+                                const key = sessionStorage.key(i);
+                                if (key && (key.startsWith('_force_refresh_') || key.startsWith('_force_'))) {
+                                    keysToRemove.push(key);
+                                }
+                            }
+                            keysToRemove.forEach(key => {
+                                try {
+                                    sessionStorage.removeItem(key);
+                                } catch (e) {}
+                            });
+                            console.log('[lottery] ✅ 强制刷新标记已清除');
+                        } catch (e) {}
+                    }, 1000);
+                    
                     return;
                 } else {
                     // 正常情况下尝试使用缓存
                     try {
                         const cachedUrl = await CacheManager.cacheImage(BG_URL_CDN, { maxAge: 7 * 24 * 60 * 60 * 1000 });
+                        
+                        // 检查返回的是否是 base64 DataURL（如果是，说明是旧缓存）
+                        if (cachedUrl && cachedUrl.startsWith('data:image/')) {
+                            console.warn('[lottery] ⚠️ CacheManager 返回了 base64 缓存数据，可能过期');
+                            // 不使用这个缓存，直接加载原始URL
+                            throw new Error('Base64 cache detected, skipping');
+                        }
+                        
                         poolImg.src = cachedUrl;
                         console.log('[lottery] 🖼️ 奖池背景图已加载（使用缓存）');
                         return; // 成功使用缓存，直接返回
                     } catch (e) {
-                        console.warn('[lottery] 缓存加载失败，直接加载:', e);
+                        console.warn('[lottery] 缓存加载失败或检测到base64缓存，直接加载:', e.message);
                         // 继续执行下面的后备方案
                     }
                 }
@@ -1381,9 +1427,163 @@
             clearAllCaches();
         }
         
-        // 清除背景缓存（兼容旧版本）
-        function clearBgCache() {
-            clearAllCaches();
+        // ===== 终极版清除背景缓存（抗Tracking Prevention）- 修复版 =====
+        function clearBgCache(){
+            console.log('[lottery] 🖼️ [终极版] 开始清除背景缓存...');
+            
+            // ⭐ 关键修复：立即设置全局强制刷新标记（最可靠）
+            window._forceBgRefresh = true;
+            console.log('[lottery] ✅ 已设置全局强制刷新标记: window._forceBgRefresh = true');
+            
+            // 显示立即提示（在清除前显示，因为后续可能出错）
+            var notif = document.createElement('div');
+            notif.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg, rgba(239,68,68,0.95), rgba(220,38,38,0.95));color:white;padding:16px 32px;border-radius:12px;font-size:15px;z-index:99999;animation:fadeInDown 0.3s ease;box-shadow:0 12px 32px rgba(220,38,38,0.4);font-weight:600;max-width:400px;text-align:center;';
+            notif.innerHTML = '🔄 正在强力清除缓存...<br><span style="font-size:12px;font-weight:normal;opacity:0.85;display:block;margin-top:6px;">请稍候，即将强制刷新</span>';
+            document.body.appendChild(notif);
+            
+            // 使用异步方式执行所有清除操作（不阻塞UI）
+            setTimeout(async function() {
+                try {
+                    // ===== 第1层：尝试清除 localStorage（可能被Tracking Prevention阻止）=====
+                    try {
+                        var keysToRemove = [
+                            'lottery_bg_cache',
+                            'lottery_bg_version', 
+                            'lottery_reward_config',
+                            'bg_image_cache',
+                            'bg_image_url',
+                            'lottery_data'
+                        ];
+                        
+                        keysToRemove.forEach(function(key) {
+                            try {
+                                if (localStorage.getItem(key) !== null) {
+                                    localStorage.removeItem(key);
+                                    console.log('[lottery]   ✅ localStorage 已清除:', key);
+                                }
+                            } catch (storageErr) {
+                                console.warn('[lottery]   ⚠️ 清除 localStorage 被阻止:', key, '-', storageErr.message);
+                            }
+                        });
+                    } catch (e) {
+                        console.warn('[lottery]   ⚠️ localStorage 操作异常:', e.message);
+                    }
+                    
+                    // ===== 第2层：尝试清除 sessionStorage 并写入强制刷新标记 =====
+                    try {
+                        // 先清除旧的标记
+                        const oldKeys = [];
+                        for (let i = 0; i < sessionStorage.length; i++) {
+                            const key = sessionStorage.key(i);
+                            if (key && (key.startsWith('_force_') || key.startsWith('_force_refresh_'))) {
+                                oldKeys.push(key);
+                            }
+                        }
+                        oldKeys.forEach(key => {
+                            try { sessionStorage.removeItem(key); } catch(e) {}
+                        });
+                        
+                        // 写入新的强制刷新标记（多种格式确保兼容）
+                        sessionStorage.setItem('_force_refresh_bg_' + Date.now(), 'true');
+                        sessionStorage.setItem('_force_bg_clear_' + Date.now(), 'true');
+                        
+                        for (var i = 0; i < 3; i++) {
+                            try {
+                                sessionStorage.setItem('_force_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8), 'true');
+                            } catch (seErr) {}
+                        }
+                        console.log('[lottery]   ✅ sessionStorage 强制刷新标记已写入');
+                    } catch (e) {
+                        console.warn('[lottery]   ⚠️ sessionStorage 操作异常:', e.message);
+                    }
+                    
+                    // ===== 第3层：尝试清除 IndexedDB（CacheManager）- 增强版 =====
+                    if (typeof CacheManager !== 'undefined') {
+                        try {
+                            // 尝试调用 clear 方法
+                            if (typeof CacheManager.clear === 'function') {
+                                await CacheManager.clear();
+                                console.log('[lottery]   ✅ CacheManager.clear() 成功');
+                            }
+                            
+                            // 额外：尝试调用其他可能的清除方法
+                            if (typeof CacheManager.clearImageCache === 'function') {
+                                await CacheManager.clearImageCache();
+                                console.log('[lottery]   ✅ CacheManager.clearImageCache() 成功');
+                            }
+                            
+                        } catch (cacheErr) {
+                            console.warn('[lottery]   ⚠️ CacheManager 清除失败:', cacheErr.message);
+                        }
+                        
+                        // 无论 CacheManager.clear 是否成功，都尝试手动删除 IndexedDB
+                        try {
+                            if (typeof indexedDB !== 'undefined' && typeof indexedDB.deleteDatabase === 'function') {
+                                // 删除所有可能的缓存数据库
+                                const dbNames = ['image-cache', 'audio-cache', 'ImageCache', 'AudioCache', 'cache-manager'];
+                                dbNames.forEach(dbName => {
+                                    indexedDB.deleteDatabase(dbName).catch(() => {});
+                                });
+                                console.log('[lottery]   ✅ 已请求删除所有 IndexedDB 数据库');
+                            }
+                        } catch (idbErr) {
+                            console.warn('[lottery]   ⚠️ 手动删除 IndexedDB 失败:', idbErr.message);
+                        }
+                    }
+                    
+                    // ===== 第4层：尝试注销 Service Worker =====
+                    try {
+                        if ('serviceWorker' in navigator) {
+                            const registrations = await navigator.serviceWorker.getRegistrations();
+                            for (const reg of registrations) {
+                                await reg.unregister();
+                            }
+                            console.log('[lottery]   ✅ Service Worker 已注销:', registrations.length, '个');
+                        }
+                    } catch (swErr) {
+                        console.warn('[lottery]   ⚠️ Service Worker 注销失败:', swErr.message);
+                    }
+                    
+                    // ===== 完成：更新提示并准备刷新 =====
+                    notif.innerHTML = '✅ 缓存清除完成！<br><span style="font-size:12px;font-weight:normal;opacity:0.85;display:block;margin-top:6px;">2秒后自动强制刷新...</span>';
+                    notif.style.background = 'linear-gradient(135deg, rgba(34,197,94,0.95), rgba(22,163,74,0.95))';
+                    
+                    console.log('[lottery] 🎉 所有清除操作已完成！');
+                    
+                } catch (mainError) {
+                    console.error('[lottery] ❌ 主流程异常:', mainError);
+                    notif.innerHTML = '⚠️ 部分清除完成<br><span style="font-size:12px;font-weight:normal;opacity:0.85;display:block;margin-top:6px;">仍将强制刷新</span>';
+                }
+                
+                // ===== 最终步骤：无条件强制硬刷新 =====
+                // 无论上述操作成功与否，都执行硬刷新
+                // 这是确保生效的最后保障
+                setTimeout(function() {
+                    console.log('[lottery] 💥 执行最终硬刷新...');
+                    
+                    // 方法1：使用 location.reload(true)
+                    try {
+                        location.reload(true);
+                    } catch (reloadErr) {
+                        console.warn('[lottery]   reload(true) 失败，使用备选方案');
+                        
+                        // 方法2：替换当前 URL（添加随机参数）
+                        try {
+                            var newUrl = window.location.pathname + 
+                                          '?_hard=' + Date.now() + 
+                                          '_' + Math.random().toString(36).substr(2, 9) + 
+                                          '#forced';
+                            window.location.replace(newUrl);
+                        } catch (urlErr) {
+                            console.error('[lottery]   所有刷新方法都失败了:', urlErr);
+                            
+                            // 方法3：最后手段 - 提示用户手动刷新
+                            alert('⚠️ 自动刷新被阻止\n\n请手动按以下键强制刷新：\n\n• Windows/Linux: Ctrl + Shift + R\n• Mac: Cmd + Shift + R\n\n或在地址栏按 Enter 刷新');
+                        }
+                    }
+                }, 2000);  // 给用户2秒时间看到提示
+                
+            }, 100);  // 延迟100ms启动异步操作
         }
         
         // 强制重新加载背景图（带缓存破坏）
@@ -1600,24 +1800,7 @@
              document.body.appendChild(notif);
              setTimeout(function(){notif.style.opacity='0';notif.style.transition='opacity 0.5s';setTimeout(function(){notif.remove()},500)},3000);
          }
-         
-         function clearBgCache(){
-             // 清除奖池背景图缓存
-             localStorage.removeItem('lottery_bg_cache');
-             localStorage.removeItem('lottery_bg_version');
-             
-             // 显示提示
-             var notif=document.createElement('div');
-             notif.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(6,182,212,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
-             notif.innerHTML='🖼️ 背景缓存已清除，正在重新加载...';
-             document.body.appendChild(notif);
-             
-             // 强制重新加载页面（带时间戳）
-             setTimeout(function(){
-                 window.location.href=window.location.pathname+'?bgrefresh='+Date.now();
-             },500);
-         }
-         
+        
          function forceRefreshPage(){
              // 清除所有相关缓存
              localStorage.removeItem('lottery_reward_config');
@@ -1626,16 +1809,16 @@
              REWARD_CONFIG=null;
              
              // 显示提示
-             var notif=document.createElement('div');
-             notif.style.cssText='position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
-             notif.innerHTML='🔄 正在刷新数据...';
-             document.body.appendChild(notif);
-             
-             // 强制重新加载页面（带时间戳）
-             setTimeout(function(){
-                 window.location.href=window.location.pathname+'?clear='+Date.now();
-             },500);
-         }
+            var notif = document.createElement('div');
+            notif.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg, rgba(16,185,129,0.95), rgba(5,150,105,0.95));color:white;padding:14px 28px;border-radius:10px;font-size:15px;z-index:9999;animation:fadeInDown 0.3s ease;box-shadow:0 8px 24px rgba(16,185,129,0.3);font-weight:600;';
+            notif.innerHTML = '🔄 正在强制刷新...<br><span style="font-size:12px;font-weight:normal;opacity:0.9;">正在清除所有缓存</span>';
+            document.body.appendChild(notif);
+            
+            // 强制硬刷新（绕过所有缓存）
+            setTimeout(function(){
+                location.reload(true);  // true = 硬刷新
+            },800);
+        }
         function saveData(){localStorage.setItem('lottery_data',JSON.stringify({totalDraws,lastStar5Draw,lastStar4Draw,lastStar5Type,drawHistory}))}
         function getRewards(t){
             var src=(REWARD_CONFIG&&REWARD_CONFIG[t])?REWARD_CONFIG[t]:(DEFAULT_REWARDS[t]||[]);
