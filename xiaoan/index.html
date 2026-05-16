@@ -3488,6 +3488,21 @@
                     throw updateErr;
                 }
 
+                // 同步更新 localStorage 中的 fineItems
+                const localFines = JSON.parse(localStorage.getItem('fineItems') || '[]');
+                const updatedFines = localFines.map(f => {
+                    if (String(f.id) === String(selectedId)) {
+                        return {
+                            ...f,
+                            remaining: Math.max(0, newRemaining),
+                            paid_amount: newPaid,
+                            isOverdue: isPaid ? false : f.isOverdue
+                        };
+                    }
+                    return f;
+                }).filter(f => !(f.remaining <= 0));
+                localStorage.setItem('fineItems', JSON.stringify(updatedFines));
+
                 // 扣本地兑换券
                 const newVoucher = currentVoucher - amount;
                 localStorage.setItem('voucher', String(newVoucher));
