@@ -247,6 +247,38 @@
             text-align: right;
         }
 
+        .task-action {
+            margin-top: 14px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-complete-task {
+            background: linear-gradient(135deg, #ff6b9d, #ffd93d);
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+            width: 100%;
+        }
+
+        .btn-complete-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255, 107, 157, 0.5);
+        }
+
+        .btn-complete-task:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .task-status {
             display: inline-block;
             padding: 6px 14px;
@@ -467,6 +499,9 @@
                     <div class="progress-bar"><div class="progress-fill" id="task1Fill" style="width: 0%"></div></div>
                     <div class="progress-text" id="task1Text">0/1</div>
                 </div>
+                <div class="task-action" id="task1Action">
+                    <button class="btn-complete-task" onclick="completeTask1()">✅ 完成任务</button>
+                </div>
             </div>
 
             <div class="task-card" id="task2">
@@ -482,6 +517,9 @@
                     <div class="progress-bar"><div class="progress-fill" id="task2Fill" style="width: 0%"></div></div>
                     <div class="progress-text" id="task2Text">0/1</div>
                 </div>
+                <div class="task-action" id="task2Action">
+                    <button class="btn-complete-task" onclick="completeTask2()">✅ 完成任务</button>
+                </div>
             </div>
 
             <div class="task-card" id="task3">
@@ -496,6 +534,9 @@
                 <div class="task-progress" id="task3Progress">
                     <div class="progress-bar"><div class="progress-fill" id="task3Fill" style="width: 0%"></div></div>
                     <div class="progress-text" id="task3Text">0/5</div>
+                </div>
+                <div class="task-action" id="task3Action">
+                    <button class="btn-complete-task" onclick="completeTask3()">✅ 完成一次</button>
                 </div>
             </div>
         </div>
@@ -705,47 +746,50 @@
             const task1El = document.getElementById('task1');
             const task1Fill = document.getElementById('task1Fill');
             const task1Text = document.getElementById('task1Text');
+            const task1Btn = document.getElementById('task1Action');
             if (data.task1Completed) {
                 task1El.classList.add('completed');
                 task1Fill.style.width = '100%';
                 task1Text.innerHTML = '<span class="task-status">✅ 已完成</span>';
+                task1Btn.innerHTML = '<button class="btn-complete-task" disabled>✅ 已完成</button>';
             } else {
                 task1El.classList.remove('completed');
                 task1Fill.style.width = '0%';
                 task1Text.textContent = '0/1';
-                task1Text.onclick = completeTask1;
-                task1Text.style.cursor = 'pointer';
+                task1Btn.innerHTML = '<button class="btn-complete-task" onclick="completeTask1()">✅ 完成任务</button>';
             }
 
             // Task 2
             const task2El = document.getElementById('task2');
             const task2Fill = document.getElementById('task2Fill');
             const task2Text = document.getElementById('task2Text');
+            const task2Btn = document.getElementById('task2Action');
             if (data.task2Completed) {
                 task2El.classList.add('completed');
                 task2Fill.style.width = '100%';
                 task2Text.innerHTML = '<span class="task-status">✅ 已完成</span>';
+                task2Btn.innerHTML = '<button class="btn-complete-task" disabled>✅ 已完成</button>';
             } else {
                 task2El.classList.remove('completed');
                 task2Fill.style.width = '0%';
                 task2Text.textContent = '0/1';
-                task2Text.onclick = completeTask2;
-                task2Text.style.cursor = 'pointer';
+                task2Btn.innerHTML = '<button class="btn-complete-task" onclick="completeTask2()">✅ 完成任务</button>';
             }
 
             // Task 3
             const task3El = document.getElementById('task3');
             const task3Fill = document.getElementById('task3Fill');
             const task3Text = document.getElementById('task3Text');
+            const task3Btn = document.getElementById('task3Action');
             const progress = (data.task3Count / 5) * 100;
             task3Fill.style.width = `${progress}%`;
             if (data.task3Count >= 5) {
                 task3El.classList.add('completed');
                 task3Text.innerHTML = '<span class="task-status">✅ 已完成</span>';
+                task3Btn.innerHTML = '<button class="btn-complete-task" disabled>✅ 已完成</button>';
             } else {
                 task3Text.textContent = `${data.task3Count}/5`;
-                task3Text.onclick = completeTask3;
-                task3Text.style.cursor = 'pointer';
+                task3Btn.innerHTML = '<button class="btn-complete-task" onclick="completeTask3()">✅ 完成一次</button>';
             }
         }
 
