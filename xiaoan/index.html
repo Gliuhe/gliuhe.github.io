@@ -1990,6 +1990,96 @@
             .wrb-left { flex-direction: column; }
         }
 
+        /* 儿童节活动横幅 */
+        .childrens-banner {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ffd93d 50%, #6c5ce7 100%);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3);
+            position: relative;
+            animation: childrensGlow 3s ease-in-out infinite;
+        }
+        @keyframes childrensGlow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3); }
+            50% { box-shadow: 0 8px 35px rgba(255, 217, 61, 0.5); }
+        }
+        .childrens-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        .childrens-banner-icon {
+            font-size: 2.5rem;
+            animation: bounceIcon 2s ease-in-out infinite;
+        }
+        @keyframes bounceIcon {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+        .childrens-banner-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .childrens-banner-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .childrens-banner-desc {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .childrens-banner-btn {
+            background: #fff;
+            color: #ff6b9d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .childrens-banner-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .childrens-close-btn {
+            background: rgba(255,255,255,0.3);
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .childrens-close-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        @media (max-width: 600px) {
+            .childrens-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 14px 16px;
+            }
+            .childrens-banner-content {
+                flex-direction: column;
+            }
+        }
+
         /* 排行榜样式 */
         .leaderboard-modal-content {
             position: relative;
@@ -2235,6 +2325,19 @@
             <button class="fine-banner-btn primary" onclick="openFineModal()">立即缴纳</button>
             <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
         </div>
+    </div>
+
+    <!-- 儿童节活动横幅 -->
+    <div id="childrensBanner" class="childrens-banner" style="display:none;">
+        <div class="childrens-banner-content">
+            <div class="childrens-banner-icon">🎈</div>
+            <div class="childrens-banner-text">
+                <span class="childrens-banner-title">🎊 六一儿童节活动进行中 🎊</span>
+                <span class="childrens-banner-desc">完成任务赢奖励，兑换商品享50%返还！</span>
+            </div>
+        </div>
+        <button class="childrens-banner-btn" onclick="window.location.href='activity/61.html'">🎈 前往活动</button>
+        <button class="childrens-close-btn" onclick="closeChildrensBanner()">✕</button>
     </div>
 
     <div class="container">
@@ -3246,8 +3349,23 @@
             }
             
             if (confirm(`确定要兑换 ${product.name} 吗？这将花费 ${product.price} 兑换券。`)) {
-                const newAmount = currentVoucher - product.price;
+                let actualPrice = product.price;
+                let refunded = 0;
+                
+                // 儿童节特惠：活动期间兑换商品返还50%（除兑换其他货币）
+                if (isChildrensDayActivityActive() && product.type !== 'currency_exchange') {
+                    refunded = Math.floor(product.price * 0.5);
+                    actualPrice = product.price - refunded;
+                }
+                
+                const newAmount = currentVoucher - actualPrice;
                 localStorage.setItem('voucher', newAmount);
+                
+                // 返还部分
+                if (refunded > 0) {
+                    const afterRefund = parseInt(localStorage.getItem('voucher') || '0');
+                    localStorage.setItem('voucher', afterRefund + refunded);
+                }
                 
                 // 更新每日兑换记录
                 dailyExchange[product.id] = todayExchanges + 1;
@@ -3255,19 +3373,27 @@
                 
                 // 添加历史记录
                 const history = JSON.parse(localStorage.getItem('history'));
+                let reason = `兑换商品：${product.name}`;
+                if (refunded > 0) {
+                    reason += `（儿童节特惠返还${refunded}兑换券）`;
+                }
                 history.push({
                     date: new Date().toISOString(),
-                    amount: -product.price,
-                    reason: `兑换商品：${product.name}`,
+                    amount: -actualPrice,
+                    reason: reason,
                     type: 'exchange',
                     currencyType: 'voucher',
                     currencyName: '兑换券',
-                    balanceAfter: newAmount
+                    balanceAfter: newAmount + refunded
                 });
                 localStorage.setItem('history', JSON.stringify(history));
                 
                 updateUI();
-                showStatus(`成功兑换 ${product.name}！`);
+                let msg = `成功兑换 ${product.name}！`;
+                if (refunded > 0) {
+                    msg += ` 🎈 儿童节特惠返还 ${refunded} 兑换券！`;
+                }
+                showStatus(msg);
             }
         }
         
@@ -4803,6 +4929,9 @@
                     // 检查并执行排行榜重置
                     checkAndResetLeaderboard();
                     
+                    // 显示儿童节活动横幅
+                    showChildrensBanner();
+                    
                     console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
                 }).catch(err => {
                     console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
@@ -5942,6 +6071,27 @@
         function goToDrawnTask() {
             closeDrawModal();
             window.location.href = 'rule/index.html?taskId=' + (_currentDrawnTaskId || '');
+        }
+
+        // ===== 🎈 儿童节特惠系统 =====
+        const CHILDRENS_START = new Date('2026-05-30');
+        const CHILDRENS_END = new Date('2026-06-07 23:59:59');
+
+        function isChildrensDayActivityActive() {
+            const now = new Date();
+            return now >= CHILDRENS_START && now <= CHILDRENS_END;
+        }
+
+        function showChildrensBanner() {
+            if (isChildrensDayActivityActive()) {
+                const banner = document.getElementById('childrensBanner');
+                if (banner) banner.style.display = 'flex';
+            }
+        }
+
+        function closeChildrensBanner() {
+            document.getElementById('childrensBanner').style.display = 'none';
+            localStorage.setItem('childrensBannerClosed', 'true');
         }
 
         // ===== 🏆 排行榜系统 =====
