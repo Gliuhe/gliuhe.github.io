@@ -5958,28 +5958,28 @@
 
             try {
                 const allowedIds = LEADERBOARD_ALLOWED_USERS;
-                const { data: tasksData, error: tasksError } = await sb
-                    .from('active_tasks')
-                    .select('user_id, status, completed_time')
+                const { data, error } = await sb
+                    .from('user_currencies')
+                    .select('user_id, currency_type, amount')
                     .in('user_id', allowedIds);
 
-                if (tasksError) {
-                    throw new Error(tasksError.message);
+                if (error) {
+                    throw new Error(error.message);
                 }
 
                 const userMap = {};
-                allowedIds.forEach(userId => {
-                    userMap[userId] = { user_id: userId, completed_tasks: 0, total_score: 0 };
-                });
-
-                (tasksData || []).forEach(row => {
-                    if (row.status === 'completed' && row.user_id && userMap[row.user_id]) {
-                        userMap[row.user_id].completed_tasks++;
+                (data || []).forEach(row => {
+                    if (!userMap[row.user_id]) {
+                        userMap[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0 };
                     }
+                    const val = parseFloat(row.amount) || 0;
+                    if (row.currency_type === 'voucher') userMap[row.user_id].voucher = val;
+                    else if (row.currency_type === 'lottery') userMap[row.user_id].lottery = val;
+                    else if (row.currency_type === 'premium') userMap[row.user_id].premium = val;
                 });
 
                 const result = Object.values(userMap).map(u => {
-                    u.total_score = u.completed_tasks;
+                    u.total_score = u.voucher + u.lottery + u.premium;
                     return u;
                 });
 
@@ -6003,29 +6003,22 @@
                     console.warn('[Leaderboard] user_profiles 表不存在，将使用 UUID 显示用户名');
                     const allowedIds = LEADERBOARD_ALLOWED_USERS;
                     try {
-                        const { data: tasksData, error: tasksError } = await sb
-                            .from('active_tasks')
-                            .select('user_id, status, completed_time')
+                        const { data, error } = await sb
+                            .from('user_currencies')
+                            .select('user_id, currency_type, amount')
                             .in('user_id', allowedIds);
-                        if (tasksError) throw new Error(tasksError.message);
-
+                        if (error) throw new Error(error.message);
                         const userMap2 = {};
-                        allowedIds.forEach(userId => {
-                            userMap2[userId] = { user_id: userId, completed_tasks: 0, total_score: 0, username: userId.substring(0, 8) };
-                        });
-
-                        (tasksData || []).forEach(row => {
-                            if (row.status === 'completed' && row.user_id && userMap2[row.user_id]) {
-                                userMap2[row.user_id].completed_tasks++;
+                        (data || []).forEach(row => {
+                            if (!userMap2[row.user_id]) {
+                                userMap2[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0, username: row.user_id.substring(0, 8) };
                             }
+                            const val = parseFloat(row.amount) || 0;
+                            if (row.currency_type === 'voucher') userMap2[row.user_id].voucher = val;
+                            else if (row.currency_type === 'lottery') userMap2[row.user_id].lottery = val;
+                            else if (row.currency_type === 'premium') userMap2[row.user_id].premium = val;
                         });
-
-                        const result = Object.values(userMap2).map(u => {
-                            u.total_score = u.completed_tasks;
-                            return u;
-                        });
-
-                        _leaderboardCache = result;
+                        _leaderboardCache = Object.values(userMap2);
                         _leaderboardLastFetch = now;
                         return _leaderboardCache;
                     } catch(e2) {
@@ -6081,11 +6074,11 @@
                         <div class="leaderboard-avatar" id="lbAvatar_${item.user_id}">${initial}</div>
                         <div class="leaderboard-info">
                             <div class="leaderboard-name">${name}${isCurrentUser ? ' (我)' : ''}</div>
-                            <div class="leaderboard-subtitle">完成任务: ${item.completed_tasks || 0}</div>
+                            <div class="leaderboard-subtitle">兑换券: ${item.voucher || 0}</div>
                         </div>
                         <div class="leaderboard-score">
                             <div class="leaderboard-score-value">${item.total_score || 0}</div>
-                            <div class="leaderboard-score-label">任务积分</div>
+                            <div class="leaderboard-score-label">总积分</div>
                         </div>
                     </div>
                 `;
