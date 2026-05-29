@@ -4800,6 +4800,9 @@
                     // 预加载排行榜数据
                     loadLeaderboardData().then(() => {}).catch(() => {});
                     
+                    // 检查并执行排行榜重置
+                    checkAndResetLeaderboard();
+                    
                     console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
                 }).catch(err => {
                     console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
@@ -5943,8 +5946,101 @@
 
         // ===== 🏆 排行榜系统 =====
         const LEADERBOARD_ALLOWED_USERS = ['34b895c9-effa-4647-bfca-160cf0d4c7d4', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'];
+        const LEADERBOARD_RESET_DAYS = 14; // 每两周重置
         let _leaderboardCache = null;
         let _leaderboardLastFetch = 0;
+
+        function getLeaderboardResetInfo() {
+            const lastReset = localStorage.getItem('leaderboard_last_reset');
+            if (!lastReset) {
+                const now = new Date();
+                localStorage.setItem('leaderboard_last_reset', now.toISOString());
+                return { lastReset: now, daysLeft: LEADERBOARD_RESET_DAYS };
+            }
+            const resetDate = new Date(lastReset);
+            const nextReset = new Date(resetDate.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            const now = new Date();
+            const msLeft = nextReset.getTime() - now.getTime();
+            const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+            return { lastReset: resetDate, nextReset, daysLeft, msLeft };
+        }
+
+        async function checkAndResetLeaderboard() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) return;
+            
+            const { daysLeft } = getLeaderboardResetInfo();
+            if (daysLeft > 0) return;
+            
+            console.log('[Leaderboard] 🔄 开始重置排行榜...');
+            
+            // 获取当前排行榜
+            const data = await loadLeaderboardData(true);
+            if (data.length === 0) return;
+            
+            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
+            const winner = sorted[0];
+            
+            if (winner && winner.task_points > 0) {
+                // 给第一名发放奖励：2000兑换券 + 10抽奖券
+                try {
+                    // 更新兑换券
+                    const { data: vRows } = await sb.from('user_currencies')
+                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'voucher').maybeSingle();
+                    const currentV = parseFloat(vRows?.amount) || 0;
+                    await sb.from('user_currencies').upsert({
+                        user_id: winner.user_id,
+                        currency_type: 'voucher',
+                        amount: currentV + 2000,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+                    
+                    // 更新抽奖券
+                    const { data: lRows } = await sb.from('user_currencies')
+                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'lottery').maybeSingle();
+                    const currentL = parseFloat(lRows?.amount) || 0;
+                    await sb.from('user_currencies').upsert({
+                        user_id: winner.user_id,
+                        currency_type: 'lottery',
+                        amount: currentL + 10,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+                    
+                    // 发送通知给获胜者
+                    const { data: notif } = await sb.from('notifications').insert({
+                        user_id: winner.user_id,
+                        title: '🏆 排行榜奖励发放',
+                        content: `恭喜你在排行榜中取得第一名！获得奖励：2000兑换券 + 10抽奖券！`,
+                        type: 'success',
+                        created_at: new Date().toISOString()
+                    });
+                    
+                    console.log(`[Leaderboard] ✅ 已给 ${winner.username || winner.user_id} 发放奖励`);
+                    showStatus(`🏆 排行榜已重置！恭喜 ${winner.username || '第一名'} 获得奖励！`, 'success');
+                } catch(e) {
+                    console.error('[Leaderboard] 发放奖励失败:', e.message);
+                }
+            }
+            
+            // 重置所有用户的任务积分为0
+            for (const userId of LEADERBOARD_ALLOWED_USERS) {
+                try {
+                    await sb.from('user_currencies').upsert({
+                        user_id: userId,
+                        currency_type: 'task_points',
+                        amount: 0,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+                } catch(e) {
+                    console.warn(`[Leaderboard] 重置用户 ${userId} 失败:`, e.message);
+                }
+            }
+            
+            // 更新重置时间
+            localStorage.setItem('leaderboard_last_reset', new Date().toISOString());
+            _leaderboardCache = null;
+        }
 
         async function loadLeaderboardData(force = false) {
             const sb = window.__cloudClient;
@@ -5970,17 +6066,11 @@
                 const userMap = {};
                 (data || []).forEach(row => {
                     if (!userMap[row.user_id]) {
-                        userMap[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0 };
+                        userMap[row.user_id] = { user_id: row.user_id, task_points: 0 };
                     }
-                    const val = parseFloat(row.amount) || 0;
-                    if (row.currency_type === 'voucher') userMap[row.user_id].voucher = val;
-                    else if (row.currency_type === 'lottery') userMap[row.user_id].lottery = val;
-                    else if (row.currency_type === 'premium') userMap[row.user_id].premium = val;
-                });
-
-                const result = Object.values(userMap).map(u => {
-                    u.total_score = u.voucher + u.lottery + u.premium;
-                    return u;
+                    if (row.currency_type === 'task_points') {
+                        userMap[row.user_id].task_points = parseFloat(row.amount) || 0;
+                    }
                 });
 
                 const usernames = await sb
@@ -5990,17 +6080,24 @@
 
                 if (usernames?.data) {
                     usernames.data.forEach(u => {
-                        const found = result.find(r => r.user_id === u.user_id);
+                        const found = Object.values(userMap).find(r => r.user_id === u.user_id);
                         if (found) found.username = u.username;
                     });
                 }
 
-                _leaderboardCache = result;
+                // 确保所有用户都在列表中
+                allowedIds.forEach(uid2 => {
+                    if (!userMap[uid2]) {
+                        userMap[uid2] = { user_id: uid2, task_points: 0, username: uid2.substring(0, 8) };
+                    }
+                });
+
+                _leaderboardCache = Object.values(userMap);
                 _leaderboardLastFetch = now;
                 return _leaderboardCache;
             } catch(e) {
                 if (e.message && e.message.includes('user_profiles')) {
-                    console.warn('[Leaderboard] user_profiles 表不存在，将使用 UUID 显示用户名');
+                    console.warn('[Leaderboard] user_profiles 表不存在');
                     const allowedIds = LEADERBOARD_ALLOWED_USERS;
                     try {
                         const { data, error } = await sb
@@ -6011,12 +6108,16 @@
                         const userMap2 = {};
                         (data || []).forEach(row => {
                             if (!userMap2[row.user_id]) {
-                                userMap2[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0, username: row.user_id.substring(0, 8) };
+                                userMap2[row.user_id] = { user_id: row.user_id, task_points: 0, username: row.user_id.substring(0, 8) };
                             }
-                            const val = parseFloat(row.amount) || 0;
-                            if (row.currency_type === 'voucher') userMap2[row.user_id].voucher = val;
-                            else if (row.currency_type === 'lottery') userMap2[row.user_id].lottery = val;
-                            else if (row.currency_type === 'premium') userMap2[row.user_id].premium = val;
+                            if (row.currency_type === 'task_points') {
+                                userMap2[row.user_id].task_points = parseFloat(row.amount) || 0;
+                            }
+                        });
+                        allowedIds.forEach(uid2 => {
+                            if (!userMap2[uid2]) {
+                                userMap2[uid2] = { user_id: uid2, task_points: 0, username: uid2.substring(0, 8) };
+                            }
                         });
                         _leaderboardCache = Object.values(userMap2);
                         _leaderboardLastFetch = now;
@@ -6043,10 +6144,17 @@
 
         async function renderLeaderboard(isRefresh = false) {
             const list = document.getElementById('leaderboardList');
+            const timer = document.getElementById('leaderboardTimer');
             const uid = window.__cloudUserId || '';
 
             if (!isRefresh) {
                 list.innerHTML = '<div class="leaderboard-loading"><div class="spinner"></div><div>加载中...</div></div>';
+            }
+
+            // 显示距重置天数
+            const { daysLeft } = getLeaderboardResetInfo();
+            if (timer) {
+                timer.innerHTML = `<span style="font-size:0.85rem;color:#64748b;">⏰ 距重置还有 <strong style="color:#f59e0b;">${daysLeft}</strong> 天</span>`;
             }
 
             const data = await loadLeaderboardData(isRefresh);
@@ -6056,7 +6164,7 @@
                 return;
             }
 
-            const sorted = [...data].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
             const rankClasses = ['gold', 'silver', 'bronze'];
 
             list.innerHTML = sorted.map((item, index) => {
@@ -6074,11 +6182,11 @@
                         <div class="leaderboard-avatar" id="lbAvatar_${item.user_id}">${initial}</div>
                         <div class="leaderboard-info">
                             <div class="leaderboard-name">${name}${isCurrentUser ? ' (我)' : ''}</div>
-                            <div class="leaderboard-subtitle">兑换券: ${item.voucher || 0}</div>
+                            <div class="leaderboard-subtitle">🏆 第${rank}名</div>
                         </div>
                         <div class="leaderboard-score">
-                            <div class="leaderboard-score-value">${item.total_score || 0}</div>
-                            <div class="leaderboard-score-label">总积分</div>
+                            <div class="leaderboard-score-value">${item.task_points || 0}</div>
+                            <div class="leaderboard-score-label">任务积分</div>
                         </div>
                     </div>
                 `;
@@ -7198,6 +7306,7 @@
                 <button onclick="closeLeaderboard()">✕</button>
             </div>
             <div class="leaderboard-body">
+                <div id="leaderboardTimer" style="text-align:center;margin-bottom:12px;"></div>
                 <div class="leaderboard-refresh">
                     <button class="leaderboard-refresh-btn" id="leaderboardRefreshBtn" onclick="refreshLeaderboard()">🔄 刷新数据</button>
                 </div>
