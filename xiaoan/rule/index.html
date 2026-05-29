@@ -1866,6 +1866,21 @@
             });
             localStorage.setItem('history', JSON.stringify(history));
 
+            // 任务积分奖励（每完成1个任务获得1点积分）
+            const taskPoints = parseInt(localStorage.getItem('task_points') || '0') + 1;
+            localStorage.setItem('task_points', String(taskPoints));
+            history.push({
+                date: new Date().toISOString(),
+                amount: 1,
+                reason: `完成任务：${rule.title}`,
+                type: 'add',
+                currencyType: 'task_points',
+                currencyName: '任务积分',
+                status: 'completed'
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+            syncTaskPointsToCloud(taskPoints);
+
             // 更新任务状态并记录完成时间
             activeTasks[id] = {
                 status: 'completed',
@@ -2314,6 +2329,29 @@
         }
 
         // 启动应用
+        
+        // 任务积分同步到云端
+        async function syncTaskPointsToCloud(taskPoints) {
+            const userId = USER_ID;
+            try {
+                if (!window.supabase) return;
+                const sbClient = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2VyIiwiaWF0IjoxNzc1NjM3ODM1LCJleHAiOjIwOTEyMTM4MzV9.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
+                    { db: { schema: 'public' } }
+                );
+                await sbClient.from('user_currencies').upsert({
+                    user_id: userId,
+                    currency_type: 'task_points',
+                    amount: taskPoints,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,currency_type' });
+                console.log('[TaskPoints] 已同步到云端:', taskPoints);
+            } catch(e) {
+                console.warn('[TaskPoints] 同步失败:', e.message);
+            }
+        }
+        
         initApp();
     </script>
 </body>

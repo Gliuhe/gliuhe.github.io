@@ -1989,6 +1989,294 @@
             .write-reminder-banner { flex-direction: column; text-align: center; }
             .wrb-left { flex-direction: column; }
         }
+
+        /* 儿童节活动横幅 */
+        .childrens-banner {
+            max-width: 1200px;
+            margin: 16px auto 0;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ffd93d 50%, #6c5ce7 100%);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3);
+            position: relative;
+            animation: childrensGlow 3s ease-in-out infinite;
+        }
+        @keyframes childrensGlow {
+            0%, 100% { box-shadow: 0 8px 25px rgba(255, 107, 157, 0.3); }
+            50% { box-shadow: 0 8px 35px rgba(255, 217, 61, 0.5); }
+        }
+        .childrens-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        .childrens-banner-icon {
+            font-size: 2.5rem;
+            animation: bounceIcon 2s ease-in-out infinite;
+        }
+        @keyframes bounceIcon {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-5px) rotate(5deg); }
+        }
+        .childrens-banner-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .childrens-banner-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .childrens-banner-desc {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            margin-top: 2px;
+        }
+        .childrens-banner-btn {
+            background: #fff;
+            color: #ff6b9d;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        .childrens-banner-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .childrens-close-btn {
+            background: rgba(255,255,255,0.3);
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .childrens-close-btn:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        @media (max-width: 600px) {
+            .childrens-banner {
+                flex-direction: column;
+                text-align: center;
+                padding: 14px 16px;
+            }
+            .childrens-banner-content {
+                flex-direction: column;
+            }
+        }
+
+        /* 排行榜样式 */
+        .leaderboard-modal-content {
+            position: relative;
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #fff;
+        }
+        .leaderboard-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .leaderboard-header button {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .leaderboard-header button:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        .leaderboard-body {
+            padding: 20px 24px;
+        }
+        .leaderboard-refresh {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+        .leaderboard-refresh-btn {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #0284c7;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .leaderboard-refresh-btn:hover {
+            background: #e0f2fe;
+        }
+        .leaderboard-refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .leaderboard-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .leaderboard-item.current-user {
+            background: #fffbeb;
+            border-color: #fbbf24;
+            box-shadow: 0 2px 8px rgba(251,191,36,0.2);
+        }
+        .leaderboard-rank {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .leaderboard-rank.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #fff;
+        }
+        .leaderboard-rank.silver {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            color: #fff;
+        }
+        .leaderboard-rank.bronze {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: #fff;
+        }
+        .leaderboard-rank.normal {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .leaderboard-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #475569;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .leaderboard-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .leaderboard-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .leaderboard-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .leaderboard-subtitle {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .leaderboard-score {
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .leaderboard-score-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        .leaderboard-score-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .leaderboard-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        .leaderboard-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .leaderboard-loading {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+        .leaderboard-loading .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #059669;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -2012,6 +2300,7 @@
             <button class="quick-btn" onclick="openMailbox()" id="mailBtn" title="邮箱">📬<span class="mail-unread" id="mailUnreadBadge" style="display:none;">0</span></button>
             <button class="quick-btn" onclick="window.location.href='rule/announcement.html'" title="公告栏">📢</button>
             <button class="quick-btn" onclick="drawRandomTask()" id="drawTaskBtn" title="随机抽取任务">🎲</button>
+            <button class="quick-btn" onclick="openLeaderboard()" id="leaderboardBtn" title="排行榜">🏆</button>
         </div>
         <button class="btn-logout" onclick="doLogout()">退出</button>
     </div>
@@ -2036,6 +2325,19 @@
             <button class="fine-banner-btn primary" onclick="openFineModal()">立即缴纳</button>
             <button class="fine-banner-btn secondary" onclick="hideFineBanner()">稍后处理</button>
         </div>
+    </div>
+
+    <!-- 儿童节活动横幅 -->
+    <div id="childrensBanner" class="childrens-banner" style="display:none;">
+        <div class="childrens-banner-content">
+            <div class="childrens-banner-icon">🎈</div>
+            <div class="childrens-banner-text">
+                <span class="childrens-banner-title">🎊 六一儿童节活动进行中 🎊</span>
+                <span class="childrens-banner-desc">完成任务赢奖励，兑换商品享50%返还！</span>
+            </div>
+        </div>
+        <button class="childrens-banner-btn" onclick="window.location.href='activity/61.html'">🎈 前往活动</button>
+        <button class="childrens-close-btn" onclick="closeChildrensBanner()">✕</button>
     </div>
 
     <div class="container">
@@ -3047,8 +3349,23 @@
             }
             
             if (confirm(`确定要兑换 ${product.name} 吗？这将花费 ${product.price} 兑换券。`)) {
-                const newAmount = currentVoucher - product.price;
+                let actualPrice = product.price;
+                let refunded = 0;
+                
+                // 儿童节特惠：活动期间兑换商品返还50%（除兑换其他货币）
+                if (isChildrensDayActivityActive() && product.type !== 'currency_exchange') {
+                    refunded = Math.floor(product.price * 0.5);
+                    actualPrice = product.price - refunded;
+                }
+                
+                const newAmount = currentVoucher - actualPrice;
                 localStorage.setItem('voucher', newAmount);
+                
+                // 返还部分
+                if (refunded > 0) {
+                    const afterRefund = parseInt(localStorage.getItem('voucher') || '0');
+                    localStorage.setItem('voucher', afterRefund + refunded);
+                }
                 
                 // 更新每日兑换记录
                 dailyExchange[product.id] = todayExchanges + 1;
@@ -3056,19 +3373,27 @@
                 
                 // 添加历史记录
                 const history = JSON.parse(localStorage.getItem('history'));
+                let reason = `兑换商品：${product.name}`;
+                if (refunded > 0) {
+                    reason += `（儿童节特惠返还${refunded}兑换券）`;
+                }
                 history.push({
                     date: new Date().toISOString(),
-                    amount: -product.price,
-                    reason: `兑换商品：${product.name}`,
+                    amount: -actualPrice,
+                    reason: reason,
                     type: 'exchange',
                     currencyType: 'voucher',
                     currencyName: '兑换券',
-                    balanceAfter: newAmount
+                    balanceAfter: newAmount + refunded
                 });
                 localStorage.setItem('history', JSON.stringify(history));
                 
                 updateUI();
-                showStatus(`成功兑换 ${product.name}！`);
+                let msg = `成功兑换 ${product.name}！`;
+                if (refunded > 0) {
+                    msg += ` 🎈 儿童节特惠返还 ${refunded} 兑换券！`;
+                }
+                showStatus(msg);
             }
         }
         
@@ -4598,6 +4923,15 @@
                     // 更新罚款横幅（云连接成功后）
                     updateFineBanner();
                     
+                    // 预加载排行榜数据
+                    loadLeaderboardData().then(() => {}).catch(() => {});
+                    
+                    // 检查并执行排行榜重置
+                    checkAndResetLeaderboard();
+                    
+                    // 显示儿童节活动横幅
+                    showChildrensBanner();
+                    
                     console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
                 }).catch(err => {
                     console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
@@ -5739,6 +6073,359 @@
             window.location.href = 'rule/index.html?taskId=' + (_currentDrawnTaskId || '');
         }
 
+        // ===== 🎈 儿童节特惠系统 =====
+        const CHILDRENS_START = new Date('2026-05-30');
+        const CHILDRENS_END = new Date('2026-06-07 23:59:59');
+
+        function isChildrensDayActivityActive() {
+            const now = new Date();
+            return now >= CHILDRENS_START && now <= CHILDRENS_END;
+        }
+
+        function showChildrensBanner() {
+            if (isChildrensDayActivityActive()) {
+                const banner = document.getElementById('childrensBanner');
+                if (banner) banner.style.display = 'flex';
+            }
+        }
+
+        function closeChildrensBanner() {
+            document.getElementById('childrensBanner').style.display = 'none';
+            localStorage.setItem('childrensBannerClosed', 'true');
+        }
+
+        // ===== 🏆 排行榜系统 =====
+        const LEADERBOARD_ALLOWED_USERS = ['34b895c9-effa-4647-bfca-160cf0d4c7d4', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'];
+        const LEADERBOARD_RESET_DAYS = 14; // 每两周重置
+        let _leaderboardCache = null;
+        let _leaderboardLastFetch = 0;
+
+        function getCycleStartFromLocal() {
+            return localStorage.getItem('leaderboard_cycle_start');
+        }
+
+        function setCycleStartToLocal(val) {
+            localStorage.setItem('leaderboard_cycle_start', val);
+        }
+
+        async function ensureLeaderboardCycle() {
+            const sb = window.__cloudClient;
+            if (!sb) return null;
+
+            try {
+                const { data, error } = await sb
+                    .from('leaderboard_cycle')
+                    .select('cycle_start')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (data?.cycle_start) {
+                    setCycleStartToLocal(data.cycle_start);
+                    return new Date(data.cycle_start);
+                }
+
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('[Leaderboard] 查询周期失败:', error.message);
+                    const local = getCycleStartFromLocal();
+                    if (local) return new Date(local);
+                    const fallback = new Date();
+                    setCycleStartToLocal(fallback.toISOString());
+                    return fallback;
+                }
+
+                const now = new Date();
+                const { error: insertErr } = await sb
+                    .from('leaderboard_cycle')
+                    .insert({ id: 1, cycle_start: now.toISOString() });
+
+                if (insertErr) {
+                    const local = getCycleStartFromLocal();
+                    if (local) return new Date(local);
+                    setCycleStartToLocal(now.toISOString());
+                    return now;
+                }
+
+                setCycleStartToLocal(now.toISOString());
+                return now;
+            } catch(e) {
+                console.warn('[Leaderboard] 周期获取失败:', e.message);
+                const local = getCycleStartFromLocal();
+                if (local) return new Date(local);
+                const fallback = new Date();
+                setCycleStartToLocal(fallback.toISOString());
+                return fallback;
+            }
+        }
+
+        async function checkAndResetLeaderboard() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) return;
+
+            const cycleStart = await ensureLeaderboardCycle();
+            if (!cycleStart) return;
+
+            const now = new Date();
+            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            if (now < nextReset) return;
+
+            console.log('[Leaderboard] 🔄 开始重置排行榜...');
+
+            // 获取当前排行榜
+            const data = await loadLeaderboardData(true);
+            if (data.length === 0) return;
+
+            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
+            const winner = sorted[0];
+
+            if (winner && winner.task_points > 0) {
+                try {
+                    const { data: vRows } = await sb.from('user_currencies')
+                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'voucher').maybeSingle();
+                    const currentV = parseFloat(vRows?.amount) || 0;
+                    await sb.from('user_currencies').upsert({
+                        user_id: winner.user_id,
+                        currency_type: 'voucher',
+                        amount: currentV + 2000,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+
+                    const { data: lRows } = await sb.from('user_currencies')
+                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'lottery').maybeSingle();
+                    const currentL = parseFloat(lRows?.amount) || 0;
+                    await sb.from('user_currencies').upsert({
+                        user_id: winner.user_id,
+                        currency_type: 'lottery',
+                        amount: currentL + 10,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+
+                    await sb.from('notifications').insert({
+                        user_id: winner.user_id,
+                        title: '🏆 排行榜奖励发放',
+                        content: `恭喜你在排行榜中取得第一名！获得奖励：2000兑换券 + 10抽奖券！`,
+                        type: 'success',
+                        created_at: new Date().toISOString()
+                    });
+
+                    console.log(`[Leaderboard] ✅ 已给 ${winner.username || winner.user_id} 发放奖励`);
+                    showStatus(`🏆 排行榜已重置！恭喜 ${winner.username || '第一名'} 获得奖励！`, 'success');
+                } catch(e) {
+                    console.error('[Leaderboard] 发放奖励失败:', e.message);
+                }
+            }
+
+            for (const userId of LEADERBOARD_ALLOWED_USERS) {
+                try {
+                    await sb.from('user_currencies').upsert({
+                        user_id: userId,
+                        currency_type: 'task_points',
+                        amount: 0,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+                } catch(e) {
+                    console.warn(`[Leaderboard] 重置用户 ${userId} 失败:`, e.message);
+                }
+            }
+
+            const newStart = new Date();
+            await sb.from('leaderboard_cycle')
+                .update({ cycle_start: newStart.toISOString(), updated_at: new Date().toISOString() })
+                .eq('id', 1);
+            setCycleStartToLocal(newStart.toISOString());
+
+            _leaderboardCache = null;
+        }
+
+        function computeResetDays(cycleStartStr) {
+            if (!cycleStartStr) return LEADERBOARD_RESET_DAYS;
+            const cycleStart = new Date(cycleStartStr);
+            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            const msLeft = nextReset.getTime() - Date.now();
+            return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+        }
+
+        async function loadLeaderboardData(force = false) {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) return [];
+
+            const now = Date.now();
+            if (!force && _leaderboardCache && (now - _leaderboardLastFetch) < 60000) {
+                return _leaderboardCache;
+            }
+
+            try {
+                const allowedIds = LEADERBOARD_ALLOWED_USERS;
+                const { data, error } = await sb
+                    .from('user_currencies')
+                    .select('user_id, currency_type, amount')
+                    .in('user_id', allowedIds);
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                const userMap = {};
+                (data || []).forEach(row => {
+                    if (!userMap[row.user_id]) {
+                        userMap[row.user_id] = { user_id: row.user_id, task_points: 0 };
+                    }
+                    if (row.currency_type === 'task_points') {
+                        userMap[row.user_id].task_points = parseFloat(row.amount) || 0;
+                    }
+                });
+
+                const usernames = await sb
+                    .from('user_profiles')
+                    .select('user_id, username')
+                    .in('user_id', allowedIds);
+
+                if (usernames?.data) {
+                    usernames.data.forEach(u => {
+                        const found = Object.values(userMap).find(r => r.user_id === u.user_id);
+                        if (found) found.username = u.username;
+                    });
+                }
+
+                // 确保所有用户都在列表中
+                allowedIds.forEach(uid2 => {
+                    if (!userMap[uid2]) {
+                        userMap[uid2] = { user_id: uid2, task_points: 0, username: uid2.substring(0, 8) };
+                    }
+                });
+
+                _leaderboardCache = Object.values(userMap);
+                _leaderboardLastFetch = now;
+                return _leaderboardCache;
+            } catch(e) {
+                if (e.message && e.message.includes('user_profiles')) {
+                    console.warn('[Leaderboard] user_profiles 表不存在');
+                    const allowedIds = LEADERBOARD_ALLOWED_USERS;
+                    try {
+                        const { data, error } = await sb
+                            .from('user_currencies')
+                            .select('user_id, currency_type, amount')
+                            .in('user_id', allowedIds);
+                        if (error) throw new Error(error.message);
+                        const userMap2 = {};
+                        (data || []).forEach(row => {
+                            if (!userMap2[row.user_id]) {
+                                userMap2[row.user_id] = { user_id: row.user_id, task_points: 0, username: row.user_id.substring(0, 8) };
+                            }
+                            if (row.currency_type === 'task_points') {
+                                userMap2[row.user_id].task_points = parseFloat(row.amount) || 0;
+                            }
+                        });
+                        allowedIds.forEach(uid2 => {
+                            if (!userMap2[uid2]) {
+                                userMap2[uid2] = { user_id: uid2, task_points: 0, username: uid2.substring(0, 8) };
+                            }
+                        });
+                        _leaderboardCache = Object.values(userMap2);
+                        _leaderboardLastFetch = now;
+                        return _leaderboardCache;
+                    } catch(e2) {
+                        console.warn('[Leaderboard] 备用查询也失败:', e2.message);
+                    }
+                }
+                return _leaderboardCache || [];
+            }
+        }
+
+        async function refreshLeaderboard() {
+            const btn = document.getElementById('leaderboardRefreshBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 刷新中...';
+
+            _leaderboardCache = null;
+            await renderLeaderboard(true);
+
+            btn.disabled = false;
+            btn.textContent = '🔄 刷新数据';
+        }
+
+        async function renderLeaderboard(isRefresh = false) {
+            const list = document.getElementById('leaderboardList');
+            const timer = document.getElementById('leaderboardTimer');
+            const uid = window.__cloudUserId || '';
+
+            if (!isRefresh) {
+                list.innerHTML = '<div class="leaderboard-loading"><div class="spinner"></div><div>加载中...</div></div>';
+            }
+
+            // 显示距重置天数
+            const cycleStart = getCycleStartFromLocal();
+            const daysLeft = computeResetDays(cycleStart);
+            if (timer) {
+                timer.innerHTML = `<span style="font-size:0.85rem;color:#64748b;">⏰ 距重置还有 <strong style="color:#f59e0b;">${daysLeft}</strong> 天</span>`;
+            }
+
+            const data = await loadLeaderboardData(isRefresh);
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="leaderboard-empty"><div class="leaderboard-empty-icon">🏆</div><div>暂无排行榜数据</div></div>';
+                return;
+            }
+
+            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
+            const rankClasses = ['gold', 'silver', 'bronze'];
+
+            list.innerHTML = sorted.map((item, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? rankClasses[rank - 1] : 'normal';
+                const isCurrentUser = String(item.user_id) === String(uid);
+                const name = item.username || item.user_id.substring(0, 8);
+                const initial = name.charAt(0).toUpperCase();
+                const medalIcons = ['🥇', '🥈', '🥉'];
+                const medal = rank <= 3 ? medalIcons[rank - 1] : `#${rank}`;
+
+                return `
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                        <div class="leaderboard-rank ${rankClass}">${medal}</div>
+                        <div class="leaderboard-avatar" id="lbAvatar_${item.user_id}">${initial}</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">${name}${isCurrentUser ? ' (我)' : ''}</div>
+                            <div class="leaderboard-subtitle">🏆 第${rank}名</div>
+                        </div>
+                        <div class="leaderboard-score">
+                            <div class="leaderboard-score-value">${item.task_points || 0}</div>
+                            <div class="leaderboard-score-label">任务积分</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            sorted.forEach(item => {
+                loadLeaderboardAvatar(item.user_id);
+            });
+        }
+
+        async function openLeaderboard() {
+            document.getElementById('leaderboardModal').style.display = 'flex';
+            await renderLeaderboard(false);
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardModal').style.display = 'none';
+        }
+
+        async function loadLeaderboardAvatar(userId) {
+            const sb = window.__cloudClient;
+            if (!sb) return;
+            try {
+                const { data: files } = await sb.storage.from('avatars').list(userId);
+                if (files && files.length > 0) {
+                    const avatarFile = files[0];
+                    const { data } = sb.storage.from('avatars').getPublicUrl(`${userId}/${avatarFile.name}`);
+                    const el = document.getElementById(`lbAvatar_${userId}`);
+                    if (el && data?.publicUrl) {
+                        el.innerHTML = `<img src="${data.publicUrl}" alt="头像">`;
+                    }
+                }
+            } catch(e) {}
+        }
+
         // 启动
         startApp();
 
@@ -6811,6 +7498,28 @@
             <div class="task-draw-actions">
                 <button class="btn-task-goto" onclick="goToDrawnTask()">前去完成</button>
                 <button class="btn-task-close" onclick="closeDrawModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜模态框 -->
+    <div class="modal" id="leaderboardModal" style="display:none;">
+        <div class="leaderboard-modal-content">
+            <div class="leaderboard-header">
+                <h2>🏆 排行榜</h2>
+                <button onclick="closeLeaderboard()">✕</button>
+            </div>
+            <div class="leaderboard-body">
+                <div id="leaderboardTimer" style="text-align:center;margin-bottom:12px;"></div>
+                <div class="leaderboard-refresh">
+                    <button class="leaderboard-refresh-btn" id="leaderboardRefreshBtn" onclick="refreshLeaderboard()">🔄 刷新数据</button>
+                </div>
+                <div id="leaderboardList" class="leaderboard-list">
+                    <div class="leaderboard-loading">
+                        <div class="spinner"></div>
+                        <div>加载中...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
