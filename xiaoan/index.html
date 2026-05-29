@@ -1989,6 +1989,204 @@
             .write-reminder-banner { flex-direction: column; text-align: center; }
             .wrb-left { flex-direction: column; }
         }
+
+        /* 排行榜样式 */
+        .leaderboard-modal-content {
+            position: relative;
+            background: #ffffff;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #fff;
+        }
+        .leaderboard-header h2 {
+            margin: 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .leaderboard-header button {
+            background: rgba(255,255,255,0.3);
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .leaderboard-header button:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        .leaderboard-body {
+            padding: 20px 24px;
+        }
+        .leaderboard-refresh {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        }
+        .leaderboard-refresh-btn {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #0284c7;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .leaderboard-refresh-btn:hover {
+            background: #e0f2fe;
+        }
+        .leaderboard-refresh-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .leaderboard-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .leaderboard-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        .leaderboard-item.current-user {
+            background: #fffbeb;
+            border-color: #fbbf24;
+            box-shadow: 0 2px 8px rgba(251,191,36,0.2);
+        }
+        .leaderboard-rank {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .leaderboard-rank.gold {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #fff;
+        }
+        .leaderboard-rank.silver {
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            color: #fff;
+        }
+        .leaderboard-rank.bronze {
+            background: linear-gradient(135deg, #d97706, #b45309);
+            color: #fff;
+        }
+        .leaderboard-rank.normal {
+            background: #e2e8f0;
+            color: #475569;
+        }
+        .leaderboard-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #475569;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .leaderboard-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .leaderboard-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .leaderboard-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .leaderboard-subtitle {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .leaderboard-score {
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .leaderboard-score-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        .leaderboard-score-label {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        .leaderboard-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        .leaderboard-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+        .leaderboard-loading {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+        .leaderboard-loading .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #059669;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -2012,6 +2210,7 @@
             <button class="quick-btn" onclick="openMailbox()" id="mailBtn" title="邮箱">📬<span class="mail-unread" id="mailUnreadBadge" style="display:none;">0</span></button>
             <button class="quick-btn" onclick="window.location.href='rule/announcement.html'" title="公告栏">📢</button>
             <button class="quick-btn" onclick="drawRandomTask()" id="drawTaskBtn" title="随机抽取任务">🎲</button>
+            <button class="quick-btn" onclick="openLeaderboard()" id="leaderboardBtn" title="排行榜">🏆</button>
         </div>
         <button class="btn-logout" onclick="doLogout()">退出</button>
     </div>
@@ -4598,6 +4797,9 @@
                     // 更新罚款横幅（云连接成功后）
                     updateFineBanner();
                     
+                    // 预加载排行榜数据
+                    loadLeaderboardData().then(() => {}).catch(() => {});
+                    
                     console.log('[Cloud] ✅ 云端同步完成，UI 已刷新');
                 }).catch(err => {
                     console.warn('[Cloud] ⚠️ 后台同步失败:', err.message);
@@ -5739,6 +5941,179 @@
             window.location.href = 'rule/index.html?taskId=' + (_currentDrawnTaskId || '');
         }
 
+        // ===== 🏆 排行榜系统 =====
+        const LEADERBOARD_ALLOWED_USERS = ['34b895c9-effa-4647-bfca-160cf0d4c7d4', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'];
+        let _leaderboardCache = null;
+        let _leaderboardLastFetch = 0;
+
+        async function loadLeaderboardData(force = false) {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) return [];
+
+            const now = Date.now();
+            if (!force && _leaderboardCache && (now - _leaderboardLastFetch) < 60000) {
+                return _leaderboardCache;
+            }
+
+            try {
+                const allowedIds = LEADERBOARD_ALLOWED_USERS;
+                const { data, error } = await sb
+                    .from('user_currencies')
+                    .select('user_id, currency_type, amount')
+                    .in('user_id', allowedIds);
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                const userMap = {};
+                (data || []).forEach(row => {
+                    if (!userMap[row.user_id]) {
+                        userMap[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0 };
+                    }
+                    const val = parseFloat(row.amount) || 0;
+                    if (row.currency_type === 'voucher') userMap[row.user_id].voucher = val;
+                    else if (row.currency_type === 'lottery') userMap[row.user_id].lottery = val;
+                    else if (row.currency_type === 'premium') userMap[row.user_id].premium = val;
+                });
+
+                const result = Object.values(userMap).map(u => {
+                    u.total_score = u.voucher + u.lottery + u.premium;
+                    return u;
+                });
+
+                const usernames = await sb
+                    .from('user_profiles')
+                    .select('user_id, username')
+                    .in('user_id', allowedIds);
+
+                if (usernames?.data) {
+                    usernames.data.forEach(u => {
+                        const found = result.find(r => r.user_id === u.user_id);
+                        if (found) found.username = u.username;
+                    });
+                }
+
+                _leaderboardCache = result;
+                _leaderboardLastFetch = now;
+                return _leaderboardCache;
+            } catch(e) {
+                if (e.message && e.message.includes('user_profiles')) {
+                    console.warn('[Leaderboard] user_profiles 表不存在，将使用 UUID 显示用户名');
+                    const allowedIds = LEADERBOARD_ALLOWED_USERS;
+                    try {
+                        const { data, error } = await sb
+                            .from('user_currencies')
+                            .select('user_id, currency_type, amount')
+                            .in('user_id', allowedIds);
+                        if (error) throw new Error(error.message);
+                        const userMap2 = {};
+                        (data || []).forEach(row => {
+                            if (!userMap2[row.user_id]) {
+                                userMap2[row.user_id] = { user_id: row.user_id, voucher: 0, lottery: 0, premium: 0, total_score: 0, username: row.user_id.substring(0, 8) };
+                            }
+                            const val = parseFloat(row.amount) || 0;
+                            if (row.currency_type === 'voucher') userMap2[row.user_id].voucher = val;
+                            else if (row.currency_type === 'lottery') userMap2[row.user_id].lottery = val;
+                            else if (row.currency_type === 'premium') userMap2[row.user_id].premium = val;
+                        });
+                        _leaderboardCache = Object.values(userMap2);
+                        _leaderboardLastFetch = now;
+                        return _leaderboardCache;
+                    } catch(e2) {
+                        console.warn('[Leaderboard] 备用查询也失败:', e2.message);
+                    }
+                }
+                return _leaderboardCache || [];
+            }
+        }
+
+        async function refreshLeaderboard() {
+            const btn = document.getElementById('leaderboardRefreshBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 刷新中...';
+
+            _leaderboardCache = null;
+            await renderLeaderboard(true);
+
+            btn.disabled = false;
+            btn.textContent = '🔄 刷新数据';
+        }
+
+        async function renderLeaderboard(isRefresh = false) {
+            const list = document.getElementById('leaderboardList');
+            const uid = window.__cloudUserId || '';
+
+            if (!isRefresh) {
+                list.innerHTML = '<div class="leaderboard-loading"><div class="spinner"></div><div>加载中...</div></div>';
+            }
+
+            const data = await loadLeaderboardData(isRefresh);
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<div class="leaderboard-empty"><div class="leaderboard-empty-icon">🏆</div><div>暂无排行榜数据</div></div>';
+                return;
+            }
+
+            const sorted = [...data].sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+            const rankClasses = ['gold', 'silver', 'bronze'];
+
+            list.innerHTML = sorted.map((item, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? rankClasses[rank - 1] : 'normal';
+                const isCurrentUser = String(item.user_id) === String(uid);
+                const name = item.username || item.user_id.substring(0, 8);
+                const initial = name.charAt(0).toUpperCase();
+                const medalIcons = ['🥇', '🥈', '🥉'];
+                const medal = rank <= 3 ? medalIcons[rank - 1] : `#${rank}`;
+
+                return `
+                    <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                        <div class="leaderboard-rank ${rankClass}">${medal}</div>
+                        <div class="leaderboard-avatar" id="lbAvatar_${item.user_id}">${initial}</div>
+                        <div class="leaderboard-info">
+                            <div class="leaderboard-name">${name}${isCurrentUser ? ' (我)' : ''}</div>
+                            <div class="leaderboard-subtitle">兑换券: ${item.voucher || 0}</div>
+                        </div>
+                        <div class="leaderboard-score">
+                            <div class="leaderboard-score-value">${item.total_score || 0}</div>
+                            <div class="leaderboard-score-label">总积分</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            sorted.forEach(item => {
+                loadLeaderboardAvatar(item.user_id);
+            });
+        }
+
+        async function openLeaderboard() {
+            document.getElementById('leaderboardModal').style.display = 'flex';
+            await renderLeaderboard(false);
+        }
+
+        function closeLeaderboard() {
+            document.getElementById('leaderboardModal').style.display = 'none';
+        }
+
+        async function loadLeaderboardAvatar(userId) {
+            const sb = window.__cloudClient;
+            if (!sb) return;
+            try {
+                const { data: files } = await sb.storage.from('avatars').list(userId);
+                if (files && files.length > 0) {
+                    const avatarFile = files[0];
+                    const { data } = sb.storage.from('avatars').getPublicUrl(`${userId}/${avatarFile.name}`);
+                    const el = document.getElementById(`lbAvatar_${userId}`);
+                    if (el && data?.publicUrl) {
+                        el.innerHTML = `<img src="${data.publicUrl}" alt="头像">`;
+                    }
+                }
+            } catch(e) {}
+        }
+
         // 启动
         startApp();
 
@@ -6811,6 +7186,27 @@
             <div class="task-draw-actions">
                 <button class="btn-task-goto" onclick="goToDrawnTask()">前去完成</button>
                 <button class="btn-task-close" onclick="closeDrawModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 排行榜模态框 -->
+    <div class="modal" id="leaderboardModal" style="display:none;">
+        <div class="leaderboard-modal-content">
+            <div class="leaderboard-header">
+                <h2>🏆 排行榜</h2>
+                <button onclick="closeLeaderboard()">✕</button>
+            </div>
+            <div class="leaderboard-body">
+                <div class="leaderboard-refresh">
+                    <button class="leaderboard-refresh-btn" id="leaderboardRefreshBtn" onclick="refreshLeaderboard()">🔄 刷新数据</button>
+                </div>
+                <div id="leaderboardList" class="leaderboard-list">
+                    <div class="leaderboard-loading">
+                        <div class="spinner"></div>
+                        <div>加载中...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
