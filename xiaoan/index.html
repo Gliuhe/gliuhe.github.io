@@ -5950,42 +5950,86 @@
         let _leaderboardCache = null;
         let _leaderboardLastFetch = 0;
 
-        function getLeaderboardResetInfo() {
-            const lastReset = localStorage.getItem('leaderboard_last_reset');
-            if (!lastReset) {
+        function getCycleStartFromLocal() {
+            return localStorage.getItem('leaderboard_cycle_start');
+        }
+
+        function setCycleStartToLocal(val) {
+            localStorage.setItem('leaderboard_cycle_start', val);
+        }
+
+        async function ensureLeaderboardCycle() {
+            const sb = window.__cloudClient;
+            if (!sb) return null;
+
+            try {
+                const { data, error } = await sb
+                    .from('leaderboard_cycle')
+                    .select('cycle_start')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (data?.cycle_start) {
+                    setCycleStartToLocal(data.cycle_start);
+                    return new Date(data.cycle_start);
+                }
+
+                if (error && error.code !== 'PGRST116') {
+                    console.warn('[Leaderboard] 查询周期失败:', error.message);
+                    const local = getCycleStartFromLocal();
+                    if (local) return new Date(local);
+                    const fallback = new Date();
+                    setCycleStartToLocal(fallback.toISOString());
+                    return fallback;
+                }
+
                 const now = new Date();
-                localStorage.setItem('leaderboard_last_reset', now.toISOString());
-                return { lastReset: now, daysLeft: LEADERBOARD_RESET_DAYS };
+                const { error: insertErr } = await sb
+                    .from('leaderboard_cycle')
+                    .insert({ id: 1, cycle_start: now.toISOString() });
+
+                if (insertErr) {
+                    const local = getCycleStartFromLocal();
+                    if (local) return new Date(local);
+                    setCycleStartToLocal(now.toISOString());
+                    return now;
+                }
+
+                setCycleStartToLocal(now.toISOString());
+                return now;
+            } catch(e) {
+                console.warn('[Leaderboard] 周期获取失败:', e.message);
+                const local = getCycleStartFromLocal();
+                if (local) return new Date(local);
+                const fallback = new Date();
+                setCycleStartToLocal(fallback.toISOString());
+                return fallback;
             }
-            const resetDate = new Date(lastReset);
-            const nextReset = new Date(resetDate.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
-            const now = new Date();
-            const msLeft = nextReset.getTime() - now.getTime();
-            const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
-            return { lastReset: resetDate, nextReset, daysLeft, msLeft };
         }
 
         async function checkAndResetLeaderboard() {
             const sb = window.__cloudClient;
             const uid = window.__cloudUserId;
             if (!sb || !uid) return;
-            
-            const { daysLeft } = getLeaderboardResetInfo();
-            if (daysLeft > 0) return;
-            
+
+            const cycleStart = await ensureLeaderboardCycle();
+            if (!cycleStart) return;
+
+            const now = new Date();
+            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            if (now < nextReset) return;
+
             console.log('[Leaderboard] 🔄 开始重置排行榜...');
-            
+
             // 获取当前排行榜
             const data = await loadLeaderboardData(true);
             if (data.length === 0) return;
-            
+
             const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
             const winner = sorted[0];
-            
+
             if (winner && winner.task_points > 0) {
-                // 给第一名发放奖励：2000兑换券 + 10抽奖券
                 try {
-                    // 更新兑换券
                     const { data: vRows } = await sb.from('user_currencies')
                         .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'voucher').maybeSingle();
                     const currentV = parseFloat(vRows?.amount) || 0;
@@ -5995,8 +6039,7 @@
                         amount: currentV + 2000,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
-                    
-                    // 更新抽奖券
+
                     const { data: lRows } = await sb.from('user_currencies')
                         .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'lottery').maybeSingle();
                     const currentL = parseFloat(lRows?.amount) || 0;
@@ -6006,24 +6049,22 @@
                         amount: currentL + 10,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
-                    
-                    // 发送通知给获胜者
-                    const { data: notif } = await sb.from('notifications').insert({
+
+                    await sb.from('notifications').insert({
                         user_id: winner.user_id,
                         title: '🏆 排行榜奖励发放',
                         content: `恭喜你在排行榜中取得第一名！获得奖励：2000兑换券 + 10抽奖券！`,
                         type: 'success',
                         created_at: new Date().toISOString()
                     });
-                    
+
                     console.log(`[Leaderboard] ✅ 已给 ${winner.username || winner.user_id} 发放奖励`);
                     showStatus(`🏆 排行榜已重置！恭喜 ${winner.username || '第一名'} 获得奖励！`, 'success');
                 } catch(e) {
                     console.error('[Leaderboard] 发放奖励失败:', e.message);
                 }
             }
-            
-            // 重置所有用户的任务积分为0
+
             for (const userId of LEADERBOARD_ALLOWED_USERS) {
                 try {
                     await sb.from('user_currencies').upsert({
@@ -6036,10 +6077,22 @@
                     console.warn(`[Leaderboard] 重置用户 ${userId} 失败:`, e.message);
                 }
             }
-            
-            // 更新重置时间
-            localStorage.setItem('leaderboard_last_reset', new Date().toISOString());
+
+            const newStart = new Date();
+            await sb.from('leaderboard_cycle')
+                .update({ cycle_start: newStart.toISOString(), updated_at: new Date().toISOString() })
+                .eq('id', 1);
+            setCycleStartToLocal(newStart.toISOString());
+
             _leaderboardCache = null;
+        }
+
+        function computeResetDays(cycleStartStr) {
+            if (!cycleStartStr) return LEADERBOARD_RESET_DAYS;
+            const cycleStart = new Date(cycleStartStr);
+            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            const msLeft = nextReset.getTime() - Date.now();
+            return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
         }
 
         async function loadLeaderboardData(force = false) {
@@ -6152,7 +6205,8 @@
             }
 
             // 显示距重置天数
-            const { daysLeft } = getLeaderboardResetInfo();
+            const cycleStart = getCycleStartFromLocal();
+            const daysLeft = computeResetDays(cycleStart);
             if (timer) {
                 timer.innerHTML = `<span style="font-size:0.85rem;color:#64748b;">⏰ 距重置还有 <strong style="color:#f59e0b;">${daysLeft}</strong> 天</span>`;
             }
