@@ -211,64 +211,11 @@
             position: relative;
         }
 
-        /* 周区域容器 */
-        .week-zones {
-            display: flex;
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .zone-section {
-            border-radius: 20px;
-            padding: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .zone-a {
-            flex: 5;
-            background: rgba(255, 152, 0, 0.15);
-        }
-
-        .zone-b {
-            flex: 2;
-            background: rgba(255, 152, 0, 0.15);
-        }
-
-        .zone-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .zone-icon {
-            font-size: 1.5rem;
-        }
-
-        .zone-title {
-            font-size: 1.2rem;
-            color: white;
-            font-weight: bold;
-        }
-
-        .zone-subtitle {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-left: auto;
-        }
-
         /* 日期格子 */
         .days-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 10px;
-        }
-
-        .days-grid.weekend {
-            grid-template-columns: repeat(3, 1fr);
         }
 
         .day-cell {
@@ -333,50 +280,6 @@
         .day-cell.completed .day-status {
             color: #a8e6cf;
             font-weight: bold;
-        }
-
-        /* 底部统计 */
-        .monthly-stats {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 25px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stats-title {
-            font-size: 1.1rem;
-            color: white;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-
-        .stats-grid {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 1.3rem;
-            color: #FFB74D;
-            font-weight: bold;
-        }
-
-        .stat-value.weekend {
-            color: #FFB74D;
         }
 
         /* 纪行券显示 */
@@ -577,7 +480,7 @@
             }
 
             .days-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .progress-header {
@@ -782,46 +685,9 @@
                 </div>
             </div>
 
-            <!-- A区B区日历 -->
-            <div class="week-zones">
-                <!-- A区：周中（周一到周四） -->
-                <div class="zone-section zone-a">
-                    <div class="zone-header">
-                        <span class="zone-icon">🅰️</span>
-                        <span class="zone-title">周中区</span>
-                        <span class="zone-subtitle">周一至周四</span>
-                    </div>
-                    <div class="days-grid" id="zoneAGrid">
-                        <!-- 动态生成 -->
-                    </div>
-                </div>
-                
-                <!-- B区：周末（周五到周日） -->
-                <div class="zone-section zone-b">
-                    <div class="zone-header">
-                        <span class="zone-icon">🅱️</span>
-                        <span class="zone-title">周末区</span>
-                        <span class="zone-subtitle">周五至周日</span>
-                    </div>
-                    <div class="days-grid weekend" id="zoneBGrid">
-                        <!-- 动态生成 -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- 本月统计 -->
-            <div class="monthly-stats">
-                <div class="stats-title">📊 本月累计统计</div>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-label">周中区共完成</div>
-                        <div class="stat-value" id="zoneAStats">0 天 / 0 券</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-label">周末区共完成</div>
-                        <div class="stat-value weekend" id="zoneBStats">0 天 / 0 券</div>
-                    </div>
-                </div>
+            <!-- 日期网格 -->
+            <div class="days-grid" id="daysGrid">
+                <!-- 动态生成 -->
             </div>
         </div>
 
@@ -873,7 +739,6 @@
     <script>
         // 纪行数据键名
         const JIXING_KEY = 'jixing_muchun_progress_v2';
-        const MONTHLY_STATS_KEY = 'jixing_muchun_monthly_stats';
         const CURRENCY_KEY = 'jixing_muchun_currency';
         const BOUGHT_KEY = 'jixing_muchun_bought';
         const INIT_KEY = 'jixing_muchun_initialized_v2';
@@ -911,28 +776,6 @@
                 lastResetWeek: getWeekKey(),
                 lastClaimDate: null
             };
-        }
-
-        // 获取本月统计
-        function getMonthlyStats() {
-            const data = localStorage.getItem(MONTHLY_STATS_KEY);
-            const currentMonth = getMonthKey();
-            if (data) {
-                const parsed = JSON.parse(data);
-                if (parsed.month === currentMonth) {
-                    return parsed;
-                }
-            }
-            return {
-                month: currentMonth,
-                zoneA: { days: 0, currency: 0 },
-                zoneB: { days: 0, currency: 0 }
-            };
-        }
-
-        // 保存本月统计
-        function saveMonthlyStats(stats) {
-            localStorage.setItem(MONTHLY_STATS_KEY, JSON.stringify(stats));
         }
 
         // 获取周标识（用于判断是否需要重置）
@@ -1054,21 +897,9 @@
             const currentCurrency = getJixingCurrency();
             saveJixingCurrency(currentCurrency + reward);
 
-            // 更新本月统计
-            const monthlyStats = getMonthlyStats();
-            if (dayConfig.zone === 'A') {
-                monthlyStats.zoneA.days++;
-                monthlyStats.zoneA.currency += reward;
-            } else {
-                monthlyStats.zoneB.days++;
-                monthlyStats.zoneB.currency += reward;
-            }
-            saveMonthlyStats(monthlyStats);
-
             return { 
                 success: true, 
                 reward: reward,
-                zone: dayConfig.zone,
                 dayName: dayConfig.name
             };
         }
@@ -1082,29 +913,15 @@
             document.getElementById('progressFill').style.width = percentage + '%';
             document.getElementById('progressCount').textContent = `${completedCount} / 7 天`;
 
-            // 渲染A区（周中：周一到周四）
-            const zoneAGrid = document.getElementById('zoneAGrid');
-            zoneAGrid.innerHTML = '';
-            const zoneADays = WEEK_DAYS.filter(d => d.zone === 'A');
+            // 渲染统一的日期网格
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
             const todayDayOfWeek = getTodayDayOfWeek();
             
-            zoneADays.forEach(day => {
+            WEEK_DAYS.forEach(day => {
                 const cell = createDayCell(day, progress, todayDayOfWeek);
-                zoneAGrid.appendChild(cell);
+                daysGrid.appendChild(cell);
             });
-
-            // 渲染B区（周末：周五到周日）
-            const zoneBGrid = document.getElementById('zoneBGrid');
-            zoneBGrid.innerHTML = '';
-            const zoneBDays = WEEK_DAYS.filter(d => d.zone === 'B');
-            
-            zoneBDays.forEach(day => {
-                const cell = createDayCell(day, progress, todayDayOfWeek);
-                zoneBGrid.appendChild(cell);
-            });
-
-            // 更新本月统计
-            renderMonthlyStats();
         }
 
         // 创建日期格子
@@ -1148,15 +965,6 @@
             }
 
             return cell;
-        }
-
-        // 渲染本月统计
-        function renderMonthlyStats() {
-            const stats = getMonthlyStats();
-            document.getElementById('zoneAStats').textContent = 
-                `${stats.zoneA.days} 天 / ${stats.zoneA.currency} 券`;
-            document.getElementById('zoneBStats').textContent = 
-                `${stats.zoneB.days} 天 / ${stats.zoneB.currency} 券`;
         }
 
         // 更新纪行券显示
