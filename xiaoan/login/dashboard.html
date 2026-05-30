@@ -81,94 +81,13 @@
 
     <div class="main-content">
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('lottery', this)">🎰 抽奖配置</button>
-            <button class="tab-btn" onclick="switchTab('shop', this)">🛒 商城管理</button>
+            <button class="tab-btn active" onclick="switchTab('shop', this)">🛒 商城管理</button>
             <button class="tab-btn" onclick="switchTab('notify', this)">📬 邮件管理</button>
             <button class="tab-btn" onclick="switchTab('fines', this)">💰 罚款管理</button>
             <button class="tab-btn" onclick="switchTab('bans', this)">🚫 封禁管理</button>
         </div>
 
-        <!-- 面板1：抽奖配置 -->
-        <div class="tab-panel active" id="panel-lottery">
-            <div class="section-header">
-                <span class="section-title">🎰 抽奖奖励配置</span>
-                <button class="btn btn-primary" onclick="saveLotteryConfig()">💾 保存配置</button>
-            </div>
-            
-            <!-- 星级选择标签 -->
-            <div class="tabs" style="margin-bottom:16px;">
-                <button class="tab-btn active" onclick="switchLotteryTab('star5_premium', this)">★★ 特级五星</button>
-                <button class="tab-btn" onclick="switchLotteryTab('star5_normal', this)">★ 普通五星</button>
-                <button class="tab-btn" onclick="switchLotteryTab('star4', this)">☆ 四星</button>
-                <button class="tab-btn" onclick="switchLotteryTab('star3', this)">☆ 三星</button>
-                <button class="tab-btn" onclick="switchLotteryTab('star2', this)">☆ 二星</button>
-                <button class="tab-btn" onclick="switchLotteryTab('star1', this)">☆ 一星</button>
-            </div>
-            
-            <!-- 特级五星配置 -->
-            <div class="lottery-tier-panel active" id="lottery-star5_premium">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#f59e0b;">★★ 特级五星 - A区（用户选择一项）</h4>
-                    <div id="star5_premium_zoneA_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star5_premium', 'zoneA')" style="margin-top:10px;">+ 添加A区奖品</button>
-                    
-                    <h4 style="margin:20px 0 16px;color:#f59e0b;">★★ 特级五星 - B区（全部获得）</h4>
-                    <div id="star5_premium_zoneB_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star5_premium', 'zoneB')" style="margin-top:10px;">+ 添加B区奖品</button>
-                </div>
-            </div>
-            
-            <!-- 普通五星配置 -->
-            <div class="lottery-tier-panel" id="lottery-star5_normal">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#f59e0b;">★ 普通五星 - A区（用户选择一项）</h4>
-                    <div id="star5_normal_zoneA_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star5_normal', 'zoneA')" style="margin-top:10px;">+ 添加A区奖品</button>
-                    
-                    <h4 style="margin:20px 0 16px;color:#f59e0b;">★ 普通五星 - B区（全部获得）</h4>
-                    <div id="star5_normal_zoneB_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star5_normal', 'zoneB')" style="margin-top:10px;">+ 添加B区奖品</button>
-                </div>
-            </div>
-            
-            <!-- 四星配置 -->
-            <div class="lottery-tier-panel" id="lottery-star4">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#8b5cf6;">☆ 四星奖品池（随机一项）</h4>
-                    <div id="star4_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star4')" style="margin-top:10px;">+ 添加四星奖品</button>
-                </div>
-            </div>
-            
-            <!-- 三星配置 -->
-            <div class="lottery-tier-panel" id="lottery-star3">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#3b82f6;">☆ 三星奖品池（随机一项）</h4>
-                    <div id="star3_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star3')" style="margin-top:10px;">+ 添加三星奖品</button>
-                </div>
-            </div>
-            
-            <!-- 二星配置 -->
-            <div class="lottery-tier-panel" id="lottery-star2">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#10b981;">☆ 二星奖品池（随机一项）</h4>
-                    <div id="star2_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star2')" style="margin-top:10px;">+ 添加二星奖品</button>
-                </div>
-            </div>
-            
-            <!-- 一星配置 -->
-            <div class="lottery-tier-panel" id="lottery-star1">
-                <div style="background:#fff;padding:20px;border-radius:12px;margin-bottom:16px;">
-                    <h4 style="margin-bottom:16px;color:#6b7280;">☆ 一星奖品池（随机一项）</h4>
-                    <div id="star1_list"></div>
-                    <button class="btn" onclick="addPrizeItem('star1')" style="margin-top:10px;">+ 添加一星奖品</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 面板1.5：商城管理 -->
+        <!-- 面板1：商城管理 -->
         <div class="tab-panel" id="panel-shop">
             <div class="section-header">
                 <span class="section-title">🛒 纪行商城商品管理</span>
@@ -401,10 +320,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>商品所属分类</label>
-                    <select id="productCategory" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
-                        <option value="">-- 未分类 --</option>
-                    </select>
+                    <label>商品图片（CDN）</label>
+                    <input type="text" id="productImage" placeholder="例如：toy.png（仅填文件名）" style="font-size:14px;">
                 </div>
             </div>
 
@@ -416,6 +333,13 @@
             <div class="form-group">
                 <label>商品描述</label>
                 <textarea id="productDesc" placeholder="输入商品描述（可选）"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>商品所属分类</label>
+                <select id="productCategory" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                    <option value="">-- 未分类 --</option>
+                </select>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
@@ -568,7 +492,6 @@
             document.getElementById('panel-' + tabId).classList.add('active');
             
             // 加载数据
-            if (tabId === 'lottery') loadLotteryConfig();
             if (tabId === 'shop') loadShopProducts();
             if (tabId === 'notify') loadMailList();
             if (tabId === 'fines') loadFinesList();
@@ -588,152 +511,6 @@
             // 加载对应数据
             if (subTabId === 'products') loadShopProducts();
             if (subTabId === 'categories') loadCategoriesList();
-        }
-        
-        // ===== 抽奖配置功能 =====
-        let currentLotteryConfig = {};
-        
-        // 切换抽奖星级标签
-        function switchLotteryTab(tier, btnElement) {
-            document.querySelectorAll('#panel-lottery .tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.lottery-tier-panel').forEach(panel => panel.classList.remove('active'));
-            
-            if (btnElement) btnElement.classList.add('active');
-            document.getElementById('lottery-' + tier).classList.add('active');
-        }
-        
-        // 加载配置
-        async function loadLotteryConfig() {
-            try {
-                const config = await loadLotteryConfigFromCloud();
-                if (config) {
-                    currentLotteryConfig = config;
-                } else {
-                    // 默认配置
-                    currentLotteryConfig = {
-                        star5_premium: { zoneA: [], zoneB: [] },
-                        star5_normal: { zoneA: [], zoneB: [] },
-                        star4: [],
-                        star3: [],
-                        star2: [],
-                        star1: []
-                    };
-                }
-                renderAllPrizeLists();
-            } catch (e) {
-                console.error('[Admin] 加载配置失败:', e);
-            }
-        }
-        
-        // 渲染所有奖品列表
-        function renderAllPrizeLists() {
-            // 五星特级
-            renderPrizeList('star5_premium', 'zoneA', currentLotteryConfig.star5_premium?.zoneA || []);
-            renderPrizeList('star5_premium', 'zoneB', currentLotteryConfig.star5_premium?.zoneB || []);
-            // 五星普通
-            renderPrizeList('star5_normal', 'zoneA', currentLotteryConfig.star5_normal?.zoneA || []);
-            renderPrizeList('star5_normal', 'zoneB', currentLotteryConfig.star5_normal?.zoneB || []);
-            // 其他星级
-            renderPrizeList('star4', null, currentLotteryConfig.star4 || []);
-            renderPrizeList('star3', null, currentLotteryConfig.star3 || []);
-            renderPrizeList('star2', null, currentLotteryConfig.star2 || []);
-            renderPrizeList('star1', null, currentLotteryConfig.star1 || []);
-        }
-        
-        // 渲染奖品列表
-        function renderPrizeList(tier, zone, items) {
-            const listId = zone ? `${tier}_${zone}_list` : `${tier}_list`;
-            const container = document.getElementById(listId);
-            if (!container) return;
-
-            if (items.length === 0) {
-                container.innerHTML = '<p style="color:#94a3b8;padding:10px;">暂无奖品，请添加</p>';
-                return;
-            }
-
-            container.innerHTML = items.map((item, index) => `
-                <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:10px;background:#f8fafc;border-radius:8px;flex-wrap:wrap;">
-                    <input type="text" placeholder="奖品名称" value="${item.name || ''}"
-                        onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'name', this.value)"
-                        style="flex:1;min-width:120px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                    <select onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'type', this.value)"
-                        style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                        <option value="voucher" ${item.type === 'voucher' ? 'selected' : ''}>兑换券</option>
-                        <option value="lottery_ticket" ${item.type === 'lottery_ticket' ? 'selected' : ''}>抽奖券</option>
-                        <option value="premium_lottery_ticket" ${item.type === 'premium_lottery_ticket' ? 'selected' : ''}>高级抽奖券</option>
-                        <option value="jixing_ticket" ${item.type === 'jixing_ticket' ? 'selected' : ''}>纪行券</option>
-                        <option value="physical" ${item.type === 'physical' ? 'selected' : ''}>实物</option>
-                    </select>
-                    ${item.type === 'voucher' || item.type === 'lottery_ticket' || item.type === 'premium_lottery_ticket' || item.type === 'jixing_ticket' ? `
-                        <input type="number" placeholder="数量" value="${item.amount || ''}"
-                            onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'amount', this.value)"
-                            style="width:80px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                    ` : ''}
-                    ${item.type === 'physical' ? `
-                        <input type="text" placeholder="兑换码" value="${item.code || ''}"
-                            onchange="updatePrizeItem('${tier}', '${zone || ''}', ${index}, 'code', this.value)"
-                            style="width:120px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                    ` : ''}
-                    <button onclick="removePrizeItem('${tier}', '${zone || ''}', ${index})"
-                        style="padding:8px 12px;background:#ef4446;color:white;border:none;border-radius:6px;cursor:pointer;">删除</button>
-                </div>
-            `).join('');
-        }
-        
-        // 添加奖品
-        function addPrizeItem(tier, zone) {
-            const newItem = { name: '', type: 'voucher', amount: 1 };
-            
-            if (tier.startsWith('star5')) {
-                if (!currentLotteryConfig[tier]) currentLotteryConfig[tier] = { zoneA: [], zoneB: [] };
-                currentLotteryConfig[tier][zone].push(newItem);
-            } else {
-                if (!currentLotteryConfig[tier]) currentLotteryConfig[tier] = [];
-                currentLotteryConfig[tier].push(newItem);
-            }
-            
-            renderAllPrizeLists();
-        }
-        
-        // 更新奖品
-        function updatePrizeItem(tier, zone, index, field, value) {
-            if (tier.startsWith('star5')) {
-                if (field === 'amount') {
-                    currentLotteryConfig[tier][zone][index][field] = parseInt(value) || 0;
-                } else {
-                    currentLotteryConfig[tier][zone][index][field] = value;
-                }
-            } else {
-                if (field === 'amount') {
-                    currentLotteryConfig[tier][index][field] = parseInt(value) || 0;
-                } else {
-                    currentLotteryConfig[tier][index][field] = value;
-                }
-            }
-            // 如果修改的是类型，重新渲染以显示对应的输入框
-            if (field === 'type') {
-                renderAllPrizeLists();
-            }
-        }
-        
-        // 删除奖品
-        function removePrizeItem(tier, zone, index) {
-            if (tier.startsWith('star5')) {
-                currentLotteryConfig[tier][zone].splice(index, 1);
-            } else {
-                currentLotteryConfig[tier].splice(index, 1);
-            }
-            renderAllPrizeLists();
-        }
-        
-        // 保存配置
-        async function saveLotteryConfig() {
-            const success = await saveLotteryConfigToCloud(currentLotteryConfig);
-            if (success) {
-                alert('✅ 配置保存成功！');
-            } else {
-                alert('❌ 保存失败');
-            }
         }
         
         // ===== 邮件功能 =====
@@ -1038,7 +815,9 @@
                     const currencyName = currencyMap[p.currency_type] || p.currency_type || '纪行券';
                     
                     return `<tr>
-                        <td style="font-size:1.5rem;text-align:center;">${p.icon || '🎁'}</td>
+                        <td style="font-size:1.5rem;text-align:center;">
+                            ${p.image_name ? `<img src="../activity/${p.image_name}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;" onerror="this.style.display='none';this.parentElement.innerHTML='${p.icon || '🎁'}'">` : (p.icon || '🎁')}
+                        </td>
                         <td>
                             <strong>${escapeHtml(p.name)}</strong>
                             ${p.category_id ? `<div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">已分类</div>` : ''}
@@ -1075,6 +854,7 @@
         async function showAddProductModal() {
             document.getElementById('productModalTitle').textContent = '添加商品';
             document.getElementById('productIcon').value = '';
+            document.getElementById('productImage').value = '';
             document.getElementById('productName').value = '';
             document.getElementById('productDesc').value = '';
             document.getElementById('productPrice').value = '';
@@ -1183,6 +963,7 @@
 
                 document.getElementById('productModalTitle').textContent = '编辑商品';
                 document.getElementById('productIcon').value = product.icon || '';
+                document.getElementById('productImage').value = product.image_name || '';
                 document.getElementById('productName').value = product.name || '';
                 document.getElementById('productDesc').value = product.description || '';
                 document.getElementById('productPrice').value = product.price || '';
@@ -1226,6 +1007,7 @@
         // 保存商品（新增或更新）
         async function saveProduct() {
             const icon = document.getElementById('productIcon').value.trim();
+            const imageName = document.getElementById('productImage').value.trim();
             const name = document.getElementById('productName').value.trim();
             const description = document.getElementById('productDesc').value.trim();
             const price = parseInt(document.getElementById('productPrice').value);
@@ -1275,6 +1057,7 @@
             try {
                 const productData = {
                     icon: icon || '🎁',
+                    image_name: imageName || null,
                     name: name,
                     description: description,
                     price: price,
@@ -1548,7 +1331,6 @@
         
         // 初始化
         initSupabase();
-        loadLotteryConfig();
     </script>
 </body>
 </html>
