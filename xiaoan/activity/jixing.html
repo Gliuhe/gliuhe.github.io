@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沐春望景 - 纪行活动</title>
+    <title>芒夏盛景 - 纪行活动</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,9 +13,9 @@
         }
 
         :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #66BB6A;
-            --accent-color: #81C784;
+            --primary-color: #FF9800;
+            --secondary-color: #FFB74D;
+            --accent-color: #FFCC80;
             --spring-green: #a8e6cf;
         }
 
@@ -48,8 +48,8 @@
             height: 100%;
             background: linear-gradient(
                 to bottom,
-                rgba(76, 175, 80, 0.2) 0%,
-                rgba(102, 187, 106, 0.3) 40%,
+                rgba(255, 152, 0, 0.2) 0%,
+                rgba(255, 183, 77, 0.3) 40%,
                 rgba(0, 0, 0, 0.6) 100%
             );
             z-index: -1;
@@ -76,7 +76,7 @@
 
         .btn-primary {
             background: rgba(255, 255, 255, 0.95);
-            color: #4CAF50;
+            color: #FF9800;
             backdrop-filter: blur(10px);
         }
 
@@ -86,7 +86,7 @@
         }
 
         .btn-reward {
-            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            background: linear-gradient(135deg, #FFB74D, #FF9800);
             color: white;
             padding: 15px 40px;
             font-size: 1.2rem;
@@ -94,7 +94,7 @@
 
         .btn-reward:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(102, 187, 106, 0.5);
+            box-shadow: 0 8px 25px rgba(255, 183, 77, 0.5);
         }
 
         .btn-reward:disabled {
@@ -146,14 +146,14 @@
         }
 
         .event-badge {
-            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            background: linear-gradient(135deg, #FF9800, #FFB74D);
             color: white;
             padding: 10px 25px;
             border-radius: 20px;
             display: inline-block;
             font-size: 1rem;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
         }
 
         /* 进度区域 */
@@ -204,10 +204,10 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #66BB6A, #81C784, #a8e6cf);
+            background: linear-gradient(90deg, #FF9800, #FFB74D, #FFCC80, #a8e6cf);
             border-radius: 15px;
             transition: width 0.8s ease;
-            box-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            box-shadow: 0 0 15px rgba(255, 204, 128, 0.6);
             position: relative;
         }
 
@@ -226,7 +226,7 @@
 
         .zone-a {
             flex: 5;
-            background: rgba(76, 175, 80, 0.15);
+            background: rgba(255, 152, 0, 0.15);
         }
 
         .zone-b {
@@ -299,8 +299,8 @@
         }
 
         .day-cell.today {
-            border-color: #81C784;
-            box-shadow: 0 0 15px rgba(129, 199, 132, 0.5);
+            border-color: #FFCC80;
+            box-shadow: 0 0 15px rgba(255, 204, 128, 0.5);
             cursor: pointer;
             animation: pulse 2s infinite;
         }
@@ -371,7 +371,7 @@
 
         .stat-value {
             font-size: 1.3rem;
-            color: #81C784;
+            color: #FFB74D;
             font-weight: bold;
         }
 
@@ -411,9 +411,9 @@
 
         .currency-amount {
             font-size: 2.5rem;
-            color: #81C784;
+            color: #FFB74D;
             font-weight: bold;
-            text-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            text-shadow: 0 0 15px rgba(255, 183, 77, 0.6);
         }
 
         .currency-tip {
@@ -651,7 +651,7 @@
         }
 
         .success-message h2 {
-            color: #4CAF50;
+            color: #FF9800;
             font-size: 2rem;
             margin-bottom: 20px;
         }
@@ -712,8 +712,8 @@
             align-items: center;
             gap: 20px;
             padding: 20px;
-            background: linear-gradient(135deg, #f0f9f1, #e8f5e9);
-            border: 2px solid #c8e6c9;
+            background: linear-gradient(135deg, #fff8e1, #ffecb3);
+            border: 2px solid #ffe082;
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -721,8 +721,8 @@
 
         .choice-option:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+            border-color: #FF9800;
         }
 
         .choice-icon {
@@ -730,7 +730,7 @@
         }
 
         .choice-info h3 {
-            color: #4CAF50;
+            color: #FF9800;
             font-size: 1.3rem;
             margin-bottom: 5px;
         }
@@ -764,9 +764,9 @@
     <div class="container">
         <!-- 活动标题 -->
         <div class="event-header">
-            <div class="event-icon">🌸</div>
-            <h1 class="event-title">沐春望景</h1>
-            <p class="event-subtitle">春日纪行，每日完成任务，收集纪行券兑换大奖</p>
+            <div class="event-icon">☀️</div>
+            <h1 class="event-title">芒夏盛景</h1>
+            <p class="event-subtitle">盛夏纪行，每日完成任务，收集纪行券兑换大奖</p>
             <span class="event-badge">🎯 纪行活动</span>
         </div>
 
@@ -832,26 +832,26 @@
                 <span class="currency-label">纪行券</span>
                 <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
-            <p class="currency-tip">周中区（周一至周四）每日300券 | 周末区：周五600券/周六250券/周日50券</p>
+            <p class="currency-tip">每日完成任务即可获得500张纪行券</p>
         </div>
 
-        <!-- 抽奖模块 -->
+        <!-- 商城入口 -->
         <div class="lottery-section">
-            <h2 class="lottery-title">🎰 纪行之骰：幸运大抽奖</h2>
-            <p class="lottery-desc">使用纪行券掷3颗骰子，试试你的运气！掷出三个6即中五星大奖！</p>
+            <h2 class="lottery-title">🛍️ 纪行商城</h2>
+            <p class="lottery-desc">使用纪行券直接兑换精美商品，丰富奖励等你来拿！</p>
             
-            <div class="lottery-card" onclick="goToLottery()">
+            <div class="lottery-card" onclick="window.location.href='store.html'">
                 <div class="lottery-card-bg"></div>
                 <div class="lottery-card-content">
-                    <div class="lottery-icon">🎲</div>
-                    <div class="lottery-name">前往抽奖</div>
-                    <div class="lottery-hint">消耗纪行券，赢取丰厚奖励</div>
+                    <div class="lottery-icon">🎁</div>
+                    <div class="lottery-name">前往商城</div>
+                    <div class="lottery-hint">使用纪行券，兑换心仪好物</div>
                     <div class="lottery-rewards-hint">
-                        <span>⭐ 三星：兑换券/抽奖券</span>
-                        <span>✨ 四星：大量兑换券</span>
-                        <span>👑 五星：实物大奖/兑换券</span>
+                        <span>🎫 兑换券</span>
+                        <span>🎲 抽奖券</span>
+                        <span>⭐ 高级券</span>
                     </div>
-                    <div class="lottery-btn">🎰 开始抽奖</div>
+                    <div class="lottery-btn">🛍️ 立即前往</div>
                 </div>
             </div>
         </div>
@@ -860,12 +860,9 @@
         <div class="rules-section">
             <h3 class="rules-title">📜 活动规则</h3>
             <ul class="rules-list">
-                <li><strong>周中区（周一至周四）：</strong>完成任务中心的"每日任务奖励"可获得300张纪行券</li>
-                <li><strong>周末区（周五至周日）：</strong>周五完成获得600券，周六完成获得250券，周日完成获得50券</li>
+                <li><strong>每日奖励：</strong>完成任务中心的"每日任务奖励"可获得500张纪行券</li>
                 <li>每周一自动重置进度，开始新一周的纪行</li>
-                <li>使用纪行券参与掷骰抽奖，点数越高奖励越好</li>
-                <li>掷出三个6即可获得五星大奖（含实物奖励）</li>
-                <li>四星奖励每10次必出（保底机制）</li>
+                <li>使用纪行券前往商城兑换心仪商品</li>
                 <li>实物奖品将在活动结束后统一发放</li>
             </ul>
         </div>
@@ -884,13 +881,13 @@
 
         // 星期配置
         const WEEK_DAYS = [
-            { name: '周一', dayOfWeek: 1, zone: 'A', reward: 300 },
-            { name: '周二', dayOfWeek: 2, zone: 'A', reward: 300 },
-            { name: '周三', dayOfWeek: 3, zone: 'A', reward: 300 },
-            { name: '周四', dayOfWeek: 4, zone: 'A', reward: 300 },
-            { name: '周五', dayOfWeek: 5, zone: 'B', reward: 600 },
-            { name: '周六', dayOfWeek: 6, zone: 'B', reward: 250 },
-            { name: '周日', dayOfWeek: 0, zone: 'B', reward: 50 }
+            { name: '周一', dayOfWeek: 1, zone: 'A', reward: 500 },
+            { name: '周二', dayOfWeek: 2, zone: 'A', reward: 500 },
+            { name: '周三', dayOfWeek: 3, zone: 'A', reward: 500 },
+            { name: '周四', dayOfWeek: 4, zone: 'A', reward: 500 },
+            { name: '周五', dayOfWeek: 5, zone: 'B', reward: 500 },
+            { name: '周六', dayOfWeek: 6, zone: 'B', reward: 500 },
+            { name: '周日', dayOfWeek: 0, zone: 'B', reward: 500 }
         ];
 
         // 获取本周进度
@@ -1029,9 +1026,7 @@
 
         // 获取今天的奖励数量
         function getTodayReward() {
-            const todayDayOfWeek = getTodayDayOfWeek();
-            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
-            return dayConfig ? dayConfig.reward : 300;
+            return 500;
         }
 
         // 今日签到
@@ -1048,7 +1043,7 @@
             const progress = getWeeklyProgress();
             const todayDayOfWeek = getTodayDayOfWeek();
             const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
-            const reward = dayConfig ? dayConfig.reward : 300;
+            const reward = 500;
 
             // 更新周进度
             progress.completedDays.push(todayDayOfWeek);
@@ -1164,62 +1159,6 @@
                 `${stats.zoneB.days} 天 / ${stats.zoneB.currency} 券`;
         }
 
-        // 前往抽奖页面
-        async function goToLottery() {
-            // 检查是否被封禁（纪行抽奖功能）
-            const banInfo = await checkUserBan('jixing');
-            if (banInfo.banned) {
-                alert('🚫 您已被禁止参与纪行抽奖\n\n原因：' + (banInfo.reason || '违反规则') + 
-                      '\n到期时间：' + (banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : '永久封禁'));
-                return;
-            }
-            window.location.href = 'lottery.html';
-        }
-        
-        // 检查封禁状态并更新UI
-        async function checkBanStatusAndUpdateUI() {
-            try {
-                const banInfo = await checkUserBan('jixing');
-                if (banInfo.banned) {
-                    // 禁用前往抽奖卡片
-                    const lotteryCard = document.querySelector('.lottery-card');
-                    if (lotteryCard) {
-                        lotteryCard.style.opacity = '0.5';
-                        lotteryCard.style.pointerEvents = 'none';
-                        lotteryCard.style.cursor = 'not-allowed';
-                        lotteryCard.title = '您已被禁止参与纪行抽奖';
-                        
-                        // 修改按钮文字
-                        const lotteryBtn = lotteryCard.querySelector('.lottery-btn');
-                        if (lotteryBtn) {
-                            lotteryBtn.textContent = '🚫 已封禁';
-                            lotteryBtn.style.background = '#999';
-                        }
-                    }
-                    
-                    // 显示封禁提示
-                    const lotterySection = document.querySelector('.lottery-section');
-                    if (lotterySection) {
-                        const banNotice = document.createElement('div');
-                        banNotice.style.cssText = `
-                            background: linear-gradient(135deg, #dc2626, #b91c1c);
-                            color: white;
-                            padding: 12px 20px;
-                            border-radius: 12px;
-                            margin-bottom: 15px;
-                            text-align: center;
-                            font-weight: 600;
-                            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-                        `;
-                        banNotice.innerHTML = `🚫 您已被禁止参与纪行抽奖 | 原因：${banInfo.reason || '违反规则'} | 到期：${banInfo.expiresAt ? new Date(banInfo.expiresAt).toLocaleString() : '永久'}`;
-                        lotterySection.insertBefore(banNotice, lotterySection.firstChild);
-                    }
-                }
-            } catch (e) {
-                console.warn('[BanCheck] 检查封禁状态失败:', e);
-            }
-        }
-
         // 更新纪行券显示
         function updateCurrencyDisplay() {
             const currency = getJixingCurrency();
@@ -1247,9 +1186,6 @@
 
             renderProgress();
             updateCurrencyDisplay();
-            
-            // 检查封禁状态并更新UI
-            await checkBanStatusAndUpdateUI();
         }
 
         init();
