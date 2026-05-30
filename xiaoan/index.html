@@ -6096,7 +6096,7 @@
 
         // ===== 🏆 排行榜系统 =====
         const LEADERBOARD_ALLOWED_USERS = ['34b895c9-effa-4647-bfca-160cf0d4c7d4', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'];
-        const LEADERBOARD_RESET_DAYS = 7; // 每周重置
+        const LEADERBOARD_RESET_DAYS = 14; // 每两周重置
         let _leaderboardCache = null;
         let _leaderboardLastFetch = 0;
 
@@ -6190,20 +6190,20 @@
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
 
-                    const { data: jRows } = await sb.from('user_currencies')
-                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'jixing_muchun_currency').maybeSingle();
-                    const currentJ = parseFloat(jRows?.amount) || 0;
+                    const { data: lRows } = await sb.from('user_currencies')
+                        .select('amount').eq('user_id', winner.user_id).eq('currency_type', 'lottery').maybeSingle();
+                    const currentL = parseFloat(lRows?.amount) || 0;
                     await sb.from('user_currencies').upsert({
                         user_id: winner.user_id,
-                        currency_type: 'jixing_muchun_currency',
-                        amount: currentJ + 1000,
+                        currency_type: 'lottery',
+                        amount: currentL + 10,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
 
                     await sb.from('notifications').insert({
                         user_id: winner.user_id,
                         title: '🏆 排行榜奖励发放',
-                        content: `恭喜你在排行榜中取得第一名！获得奖励：2000兑换券 + 1000纪行券！`,
+                        content: `恭喜你在排行榜中取得第一名！获得奖励：2000兑换券 + 10抽奖券！`,
                         type: 'success',
                         created_at: new Date().toISOString()
                     });
