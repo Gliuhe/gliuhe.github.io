@@ -492,6 +492,38 @@
                 </div>
             </div>
 
+            <!-- 限购设置 -->
+            <div style="margin-top:12px;padding:16px;background:#ede9fe;border:2px dashed #8b5cf6;border-radius:10px;">
+                <div style="font-weight:700;color:#5b21b6;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                    🔒 限购设置
+                    <span style="font-size:0.78rem;font-weight:normal;color:#7c3aed;">（可选，不设置则无限制）</span>
+                </div>
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>限购周期</label>
+                        <select id="purchaseLimitPeriod" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                            <option value="none">🔓 不限购</option>
+                            <option value="daily">📅 每天限购</option>
+                            <option value="weekly">📆 每周限购</option>
+                            <option value="monthly">🗓️ 每月限购</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>限购次数</label>
+                        <input type="number" id="purchaseLimitCount" placeholder="不限购时留空" min="1" max="9999">
+                        <div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">每个限购周期内最多可购买次数</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top:10px;padding:10px;background:white;border-radius:6px;font-size:0.85rem;color:#374151;">
+                    <strong>💡 示例：</strong><br>
+                    每天限购 1 次 → 用户每天只能购买该商品 1 次<br>
+                    每周限购 3 次 → 用户每周只能购买该商品 3 次
+                </div>
+            </div>
+
             <div class="form-group">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" id="productActive" checked style="width:18px;height:18px;">
@@ -1091,6 +1123,10 @@
             document.getElementById('rewardCurrencyType').value = 'auto';
             document.getElementById('rewardAmount').value = '';
             
+            // 限购设置
+            document.getElementById('purchaseLimitPeriod').value = 'none';
+            document.getElementById('purchaseLimitCount').value = '';
+            
             // 初始化字段显示状态
             toggleProductTypeFields();
             
@@ -1199,6 +1235,10 @@
                 document.getElementById('rewardCurrencyType').value = product.reward_currency_type || 'auto';
                 document.getElementById('rewardAmount').value = product.reward_amount || '';
                 
+                // 限购设置回填
+                document.getElementById('purchaseLimitPeriod').value = product.purchase_limit_period || 'none';
+                document.getElementById('purchaseLimitCount').value = product.purchase_limit_count || '';
+                
                 // 根据类型显示/隐藏对应字段
                 toggleProductTypeFields();
                 
@@ -1271,6 +1311,16 @@
                     return;
                 }
             }
+            
+            // 限购设置验证
+            const purchaseLimitPeriod = document.getElementById('purchaseLimitPeriod').value;
+            const purchaseLimitCount = parseInt(document.getElementById('purchaseLimitCount').value) || null;
+            
+            if (purchaseLimitPeriod !== 'none' && (!purchaseLimitCount || purchaseLimitCount <= 0)) {
+                alert('❌ 设置了限购周期后，必须填写限购次数！');
+                document.getElementById('purchaseLimitCount').focus();
+                return;
+            }
 
             try {
                 const productData = {
@@ -1286,6 +1336,9 @@
                     // 新增字段
                     reward_currency_type: rewardCurrencyType === 'auto' ? null : rewardCurrencyType,
                     reward_amount: rewardAmount,
+                    // 限购设置
+                    purchase_limit_period: purchaseLimitPeriod === 'none' ? null : purchaseLimitPeriod,
+                    purchase_limit_count: purchaseLimitCount,
                     updated_at: new Date().toISOString()
                 };
 
