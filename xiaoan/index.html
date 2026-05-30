@@ -4960,7 +4960,7 @@
                 console.log('[Cloud] 🗑️ 检测到用户切换: ' + lastUserId.substring(0,8) + ' → ' + userId.substring(0,8) + '，清除旧数据');
                 // 需要清除的 localStorage key 列表（应用相关的所有 key）
                 const appKeys = [
-                    'voucher', 'lottery', 'premium', 'bankTicket',
+                    'voucher', 'lottery', 'premium', 'bankTicket', 'task_points',
                     'xiaoan_password', 'password', 'rule_password',
                     'lottery_password', 'advanced_password', 'bank_password',
                     'announcement_password', 
@@ -5020,6 +5020,10 @@
                                     }, { onConflict: 'user_id,currency_type' })
                                     .then(r => { if (r.error) console.warn('[Cloud] ⚠️ 货币回写失败:', r.error.message); });
                                 }
+                            }
+                            // 任务积分：只从云端加载，不覆盖本地（本地由 rule/index.html 管理）
+                            if (key === 'task_points') {
+                                localStorage.setItem('task_points', String(parseFloat(row.amount) || 0));
                             }
                         });
                     }
@@ -5379,7 +5383,7 @@
             
             try {
                 // ========== 货币类 → user_currencies 表（行级模型: currency_type + amount） ==========
-                if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
+                if (['voucher', 'lottery', 'premium', 'bankTicket', 'task_points'].includes(key)) {
                     const result = await sbClient.from('user_currencies').upsert({
                         user_id: userId,
                         currency_type: key,
@@ -5743,7 +5747,7 @@
             
             try {
                 const syncMapKeys = [
-                    'voucher','lottery','premium','bankTicket',
+                    'voucher','lottery','premium','bankTicket','task_points',
                     'bankSavings','bankDeposit','bankInvestment',
                     'depositStartDate','investmentStartDate',
                     'products','history','rules','activeTasks',
@@ -5819,7 +5823,7 @@
                 
                 // 清除所有应用数据（强制从云端重新加载）
                 const appKeys = [
-                    'voucher', 'lottery', 'premium', 'bankTicket',
+                    'voucher', 'lottery', 'premium', 'bankTicket', 'task_points',
                     'bankSavings', 'bankDeposit', 'bankInvestment',
                     'savingsBalance', 'depositBalance', 'investmentBalance',
                     'records', 'advancedRecords', 'lotteryRecords', 'advancedLotteryRecords',
@@ -5873,7 +5877,7 @@
         /** 根据 localStorage key 标记对应模块已同步 */
         function _markModuleSynced(key) {
             const map = {
-                voucher:'currencies', lottery:'currencies', premium:'currencies', bankTicket:'currencies',
+                voucher:'currencies', lottery:'currencies', premium:'currencies', bankTicket:'currencies', task_points:'currencies',
                 bankSavings:'bank', bankDeposit:'bank', bankInvestment:'bank', bankHistory:'bank',
                 lotteryRecords:'lottery', advancedLotteryRecords:'lottery',
                 checkinData:'checkin', history:'history', rules:'rules', activeTasks:'rules',
