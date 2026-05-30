@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>纪行商城 - 超级兑换券乐园</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 30%, #a1c4fd 60%, #c2e9fb 100%);
+            color: #333;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 装饰气泡 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50px; right: -50px;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(255,255,255,0.4), transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            animation: floatBubble 8s ease-in-out infinite;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30px; left: -30px;
+            width: 160px; height: 160px;
+            background: radial-gradient(circle, rgba(255,255,255,0.3), transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            animation: floatBubble 10s ease-in-out infinite reverse;
+        }
+        @keyframes floatBubble {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        .back-btn {
+            position: fixed; top: 16px; left: 16px; z-index: 100;
+        }
+        .back-btn button {
+            padding: 7px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.6); color: #5b3a8c; cursor: pointer; font-size: 0.88rem;
+            transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        .back-btn button:hover { background: rgba(255,255,255,0.8); }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 14px 10px; max-width: 900px; margin: 0 auto;
+            position: relative; z-index: 10;
+        }
+        .pool-title {
+            font-size: 1.5rem; font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .ticket-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+            border: 1px solid rgba(255,255,255,0.5);
+            border-radius: 20px; padding: 6px 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .ticket-badge .icon { font-size: 1.2rem; }
+        .ticket-badge .val { color: #764ba2; font-weight: bold; font-size: 1.1rem; }
+
+        .container {
+            max-width: 900px; margin: 0 auto; padding: 10px 14px 40px;
+            position: relative; z-index: 10;
+        }
+
+        /* 分类筛选 */
+        .category-tabs {
+            display: flex; gap: 8px; padding: 10px 0;
+            overflow-x: auto; -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .cat-tab {
+            flex-shrink: 0;
+            padding: 8px 18px; border-radius: 20px; border: none;
+            background: rgba(255,255,255,0.5); color: #5b3a8c;
+            font-size: 0.88rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; backdrop-filter: blur(5px);
+        }
+        .cat-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        /* 商品网格 */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 18px;
+            margin-top: 16px;
+        }
+
+        .product-card {
+            background: rgba(255,255,255,0.85);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.6);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(102,126,234,0.2);
+            border-color: rgba(102,126,234,0.3);
+        }
+
+        .product-img-wrap {
+            width: 100%; height: 160px;
+            background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .product-img-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover .product-img-wrap img {
+            transform: scale(1.05);
+        }
+        .product-img-placeholder {
+            font-size: 3.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .product-info {
+            padding: 14px 16px;
+        }
+        .product-name {
+            font-size: 1rem; font-weight: 700; color: #2d2b55;
+            margin-bottom: 4px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .product-desc {
+            font-size: 0.82rem; color: #8b88b0;
+            margin-bottom: 10px;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .product-bottom {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .product-price {
+            display: flex; align-items: center; gap: 4px;
+            font-size: 0.95rem; font-weight: 700;
+            color: #764ba2;
+        }
+        .product-price .price-icon { font-size: 1rem; }
+        .buy-btn {
+            padding: 6px 16px; border-radius: 16px; border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .buy-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(118,75,162,0.3);
+        }
+        .buy-btn:disabled {
+            background: #ccc; cursor: not-allowed; transform: none; box-shadow: none;
+        }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: #8b88b0;
+        }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 16px; }
+
+        /* 加载 */
+        .loading-state {
+            text-align: center; padding: 60px; color: #667eea;
+        }
+        .loading-spinner {
+            width: 32px; height: 32px; margin: 0 auto 12px;
+            border: 3px solid rgba(102,126,234,0.2);
+            border-top-color: #667eea; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 确认弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-card {
+            background: #fff; border-radius: 24px; padding: 30px;
+            max-width: 380px; width: 90%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .modal-icon { font-size: 3rem; margin-bottom: 12px; }
+        .modal-title { font-size: 1.2rem; font-weight: 700; color: #2d2b55; margin-bottom: 8px; }
+        .modal-desc { font-size: 0.9rem; color: #8b88b0; margin-bottom: 20px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-actions button {
+            flex: 1; padding: 10px; border-radius: 16px; border: none;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-cancel {
+            background: #f1f5f9; color: #64748b;
+        }
+        .modal-cancel:hover { background: #e2e8f0; }
+        .modal-confirm {
+            background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
+        }
+        .modal-confirm:hover { box-shadow: 0 4px 12px rgba(118,75,162,0.3); }
+
+        /* 状态提示 */
+        .status-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #fff; padding: 12px 24px; border-radius: 16px;
+            font-size: 0.9rem; font-weight: 600; color: #2d2b55;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 2000; transition: all 0.3s ease;
+            opacity: 0; transform: translateX(-50%) translateY(-10px);
+            pointer-events: none;
+        }
+        .status-toast.show {
+            opacity: 1; transform: translateX(-50%) translateY(0);
+        }
+        .status-toast.success { border-left: 4px solid #10b981; }
+        .status-toast.error { border-left: 4px solid #ef4444; }
+
+        @media (max-width: 600px) {
+            .products-grid { grid-template-columns: 1fr; }
+            .top-bar { padding: 16px 10px 8px; }
+            .pool-title { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="back-btn">
+        <button onclick="window.location.href='lottery.html'">← 返回抽奖页</button>
+    </div>
+
+    <div class="top-bar">
+        <div class="pool-title">🛍️ 纪行商城</div>
+        <div class="ticket-badge">
+            <span class="icon">🎫</span>
+            <span class="val" id="jixingBalance">0</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="category-tabs" id="categoryTabs">
+            <button class="cat-tab active" data-cat="all">全部</button>
+        </div>
+
+        <div id="productsContainer">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <div>商品加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)closeConfirmModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-icon">🛍️</div>
+            <div class="modal-title" id="confirmTitle">确认兑换？</div>
+            <div class="modal-desc" id="confirmDesc"></div>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="closeConfirmModal()">取消</button>
+                <button class="modal-confirm" id="confirmBtn" onclick="confirmPurchase()">确认兑换</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态提示 -->
+    <div class="status-toast" id="statusToast"></div>
+
+    <script>
+        const SB_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
+        const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I';
+        const sb = window.supabase.createClient(SB_URL, SB_KEY);
+
+        let allProducts = [];
+        let categories = [];
+        let currentCategory = 'all';
+        let currentProduct = null;
+
+        const CDN_BASE = 'https://cdn.jsdelivr.net/gh/xiaoan-cdn/js2/';
+
+        async function init() {
+            await loadJixingBalance();
+            await Promise.all([loadCategories(), loadProducts()]);
+        }
+
+        async function loadJixingBalance() {
+            const userId = localStorage.getItem('xiaoan_user_id');
+            if (!userId) return;
+
+            // 先读本地
+            const localJixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0');
+            document.getElementById('jixingBalance').textContent = localJixing;
+
+            // 云端同步
+            try {
+                const { data, error } = await sb
+                    .from('user_currencies')
+                    .select('amount')
+                    .eq('user_id', userId)
+                    .eq('currency_type', 'jixing_muchun_currency')
+                    .maybeSingle();
+                if (!error && data) {
+                    const cloudVal = Math.floor(parseFloat(data.amount) || 0);
+                    document.getElementById('jixingBalance').textContent = cloudVal;
+                    localStorage.setItem('jixing_muchun_currency', String(cloudVal));
+                }
+            } catch(e) {}
+        }
+
+        async function loadCategories() {
+            try {
+                const { data, error } = await sb
+                    .from('jixing_shop_categories')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+                if (error) throw error;
+                categories = data || [];
+
+                const tabsEl = document.getElementById('categoryTabs');
+                tabsEl.innerHTML = '<button class="cat-tab active" data-cat="all" onclick="filterCategory(\'all\', this)">🌟 全部</button>';
+                categories.forEach(cat => {
+                    tabsEl.innerHTML += `<button class="cat-tab" data-cat="${cat.id}" onclick="filterCategory('${cat.id}', this)">${cat.icon || '📦'} ${escapeHtml(cat.name)}</button>`;
+                });
+            } catch(e) {
+                console.warn('[Store] 加载分类失败:', e.message);
+            }
+        }
+
+        async function loadProducts() {
+            const container = document.getElementById('productsContainer');
+            container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div>商品加载中...</div></div>';
+
+            try {
+                const { data, error } = await sb
+                    .from('jixing_shop_products')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+                if (error) throw error;
+                allProducts = data || [];
+                renderProducts();
+            } catch(e) {
+                console.error('[Store] 加载商品失败:', e);
+                container.innerHTML = '<div class="empty-state"><div class="icon">😢</div><div>加载失败，请稍后重试</div></div>';
+            }
+        }
+
+        function filterCategory(catId, el) {
+            currentCategory = catId;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('productsContainer');
+            let filtered = [...allProducts];
+            if (currentCategory !== 'all') {
+                filtered = filtered.filter(p => p.category_id === currentCategory);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🛍️</div><div>暂无商品，敬请期待~</div></div>';
+                return;
+            }
+
+            const gridHTML = filtered.map(p => {
+                const imgHTML = p.image_name
+                    ? `<img src="${CDN_BASE}${escapeHtml(p.image_name)}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'>${p.icon || '🎁'}</div>'">`
+                    : `<div class="product-img-placeholder">${p.icon || '🎁'}</div>`;
+
+                return `
+                    <div class="product-card" onclick="showPurchaseConfirm('${p.id}')">
+                        <div class="product-img-wrap">${imgHTML}</div>
+                        <div class="product-info">
+                            <div class="product-name">${escapeHtml(p.name)}</div>
+                            <div class="product-desc">${escapeHtml(p.description || '暂无描述')}</div>
+                            <div class="product-bottom">
+                                <div class="product-price">
+                                    <span class="price-icon">🎫</span>
+                                    <span>${p.price}</span>
+                                </div>
+                                <button class="buy-btn" onclick="event.stopPropagation();showPurchaseConfirm('${p.id}')">立即兑换</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `<div class="products-grid">${gridHTML}</div>`;
+        }
+
+        function showPurchaseConfirm(productId) {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
+            currentProduct = product;
+
+            const balance = parseInt(document.getElementById('jixingBalance').textContent);
+            const canAfford = balance >= product.price;
+
+            document.getElementById('confirmTitle').textContent = `兑换「${product.name}」？`;
+            document.getElementById('confirmDesc').textContent = `价格：${product.price} 纪行券\n${product.description || ''}${!canAfford ? '\n\n⚠️ 纪行券余额不足！' : ''}`;
+            document.getElementById('confirmBtn').disabled = !canAfford;
+            document.getElementById('confirmBtn').textContent = canAfford ? '确认兑换' : '余额不足';
+
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+            currentProduct = null;
+        }
+
+        async function confirmPurchase() {
+            if (!currentProduct) return;
+            const product = currentProduct;
+            const userId = localStorage.getItem('xiaoan_user_id');
+
+            if (!userId) {
+                showToast('请先登录', 'error');
+                closeConfirmModal();
+                return;
+            }
+
+            closeConfirmModal();
+
+            // 扣减纪行券
+            const currentBalance = parseInt(document.getElementById('jixingBalance').textContent);
+            if (currentBalance < product.price) {
+                showToast('纪行券余额不足！', 'error');
+                return;
+            }
+
+            const newBalance = currentBalance - product.price;
+
+            try {
+                // 更新云端余额
+                await sb.from('user_currencies').upsert({
+                    user_id: userId,
+                    currency_type: 'jixing_muchun_currency',
+                    amount: newBalance,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,currency_type' });
+
+                // 更新本地
+                localStorage.setItem('jixing_muchun_currency', String(newBalance));
+                document.getElementById('jixingBalance').textContent = newBalance;
+
+                // 发放奖励
+                await deliverReward(product);
+
+                showToast(`🎉 兑换成功！${product.name}`, 'success');
+            } catch(e) {
+                console.error('[Store] 兑换失败:', e);
+                showToast('兑换失败，请重试', 'error');
+            }
+        }
+
+        async function deliverReward(product) {
+            const userId = localStorage.getItem('xiaoan_user_id');
+
+            if (product.product_type === 'physical' || product.product_type === 'custom') {
+                // 实物/自定义：放入背包记录
+                let records = JSON.parse(localStorage.getItem('records') || '[]');
+                records.push({
+                    prize: { name: product.name, icon: product.icon || '🎁', description: product.description || '' },
+                    rewardType: product.product_type,
+                    usable: true,
+                    isExchangeItem: false,
+                    used: false,
+                    date: new Date().toISOString(),
+                    icon: product.icon || '🎁',
+                    description: product.description || '纪行商城兑换',
+                    _source: 'normal',
+                    _sourceLabel: '纪行商城'
+                });
+                localStorage.setItem('records', JSON.stringify(records));
+            } else {
+                // 货币类：根据 reward_currency_type 和 reward_amount 发放
+                let targetCurrency = product.reward_currency_type;
+                let rewardAmount = product.reward_amount || product.price; // 默认回退
+
+                // 如果没有设置 reward_currency_type，根据 product_type 推断
+                if (!targetCurrency) {
+                    const map = {
+                        'voucher': 'voucher',
+                        'lottery_ticket': 'lottery',
+                        'premium_ticket': 'premium',
+                        'bank_note': 'bank_currency',
+                        'jixing_ticket': 'jixing_muchun_currency'
+                    };
+                    targetCurrency = map[product.product_type] || 'voucher';
+                }
+
+                const current = await getCurrencyAmount(userId, targetCurrency);
+                const newAmount = current + rewardAmount;
+                await sb.from('user_currencies').upsert({
+                    user_id: userId,
+                    currency_type: targetCurrency,
+                    amount: newAmount,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,currency_type' });
+                localStorage.setItem(targetCurrency, String(newAmount));
+            }
+        }
+
+        async function getCurrencyAmount(userId, currencyType) {
+            try {
+                const { data } = await sb
+                    .from('user_currencies')
+                    .select('amount')
+                    .eq('user_id', userId)
+                    .eq('currency_type', currencyType)
+                    .maybeSingle();
+                return Math.floor(parseFloat(data?.amount) || 0);
+            } catch(e) {
+                return parseInt(localStorage.getItem(currencyType) || '0');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('statusToast');
+            toast.textContent = message;
+            toast.className = `status-toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        init();
+    </script>
+</body>
+</html>
