@@ -2334,21 +2334,29 @@
         async function syncTaskPointsToCloud(taskPoints) {
             const userId = USER_ID;
             try {
-                if (!window.supabase) return;
+                if (!window.supabase) {
+                    console.warn('[TaskPoints] Supabase 未加载，同步失败');
+                    return;
+                }
                 const sbClient = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2VyIiwiaWF0IjoxNzc1NjM3ODM1LCJleHAiOjIwOTEyMTM4MzV9.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
                     { db: { schema: 'public' } }
                 );
-                await sbClient.from('user_currencies').upsert({
+                const { error } = await sbClient.from('user_currencies').upsert({
                     user_id: userId,
                     currency_type: 'task_points',
                     amount: taskPoints,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id,currency_type' });
-                console.log('[TaskPoints] 已同步到云端:', taskPoints);
+                
+                if (error) {
+                    console.error('[TaskPoints] ❌ 同步失败:', error.message);
+                } else {
+                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints);
+                }
             } catch(e) {
-                console.warn('[TaskPoints] 同步失败:', e.message);
+                console.error('[TaskPoints] ❌ 同步异常:', e.message);
             }
         }
         

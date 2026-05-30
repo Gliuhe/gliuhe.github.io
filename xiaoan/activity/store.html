@@ -426,18 +426,48 @@
             container.innerHTML = `<div class="products-grid">${gridHTML}</div>`;
         }
 
-        function showPurchaseConfirm(productId) {
+        async function showPurchaseConfirm(productId) {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
             currentProduct = product;
 
+            const userId = localStorage.getItem('xiaoan_user_id');
             const balance = parseInt(document.getElementById('jixingBalance').textContent);
             const canAfford = balance >= product.price;
 
+            let limitInfo = '';
+            let canPurchase = true;
+            
+            if (userId && product.purchase_limit_period && product.purchase_limit_period !== 'none') {
+                const limitResult = await checkPurchaseLimit(product, userId);
+                canPurchase = limitResult.canPurchase;
+                
+                const periodLabel = {
+                    'daily': '今天',
+                    'weekly': '本周',
+                    'monthly': '本月'
+                }[product.purchase_limit_period] || '当前周期';
+                
+                limitInfo = `\n${periodLabel}已兑换：${limitResult.currentCount}/${limitResult.limitCount}次`;
+                
+                if (!canPurchase) {
+                    limitInfo += '\n⚠️ 已达到限购次数，请下个周期再来！';
+                }
+            }
+
+            const canBuy = canAfford && canPurchase;
+            
             document.getElementById('confirmTitle').textContent = `兑换「${product.name}」？`;
-            document.getElementById('confirmDesc').textContent = `价格：${product.price} 纪行券\n${product.description || ''}${!canAfford ? '\n\n⚠️ 纪行券余额不足！' : ''}`;
-            document.getElementById('confirmBtn').disabled = !canAfford;
-            document.getElementById('confirmBtn').textContent = canAfford ? '确认兑换' : '余额不足';
+            document.getElementById('confirmDesc').textContent = `价格：${product.price} 纪行券\n${product.description || ''}${!canAfford ? '\n\n⚠️ 纪行券余额不足！' : ''}${limitInfo}`;
+            document.getElementById('confirmBtn').disabled = !canBuy;
+            
+            if (!canAfford) {
+                document.getElementById('confirmBtn').textContent = '余额不足';
+            } else if (!canPurchase) {
+                document.getElementById('confirmBtn').textContent = '已达限购';
+            } else {
+                document.getElementById('confirmBtn').textContent = '确认兑换';
+            }
 
             document.getElementById('confirmModal').classList.add('show');
         }
@@ -484,6 +514,11 @@
 
                 // 发放奖励
                 await deliverReward(product);
+
+                // 保存购买记录（用于限购统计）
+                if (userId) {
+                    await savePurchaseRecord(userId, product.id);
+                }
 
                 showToast(`🎉 兑换成功！${product.name}`, 'success');
             } catch(e) {
@@ -564,6 +599,87 @@
         function escapeHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ========== 限购相关功能 ==========
+
+        // 获取当前周期的起始时间
+        function getPeriodStart(period) {
+            const now = new Date();
+            switch(period) {
+                case 'daily':
+                    return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+                case 'weekly':
+                    const dayOfWeek = now.getDay();
+                    const monday = new Date(now);
+                    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+                    monday.setHours(0, 0, 0, 0);
+                    return monday.toISOString();
+                case 'monthly':
+                    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+                default:
+                    return null;
+            }
+        }
+
+        // 检查用户是否已达到限购次数
+        async function checkPurchaseLimit(product, userId) {
+            if (!product.purchase_limit_period || product.purchase_limit_period === 'none') {
+                return { canPurchase: true, currentCount: 0, limitCount: 0 };
+            }
+
+            const periodStart = getPeriodStart(product.purchase_limit_period);
+            if (!periodStart) {
+                return { canPurchase: true, currentCount: 0, limitCount: 0 };
+            }
+
+            try {
+                const { count, error } = await sb
+                    .from('jixing_shop_purchase_records')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', userId)
+                    .eq('product_id', product.id)
+                    .gte('created_at', periodStart);
+
+                if (error) throw error;
+
+                const currentCount = count || 0;
+                const limitCount = product.purchase_limit_count;
+
+                return {
+                    canPurchase: currentCount < limitCount,
+                    currentCount,
+                    limitCount
+                };
+            } catch(e) {
+                console.error('[Store] 检查限购失败:', e);
+                return { canPurchase: true, currentCount: 0, limitCount: 0 };
+            }
+        }
+
+        // 保存购买记录
+        async function savePurchaseRecord(userId, productId) {
+            try {
+                const { error } = await sb
+                    .from('jixing_shop_purchase_records')
+                    .insert({
+                        id: generateUUID(),
+                        user_id: userId,
+                        product_id: productId,
+                        created_at: new Date().toISOString()
+                    });
+
+                if (error) throw error;
+            } catch(e) {
+                console.error('[Store] 保存购买记录失败:', e);
+            }
+        }
+
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
         }
 
         init();
