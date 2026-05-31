@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沐春望景 - 纪行活动</title>
+    <title>夏日纪行 - 纪行活动</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,10 +13,12 @@
         }
 
         :root {
-            --primary-color: #4CAF50;
-            --secondary-color: #66BB6A;
-            --accent-color: #81C784;
-            --spring-green: #a8e6cf;
+            --primary-color: #0EA5E9;
+            --secondary-color: #38BDF8;
+            --accent-color: #7DD3FC;
+            --summer-blue: #bae6fd;
+            --summer-orange: #FB923C;
+            --summer-yellow: #FBBF24;
         }
 
         body {
@@ -48,8 +50,8 @@
             height: 100%;
             background: linear-gradient(
                 to bottom,
-                rgba(76, 175, 80, 0.2) 0%,
-                rgba(102, 187, 106, 0.3) 40%,
+                rgba(14, 165, 233, 0.15) 0%,
+                rgba(56, 189, 248, 0.25) 40%,
                 rgba(0, 0, 0, 0.6) 100%
             );
             z-index: -1;
@@ -76,7 +78,7 @@
 
         .btn-primary {
             background: rgba(255, 255, 255, 0.95);
-            color: #4CAF50;
+            color: #0EA5E9;
             backdrop-filter: blur(10px);
         }
 
@@ -86,7 +88,7 @@
         }
 
         .btn-reward {
-            background: linear-gradient(135deg, #66BB6A, #4CAF50);
+            background: linear-gradient(135deg, #38BDF8, #0EA5E9);
             color: white;
             padding: 15px 40px;
             font-size: 1.2rem;
@@ -94,7 +96,7 @@
 
         .btn-reward:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(102, 187, 106, 0.5);
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
         }
 
         .btn-reward:disabled {
@@ -146,14 +148,14 @@
         }
 
         .event-badge {
-            background: linear-gradient(135deg, #4CAF50, #66BB6A);
+            background: linear-gradient(135deg, #0EA5E9, #38BDF8);
             color: white;
             padding: 10px 25px;
             border-radius: 20px;
             display: inline-block;
             font-size: 1rem;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
         }
 
         /* 进度区域 */
@@ -183,10 +185,10 @@
         }
 
         .progress-count {
-            color: #81C784;
+            color: #38BDF8;
             font-weight: bold;
             font-size: 1.4rem;
-            text-shadow: 0 0 10px rgba(129, 199, 132, 0.5);
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
 
         .progress-bar-container {
@@ -204,71 +206,19 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #66BB6A, #81C784, #a8e6cf);
+            background: linear-gradient(90deg, #0EA5E9, #38BDF8, #7DD3FC, #bae6fd);
             border-radius: 15px;
             transition: width 0.8s ease;
-            box-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
             position: relative;
         }
 
-        /* 周区域容器 */
-        .week-zones {
-            display: flex;
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .zone-section {
-            border-radius: 20px;
-            padding: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .zone-a {
-            flex: 5;
-            background: rgba(76, 175, 80, 0.15);
-        }
-
-        .zone-b {
-            flex: 2;
-            background: rgba(255, 152, 0, 0.15);
-        }
-
-        .zone-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .zone-icon {
-            font-size: 1.5rem;
-        }
-
-        .zone-title {
-            font-size: 1.2rem;
-            color: white;
-            font-weight: bold;
-        }
-
-        .zone-subtitle {
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-left: auto;
-        }
-
-        /* 日期格子 */
+        /* 统一日期容器 */
         .days-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 10px;
-        }
-
-        .days-grid.weekend {
-            grid-template-columns: repeat(3, 1fr);
+            margin-top: 20px;
         }
 
         .day-cell {
@@ -283,8 +233,8 @@
         }
 
         .day-cell.completed {
-            background: linear-gradient(135deg, rgba(168, 230, 207, 0.4), rgba(255, 209, 102, 0.4));
-            border-color: #a8e6cf;
+            background: linear-gradient(135deg, rgba(186, 230, 253, 0.4), rgba(253, 224, 71, 0.4));
+            border-color: #bae6fd;
         }
 
         .day-cell.completed::after {
@@ -292,17 +242,35 @@
             position: absolute;
             top: 5px;
             right: 8px;
-            color: #a8e6cf;
+            color: #bae6fd;
             font-size: 1rem;
             font-weight: bold;
-            text-shadow: 0 0 5px rgba(168, 230, 207, 0.8);
+            text-shadow: 0 0 5px rgba(186, 230, 253, 0.8);
         }
 
         .day-cell.today {
-            border-color: #81C784;
-            box-shadow: 0 0 15px rgba(129, 199, 132, 0.5);
+            border-color: #38BDF8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
             cursor: pointer;
             animation: pulse 2s infinite;
+        }
+
+        /* 周中区样式 */
+        .day-cell.zone-a {
+            background: rgba(14, 165, 233, 0.15);
+        }
+
+        /* 周末区样式 */
+        .day-cell.zone-b {
+            background: rgba(251, 146, 60, 0.15);
+        }
+
+        .day-cell.zone-b .day-reward {
+            color: #FB923C;
+        }
+
+        .day-cell.zone-a .day-reward {
+            color: #38BDF8;
         }
 
         @keyframes pulse {
@@ -331,7 +299,7 @@
         }
 
         .day-cell.completed .day-status {
-            color: #a8e6cf;
+            color: #bae6fd;
             font-weight: bold;
         }
 
@@ -371,12 +339,12 @@
 
         .stat-value {
             font-size: 1.3rem;
-            color: #81C784;
+            color: #38BDF8;
             font-weight: bold;
         }
 
         .stat-value.weekend {
-            color: #FFB74D;
+            color: #FB923C;
         }
 
         /* 纪行券显示 */
@@ -411,9 +379,9 @@
 
         .currency-amount {
             font-size: 2.5rem;
-            color: #81C784;
+            color: #38BDF8;
             font-weight: bold;
-            text-shadow: 0 0 15px rgba(129, 199, 132, 0.6);
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
         }
 
         .currency-tip {
@@ -565,7 +533,7 @@
         }
 
         .rules-list li::before {
-            content: '🌸';
+            content: '🌴';
             position: absolute;
             left: 0;
         }
@@ -577,7 +545,7 @@
             }
 
             .days-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
             }
 
             .progress-header {
@@ -609,6 +577,12 @@
 
             .choice-info h3 {
                 font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .days-grid {
+                grid-template-columns: repeat(3, 1fr);
             }
         }
 
@@ -651,7 +625,7 @@
         }
 
         .success-message h2 {
-            color: #4CAF50;
+            color: #0EA5E9;
             font-size: 2rem;
             margin-bottom: 20px;
         }
@@ -687,7 +661,7 @@
         }
 
         .choice-message h2 {
-            color: #4CAF50;
+            color: #0EA5E9;
             font-size: 2rem;
             margin-bottom: 15px;
             text-align: center;
@@ -712,8 +686,8 @@
             align-items: center;
             gap: 20px;
             padding: 20px;
-            background: linear-gradient(135deg, #f0f9f1, #e8f5e9);
-            border: 2px solid #c8e6c9;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px solid #bae6fd;
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -721,8 +695,8 @@
 
         .choice-option:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
-            border-color: #4CAF50;
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
+            border-color: #0EA5E9;
         }
 
         .choice-icon {
@@ -730,7 +704,7 @@
         }
 
         .choice-info h3 {
-            color: #4CAF50;
+            color: #0EA5E9;
             font-size: 1.3rem;
             margin-bottom: 5px;
         }
@@ -764,9 +738,9 @@
     <div class="container">
         <!-- 活动标题 -->
         <div class="event-header">
-            <div class="event-icon">🌸</div>
-            <h1 class="event-title">沐春望景</h1>
-            <p class="event-subtitle">春日纪行，每日完成任务，收集纪行券兑换大奖</p>
+            <div class="event-icon">☀️</div>
+            <h1 class="event-title">夏日纪行</h1>
+            <p class="event-subtitle">夏日炎炎，每日完成任务，收集纪行券兑换大奖</p>
             <span class="event-badge">🎯 纪行活动</span>
         </div>
 
@@ -782,31 +756,9 @@
                 </div>
             </div>
 
-            <!-- A区B区日历 -->
-            <div class="week-zones">
-                <!-- A区：周中（周一到周四） -->
-                <div class="zone-section zone-a">
-                    <div class="zone-header">
-                        <span class="zone-icon">🅰️</span>
-                        <span class="zone-title">周中区</span>
-                        <span class="zone-subtitle">周一至周四</span>
-                    </div>
-                    <div class="days-grid" id="zoneAGrid">
-                        <!-- 动态生成 -->
-                    </div>
-                </div>
-                
-                <!-- B区：周末（周五到周日） -->
-                <div class="zone-section zone-b">
-                    <div class="zone-header">
-                        <span class="zone-icon">🅱️</span>
-                        <span class="zone-title">周末区</span>
-                        <span class="zone-subtitle">周五至周日</span>
-                    </div>
-                    <div class="days-grid weekend" id="zoneBGrid">
-                        <!-- 动态生成 -->
-                    </div>
-                </div>
+            <!-- 统一日历（周中周末合并） -->
+            <div class="days-grid" id="daysGrid">
+                <!-- 动态生成 -->
             </div>
 
             <!-- 本月统计 -->
@@ -832,7 +784,7 @@
                 <span class="currency-label">纪行券</span>
                 <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
-            <p class="currency-tip">周中区（周一至周四）每日300券 | 周末区：周五600券/周六250券/周日50券</p>
+            <p class="currency-tip">每日完成任务即可领取纪行券 | 周中300券/周五600券/周六250券/周日50券</p>
         </div>
 
         <!-- 抽奖模块 -->
@@ -860,8 +812,8 @@
         <div class="rules-section">
             <h3 class="rules-title">📜 活动规则</h3>
             <ul class="rules-list">
-                <li><strong>周中区（周一至周四）：</strong>完成任务中心的"每日任务奖励"可获得300张纪行券</li>
-                <li><strong>周末区（周五至周日）：</strong>周五完成获得600券，周六完成获得250券，周日完成获得50券</li>
+                <li><strong>周中（周一至周四）：</strong>完成任务中心的"每日任务奖励"可获得300张纪行券</li>
+                <li><strong>周末（周五至周日）：</strong>周五完成获得600券，周六完成获得250券，周日完成获得50券</li>
                 <li>每周一自动重置进度，开始新一周的纪行</li>
                 <li>使用纪行券参与掷骰抽奖，点数越高奖励越好</li>
                 <li>掷出三个6即可获得五星大奖（含实物奖励）</li>
@@ -875,11 +827,11 @@
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // 纪行数据键名
-        const JIXING_KEY = 'jixing_muchun_progress_v2';
-        const MONTHLY_STATS_KEY = 'jixing_muchun_monthly_stats';
-        const CURRENCY_KEY = 'jixing_muchun_currency';
-        const BOUGHT_KEY = 'jixing_muchun_bought';
-        const INIT_KEY = 'jixing_muchun_initialized_v2';
+        const JIXING_KEY = 'jixing_summer_progress_v2';
+        const MONTHLY_STATS_KEY = 'jixing_summer_monthly_stats';
+        const CURRENCY_KEY = 'jixing_summer_currency';
+        const BOUGHT_KEY = 'jixing_summer_bought';
+        const INIT_KEY = 'jixing_summer_initialized_v2';
         const PRICE_PER_ITEM = 15;
 
         // 星期配置
@@ -1087,25 +1039,14 @@
             document.getElementById('progressFill').style.width = percentage + '%';
             document.getElementById('progressCount').textContent = `${completedCount} / 7 天`;
 
-            // 渲染A区（周中：周一到周四）
-            const zoneAGrid = document.getElementById('zoneAGrid');
-            zoneAGrid.innerHTML = '';
-            const zoneADays = WEEK_DAYS.filter(d => d.zone === 'A');
+            // 渲染统一日历（周中周末合并）
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
             const todayDayOfWeek = getTodayDayOfWeek();
             
-            zoneADays.forEach(day => {
+            WEEK_DAYS.forEach(day => {
                 const cell = createDayCell(day, progress, todayDayOfWeek);
-                zoneAGrid.appendChild(cell);
-            });
-
-            // 渲染B区（周末：周五到周日）
-            const zoneBGrid = document.getElementById('zoneBGrid');
-            zoneBGrid.innerHTML = '';
-            const zoneBDays = WEEK_DAYS.filter(d => d.zone === 'B');
-            
-            zoneBDays.forEach(day => {
-                const cell = createDayCell(day, progress, todayDayOfWeek);
-                zoneBGrid.appendChild(cell);
+                daysGrid.appendChild(cell);
             });
 
             // 更新本月统计
@@ -1115,7 +1056,7 @@
         // 创建日期格子
         function createDayCell(day, progress, todayDayOfWeek) {
             const cell = document.createElement('div');
-            cell.className = 'day-cell';
+            cell.className = `day-cell zone-${day.zone.toLowerCase()}`;
 
             const isCompleted = progress.completedDays.includes(day.dayOfWeek);
             const isToday = day.dayOfWeek === todayDayOfWeek;
