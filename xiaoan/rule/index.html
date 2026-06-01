@@ -743,6 +743,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="ruleRewardAmount1" min="0" value="0" style="flex: 1">
                 </div>
@@ -753,6 +754,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="ruleRewardAmount2" min="0" value="0" style="flex: 1">
                 </div>
@@ -840,6 +842,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="editRuleRewardAmount1" min="0" value="0" style="flex: 1">
                 </div>
@@ -850,6 +853,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="editRuleRewardAmount2" min="0" value="0" style="flex: 1">
                 </div>
@@ -1042,13 +1046,15 @@
             if (rule.rewardType1 && rule.rewardType1 !== 'none' && rule.rewardAmount1 > 0) {
                 const typeName = rule.rewardType1 === 'voucher' ? '兑换券' : 
                                 rule.rewardType1 === 'lottery' ? '抽奖券' : 
-                                rule.rewardType1 === 'bankTicket' ? '银行券' : '高级抽奖券';
+                                rule.rewardType1 === 'bankTicket' ? '银行券' : 
+                                rule.rewardType1 === 'jixing_muchun_currency' ? '纪行券' : '高级抽奖券';
                 rewards.push(`${rule.rewardAmount1} ${typeName}`);
             }
             if (rule.rewardType2 && rule.rewardType2 !== 'none' && rule.rewardAmount2 > 0) {
                 const typeName = rule.rewardType2 === 'voucher' ? '兑换券' : 
                                 rule.rewardType2 === 'lottery' ? '抽奖券' : 
-                                rule.rewardType2 === 'bankTicket' ? '银行券' : '高级抽奖券';
+                                rule.rewardType2 === 'bankTicket' ? '银行券' : 
+                                rule.rewardType2 === 'jixing_muchun_currency' ? '纪行券' : '高级抽奖券';
                 rewards.push(`${rule.rewardAmount2} ${typeName}`);
             }
             
@@ -1879,7 +1885,7 @@
                 status: 'completed'
             });
             localStorage.setItem('history', JSON.stringify(history));
-            syncTaskPointsToCloud(taskPoints);
+            await syncTaskPointsToCloud(taskPoints);
 
             // 更新任务状态并记录完成时间
             activeTasks[id] = {
@@ -2338,12 +2344,13 @@
                     console.warn('[TaskPoints] Supabase 未加载，同步失败');
                     return;
                 }
+                console.log('[TaskPoints] 📤 开始同步:', taskPoints, 'user_id:', userId);
                 const sbClient = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2VyIiwiaWF0IjoxNzc1NjM3ODM1LCJleHAiOjIwOTEyMTM4MzV9.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
                     { db: { schema: 'public' } }
                 );
-                const { error } = await sbClient.from('user_currencies').upsert({
+                const { data, error } = await sbClient.from('user_currencies').upsert({
                     user_id: userId,
                     currency_type: 'task_points',
                     amount: taskPoints,
@@ -2351,12 +2358,12 @@
                 }, { onConflict: 'user_id,currency_type' });
                 
                 if (error) {
-                    console.error('[TaskPoints] ❌ 同步失败:', error.message);
+                    console.error('[TaskPoints] ❌ 同步失败:', error.message, error.details);
                 } else {
-                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints);
+                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints, 'data:', data);
                 }
             } catch(e) {
-                console.error('[TaskPoints] ❌ 同步异常:', e.message);
+                console.error('[TaskPoints] ❌ 同步异常:', e.message, e.stack);
             }
         }
         
