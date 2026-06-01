@@ -1816,7 +1816,7 @@
         }
         
         // 确认完成任务
-        function confirmCompleteRule() {
+        async function confirmCompleteRule() {
             const id = parseInt(document.getElementById('completeRuleId').value);
 
             const rules = JSON.parse(localStorage.getItem('rules')) || [];
