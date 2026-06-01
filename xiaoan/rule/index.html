@@ -1855,7 +1855,11 @@
             rewardTypes.forEach(reward => {
                 if (reward.type !== 'none' && reward.amount > 0) {
                     const currentAmount = parseInt(localStorage.getItem(reward.type) || '0');
-                    localStorage.setItem(reward.type, currentAmount + reward.amount);
+                    const newAmount = currentAmount + reward.amount;
+                    localStorage.setItem(reward.type, String(newAmount));
+                    console.log(`[TaskPoints] 💰 货币 ${reward.type}: ${currentAmount} → ${newAmount} (+${reward.amount})`);
+                    // 同步其他货币奖励到云端
+                    syncCurrencyToCloud(reward.type, newAmount);
 
                     history.push({
                         date: new Date().toISOString(),
@@ -2100,7 +2104,7 @@
                     if (currencies && currencies.length > 0) {
                         currencies.forEach(row => {
                             const key = row.currency_type;
-                            if (['voucher', 'lottery', 'premium', 'bankTicket', 'jixing_muchun_currency'].includes(key)) {
+                            if (['voucher', 'lottery', 'premium', 'bankTicket', 'jixing_muchun_currency', 'task_points'].includes(key)) {
                                 const cloudVal = parseFloat(row.amount) || 0;
                                 const localRaw = localStorage.getItem(key);
                                 const localVal = localRaw !== null ? parseFloat(localRaw) : null;
@@ -2336,6 +2340,37 @@
 
         // 启动应用
         
+        // 通用货币同步到云端
+        async function syncCurrencyToCloud(currencyType, amount) {
+            const userId = USER_ID;
+            try {
+                if (!window.supabase) {
+                    console.warn(`[Currency] Supabase 未加载，无法同步 ${currencyType}`);
+                    return;
+                }
+                console.log(`[Currency] 📤 同步 ${currencyType} = ${amount} 到云端`);
+                const sbClient = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
+                    { db: { schema: 'public' } }
+                );
+                const { data, error } = await sbClient.from('user_currencies').upsert({
+                    user_id: userId,
+                    currency_type: currencyType,
+                    amount: amount,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,currency_type' });
+                
+                if (error) {
+                    console.error(`[Currency] ❌ 同步 ${currencyType} 失败:`, error.message, error.details || '');
+                } else {
+                    console.log(`[Currency] ✅ 已同步 ${currencyType} = ${amount}`);
+                }
+            } catch(e) {
+                console.error(`[Currency] ❌ 同步 ${currencyType} 异常:`, e.message);
+            }
+        }
+        
         // 任务积分同步到云端
         async function syncTaskPointsToCloud(taskPoints) {
             const userId = USER_ID;
@@ -2344,10 +2379,10 @@
                     console.warn('[TaskPoints] Supabase 未加载，同步失败');
                     return;
                 }
-                console.log('[TaskPoints] 📤 开始同步:', taskPoints, 'user_id:', userId);
+                console.log('[TaskPoints] 📤 开始同步 task_points:', taskPoints, 'user_id:', userId);
                 const sbClient = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2VyIiwiaWF0IjoxNzc1NjM3ODM1LCJleHAiOjIwOTEyMTM4MzV9.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
                     { db: { schema: 'public' } }
                 );
                 const { data, error } = await sbClient.from('user_currencies').upsert({
@@ -2358,12 +2393,12 @@
                 }, { onConflict: 'user_id,currency_type' });
                 
                 if (error) {
-                    console.error('[TaskPoints] ❌ 同步失败:', error.message, error.details);
+                    console.error('[TaskPoints] ❌ 同步失败:', error.message, error.details || '');
                 } else {
-                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints, 'data:', data);
+                    console.log('[TaskPoints] ✅ 已同步 task_points 到云端:', taskPoints, 'data:', data);
                 }
             } catch(e) {
-                console.error('[TaskPoints] ❌ 同步异常:', e.message, e.stack);
+                console.error('[TaskPoints] ❌ 同步异常:', e.message, e.stack || '');
             }
         }
         
