@@ -1879,7 +1879,7 @@
                 status: 'completed'
             });
             localStorage.setItem('history', JSON.stringify(history));
-            syncTaskPointsToCloud(taskPoints);
+            await syncTaskPointsToCloud(taskPoints);
 
             // 更新任务状态并记录完成时间
             activeTasks[id] = {
@@ -2338,12 +2338,13 @@
                     console.warn('[TaskPoints] Supabase 未加载，同步失败');
                     return;
                 }
+                console.log('[TaskPoints] 📤 开始同步:', taskPoints, 'user_id:', userId);
                 const sbClient = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2VyIiwiaWF0IjoxNzc1NjM3ODM1LCJleHAiOjIwOTEyMTM4MzV9.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
                     { db: { schema: 'public' } }
                 );
-                const { error } = await sbClient.from('user_currencies').upsert({
+                const { data, error } = await sbClient.from('user_currencies').upsert({
                     user_id: userId,
                     currency_type: 'task_points',
                     amount: taskPoints,
@@ -2351,12 +2352,12 @@
                 }, { onConflict: 'user_id,currency_type' });
                 
                 if (error) {
-                    console.error('[TaskPoints] ❌ 同步失败:', error.message);
+                    console.error('[TaskPoints] ❌ 同步失败:', error.message, error.details);
                 } else {
-                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints);
+                    console.log('[TaskPoints] ✅ 已同步到云端:', taskPoints, 'data:', data);
                 }
             } catch(e) {
-                console.error('[TaskPoints] ❌ 同步异常:', e.message);
+                console.error('[TaskPoints] ❌ 同步异常:', e.message, e.stack);
             }
         }
         
