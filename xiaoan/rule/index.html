@@ -743,6 +743,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="ruleRewardAmount1" min="0" value="0" style="flex: 1">
                 </div>
@@ -753,6 +754,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="ruleRewardAmount2" min="0" value="0" style="flex: 1">
                 </div>
@@ -840,6 +842,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="editRuleRewardAmount1" min="0" value="0" style="flex: 1">
                 </div>
@@ -850,6 +853,7 @@
                         <option value="lottery">抽奖券</option>
                         <option value="premium">高级抽奖券</option>
                         <option value="bankTicket">银行券</option>
+                        <option value="jixing_muchun_currency">纪行券</option>
                     </select>
                     <input type="number" id="editRuleRewardAmount2" min="0" value="0" style="flex: 1">
                 </div>
@@ -1042,13 +1046,15 @@
             if (rule.rewardType1 && rule.rewardType1 !== 'none' && rule.rewardAmount1 > 0) {
                 const typeName = rule.rewardType1 === 'voucher' ? '兑换券' : 
                                 rule.rewardType1 === 'lottery' ? '抽奖券' : 
-                                rule.rewardType1 === 'bankTicket' ? '银行券' : '高级抽奖券';
+                                rule.rewardType1 === 'bankTicket' ? '银行券' : 
+                                rule.rewardType1 === 'jixing_muchun_currency' ? '纪行券' : '高级抽奖券';
                 rewards.push(`${rule.rewardAmount1} ${typeName}`);
             }
             if (rule.rewardType2 && rule.rewardType2 !== 'none' && rule.rewardAmount2 > 0) {
                 const typeName = rule.rewardType2 === 'voucher' ? '兑换券' : 
                                 rule.rewardType2 === 'lottery' ? '抽奖券' : 
-                                rule.rewardType2 === 'bankTicket' ? '银行券' : '高级抽奖券';
+                                rule.rewardType2 === 'bankTicket' ? '银行券' : 
+                                rule.rewardType2 === 'jixing_muchun_currency' ? '纪行券' : '高级抽奖券';
                 rewards.push(`${rule.rewardAmount2} ${typeName}`);
             }
             
