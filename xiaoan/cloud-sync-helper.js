@@ -1,10 +1,15 @@
 /**
  * 精简版云同步助手 - 只保留核心功能
  * 保留：罚款、登录、奖池配置、兑换码、邮件/通知、封禁
- * UUID固定: d71f9173-bd5d-4d30-a033-0429ae162fd7
+ * 支持多用户：优先使用 window.__cloudUserId（当前登录用户），回退到默认 USER_ID
  */
 
 var USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+
+// 获取当前用户ID：优先使用登录用户的ID，没有则回退到默认ID
+function getCurrentUserId() {
+    return window.__cloudUserId || USER_ID;
+}
 
 function _getSb() {
     if (typeof window.supabase === 'undefined') return null;
@@ -21,7 +26,7 @@ async function loadFinesFromCloud() {
         
         var { data, error } = await sb.from('fine_items')
             .select('*')
-            .eq('user_id', USER_ID)
+            .eq('user_id', getCurrentUserId())
             .order('created_at', { ascending: true });
         
         if (error) throw error;
@@ -134,7 +139,7 @@ async function loadLotteryConfigFromCloud() {
         
         var { data, error } = await sb.from('lottery_config')
             .select('reward_config')
-            .eq('user_id', USER_ID)
+            .eq('user_id', getCurrentUserId())
             .limit(1)
             .maybeSingle();
         
@@ -163,7 +168,7 @@ async function saveLotteryConfigToCloud(config) {
         var now = new Date().toISOString();
         
         var { error } = await sb.from('lottery_config').upsert({
-            user_id: USER_ID,
+            user_id: getCurrentUserId(),
             reward_config: config,
             updated_at: now
         }, { onConflict: 'user_id' });
@@ -190,7 +195,7 @@ async function loadMailsFromCloud() {
         
         var { data, error } = await sb.from('notifications')
             .select('*')
-            .or(`target_user_id.is.null,target_user_id.eq.${USER_ID}`)
+            .or(`target_user_id.is.null,target_user_id.eq.${getCurrentUserId()}`)
             .order('created_at', { ascending: false })
             .limit(100);
         
@@ -303,7 +308,7 @@ async function checkUserBan(feature) {
         
         var { data, error } = await sb.from('user_bans')
             .select('*')
-            .eq('user_id', USER_ID)
+            .eq('user_id', getCurrentUserId())
             .order('banned_at', { ascending: false })
             .limit(1);
         
@@ -431,6 +436,7 @@ function syncBankAccountToCloud(accountKey) {
 }
 
 // ===== 导出函数到全局 =====
+window.getCurrentUserId = getCurrentUserId;
 window.checkUserBan = checkUserBan;
 window.showBanMessage = showBanMessage;
 window.checkPageBan = checkPageBan;

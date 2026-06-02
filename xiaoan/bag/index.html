@@ -917,8 +917,7 @@
                 return;
             }
             
-            // 使用全局 USER_ID（来自 cloud-sync-helper.js）
-            const userId = typeof USER_ID !== 'undefined' ? USER_ID : 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+            const userId = getCurrentUserId();
             
             try {
                 const sb = window.supabase.createClient(
@@ -930,7 +929,7 @@
                     }
                 );
                 
-                console.log('[Bag] 📥 正在从云端加载数据...');
+                console.log('[Bag] 📥 正在从云端加载数据 (user:', userId.substring(0,8) + ')...');
                 
                 // 并行加载货币和抽奖记录
                 const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
@@ -1143,7 +1142,7 @@
                     }
 
                     // 标记为已使用
-                    const currentUserId = typeof USER_ID !== 'undefined' ? USER_ID : 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
+                    const currentUserId = getCurrentUserId();
                     const { error: updateError } = await sbClient
                         .from('exchange_codes')
                         .update({ 

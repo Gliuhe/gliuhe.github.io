@@ -2166,13 +2166,14 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         }
 
         // ========== 云端数据同步 ==========
-        // 使用 cloud-sync-helper.js 中已定义的 USER_ID
         
         async function loadDataFromCloud() {
             if (!window.supabase) {
                 console.warn('[Choujiang] Supabase SDK 未加载');
                 return;
             }
+            
+            const userId = getCurrentUserId();
             
             try {
                 const sb = window.supabase.createClient(
@@ -2184,12 +2185,12 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     }
                 );
                 
-                console.log('[Choujiang] 📥 正在从云端加载数据...');
+                console.log('[Choujiang] 📥 正在从云端加载数据 (user:', userId.substring(0,8) + ')...');
                 
                 // 并行加载货币和抽奖记录
                 const [{ data: currencies, error: currenciesError }, { data: lotteryRecords, error: recordsError }] = await Promise.all([
-                    sb.from('user_currencies').select('*').eq('user_id', USER_ID),
-                    sb.from('lottery_records').select('*').eq('user_id', USER_ID)
+                    sb.from('user_currencies').select('*').eq('user_id', userId),
+                    sb.from('lottery_records').select('*').eq('user_id', userId)
                 ]);
                 
                 console.log('[Choujiang] 云端返回 - currencies:', currencies, 'error:', currenciesError);
