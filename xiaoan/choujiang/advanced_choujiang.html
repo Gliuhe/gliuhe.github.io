@@ -2435,7 +2435,6 @@
         }
         
         // ========== 云端数据同步 ==========
-        // 使用 cloud-sync-helper.js 中已定义的 USER_ID
         
         async function loadDataFromCloud() {
             if (!window.supabase) {
@@ -2443,18 +2442,20 @@
                 return;
             }
             
+            const userId = getCurrentUserId();
+            
             try {
                 const sb = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc'
                 );
                 
-                console.log('[AdvancedChoujiang] 📥 正在从云端加载数据...');
+                console.log('[AdvancedChoujiang] 📥 正在从云端加载数据 (user:', userId.substring(0,8) + ')...');
                 
                 // 并行加载货币和抽奖记录
                 const [{ data: currencies }, { data: lotteryRecords }] = await Promise.all([
-                    sb.from('user_currencies').select('*').eq('user_id', USER_ID),
-                    sb.from('lottery_records').select('*').eq('user_id', USER_ID)
+                    sb.from('user_currencies').select('*').eq('user_id', userId),
+                    sb.from('lottery_records').select('*').eq('user_id', userId)
                 ]);
                 
                 let hasUpdate = false;
