@@ -2034,10 +2034,15 @@
         // 初始化
         // 使用 cloud-sync-helper.js 中已定义的 USER_ID
         
+        // 获取当前用户ID：优先使用登录用户的ID，没有则回退到默认ID
+        function getCurrentUserId() {
+            return window.__cloudUserId || USER_ID;
+        }
+        
         async function initApp() {
             // 先从云端加载 rules 和 activeTasks
             try {
-                const userId = USER_ID;
+                const userId = getCurrentUserId();
                 if (window.supabase) {
                     if (typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
 
@@ -2158,7 +2163,7 @@
             console.log('[rule] 🔄 强制从云端同步数据...');
             
             try {
-                const userId = USER_ID;
+                const userId = getCurrentUserId();
                 if (!window.supabase) {
                     showStatus('Supabase 未加载', 'error');
                     return;
@@ -2342,13 +2347,13 @@
         
         // 通用货币同步到云端
         async function syncCurrencyToCloud(currencyType, amount) {
-            const userId = USER_ID;
+            const userId = getCurrentUserId();
             try {
                 if (!window.supabase) {
                     console.warn(`[Currency] Supabase 未加载，无法同步 ${currencyType}`);
                     return;
                 }
-                console.log(`[Currency] 📤 同步 ${currencyType} = ${amount} 到云端`);
+                console.log(`[Currency] 📤 同步 ${currencyType} = ${amount} 到云端 (user: ${userId.substring(0,8)})`);
                 const sbClient = window.supabase.createClient(
                     'https://qhnudlhpwmdzdxufcqjc.supabase.co',
                     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
@@ -2364,7 +2369,7 @@
                 if (error) {
                     console.error(`[Currency] ❌ 同步 ${currencyType} 失败:`, error.message, error.details || '');
                 } else {
-                    console.log(`[Currency] ✅ 已同步 ${currencyType} = ${amount}`);
+                    console.log(`[Currency] ✅ 已同步 ${currencyType} = ${amount} (user: ${userId.substring(0,8)})`);
                 }
             } catch(e) {
                 console.error(`[Currency] ❌ 同步 ${currencyType} 异常:`, e.message);
@@ -2373,7 +2378,7 @@
         
         // 任务积分同步到云端
         async function syncTaskPointsToCloud(taskPoints) {
-            const userId = USER_ID;
+            const userId = getCurrentUserId();
             try {
                 if (!window.supabase) {
                     console.warn('[TaskPoints] Supabase 未加载，同步失败');
@@ -2395,7 +2400,7 @@
                 if (error) {
                     console.error('[TaskPoints] ❌ 同步失败:', error.message, error.details || '');
                 } else {
-                    console.log('[TaskPoints] ✅ 已同步 task_points 到云端:', taskPoints, 'data:', data);
+                    console.log('[TaskPoints] ✅ 已同步 task_points 到云端:', taskPoints, 'data:', data, '(user:', userId.substring(0,8) + ')');
                 }
             } catch(e) {
                 console.error('[TaskPoints] ❌ 同步异常:', e.message, e.stack || '');
