@@ -513,23 +513,23 @@
 </style>
 </head>
 <body>
--->
-<!--
+
+<!-- 粒子画布 -->
 <canvas id="particles"></canvas>
 
-
+<!-- 进度条 -->
 <div class="progress-bar" id="progressBar"></div>
 
-
+<!-- 导航圆点 -->
 <div class="nav-dots" id="navDots"></div>
 
-
+<!-- 页面过渡遮罩 -->
 <div class="page-mask" id="pageMask"></div>
 
-
+<!-- 页面容器 -->
 <div class="pages" id="pages">
 
-  
+  <!-- ===== 第 0 页：封面 ===== -->
   <div class="page cover-page active" id="page-0" onclick="turnPage(1)">
     <div class="heart-icon">💌</div>
     <div class="decorative-line"></div>
@@ -539,7 +539,7 @@
     <div class="enter-hint">✨ 点击开启信件 ✨</div>
   </div>
 
-  
+  <!-- ===== 第 1 页：开篇 ===== -->
   <div class="page letter-page" id="page-1">
     <div class="letter-paper">
       <div class="paper-top-deco">
@@ -571,7 +571,7 @@
     </div>
   </div>
 
-  
+  <!-- ===== 第 2 页：倾诉 ===== -->
   <div class="page letter-page" id="page-2">
     <div class="letter-paper">
       <div class="paper-top-deco">
@@ -601,7 +601,7 @@
     </div>
   </div>
 
- 
+  <!-- ===== 第 3 页：感恩与承诺 ===== -->
   <div class="page letter-page" id="page-3">
     <div class="letter-paper">
       <div class="paper-top-deco">
@@ -641,7 +641,7 @@
     </div>
   </div>
 
-  
+  <!-- ===== 第 4 页：结尾 ===== -->
   <div class="page end-page" id="page-4" onclick="turnPage(0)">
     <div class="end-icon">fin</div>
     <div class="end-text">完</div>
@@ -649,7 +649,7 @@
     <div class="restart-hint">💫 点击回到封面 💫</div>
   </div>
 
-</div>
+</div><!-- /pages -->
 
 <script>
 // ============ 页面配置 ============
