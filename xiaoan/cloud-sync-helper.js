@@ -6,9 +6,13 @@
 
 var USER_ID = 'd71f9173-bd5d-4d30-a033-0429ae162fd7';
 
-// 获取当前用户ID：优先使用登录用户的ID，没有则回退到默认ID
+// 获取当前用户ID：优先使用 window.__cloudUserId（内存中的登录用户ID）
+// 其次使用 localStorage 中的 xiaoan_user_id（跨页面持久化的登录状态）
+// 最后回退到默认 USER_ID（仅用于未登录场景）
 function getCurrentUserId() {
-    return window.__cloudUserId || USER_ID;
+    return window.__cloudUserId || 
+           (typeof localStorage !== 'undefined' ? localStorage.getItem('xiaoan_user_id') : null) || 
+           USER_ID;
 }
 
 function _getSb() {
