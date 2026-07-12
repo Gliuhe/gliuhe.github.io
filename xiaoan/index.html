@@ -2118,18 +2118,27 @@
             gap: 8px;
         }
         .leaderboard-header button {
-            background: rgba(255,255,255,0.3);
-            border: none;
-            color: #fff;
-            font-size: 1.3rem;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.85);
+            border: 2px solid rgba(255,255,255,1);
+            color: #d97706;
+            font-size: 1.4rem;
+            font-weight: bold;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         .leaderboard-header button:hover {
-            background: rgba(255,255,255,0.5);
+            background: #fff;
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
         }
         .leaderboard-body {
             padding: 24px 28px;
