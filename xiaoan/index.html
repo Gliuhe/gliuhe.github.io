@@ -6876,7 +6876,1077 @@
         // 启动
         startApp();
  
-1069 行已隐藏
+
+        // ===== 实时通知系统 =====
+        let _audioCtxUnlocked = false;
+
+        /**
+         * 预解锁 AudioContext（解决 Safari/Chrome 自动播放限制）
+         * 用户首次点击页面时静音播放并暂停，解锁音频上下文
+         */
+        function _unlockAudio() {
+            if (_audioCtxUnlocked) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const buf = ctx.createBuffer(1, 1, 22050);
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                if (ctx.state === 'suspended') ctx.resume();
+                src.start(0);
+                setTimeout(() => { if (ctx.state !== 'closed') ctx.close(); }, 1000);
+                _audioCtxUnlocked = true;
+                console.log('[Notify] 🔊 AudioContext 已预解锁');
+            } catch(e) {
+                console.warn('[Notify] 音频预解锁失败:', e.message);
+            }
+        }
+        document.addEventListener('click', _unlockAudio, { once: true });
+        document.addEventListener('touchstart', _unlockAudio, { once: true });
+
+        /**
+         * 播放通知提示音（Web Audio API 合成，无需外部文件）
+         * @param {string} tone - 'info'|'success'|'warning'|'error'
+         */
+        function playNotificationSound(tone) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') { ctx.resume(); }
+
+                const now = ctx.currentTime;
+
+                // 根据类型选择不同和弦音色（三音和弦，更饱满）
+                const chordMap = {
+                    info:     [523.25, 659.25, 783.99],   // C5 E5 G5 - 大三和弦
+                    success:  [523.25, 659.25, 1046.50],   // C5 E5 C6 - 明亮大调
+                    warning:  [493.88, 622.25, 739.99],   // B4 D#5 F#5 - 小三和弦
+                    error:    [311.13, 369.99, 466.16]    // Eb4 F#4 Bb4 - 紧张减三
+                };
+                const freqs = chordMap[tone] || chordMap.info;
+                const volume = tone === 'error' ? 0.28 : 0.32; // 音量提升到约2倍
+
+                freqs.forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    // 渐入渐出包络：每个音错开一点进入，形成琶音效果
+                    const offset = i * 0.06; // 琶音间隔60ms
+                    g.gain.setValueAtTime(0, now);
+                    g.gain.linearRampToValueAtTime(volume, now + offset + 0.05);  // 渐入
+                    g.gain.setValueAtTime(volume, now + offset + 0.15);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 0.85);       // 长尾渐出
+
+                    osc.connect(g); g.connect(ctx.destination);
+                    osc.start(now + offset);
+                    osc.stop(now + 0.9);
+                });
+
+                setTimeout(() => { try { ctx.close(); } catch(e){} }, 1100);
+            } catch(e) {
+                console.warn('[Notify] 播放提示音失败:', e.message);
+            }
+        }
+
+        /**
+         * 显示通知横幅
+         */
+        function showNotificationBanner(content, type) {
+            const container = document.getElementById('notifyBannerContainer');
+            const banner = document.createElement('div');
+            banner.className = `notify-banner notify-${type || 'info'}`;
+
+            const icons = { info: '🔔', success: '🎉', warning: '⚠️', error: '📢' };
+            banner.innerHTML = `<span>${icons[type] || '🔔'}</span><span style="flex:1;">${content.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span><span>✕</span>`;
+
+            container.appendChild(banner);
+
+            // 点击关闭
+            banner.addEventListener('click', () => {
+                banner.style.animation = 'notifySlideUp 0.3s ease forwards';
+                setTimeout(() => banner.remove(), 300);
+            });
+
+            // 自动消失（8秒）
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.style.animation = 'notifySlideUp 0.3s ease forwards';
+                    setTimeout(() => banner.remove(), 300);
+                }
+            }, 8000);
+        }
+
+        /**
+         * 初始化 Supabase Realtime 通知订阅
+         */
+
+        // ===== 系统级通知（后台/锁屏时使用）=====
+        let _systemNotifyTag = 0;
+
+        /**
+         * 请求浏览器通知权限（在用户首次交互后调用）
+         */
+        async function _requestNotificationPermission() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') return;
+            if (Notification.permission !== 'default') return;
+            try {
+                const result = await Notification.requestPermission();
+                console.log('[Notify] 📋 通知权限:', result);
+            } catch(e) { /* 用户拒绝或不可用 */ }
+        }
+
+        /**
+         * 发送系统级通知（桌面端后台/标签页隐藏时弹出）
+         */
+        function _showSystemNotification(content, type) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') {
+                // 权限未授予或平台不支持（如 iOS Safari）→ 回退方案
+                _startTitleBlink();
+                return;
+            }
+
+            const icons = { info: '🔔', success: '🎉', warning: '⚠️', error: '📢' };
+            const tag = `notify-${Date.now()}-${++_systemNotifyTag}`;
+
+            const notif = new Notification(icons[type] || '🔔' + ' 小安乐园', {
+                body: content,
+                tag: tag,
+                icon: 'data:image/svg+xml,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
+                    '<circle cx="32" cy="32" r="30" fill="#06d6a0"/>' +
+                    '<text x="32" y="42" font-size="32" text-anchor="middle" fill="white">🔔</text>' +
+                    '</svg>'
+                ),
+                renotify: true,
+                requireInteraction: false
+            });
+
+            // 点击通知时聚焦页面
+            notif.onclick = () => {
+                window.focus();
+                notif.close();
+            };
+
+            // 页面回到前台时自动关闭系统通知
+            document.addEventListener('visibilitychange', function onVisible() {
+                if (!document.hidden) {
+                    notif.close();
+                    document.removeEventListener('visibilitychange', onVisible);
+                }
+            });
+
+            // 10秒后自动关闭
+            setTimeout(() => notif.close(), 10000);
+
+            console.log(`[Notify] 🔔 已发送系统通知: ${content}`);
+        }
+
+        // 用户首次点击页面时顺便请求通知权限
+        document.addEventListener('click', () => {
+            setTimeout(() => _requestNotificationPermission(), 500);
+        }, { once: true });
+
+        // ===== 标题闪烁提醒（所有平台通用，包括 iOS）=====
+        let _titleBlinkTimer = null;
+        let _originalTitle = document.title;
+        let _missedCount = 0;
+
+        function _startTitleBlink() {
+            _missedCount++;
+            if (_titleBlinkTimer) return; // 已在闪烁
+
+            let on = false;
+            _titleBlinkTimer = setInterval(() => {
+                document.title = on ? `🔔(${_missedCount}) 新通知` : _originalTitle;
+                on = !on;
+            }, 800);
+            console.log(`[Notify] 📛 标题开始闪烁（未读 ${_missedCount}）`);
+        }
+
+        function _stopTitleBlink() {
+            if (!_titleBlinkTimer) return;
+            clearInterval(_titleBlinkTimer);
+            _titleBlinkTimer = null;
+            const count = _missedCount;
+            _missedCount = 0;
+            document.title = _originalTitle;
+            return count;
+        }
+
+        // 用户切回前台时：停止闪烁 + 弹出未读汇总
+        document.addEventListener('visibilitychange', async () => {
+            if (!document.hidden) {
+                const missed = _stopTitleBlink();
+                if (missed > 0) {
+                    // 延迟一点等页面渲染完
+                    setTimeout(() => {
+                        showNotificationBanner(
+                            `您有 ${missed} 条未读通知（后台期间收到）`,
+                            'info'
+                        );
+                        playNotificationSound('info');
+                    }, 300);
+                }
+            }
+        });
+
+        function initNotificationListener(sbClient, userId) {
+            if (!sbClient) { console.warn('[Notify] ❌ sbClient 不存在'); return; }
+
+            console.log('[Notify] 🔧 开始初始化 Realtime 订阅...');
+
+            try {
+                const channel = sbClient.channel('notifications-realtime');
+
+                channel.on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'notifications' },
+                    async (payload) => {
+                        const n = payload.new;
+                        // 只接收广播消息或针对自己的
+                        if (n.target_user_id && n.target_user_id !== userId) return;
+
+                        console.log(`[Notify] 📩 收到通知 (${n.notification_type}):`, n.content);
+                    }
+                );
+
+                channel.subscribe((status, err) => {
+                    console.log(`[Notify] 📡 订阅状态变更: ${status}`, err || '');
+                });
+
+                // 保存引用以便清理
+                window.__notificationChannel = channel;
+
+            } catch(e) {
+                console.warn('[Notify] ❌ Realtime 初始化失败:', e.message);
+            }
+        }
+
+        /**
+         * 页面加载时查询未读邮件（补漏：在页面关闭期间发的通知）
+         */
+        async function _checkUnreadNotifications(sbClient, userId) {
+            try {
+                const { data } = await sbClient
+                    .from('notifications')
+                    .select('*')
+                    .or(`target_user_id.is.null,target_user_id.eq.${userId}`)
+                    .is('read_at', null)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (!data || data.length === 0) return;
+
+                // 逐条展示（间隔显示，避免堆叠）
+                const isBackground = document.hidden;
+                data.forEach((n, i) => {
+                    setTimeout(() => {
+                        const t = n.notification_type || 'info';
+                        if (isBackground) {
+                            _showSystemNotification(n.content, t);
+                        } else {
+                            showNotificationBanner(n.content, t);
+                            playNotificationSound(t);
+                        }
+                    }, i * 500);
+                });
+
+                console.log(`[Notify] 📬 补收到 ${data.length} 条未读通知`);
+            } catch(e) {
+                // 静默失败，不影响主流程
+            }
+        }
+
+        // ===== 📬 邮箱系统 =====
+        let _currentMailId = null;
+        let _currentMailData = null;
+        const MAIL_TYPE_NAMES = { info: '普通通知', success: '奖励通知', warning: '警告', error: '重要' };
+        const CURRENCY_NAMES = { voucher: '兑换券', lottery: '抽奖券', premium: '高级抽奖券', jixing_muchun_currency: '纪行券', item: '' };
+
+        /** 打开邮箱 */
+        async function openMailbox() {
+            document.getElementById('mailModal').style.display = 'flex';
+            await loadMails();
+        }
+
+        function closeMailbox() {
+            document.getElementById('mailModal').style.display = 'none';
+            // 重置详情面板
+            const panel = document.getElementById('mailDetailPanel');
+            panel.classList.add('hidden');
+            document.getElementById('mailDetailPlaceholder').style.display = '';
+            document.getElementById('mailDetailContent').style.display = 'none';
+            _currentMailId = null;
+            _currentMailData = null;
+            _activeMailId = null;
+        }
+
+        /** 邮件数据缓存（避免 showMailDetail 重复请求） */
+        let _mailCache = null;  // { mails: [], claimedIds: Set }
+
+        /** 加载邮件列表 */
+        async function loadMails() {
+            const el = document.getElementById('mailList');
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+
+            if (!sb || !uid) { el.innerHTML = '<div class="mail-empty">⚠️ 未连接云端</div>'; return; }
+
+            try {
+                // 并行：查邮件 + 查本用户已领取记录
+                const [mailRes, claimRes] = await Promise.all([
+                    sb.from('notifications')
+                        .select('*')
+                        .or(`target_user_id.is.null,target_user_id.eq.${uid}`)
+                        .order('created_at', { ascending: false })
+                        .limit(50),
+                    sb.from('mail_claims')
+                        .select('notification_id')
+                        .eq('user_id', uid)
+                ]);
+
+                const data = mailRes.data;
+                const claimedIds = new Set((claimRes.data || []).map(c => c.notification_id));
+
+                // 写入缓存，供 showMailDetail 直接读取
+                _mailCache = { mails: data || [], claimedIds: claimedIds };
+
+                if (!data || data.length === 0) {
+                    el.innerHTML = '<div class="mail-empty">📭 暂无邮件</div>';
+                    updateMailBadge(0);
+                    return;
+                }
+
+                // 统计未读（基于 read_at，不受领取状态影响）
+                const unread = data.filter(m => !m.read_at).length;
+                updateMailBadge(unread);
+
+                el.innerHTML = data.map(mail => {
+                    const hasAttachment = mail.attachment_type1 && (mail.attachment_type1 !== 'none');
+                    const typeClass = `mail-type-${mail.notification_type || 'info'}`;
+                    const unreadCls = !mail.read_at ? 'unread' : '';
+                    // ✅ 关键修复：从 mail_claims 判断是否已领，而非全局 claimed 字段
+                    const claimedCls = claimedIds.has(mail.id) ? 'claimed' : '';
+                    const attText = hasAttachment ? `<div class="mail-attachment">🎁 ${_formatAttachmentShort(mail)}</div>` : '';
+                    const timeStr = fmtMailTime(mail.created_at);
+                    return `
+                        <div class="mail-item ${unreadCls} ${claimedCls}" onclick="showMailDetail('${mail.id}')">
+                            <span class="mail-type-badge ${typeClass}">${MAIL_TYPE_NAMES[mail.notification_type]||MAIL_TYPE_NAMES.info}</span>
+                            <strong style="font-size:14px;">${escHtml(mail.title || mail.content || '无标题')}</strong>
+                            ${attText}
+                            <div class="mail-time">${timeStr}</div>
+                        </div>`;
+                }).join('');
+
+            } catch(e) {
+                el.innerHTML = '<div class="mail-empty">❌ 加载失败</div>';
+            }
+        }
+
+        /** 显示邮件详情（右侧面板内嵌显示）— 从缓存读取，零网络请求 */
+        async function showMailDetail(id) {
+            // 从缓存直接查找，不发网络请求
+            const data = (_mailCache && _mailCache.mails) ? _mailCache.mails.find(m => m.id === id) : null;
+            if (!data) {
+                // 缓存未命中（理论上不会发生），降级为网络请求
+                const sb = window.__cloudClient;
+                const uid = window.__cloudUserId;
+                if (!sb || !uid) return;
+                const [mailRes, claimRes] = await Promise.all([
+                    sb.from('notifications').select('*').eq('id', id).maybeSingle(),
+                    sb.from('mail_claims').select('id').eq('notification_id', id).eq('user_id', uid).maybeSingle()
+                ]);
+                if (!mailRes.data) return;
+                _showDetailUI(mailRes.data, !!claimRes.data);
+                return;
+            }
+
+            const isClaimed = _mailCache && _mailCache.claimedIds && _mailCache.claimedIds.has(id);
+            _showDetailUI(data, isClaimed);
+        }
+
+        /** 渲染详情面板 UI */
+        function _showDetailUI(data, isClaimed) {
+            _currentMailId = data.id;
+            _currentMailData = data;
+
+            // 标记为已读（仅首次打开时）— 异步发送，不阻塞UI
+            if (!data.read_at) {
+                const sb = window.__cloudClient;
+                if (sb) {
+                    sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', data.id).then(() => {}).catch(() => {});
+                }
+                updateMailBadge(-1);
+                // 本地即时更新该条目样式
+                const clickedEl = document.querySelector(`.mail-item[onclick="showMailDetail('${data.id}')"]`);
+                if (clickedEl) clickedEl.classList.remove('unread');
+                // 后台静默刷新缓存
+                _activeMailId = data.id;
+                loadMails().then(() => {}).catch(() => {});
+            }
+
+            // 高亮当前选中项
+            document.querySelectorAll('.mail-item').forEach(el => el.classList.remove('active'));
+            const activeEl = document.querySelector(`.mail-item[onclick="showMailDetail('${data.id}')"]`);
+            if (activeEl) activeEl.classList.add('active');
+
+            // 右侧面板：隐藏占位，显示内容
+            const panel = document.getElementById('mailDetailPanel');
+            const placeholder = document.getElementById('mailDetailPlaceholder');
+            const content = document.getElementById('mailDetailContent');
+
+            panel.classList.remove('hidden');
+            placeholder.style.display = 'none';
+            content.style.display = '';
+
+            document.getElementById('detailTypeBadge').className = `mail-type-badge mail-type-${data.notification_type||'info'}`;
+            document.getElementById('detailTypeBadge').textContent = MAIL_TYPE_NAMES[data.notification_type]||MAIL_TYPE_NAMES.info;
+            document.getElementById('detailTime').textContent = fmtMailTime(data.created_at);
+            document.getElementById('detailTitle').textContent = data.title || '无标题';
+            document.getElementById('detailBody').textContent = data.content;
+
+            // 附件
+            const hasAtt = data.attachment_type1 && data.attachment_type1 !== 'none';
+            const attEl = document.getElementById('detailAttachment');
+            const claimBtn = document.getElementById('claimRewardBtn');
+
+            if (hasAtt) {
+                attEl.style.display = '';
+                document.getElementById('detailAttachmentText').innerHTML = _formatAttachmentFull(data);
+                claimBtn.style.display = '';
+
+                if (isClaimed) {
+                    claimBtn.textContent = '✅ 已领取';
+                    claimBtn.disabled = true;
+                    claimBtn.style.background = '#94a3b8';
+                } else {
+                    claimBtn.textContent = '📦 领取附件奖励';
+                    claimBtn.disabled = false;
+                    claimBtn.style.background = '#06d6a0';
+                }
+            } else {
+                attEl.style.display = 'none';
+                claimBtn.style.display = 'none';
+            }
+        }
+
+        function closeMailDetail() {
+            // 遮罩弹窗关闭（移动端）
+            document.getElementById('mailDetailOverlay').style.display = 'none';
+            // 重置选中
+            document.querySelectorAll('.mail-item').forEach(el => el.classList.remove('active'));
+        }
+
+        /** 删除已读邮件 */
+        async function deleteReadMails() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+
+            if (!_mailCache || !_mailCache.mails) return;
+
+            // 筛选已读邮件（read_at 不为空）
+            const readIds = _mailCache.mails.filter(m => m.read_at).map(m => m.id);
+            if (readIds.length === 0) {
+                alert('📭 没有已读邮件可删除');
+                return;
+            }
+
+            if (!confirm(`确定删除 ${readIds.length} 封已读邮件吗？`)) return;
+
+            try {
+                const { error } = await sb.from('notifications')
+                    .delete()
+                    .in('id', readIds);
+                if (error) throw error;
+
+                // 清除缓存，重新加载列表
+                _mailCache = null;
+                _currentMailId = null;
+                _currentMailData = null;
+
+                // 重置详情面板
+                const panel = document.getElementById('mailDetailPanel');
+                panel.classList.add('hidden');
+                document.getElementById('mailDetailPlaceholder').style.display = '';
+                document.getElementById('mailDetailContent').style.display = 'none';
+
+                await loadMails();
+            } catch (e) {
+                console.error('删除已读邮件失败:', e);
+                alert('❌ 删除失败，请重试');
+            }
+        }
+
+        /** 全部领取附件奖励 */
+        async function claimAllAttachments() {
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+
+            if (!_mailCache || !_mailCache.mails) { alert('⚠️ 邮件数据未加载'); return; }
+
+            // 筛选有附件且当前用户未领取的邮件
+            const unclaimed = _mailCache.mails.filter(m => {
+                const hasAtt = m.attachment_type1 && m.attachment_type1 !== 'none';
+                return hasAtt && !_mailCache.claimedIds.has(m.id);
+            });
+
+            if (unclaimed.length === 0) {
+                alert('📭 没有待领取的附件');
+                return;
+            }
+
+            // 汇总预览
+            let preview = `即将领取 ${unclaimed.length} 封邮件的附件：\n\n`;
+            unclaimed.forEach(m => {
+                preview += `• ${m.content.substring(0, 20)}... ${_formatAttachmentShort(m)}\n`;
+            });
+            preview += '\n确定全部领取吗？';
+            if (!confirm(preview)) return;
+
+            let successCount = 0;
+            let failCount = 0;
+            const totalRewards = [];
+
+            for (const mail of unclaimed) {
+                try {
+                    // 防重复检查
+                    const existing = await sb.from('mail_claims').select('id')
+                        .eq('notification_id', mail.id).eq('user_id', uid).maybeSingle();
+                    if (existing.data) { successCount++; continue; }
+
+                    // 发放奖励
+                    const curRows = {};
+                    const rewards = [];
+
+                    // 奖励1
+                    if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                        if (mail.attachment_type1 === 'item') {
+                            rewards.push(`🎁 ${mail.attachment_item1 || '实物奖励'}`);
+                            addRecordToLocal({ prize: { name: mail.attachment_item1, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                        } else {
+                            const type = mail.attachment_type1;
+                            const amt = mail.attachment_amount1 || 0;
+                            const name = CURRENCY_NAMES[type] || type;
+                            rewards.push(`${name} +${amt}`);
+                            const current = parseFloat(localStorage.getItem(type)) || 0;
+                            curRows[type] = current + amt;
+                        }
+                    }
+
+                    // 奖励2
+                    if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                        if (mail.attachment_type2 === 'item') {
+                            rewards.push(`🎁 ${mail.attachment_item2 || '实物奖励'}`);
+                            addRecordToLocal({ prize: { name: mail.attachment_item2, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                        } else {
+                            const type = mail.attachment_type2;
+                            const amt = mail.attachment_amount2 || 0;
+                            const name = CURRENCY_NAMES[type] || type;
+                            rewards.push(`${name} +${amt}`);
+                            const current = parseFloat(localStorage.getItem(type)) || 0;
+                            if (!curRows[type]) curRows[type] = current;
+                            curRows[type] += amt;
+                        }
+                    }
+
+                    // 保存货币变更
+                    for (const [type, val] of Object.entries(curRows)) {
+                        localStorage.setItem(type, String(val));
+                        let obj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                        obj[type] = val;
+                        localStorage.setItem('xiaoan_currencies', JSON.stringify(obj));
+                        sb.from('user_currencies').upsert({
+                            user_id: uid, currency_type: type, amount: val,
+                            updated_at: new Date().toISOString()
+                        }, { onConflict: 'user_id,currency_type' }).then(() => {}).catch(() => {});
+                    }
+
+                    // 写入领取记录
+                    await sb.from('mail_claims').insert({
+                        notification_id: mail.id,
+                        user_id: uid,
+                        claimed_at: new Date().toISOString()
+                    });
+
+                    totalRewards.push(...rewards);
+                    successCount++;
+                } catch (e) {
+                    console.error(`领取邮件 ${mail.id} 失败:`, e);
+                    failCount++;
+                }
+            }
+
+            // 刷新UI
+            updateUI();
+            _mailCache = null;
+
+            // 刷新列表
+            await loadMails();
+
+            // 如果当前正在查看某封已领邮件，更新详情面板按钮状态
+            if (_currentMailId && _currentMailData) {
+                const btn = document.getElementById('claimRewardBtn');
+                if (btn) { btn.textContent = '✅ 已领取'; btn.disabled = true; btn.style.background = '#94a3b8'; }
+            }
+
+            // 结果提示
+            if (failCount > 0) {
+                alert(`✅ 成功领取 ${successCount} 封，❌ 失败 ${failCount} 封\n\n获得：\n${totalRewards.join('\n') || '无'}`);
+            } else {
+                alert(`✅ 全部领取成功！共 ${successCount} 封邮件\n\n获得：\n${totalRewards.join('\n') || '无'}`);
+            }
+        }
+
+        let _activeMailId = null; // 记录选中的邮件 ID，刷新列表后恢复高亮
+
+        /** 加载邮件后恢复选中高亮 */
+        function _restoreActiveItem() {
+            if (_activeMailId) {
+                setTimeout(() => {
+                    const el = document.querySelector(`.mail-item[onclick="showMailDetail('${_activeMailId}')"]`);
+                    if (el) el.classList.add('active');
+                }, 50);
+            }
+        }
+
+        /** 领取附件奖励 */
+        async function claimMailAttachment() {
+            if (!_currentMailData || !_currentMailId) return;
+            const sb = window.__cloudClient;
+            const uid = window.__cloudUserId;
+            if (!sb || !uid) { alert('❌ 未连接云端'); return; }
+            const d = _currentMailData;
+
+            try {
+                // ✅ 先检查是否已领取（防重复提交）
+                const existing = await sb.from('mail_claims').select('id')
+                    .eq('notification_id', _currentMailId).eq('user_id', uid).maybeSingle();
+                if (existing.data) {
+                    alert('⚠️ 您已经领取过这封邮件的奖励了');
+                    return;
+                }
+
+                // 发放奖励到用户资产
+                const rewards = [];
+
+                // ✅ 关键修复：从独立 key 读取当前余额（updateUI 从这些 key 读值）
+                //    不要从 xiaoan_currencies 对象读（它可能过期/不存在）
+                const curRows = {};
+
+                // 奖励1
+                if (d.attachment_type1 && d.attachment_type1 !== 'none') {
+                    if (d.attachment_type1 === 'item') {
+                        rewards.push(`🎁 ${d.attachment_item1 || '实物奖励'}`);
+                        addRecordToLocal({ prize: { name: d.attachment_item1, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                    } else {
+                        const type = d.attachment_type1;
+                        const amt = d.attachment_amount1 || 0;
+                        const name = CURRENCY_NAMES[type] || type;
+                        rewards.push(`${name} +${amt}`);
+                        // ✅ 从独立 key 读当前值（与 updateUI 同源）
+                        const current = parseFloat(localStorage.getItem(type)) || 0;
+                        curRows[type] = current + amt;
+                    }
+                }
+
+                // 奖励2
+                if (d.attachment_type2 && d.attachment_type2 !== 'none') {
+                    if (d.attachment_type2 === 'item') {
+                        rewards.push(`🎁 ${d.attachment_item2 || '实物奖励'}`);
+                        addRecordToLocal({ prize: { name: d.attachment_item2, rewardType: 'item' }, source: 'admin_mail', date: new Date().toISOString() });
+                    } else {
+                        const type = d.attachment_type2;
+                        const amt = d.attachment_amount2 || 0;
+                        const name = CURRENCY_NAMES[type] || type;
+                        rewards.push(`${name} +${amt}`);
+                        const current = parseFloat(localStorage.getItem(type)) || 0;
+                        if (!curRows[type]) curRows[type] = current; // 防止奖励1也是同类型时覆盖
+                        curRows[type] += amt;
+                    }
+                }
+
+                // 保存货币变更（同时写两套存储）
+                for (const [type, val] of Object.entries(curRows)) {
+                    // 写独立 key（updateUI 的数据源）
+                    localStorage.setItem(type, String(val));
+                    // 写 xiaoan_currencies 对象（保持同步）
+                    let obj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                    obj[type] = val;
+                    localStorage.setItem('xiaoan_currencies', JSON.stringify(obj));
+                    // 同步云端
+                    sb.from('user_currencies').upsert({
+                        user_id: uid, currency_type: type, amount: val,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' }).then(() => {}).catch(() => {});
+                }
+
+                // ✅ 关键修复：写入 mail_claims 记录（per-user），而非更新 notifications 全局 claimed 字段
+                await sb.from('mail_claims').insert({
+                    notification_id: _currentMailId,
+                    user_id: uid,
+                    claimed_at: new Date().toISOString()
+                });
+
+                showNotificationBanner(`🎉 领取成功！获得：${rewards.join(', ')}`, 'success');
+                playNotificationSound('success');
+
+                // 立即更新缓存中的领取状态，避免重复领取
+                if (_mailCache && _mailCache.claimedIds) {
+                    _mailCache.claimedIds.add(_currentMailId);
+                }
+                
+                // 立即更新UI显示已领取状态
+                const btn = document.getElementById('claimRewardBtn');
+                if (btn) { 
+                    btn.textContent = '✅ 已领取'; 
+                    btn.disabled = true; 
+                    btn.style.background = '#94a3b8'; 
+                }
+                
+                // 更新邮件列表中的已领取标记
+                const mailItem = document.querySelector(`.mail-item[onclick="showMailDetail('${_currentMailId}')"]`);
+                if (mailItem) mailItem.classList.add('claimed');
+
+                // 刷新 UI（刷新列表 + 刷新详情面板按钮状态）
+                updateUI();
+                _activeMailId = _currentMailId; // 保持选中
+                // 清除缓存强制重新加载
+                _mailCache = null;
+                await loadMails();
+
+            } catch(e) {
+                alert('❌ 领取失败: ' + e.message);
+            }
+        }
+
+        /** 写入一条背包记录（复用兑换码逻辑） */
+        function addRecordToLocal(item) {
+            try {
+                let records = JSON.parse(localStorage.getItem('records') || '[]');
+                records.push({
+                    prize: item.prize,
+                    date: item.date,
+                    _source: item.source || 'admin_mail',
+                    isExchangeItem: false
+                });
+                localStorage.setItem('records', JSON.stringify(records));
+            } catch(e) {}
+        }
+
+        /** 更新邮箱未读角标 */
+        function updateMailBadge(count) {
+            const badge = document.getElementById('mailUnreadBadge');
+            if (typeof count === 'number' && count < 0) {
+                // 减量操作：读取当前值
+                const cur = parseInt(badge.textContent) || 0;
+                count = Math.max(0, cur + count);
+            }
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        /** 格式化附件简短显示 */
+        function _formatAttachmentShort(mail) {
+            const parts = [];
+            if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                parts.push(_attDesc(mail.attachment_type1, mail.attachment_amount1, mail.attachment_item1));
+            }
+            if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                parts.push(_attDesc(mail.attachment_type2, mail.attachment_amount2, mail.attachment_item2));
+            }
+            return parts.join(' + ') || '';
+        }
+
+        /** 格式化附件完整显示 */
+        function _formatAttachmentFull(mail) {
+            const parts = [];
+            if (mail.attachment_type1 && mail.attachment_type1 !== 'none') {
+                parts.push(`<div>${_attDesc(mail.attachment_type1, mail.attachment_amount1, mail.attachment_item1)}</div>`);
+            }
+            if (mail.attachment_type2 && mail.attachment_type2 !== 'none') {
+                parts.push(`<div>${_attDesc(mail.attachment_type2, mail.attachment_amount2, mail.attachment_item2)}</div>`);
+            }
+            return parts.join('');
+        }
+
+        function _attDesc(type, amount, itemName) {
+            if (type === 'item') return `🎁 实物奖励：${itemName || '未知物品'}`;
+            return `${CURRENCY_NAMES[type]||type} ×${amount}`;
+        }
+
+        function escHtml(s) {
+            const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+        }
+
+        function fmtMailTime(iso) {
+            if (!iso) return '';
+            const d = new Date(iso);
+            const pad = n => String(n).padStart(2,'0');
+            return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+        
+        // 检查封禁状态并更新UI
+        async function checkBanStatusAndUpdateUI() {
+            try {
+                console.log('[BanCheck] 开始检查封禁状态...');
+                const banInfo = await checkUserBan();
+                console.log('[BanCheck] 封禁状态:', banInfo);
+                
+                // 缓存封禁状态供其他函数使用
+                window._shopBanned = banInfo.banned && banInfo.restrictions && banInfo.restrictions.shop;
+                window._banReason = banInfo.reason || '';
+                
+                if (banInfo.banned) {
+                    console.log('[BanCheck] 用户被封禁，显示封禁UI');
+                    // 显示封禁提示横幅
+                    showBanBanner(banInfo);
+                    
+                    // 禁用相关功能按钮
+                    disableBannedFeatures(banInfo.restrictions || {});
+                    
+                    // 刷新商品列表以显示封禁状态
+                    updateUI();
+                } else {
+                    console.log('[BanCheck] 用户未被封禁');
+                    // 清除之前的封禁横幅
+                    const existingBanner = document.getElementById('banBanner');
+                    if (existingBanner) {
+                        existingBanner.remove();
+                    }
+                }
+            } catch (e) {
+                console.warn('[BanCheck] 检查封禁状态失败:', e);
+            }
+        }
+        
+        // 显示封禁提示横幅
+        function showBanBanner(banInfo) {
+            const banner = document.createElement('div');
+            banner.id = 'banBanner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #dc2626, #b91c1c);
+                color: white;
+                padding: 12px 20px;
+                text-align: center;
+                font-weight: 600;
+                z-index: 99999;
+                box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            `;
+            
+            const restrictions = banInfo.restrictions || {};
+            const restrictedFeatures = [];
+            if (restrictions.lottery) restrictedFeatures.push('抽奖');
+            if (restrictions.jixing) restrictedFeatures.push('纪行');
+            if (restrictions.bank) restrictedFeatures.push('银行');
+            if (restrictions.shop) restrictedFeatures.push('商店兑换');
+            
+            let expiresText = '';
+            if (banInfo.expiresAt) {
+                expiresText = ` | 到期时间: ${new Date(banInfo.expiresAt).toLocaleString()}`;
+            } else {
+                expiresText = ' | 永久封禁';
+            }
+            
+            banner.innerHTML = `
+                🚫 您已被封禁 | 原因: ${banInfo.reason || '违反规则'} | 限制功能: ${restrictedFeatures.join('、')}${expiresText}
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // 调整页面顶部边距
+            const navbar = document.querySelector('.navbar');
+            if (navbar) {
+                navbar.style.marginTop = '44px';
+            }
+        }
+        
+        // 禁用被封禁的功能按钮
+        function disableBannedFeatures(restrictions) {
+            // 禁用商店兑换
+            if (restrictions.shop) {
+                // 禁用兑换商品标签页
+                const productsTab = document.querySelector('.nav-tab[onclick*="products"]');
+                if (productsTab) {
+                    productsTab.style.opacity = '0.5';
+                    productsTab.style.pointerEvents = 'none';
+                    productsTab.style.cursor = 'not-allowed';
+                    productsTab.title = '您已被禁止兑换商品';
+                    productsTab.onclick = null;
+                }
+                
+                // 禁用兑换商品按钮
+                const exchangeBtns = document.querySelectorAll('button[onclick*="switchTab(\'products\')"], button[onclick*="switchTab(&quot;products&quot;)"]');
+                exchangeBtns.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.title = '您已被禁止兑换商品';
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止兑换商品');
+                        return false;
+                    };
+                });
+            }
+            
+            // 禁用抽奖
+            if (restrictions.lottery) {
+                const lotteryBtn = document.querySelector('button[onclick*="choujiang/index.html"]');
+                if (lotteryBtn) {
+                    lotteryBtn.style.opacity = '0.5';
+                    lotteryBtn.style.cursor = 'not-allowed';
+                    lotteryBtn.title = '您已被禁止抽奖';
+                    lotteryBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止抽奖');
+                        return false;
+                    };
+                }
+            }
+            
+            // 禁用银行
+            if (restrictions.bank) {
+                const bankBtn = document.querySelector('button[onclick*="bank/index.html"]');
+                if (bankBtn) {
+                    bankBtn.style.opacity = '0.5';
+                    bankBtn.style.cursor = 'not-allowed';
+                    bankBtn.title = '您已被禁止进入银行';
+                    bankBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止进入银行');
+                        return false;
+                    };
+                }
+            }
+            
+            // 禁用纪行（只禁用前往纪行抽奖页面，不禁用任务中心）
+            if (restrictions.jixing) {
+                // 禁用活动中心按钮（指向activity/index.html的）
+                const activityBtns = document.querySelectorAll('button[onclick*="activity/index.html"]');
+                activityBtns.forEach(btn => {
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.title = '您已被禁止参与纪行抽奖';
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('🚫 您已被禁止参与纪行抽奖');
+                        return false;
+                    };
+                });
+            }
+        }
+        
+        // 页面加载时检查封禁状态（延迟执行确保页面渲染完成）
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkBanStatusAndUpdateUI, 500);
+        });
+        
+        // 初始化页面同步（进入/退出时自动同步）
+        initPageSync('index');
+    </script>
+    <!-- 邮箱模态框（游戏分栏风格） -->
+    <div class="modal" id="mailModal" style="display:none;">
+        <div class="mail-modal-content">
+            <!-- 顶栏 -->
+            <div class="mail-header">
+                <h2>📬 邮箱</h2>
+                <button onclick="closeMailbox()">✕</button>
+            </div>
+
+            <!-- 主体：左列表 + 右详情 -->
+            <div class="mail-body">
+                <!-- 左侧邮件列表 -->
+                <div class="mail-list-panel">
+                    <div class="mail-list" id="mailList">
+                        <div class="mail-empty">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 右侧详情面板 -->
+                <div class="mail-detail-panel hidden" id="mailDetailPanel">
+                    <div class="mail-detail-placeholder" id="mailDetailPlaceholder">
+                        <div>
+                            <div class="mail-detail-placeholder-icon">📭</div>
+                            <div class="mail-detail-title">邮件详情</div>
+                            <div class="mail-detail-subtitle">← 点击左侧查看邮件内容</div>
+                        </div>
+                    </div>
+                    <!-- 详情内容（选中邮件后显示） -->
+                    <div id="mailDetailContent" style="display:none;">
+                        <div class="mail-detail-header">
+                            <span class="mail-type-badge mail-type-info" id="detailTypeBadge">info</span>
+                            <span style="font-size:12px;color:#94a8b8;" id="detailTime"></span>
+                        </div>
+                        <div id="detailTitle" style="font-size:16px;font-weight:700;color:#1e293b;margin:10px 0 6px;"></div>
+                        <div class="mail-detail-body" id="detailBody"></div>
+                        <div class="mail-detail-attachment" id="detailAttachment" style="display:none;">
+                            <div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#059669;">🎁 附件奖励</div>
+                            <div id="detailAttachmentText"></div>
+                        </div>
+                        <div class="mail-detail-actions">
+                            <button class="btn" id="claimRewardBtn" onclick="claimMailAttachment()" style="flex:1;background:#06d6a0;color:white;padding:12px;border-radius:10px;">领取附件</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="mail-footer">
+                <button class="mail-footer-btn" style="background:#f0fdf4;border-color:#86efac;color:#059669;" onclick="claimAllAttachments()">
+                    🎁 全部领取
+                </button>
+                <button class="mail-footer-btn" style="background:#fff1f2;border-color:#fda4af;color:#e11d48;" onclick="deleteReadMails()">
+                    🗑 删除已读
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端/小屏：详情遮罩弹窗保留 -->
+    <div class="mail-detail-overlay" id="mailDetailOverlay">
+        <div class="mail-detail-card">
+            <div class="mail-detail-header">
+                <span class="mail-type-badge" id="mDetailTypeBadge">info</span>
+                <span style="font-size:12px;color:#94a3b8;" id="mDetailTime"></span>
+            </div>
+            <div class="mail-detail-body" id="mDetailBody"></div>
+            <div class="mail-detail-attachment" id="mDetailAttachment" style="display:none;">
+                <div style="font-weight:bold;margin-bottom:6px;">🎁 附件奖励</div>
+                <div id="mDetailAttachmentText"></div>
+            </div>
+            <div class="mail-detail-actions">
+                <button class="btn btn-danger" onclick="closeMailDetail()" style="flex:1;">关闭</button>
+                <button class="btn" id="mClaimRewardBtn" onclick="claimMailAttachment()" style="flex:1;background:#06d6a0;color:white;">领取附件</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务抽取模态框 -->
+    <div class="task-draw-modal" id="taskDrawModal">
+        <div class="task-draw-card">
+            <div class="task-draw-icon">🎲</div>
+            <div class="task-draw-title">今日随机任务</div>
+            <div class="task-drew-title" id="drawnTaskTitle">--</div>
+            <div class="task-drew-desc" id="drawnTaskDesc"></div>
+            <div class="task-drew-reward" id="drawnTaskReward"></div>
+            <div class="task-draw-actions">
+                <button class="btn-task-goto" onclick="goToDrawnTask()">前去完成</button>
+                <button class="btn-task-close" onclick="closeDrawModal()">关闭</button>
+            </div>
         </div>
     </div>
  
@@ -6898,7 +7968,10 @@
                 <div id="leaderboardList" class="leaderboard-list">
                     <div class="leaderboard-loading">
                         <div class="spinner"></div>
-4 行已隐藏
+<div>加载中...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
  

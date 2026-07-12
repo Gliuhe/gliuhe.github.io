@@ -483,7 +483,7 @@
 
     <div class="top-bar">
         <div class="pool-title">🎲 纪行之骰</div>
-        <div class="ticket-badge">🎫 <span class="val" id="ticketCount">0</span>
+        <div class="ticket-badge">💴 <span class="val" id="ticketCount">0</span>
             <button id="exchangeBtn" onclick="openExchangeModal()" title="用兑换券兑换纪行券" style="margin-left:8px;width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(252,211,77,0.4);background:rgba(252,211,77,0.12);color:#fcd34d;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .2s;">+</button>
         </div>
     </div>
@@ -549,8 +549,8 @@
                     <button class="detail-btn jixing-exchange-btn" onclick="openJixingShopModal()" title="使用纪行券兑换商品">🛒 纪行兑换</button>
                 </div>
                 <div class="right">
-                    <button class="pull-btn" id="rollBtn">掷骰1次<br>🎫160</button>
-                    <button class="ten-btn" id="tenBtn" onclick="startTenPull()">掷骰10次<br>🎫1600</button>
+                    <button class="pull-btn" id="rollBtn">掷骰1次<br>💴160</button>
+                    <button class="ten-btn" id="tenBtn" onclick="startTenPull()">掷骰10次<br>💴1600</button>
                 </div>
             </div>
             <div class="pull-hint" id="pullHint"></div>
@@ -1123,7 +1123,7 @@
                     </div>
 
                     <div class="jixing-balance-bar">
-                        <span class="jixing-balance-label">🎫 当前纪行券</span>
+                        <span class="jixing-balance-label">💴 当前纪行券</span>
                         <span class="jixing-balance-value" id="shopJixingBalance">0</span>
                     </div>
 
@@ -1860,7 +1860,7 @@
 
             var btn=document.getElementById('rollBtn'),hint=document.getElementById('pullHint'),tbtn=document.getElementById('tenBtn');
             if(state==='idle'){
-                btn.className='pull-btn';btn.innerHTML='掷骰1次<br>🎫160';
+                btn.className='pull-btn';btn.innerHTML='掷骰1次<br>💴160';
                 hint.textContent='';
                 if(tbtn)tbtn.disabled=false;
             }else if(state==='rolling'){
@@ -1868,7 +1868,7 @@
                 hint.textContent='按顺序掷出 3 颗骰子';
                 if(tbtn)tbtn.disabled=true;
             }else{
-                btn.className='pull-btn';btn.innerHTML='再来一次<br>🎫160';
+                btn.className='pull-btn';btn.innerHTML='再来一次<br>💴160';
                 hint.textContent='点击再次抽奖 · 或查看 📊 详情 了解更多';
                 if(tbtn)tbtn.disabled=true;
             }
@@ -3276,7 +3276,7 @@
         
         // 货币类型映射
         var currencyMap = {
-            'jixing_muchun_currency': { icon: '🎫', name: '纪行券', color: '#fcd34d' },
+            'jixing_muchun_currency': { icon: '💴', name: '纪行券', color: '#fcd34d' },
             'voucher': { icon: '🎫', name: '兑换券', color: '#f59e0b' },
             'lottery': { icon: '🎲', name: '抽奖券', color: '#a78bfa' },
             'premium': { icon: '⭐', name: '高级券', color: '#f472b6' },
@@ -3778,7 +3778,7 @@
         var typeName = typeNames[productType] || '商品';
         
         var currencyNames = {
-            'jixing_muchun_currency': '🎫 纪行券',
+            'jixing_muchun_currency': '💴 纪行券',
             'voucher': '🎫 兑换券',
             'lottery': '🎲 抽奖券',
             'premium': '⭐ 高级券',
