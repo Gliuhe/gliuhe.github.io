@@ -78,7 +78,7 @@
             <button onclick="doLogout()" class="btn-nav btn-logout">退出</button>
         </div>
     </nav>
-
+ 
     <div class="main-content">
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('shop', this)">🛒 商城管理</button>
@@ -86,20 +86,20 @@
             <button class="tab-btn" onclick="switchTab('fines', this)">💰 罚款管理</button>
             <button class="tab-btn" onclick="switchTab('bans', this)">🚫 封禁管理</button>
         </div>
-
+ 
         <!-- 面板1：商城管理 -->
         <div class="tab-panel active" id="panel-shop">
             <div class="section-header">
                 <span class="section-title">🛒 纪行商城商品管理</span>
                 <button class="btn btn-primary" onclick="showAddProductModal()">➕ 添加商品</button>
             </div>
-
+ 
             <!-- 子标签：商品管理 / 分类管理 -->
             <div style="display:flex;gap:8px;margin-bottom:20px;background:#fff;padding:6px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
                 <button class="tab-btn active" onclick="switchShopSubTab('products', this)" id="shopTabProducts" style="border-radius:8px;padding:8px 16px;font-size:13px;">📦 商品列表</button>
                 <button class="tab-btn" onclick="switchShopSubTab('categories', this)" id="shopTabCategories" style="border-radius:8px;padding:8px 16px;font-size:13px;">📂 分类管理</button>
             </div>
-
+ 
             <!-- 子面板1：商品列表 -->
             <div class="shop-sub-panel active" id="shopPanel-products">
                 <!-- 商品统计 -->
@@ -117,7 +117,7 @@
                         <div style="color:var(--text-light);margin-top:4px;">已下架</div>
                     </div>
                 </div>
-
+ 
                 <!-- 商品列表 -->
                 <div class="data-table-container">
                     <table class="data-table">
@@ -138,14 +138,14 @@
                     </table>
                 </div>
             </div>
-
+ 
             <!-- 子面板2：分类管理 -->
             <div class="shop-sub-panel" id="shopPanel-categories" style="display:none;">
                 <div class="section-header">
                     <span class="section-title" style="font-size:14px;">📂 商品分类管理</span>
                     <button class="btn btn-primary" onclick="showAddCategoryModal()" style="padding:8px 18px;font-size:13px;">➕ 添加分类</button>
                 </div>
-
+ 
                 <!-- 分类统计卡片 -->
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
                     <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
@@ -157,14 +157,14 @@
                         <div style="color:var(--text-light);margin-top:4px;font-size:13px;">已启用</div>
                     </div>
                 </div>
-
+ 
                 <!-- 分类列表（卡片式展示） -->
                 <div id="categoriesListContainer" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;">
                     <div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">加载中...</div>
                 </div>
             </div>
         </div>
-
+ 
         <!-- 面板2：邮件管理 -->
         <div class="tab-panel" id="panel-notify">
             <div class="section-header">
@@ -221,7 +221,7 @@
                 </table>
             </div>
         </div>
-
+ 
         <!-- 面板3：罚款管理 -->
         <div class="tab-panel" id="panel-fines">
             <div class="section-header">
@@ -255,7 +255,7 @@
                 </table>
             </div>
         </div>
-
+ 
         <!-- 面板4：封禁管理 -->
         <div class="tab-panel" id="panel-bans">
             <div class="section-header">
@@ -307,7 +307,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- 商品编辑模态框 - 增强版（支持双数量） -->
     <div class="modal" id="productModal">
         <div class="modal-content" style="max-width:700px;">
@@ -318,7 +318,7 @@
                     <label>商品图标（Emoji）</label>
                     <input type="text" id="productIcon" placeholder="例如：🎁 🎫 🎮 📚" maxlength="2" style="font-size:24px;text-align:center;">
                 </div>
-
+ 
                 <div class="form-group">
                     <label>商品所属分类</label>
                     <select id="productCategory" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
@@ -326,17 +326,17 @@
                     </select>
                 </div>
             </div>
-
+ 
             <div class="form-group">
                 <label>商品名称 *</label>
                 <input type="text" id="productName" placeholder="输入商品名称">
             </div>
-
+ 
             <div class="form-group">
                 <label>商品描述</label>
                 <textarea id="productDesc" placeholder="输入商品描述（可选）"></textarea>
             </div>
-
+ 
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
                 <div class="form-group">
                     <label>商品类型 *</label>
@@ -350,25 +350,25 @@
                         <option value="custom">📦 自定义</option>
                     </select>
                 </div>
-
+ 
                 <div class="form-group">
                     <label>支付货币 *</label>
                     <select id="productCurrency" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
-                        <option value="jixing_muchun_currency">🎫 纪行券</option>
+                        <option value="jixing_muchun_currency">💴 纪行券</option>
                         <option value="voucher">🎫 兑换券</option>
                         <option value="lottery">🎲 抽奖券</option>
                         <option value="premium">⭐ 高级券</option>
                         <option value="bank_currency">💰 银行货币</option>
                     </select>
                 </div>
-
+ 
                 <div class="form-group">
                     <label>支付价格 *</label>
                     <input type="number" id="productPrice" placeholder="需要花费的数量" min="1" max="99999">
                     <div style="font-size:0.75rem;color:#94a3b8;margin-top:4px;">用户需要支付的货币数量</div>
                 </div>
             </div>
-
+ 
             <!-- 货币类商品的“获得数量”字段（默认隐藏，选择货币类时显示） -->
             <div id="rewardAmountSection" style="display:none;margin-top:12px;padding:16px;background:#fef3c7;border:2px dashed #f59e0b;border-radius:10px;">
                 <div style="font-weight:700;color:#92400e;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
@@ -401,7 +401,7 @@
                     如果商品是「🎫 兑换券包」，支付500纪行券 → 获得1000兑换券
                 </div>
             </div>
-
+ 
             <!-- 自定义类型的额外字段（默认隐藏） -->
             <div id="customTypeFields" style="display:none;margin-top:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
                 <div class="form-group" style="margin-bottom:0;">
@@ -410,7 +410,7 @@
                     <div style="font-size:0.78rem;color:#94a3b8;margin-top:4px;">提示：用于自定义类型的复杂奖励结构，留空则使用基础字段</div>
                 </div>
             </div>
-
+ 
             <!-- 限购设置 -->
             <div style="margin-top:12px;padding:16px;background:#ede9fe;border:2px dashed #8b5cf6;border-radius:10px;">
                 <div style="font-weight:700;color:#5b21b6;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
@@ -442,23 +442,35 @@
                     每周限购 3 次 → 用户每周只能购买该商品 3 次
                 </div>
             </div>
-
+ 
+            <div class="form-group">
+                <label>定向用户（可选）</label>
+                <select id="productTargetUserId">
+                    <option value="">🌐 所有用户可见</option>
+                    <option value="d71f9173-bd5d-4d30-a033-0429ae162fd7">👤 用户 A (d71f9173…)</option>
+                    <option value="34b895c9-effa-4647-bfca-160cf0d4c7d4">👤 用户 B (34b895c9…)</option>
+                </select>
+                <div style="font-size:0.78rem;color:#94a3b8;margin-top:4px;line-height:1.5;">
+                    <strong>💡 说明：</strong>选择"所有用户可见"则所有登录用户都能看到此商品；选择指定用户后，仅该用户可在商店看到此商品。用于实现"A 专属商品 / B 专属商品 / 公共商品"的区分。
+                </div>
+            </div>
+ 
             <div class="form-group">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" id="productActive" checked style="width:18px;height:18px;">
                     上架（用户可见）
                 </label>
             </div>
-
+ 
             <input type="hidden" id="productId">
-
+ 
             <div class="modal-actions">
                 <button class="btn" onclick="closeProductModal()" style="background:#94a3b8;color:white;">取消</button>
                 <button class="btn btn-primary" onclick="saveProduct()">保存</button>
             </div>
         </div>
     </div>
-
+ 
     <!-- 分类编辑模态框 -->
     <div class="modal" id="categoryModal">
         <div class="modal-content" style="max-width:500px;">
@@ -468,33 +480,33 @@
                 <label>分类图标（Emoji）*</label>
                 <input type="text" id="categoryIcon" placeholder="例如：🎁 ⚔️ 🎨 👑" maxlength="2" style="font-size:28px;text-align:center;">
             </div>
-
+ 
             <div class="form-group">
                 <label>分类名称 *</label>
                 <input type="text" id="categoryName" placeholder="输入分类名称">
             </div>
-
+ 
             <div class="form-group">
                 <label>排序权重（数字越小越靠前）</label>
                 <input type="number" id="categorySortOrder" placeholder="默认为 0" value="0" min="0" max="999">
             </div>
-
+ 
             <div class="form-group">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" id="categoryActive" checked style="width:18px;height:18px;">
                     启用（用户可见）
                 </label>
             </div>
-
+ 
             <input type="hidden" id="categoryId">
-
+ 
             <div class="modal-actions">
                 <button class="btn" onclick="closeCategoryModal()" style="background:#94a3b8;color:white;">取消</button>
                 <button class="btn btn-primary" onclick="saveCategory()">保存</button>
             </div>
         </div>
     </div>
-
+ 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-sync-helper.js?v=2"></script>
     
@@ -541,13 +553,13 @@
         }
         
         // ===== 邮件功能 =====
-
+ 
         // 切换附件输入框显示
         function toggleAttachmentFields() {
             const type = document.getElementById('attachmentType').value;
             const amountInput = document.getElementById('attachmentAmount');
             const codeInput = document.getElementById('attachmentCode');
-
+ 
             if (type === '') {
                 amountInput.style.display = 'none';
                 codeInput.style.display = 'none';
@@ -559,18 +571,18 @@
                 codeInput.style.display = 'none';
             }
         }
-
+ 
         async function sendMail() {
             const type = document.getElementById('mailType').value;
             const title = document.getElementById('mailTitle').value.trim();
             const body = document.getElementById('mailBody').value.trim();
             let attachment = null;
-
+ 
             if (!title || !body) {
                 alert('请填写标题和内容');
                 return;
             }
-
+ 
             // 构建附件对象
             const attachmentType = document.getElementById('attachmentType').value;
             if (attachmentType) {
@@ -586,9 +598,9 @@
                     }
                 }
             }
-
+ 
             const success = await sendNotification(USER_ID, type, title, body, attachment);
-
+ 
             if (success) {
                 alert('✅ 邮件发送成功！');
                 document.getElementById('mailTitle').value = '';
@@ -791,7 +803,7 @@
         }
         
         // ===== 商城管理功能 =====
-
+ 
         // 加载商品列表
         async function loadShopProducts() {
             try {
@@ -801,7 +813,7 @@
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
-
+ 
                 const tbody = document.getElementById('shopProductsListBody');
                 
                 // 更新统计
@@ -812,12 +824,12 @@
                 document.getElementById('totalProductsCount').textContent = total;
                 document.getElementById('activeProductsCount').textContent = active;
                 document.getElementById('inactiveProductsCount').textContent = inactive;
-
+ 
                 if (!products || products.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无商品，点击上方按钮添加</td></tr>';
                     return;
                 }
-
+ 
                 tbody.innerHTML = products.map(p => {
                     // 获取商品类型和货币类型的显示名称
                     const typeMap = {
@@ -831,7 +843,7 @@
                     };
                     
                     const currencyMap = {
-                        'jixing_muchun_currency': '🎫 纪行券',
+                        'jixing_muchun_currency': '💴 纪行券',
                         'voucher': '🎫 兑换券',
                         'lottery': '🎲 抽奖券',
                         'premium': '⭐ 高级券',
@@ -858,6 +870,7 @@
                             <span class="badge ${p.is_active ? 'badge-green' : 'badge-gray'}">
                                 ${p.is_active ? '上架中' : '已下架'}
                             </span>
+                            ${p.target_user_id ? `<div style="font-size:0.7rem;color:#8b5cf6;margin-top:3px;" title="${escapeHtml(p.target_user_id)}">🎯 ${escapeHtml(p.target_user_id.substring(0,8))}…</div>` : `<div style="font-size:0.7rem;color:#94a3b8;margin-top:3px;">🌐 所有人</div>`}
                         </td>
                         <td style="white-space:nowrap;">${p.created_at ? new Date(p.created_at).toLocaleString('zh-CN') : '-'}</td>
                         <td>
@@ -874,7 +887,7 @@
                 alert('❌ 加载商品失败: ' + e.message);
             }
         }
-
+ 
         // 显示添加商品模态框
         async function showAddProductModal() {
             document.getElementById('productModalTitle').textContent = '添加商品';
@@ -898,7 +911,10 @@
             // 限购设置
             document.getElementById('purchaseLimitPeriod').value = 'none';
             document.getElementById('purchaseLimitCount').value = '';
-            
+ 
+            // 定向用户重置
+            document.getElementById('productTargetUserId').value = '';
+ 
             // 初始化字段显示状态
             toggleProductTypeFields();
             
@@ -973,7 +989,7 @@
                 customFields.style.display = 'none';
             }
         }
-
+ 
         // 编辑商品
         async function editProduct(productId) {
             try {
@@ -988,7 +1004,7 @@
                     alert('❌ 商品不存在');
                     return;
                 }
-
+ 
                 document.getElementById('productModalTitle').textContent = '编辑商品';
                 document.getElementById('productIcon').value = product.icon || '';
                 document.getElementById('productName').value = product.name || '';
@@ -1010,7 +1026,10 @@
                 // 限购设置回填
                 document.getElementById('purchaseLimitPeriod').value = product.purchase_limit_period || 'none';
                 document.getElementById('purchaseLimitCount').value = product.purchase_limit_count || '';
-                
+ 
+                // 定向用户回填
+                document.getElementById('productTargetUserId').value = product.target_user_id || '';
+ 
                 // 根据类型显示/隐藏对应字段
                 toggleProductTypeFields();
                 
@@ -1023,18 +1042,18 @@
                 }
                 
                 document.getElementById('productModal').style.display = 'flex';
-
+ 
             } catch (e) {
                 console.error('[Admin] 获取商品信息失败:', e);
                 alert('❌ 获取商品信息失败: ' + e.message);
             }
         }
-
+ 
         // 关闭模态框
         function closeProductModal() {
             document.getElementById('productModal').style.display = 'none';
         }
-
+ 
         // 保存商品（新增或更新）
         async function saveProduct() {
             const icon = document.getElementById('productIcon').value.trim();
@@ -1053,7 +1072,7 @@
             // 获得奖励字段（新增）
             const rewardCurrencyType = document.getElementById('rewardCurrencyType').value || 'auto';
             const rewardAmount = parseInt(document.getElementById('rewardAmount').value) || null;
-
+ 
             // 验证必填字段
             if (!name) {
                 alert('请输入商品名称');
@@ -1087,13 +1106,16 @@
             // 限购设置验证
             const purchaseLimitPeriod = document.getElementById('purchaseLimitPeriod').value;
             const purchaseLimitCount = parseInt(document.getElementById('purchaseLimitCount').value) || null;
-            
+ 
             if (purchaseLimitPeriod !== 'none' && (!purchaseLimitCount || purchaseLimitCount <= 0)) {
                 alert('❌ 设置了限购周期后，必须填写限购次数！');
                 document.getElementById('purchaseLimitCount').focus();
                 return;
             }
-
+ 
+            // 定向用户 UUID（留空 = 所有用户可见）
+            const targetUserId = document.getElementById('productTargetUserId').value.trim() || null;
+ 
             try {
                 const productData = {
                     icon: icon || '🎁',
@@ -1111,9 +1133,11 @@
                     // 限购设置
                     purchase_limit_period: purchaseLimitPeriod === 'none' ? null : purchaseLimitPeriod,
                     purchase_limit_count: purchaseLimitCount,
+                    // 定向用户（null = 所有用户可见）
+                    target_user_id: targetUserId,
                     updated_at: new Date().toISOString()
                 };
-
+ 
                 if (productId) {
                     // 更新现有商品
                     const { error } = await sb
@@ -1137,39 +1161,39 @@
                     
                     alert('✅ 商品添加成功！');
                 }
-
+ 
                 closeProductModal();
                 loadShopProducts();
-
+ 
             } catch (e) {
                 console.error('[Admin] 保存商品失败:', e);
                 alert('❌ 保存失败: ' + e.message);
             }
         }
-
+ 
         // 删除商品
         async function deleteProduct(productId, productName) {
             if (!confirm(`确定要删除商品「${productName}」吗？此操作不可恢复！`)) {
                 return;
             }
-
+ 
             try {
                 const { error } = await sb
                     .from('jixing_shop_products')
                     .delete()
                     .eq('id', productId);
-
+ 
                 if (error) throw error;
-
+ 
                 alert('✅ 商品已删除');
                 loadShopProducts();
-
+ 
             } catch (e) {
                 console.error('[Admin] 删除商品失败:', e);
                 alert('❌ 删除失败: ' + e.message);
             }
         }
-
+ 
         // 生成 UUID
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -1177,7 +1201,7 @@
                 return v.toString(16);
             });
         }
-
+ 
         // HTML 转义
         function escapeHtml(text) {
             if (!text) return '';
@@ -1187,7 +1211,7 @@
         }
         
         // ===== 分类管理功能 =====
-
+ 
         // 加载分类列表
         async function loadCategoriesList() {
             try {
@@ -1197,21 +1221,21 @@
                     .order('sort_order', { ascending: true });
                 
                 if (error) throw error;
-
+ 
                 // 更新统计
                 const total = categories ? categories.length : 0;
                 const active = categories ? categories.filter(c => c.is_active).length : 0;
                 
                 document.getElementById('totalCategoriesCount').textContent = total;
                 document.getElementById('activeCategoriesCount').textContent = active;
-
+ 
                 const container = document.getElementById('categoriesListContainer');
                 
                 if (!categories || categories.length === 0) {
                     container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:40px;grid-column:1/-1;">暂无分类，点击上方按钮添加</div>';
                     return;
                 }
-
+ 
                 container.innerHTML = categories.map(cat => `
                     <div style="background:#fff;padding:20px;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border-left:4px solid ${cat.is_active ? 'var(--green)' : '#94a3b8'};">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -1239,7 +1263,7 @@
                     '<div style="text-align:center;color:#ef4444;padding:40px;grid-column:1/-1;">❌ 加载失败: ' + e.message + '</div>';
             }
         }
-
+ 
         // 显示添加分类模态框
         function showAddCategoryModal() {
             document.getElementById('categoryModalTitle').textContent = '添加分类';
@@ -1250,7 +1274,7 @@
             document.getElementById('categoryId').value = '';
             document.getElementById('categoryModal').style.display = 'flex';
         }
-
+ 
         // 编辑分类
         async function editCategory(categoryId) {
             try {
@@ -1265,7 +1289,7 @@
                     alert('❌ 分类不存在');
                     return;
                 }
-
+ 
                 document.getElementById('categoryModalTitle').textContent = '编辑分类';
                 document.getElementById('categoryIcon').value = category.icon || '';
                 document.getElementById('categoryName').value = category.name || '';
@@ -1273,18 +1297,18 @@
                 document.getElementById('categoryActive').checked = category.is_active;
                 document.getElementById('categoryId').value = category.id;
                 document.getElementById('categoryModal').style.display = 'flex';
-
+ 
             } catch (e) {
                 console.error('[Admin] 获取分类信息失败:', e);
                 alert('❌ 获取分类信息失败: ' + e.message);
             }
         }
-
+ 
         // 关闭分类模态框
         function closeCategoryModal() {
             document.getElementById('categoryModal').style.display = 'none';
         }
-
+ 
         // 保存分类（新增或更新）
         async function saveCategory() {
             const icon = document.getElementById('categoryIcon').value.trim();
@@ -1292,7 +1316,7 @@
             const sortOrder = parseInt(document.getElementById('categorySortOrder').value) || 0;
             const isActive = document.getElementById('categoryActive').checked;
             const categoryId = document.getElementById('categoryId').value;
-
+ 
             // 验证必填字段
             if (!icon) {
                 alert('请输入分类图标');
@@ -1302,7 +1326,7 @@
                 alert('请输入分类名称');
                 return;
             }
-
+ 
             try {
                 if (categoryId) {
                     // 更新现有分类
@@ -1338,33 +1362,33 @@
                     
                     alert('✅ 分类添加成功！');
                 }
-
+ 
                 closeCategoryModal();
                 loadCategoriesList();
-
+ 
             } catch (e) {
                 console.error('[Admin] 保存分类失败:', e);
                 alert('❌ 保存失败: ' + e.message);
             }
         }
-
+ 
         // 删除分类
         async function deleteCategory(categoryId, categoryName) {
             if (!confirm(`确定要删除分类「${categoryName}」吗？\n\n⚠️ 注意：该分类下的商品将变为未分类状态！`)) {
                 return;
             }
-
+ 
             try {
                 const { error } = await sb
                     .from('jixing_shop_categories')
                     .delete()
                     .eq('id', categoryId);
-
+ 
                 if (error) throw error;
-
+ 
                 alert('✅ 分类已删除');
                 loadCategoriesList();
-
+ 
             } catch (e) {
                 console.error('[Admin] 删除分类失败:', e);
                 alert('❌ 删除失败: ' + e.message);
