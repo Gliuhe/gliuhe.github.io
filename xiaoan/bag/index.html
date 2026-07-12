@@ -236,6 +236,33 @@
             margin-bottom: 10px;
         }
 
+        /* 使用记录卡片样式 */
+        .used-record-item {
+            opacity: 0.85;
+            border: 2px solid #d1d5db;
+            background: linear-gradient(135deg, #f9fafb, #f3f4f6);
+        }
+        .used-record-item:hover {
+            opacity: 1;
+            border-color: #9ca3af;
+        }
+        .item-used-time {
+            color: #6b7280;
+            font-size: 0.78rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .used-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 10px;
+            align-self: flex-start;
+        }
+
         .item-source {
             position: absolute;
             top: 8px;
@@ -524,6 +551,7 @@
             <div class="filter-tab active" data-filter="all">&#128220; 全部</div>
             <div class="filter-tab" data-filter="normal">&#127921; 普通抽奖</div>
             <div class="filter-tab" data-filter="advanced">&#10024; 高级抽奖</div>
+            <div class="filter-tab" data-filter="used">&#128221; 使用记录</div>
         </div>
 
         <!-- 背包物品网格 -->
@@ -578,8 +606,8 @@
             const allItems = [];
 
             normalRecords.forEach((record, index) => {
-                // 排除兑换券和银行券类型、已使用物品
-                if (record.rewardType === 'currency' || record.rewardType === 'bankTicket' || record.used) return;
+                // 排除兑换券和银行券类型
+                if (record.rewardType === 'currency' || record.rewardType === 'bankTicket') return;
 
                 const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
                 const isExchange = prizeName === '下次一定';
@@ -591,8 +619,9 @@
                     _originalIndex: index,
                     _listKey: 'records',
                     // "下次一定"可兑换高级抽奖券
-                    usable: true,
-                    isExchangeItem: isExchange
+                    usable: !record.used,
+                    isExchangeItem: isExchange,
+                    _isUsed: !!record.used
                 });
             });
 
@@ -601,13 +630,13 @@
                 const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
                 const rewardType = record.prize?.rewardType || record.rewardType || 'item';
 
-                // 排除兑换券、银行券和已使用物品
-                if (rewardType === 'currency' || rewardType === 'bankTicket' || record.used) return;
+                // 排除兑换券、银行券
+                if (rewardType === 'currency' || rewardType === 'bankTicket') return;
 
                 allItems.push({
                     prize: prizeName,
                     rewardType: rewardType,
-                    usable: true,
+                    usable: !record.used,
                     isExchangeItem: (prizeName === '下次一定'),
                     used: !!record.used,
                     usedTime: record.usedTime || null,
@@ -618,7 +647,8 @@
                     _sourceLabel: '高级抽奖',
                     _originalIndex: index,
                     _listKey: 'advancedRecords',
-                    _rawRecord: record
+                    _rawRecord: record,
+                    _isUsed: !!record.used
                 });
             });
 
@@ -703,13 +733,52 @@
             // 应用筛选
             switch (currentFilter) {
                 case 'normal':
-                    filtered = allItems.filter(i => i._source === 'normal');
+                    filtered = allItems.filter(i => i._source === 'normal' && !i._isUsed);
                     break;
                 case 'advanced':
-                    filtered = allItems.filter(i => i._source === 'advanced');
+                    filtered = allItems.filter(i => i._source === 'advanced' && !i._isUsed);
+                    break;
+                case 'used':
+                    filtered = allItems.filter(i => i._isUsed);
                     break;
                 default:
+                    filtered = allItems.filter(i => !i._isUsed);
                     break;
+            }
+
+            // 使用记录视图：按使用时间倒序展示，不分组
+            if (currentFilter === 'used') {
+                if (filtered.length === 0) {
+                    grid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">&#128221;</div>
+                            <p>暂无使用记录</p>
+                            <small>使用道具后将在此处显示记录</small>
+                        </div>
+                    `;
+                    return;
+                }
+                // 按使用时间倒序排序
+                filtered.sort((a, b) => new Date(b.usedTime || b.date || 0) - new Date(a.usedTime || a.date || 0));
+
+                grid.innerHTML = filtered.map((item, idx) => {
+                    const sourceClass = item._source === 'advanced' ? 'source-advanced' : 'source-normal';
+                    const sourceLabel = item._source === 'advanced' ? '高级' : '普通';
+                    const usedTimeStr = formatUsedTime(item.usedTime);
+                    const displayName = typeof item.prize === 'object' ? (item.prize?.name || String(item.prize)) : item.prize;
+
+                    return `
+                        <div class="bag-item used-record-item" data-index="${idx}">
+                            <div class="item-source ${sourceClass}">${sourceLabel}</div>
+                            <div class="item-icon">${item.icon || '&#127873;'}</div>
+                            <div class="item-name">${displayName}</div>
+                            ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                            <div class="item-used-time">&#128337; ${usedTimeStr}</div>
+                            <div class="used-tag">&#9989; 已使用</div>
+                        </div>
+                    `;
+                }).join('');
+                return;
             }
 
             // 按名称分组统计数量
@@ -886,6 +955,16 @@
                 const d = new Date(isoStr);
                 return `${d.getMonth()+1}/${d.getDate()}`;
             } catch { return ''; }
+        }
+
+        // 格式化使用时间：完整显示 年/月/日 时:分
+        function formatUsedTime(isoStr) {
+            if (!isoStr) return '未知时间';
+            try {
+                const d = new Date(isoStr);
+                const pad = n => String(n).padStart(2, '0');
+                return `${d.getFullYear()}/${pad(d.getMonth()+1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+            } catch { return '未知时间'; }
         }
 
         function createConfetti() {
