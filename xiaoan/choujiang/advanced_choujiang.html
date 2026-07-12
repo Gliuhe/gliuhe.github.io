@@ -289,21 +289,21 @@
             z-index: 10001;
             margin: 0;
         }
-
+ 
         .modal-content::-webkit-scrollbar {
             width: 8px;
         }
-
+ 
         .modal-content::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 10px;
         }
-
+ 
         .modal-content::-webkit-scrollbar-thumb {
             background: linear-gradient(135deg, #9c27b0, #673ab7);
             border-radius: 10px;
         }
-
+ 
         .modal-content::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #7b1fa2, #512da8);
         }
@@ -459,24 +459,24 @@
             margin-bottom: 15px;
             min-height: 40px;
         }
-
+ 
         .prize-actions {
             display: flex;
             gap: 10px;
             justify-content: center;
             margin-top: 15px;
         }
-
+ 
         .btn-edit {
             background: linear-gradient(135deg, #06d6a0, #05b384);
             color: white;
         }
-
+ 
         .btn-edit:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(6, 214, 160, 0.4);
         }
-
+ 
         .record-item {
             background: white;
             border-radius: 15px;
@@ -796,9 +796,9 @@
                     <progress max="40" value="0" id="counterBProgress" style="width: 100%; height: 20px; border-radius: 10px;"></progress>
                 </div>
             </div>
-
+ 
             <p id="lotteryHint">试试你的手气吧！每次抽奖消耗高级抽奖券</p>
-
+ 
             <!-- 奖品展示 -->
             <div class="prizes-grid" id="prizesContainer">
                 <!-- 奖品将通过JavaScript动态添加 -->
@@ -904,7 +904,7 @@
                 <label id="currencyAmountLabel">兑换券数量</label>
                 <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
             </div>
-
+ 
             <div class="form-group">
                 <label for="prizeDescription">奖品描述</label>
                 <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
@@ -914,28 +914,38 @@
         </div>
     </div>
     
-
+ 
     
-
+ 
     
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
     
     <!-- 返回按钮 -->
     <a href="index.html" class="back-button" title="返回普通抽奖">⬅</a>
-
+ 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cache-manager.js"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
         // 常量定义
         const LOTTERY_COST = 1; // 基础消耗，实际消耗根据奖池动态计算
-
+ 
+        // 用户隔离的 localStorage key 生成器（与 rule/index.html 一致）
+        // 每个用户的奖品配置独立存储，互不影响
+        function userKey(baseKey) {
+            var uid = (typeof getCurrentUserId === 'function' ? getCurrentUserId() : null)
+                   || window.__cloudUserId
+                   || (typeof localStorage !== 'undefined' ? localStorage.getItem('xiaoan_user_id') : null)
+                   || 'default';
+            return uid.substring(0, 8) + '_' + baseKey;
+        }
+ 
         // 根据奖池类型获取高级抽奖券消耗
         function getPremiumCost(voucherPool, selectedPool) {
             const voucherLevel = POOL_LEVELS[voucherPool];
             const selectedLevel = POOL_LEVELS[selectedPool || voucherPool];
-
+ 
             // 只能降级,不能升级
             if (selectedLevel > voucherLevel) {
                 // 不允许升级,按最高奖池消耗
@@ -943,69 +953,69 @@
                 if (voucherPool === "gold") return 2;
                 return 1;
             }
-
+ 
             // 根据选中奖池等级返回消耗
             if (selectedPool === "diamond") return 3;
             if (selectedPool === "gold") return 2;
             return 1;
         }
-
+ 
         // 奖池配置
         const POOL_CONFIG = {
             normal: { threshold: 4000, name: "普通奖池", color: "#4caf50" },
             gold: { threshold: 10000, name: "黄金奖池", color: "#ff8c00" },
             diamond: { threshold: Infinity, name: "钻石奖池", color: "#006064" }
         };
-
+ 
         // 奖池等级映射
         const POOL_LEVELS = {
             normal: 1,
             gold: 2,
             diamond: 3
         };
-
+ 
         // 当前选中的奖池(用户可主动降级)
         let selectedPool = null;
         
         // 管理页奖池筛选状态（"all"表示全部）
         let managePoolFilter = "all";
-
+ 
         // 初始化奖池选择器
         function initPoolSelector() {
             // 移除旧的池选择器（如果存在）
             const existingSelector = document.getElementById('poolSelectorContainer');
             if (existingSelector) existingSelector.remove();
-
+ 
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             const voucherPool = getCurrentPoolType(voucherAmount);
             const availablePools = getAvailablePools(voucherAmount);
-
+ 
             // 初始化selectedPool为当前奖池
             if (!selectedPool || POOL_LEVELS[selectedPool] > POOL_LEVELS[voucherPool]) {
                 selectedPool = voucherPool;
             }
-
+ 
             const lotteryTab = document.getElementById('lottery');
             const prizesContainer = document.getElementById('prizesContainer');
-
+ 
             // 创建奖池选择器容器
             const selectorContainer = document.createElement('div');
             selectorContainer.id = 'poolSelectorContainer';
             selectorContainer.style.cssText = 'margin: 20px 0; background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(103, 58, 183, 0.1)); border-radius: 15px; padding: 15px; border: 2px solid rgba(156, 39, 176, 0.3);';
-
+ 
             const label = document.createElement('div');
             label.style.cssText = 'text-align: center; font-weight: bold; color: #9c27b0; margin-bottom: 10px; font-size: 1.1rem;';
             label.textContent = '🎯 选择抽奖奖池';
             selectorContainer.appendChild(label);
-
+ 
             const buttonsContainer = document.createElement('div');
             buttonsContainer.style.cssText = 'display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;';
-
+ 
             availablePools.forEach(([poolType, config]) => {
                 const discountRatio = getPoolDiscountRatio(voucherPool, poolType);
                 const discountPercent = Math.round((1 - discountRatio) * 100);
                 const isSelected = poolType === selectedPool;
-
+ 
                 const button = document.createElement('button');
                 button.className = `pool-selector-btn ${isSelected ? 'selected' : ''}`;
                 button.dataset.pool = poolType;
@@ -1021,75 +1031,75 @@
                     min-width: 140px;
                     box-shadow: ${isSelected ? `0 4px 15px ${config.color}66` : 'none'};
                 `;
-
+ 
                 let discountText = discountPercent > 0 ? `<br><span style="font-size: 0.85rem; opacity: 0.9;">💰 立减${discountPercent}%</span>` : '';
                 button.innerHTML = `${config.name}${discountText}`;
-
+ 
                 if (poolType === voucherPool) {
                     const originalMark = document.createElement('div');
                     originalMark.style.cssText = 'font-size: 0.75rem; opacity: 0.8; margin-top: 2px;';
                     originalMark.textContent = '（当前等级）';
                     button.appendChild(originalMark);
                 }
-
+ 
                 button.addEventListener('click', () => selectPool(poolType));
                 buttonsContainer.appendChild(button);
             });
-
+ 
             selectorContainer.appendChild(buttonsContainer);
             lotteryTab.insertBefore(selectorContainer, prizesContainer);
         }
-
+ 
         // 选择奖池
         function selectPool(poolType) {
             selectedPool = poolType;
             initPoolSelector();
             renderPrizes();
             updateCurrencyDisplay();
-
+ 
             const poolName = POOL_CONFIG[poolType].name;
             showNotification(`已切换到${poolName}`, 'success');
         }
-
+ 
         // 根据兑换券数量获取当前奖池类型
         function getCurrentPoolType(voucherAmount) {
             if (voucherAmount >= POOL_CONFIG.gold.threshold) return "diamond";
             if (voucherAmount >= POOL_CONFIG.normal.threshold) return "gold";
             return "normal";
         }
-
+ 
         // 获取奖池折扣率(每降一级25%)
         function getPoolDiscountRatio(voucherPool, selectedPool) {
             const voucherLevel = POOL_LEVELS[voucherPool];
             const selectedLevel = POOL_LEVELS[selectedPool];
-
+ 
             // 只能降级,不能升级
             if (selectedLevel > voucherLevel) {
                 return 1; // 不允许升级,按原价
             }
-
+ 
             const levelDiff = voucherLevel - selectedLevel;
             // 每降一级减25个百分点（直接减去0.25）
             return Math.max(0.25, 1 - levelDiff * 0.25);
         }
-
+ 
         // 获取可用的奖池选项
         function getAvailablePools(voucherAmount) {
             const voucherPool = getCurrentPoolType(voucherAmount);
             const voucherLevel = POOL_LEVELS[voucherPool];
-
+ 
             // 返回当前及以下级别的奖池
             return Object.entries(POOL_CONFIG)
                 .filter(([poolType, config]) => POOL_LEVELS[poolType] <= voucherLevel)
                 .sort((a, b) => POOL_LEVELS[b[0]] - POOL_LEVELS[a[0]]); // 按等级降序
         }
-
+ 
         // 根据奖池类型过滤奖品
         function filterPrizesByPool(prizes, poolType) {
             // 如果奖品没有pool字段，默认为normal（兼容旧数据）
             return prizes.filter(prize => (prize.pool || "normal") === poolType);
         }
-
+ 
         // 默认奖品
         const defaultPrizes = [
             {
@@ -1257,19 +1267,19 @@
         
         // 加载数据
         function loadData() {
-            prizes = localStorage.getItem("advancedPrizes") ? JSON.parse(localStorage.getItem("advancedPrizes")) : defaultPrizes;
+            prizes = localStorage.getItem(userKey("advancedPrizes")) ? JSON.parse(localStorage.getItem(userKey("advancedPrizes"))) : defaultPrizes;
             records = localStorage.getItem("advancedRecords") ? JSON.parse(localStorage.getItem("advancedRecords")) : [];
             currencyAmount = parseInt(localStorage.getItem("premium")) || 0;
             counterA = localStorage.getItem("advancedCounterA") ? parseInt(localStorage.getItem("advancedCounterA")) : 0;
             counterB = localStorage.getItem("advancedCounterB") ? parseInt(localStorage.getItem("advancedCounterB")) : 0;
-
+ 
             // 初始化银行券（检查是否为有效数字）
             const bankTicketValue = localStorage.getItem('bankTicket');
             if (!bankTicketValue || bankTicketValue === 'NaN' || isNaN(parseInt(bankTicketValue))) {
                 localStorage.setItem('bankTicket', '0');
                 console.log("[初始化] 银行券值无效，已重置为0");
             }
-
+ 
             window.addEventListener('storage', function(e) {
                 if (e.key === 'premium') {
                     currencyAmount = parseInt(e.newValue);
@@ -1285,7 +1295,7 @@
         
         // 保存数据
         function saveData() {
-            localStorage.setItem("advancedPrizes", JSON.stringify(prizes));
+            localStorage.setItem(userKey("advancedPrizes"), JSON.stringify(prizes));
             localStorage.setItem("advancedRecords", JSON.stringify(records));
             localStorage.setItem("advancedCounterA", counterA.toString());
             localStorage.setItem("advancedCounterB", counterB.toString());
@@ -1294,14 +1304,14 @@
         // 渲染奖品
         function renderPrizes() {
             prizesContainer.innerHTML = "";
-
+ 
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             const voucherPool = getCurrentPoolType(voucherAmount);
-
+ 
             // 使用selectedPool（用户选择的奖池）
             const poolType = selectedPool || voucherPool;
             const filteredPrizes = filterPrizesByPool(prizes, poolType);
-
+ 
             // 显示当前奖池信息 - 移到prizesContainer外部，在h2标题旁边
             const lotteryTab = document.querySelector('#lottery h2');
             if (lotteryTab && !lotteryTab.querySelector('.pool-info')) {
@@ -1314,7 +1324,7 @@
                 const poolInfo = lotteryTab.querySelector('.pool-info');
                 poolInfo.innerHTML = `🎯 ${POOL_CONFIG[poolType].name}<br><span style="font-size: 0.95rem; opacity: 0.9;">兑换券: ${voucherAmount}</span>`;
             }
-
+ 
             if (filteredPrizes.length === 0) {
                 const noPrizes = document.createElement('div');
                 noPrizes.style.cssText = 'text-align: center; padding: 30px; color: #666; font-size: 1.1rem;';
@@ -1322,7 +1332,7 @@
                 prizesContainer.appendChild(noPrizes);
                 return;
             }
-
+ 
             filteredPrizes.forEach(prize => {
                 if (prize.stock !== 0) {
                     const prizeCard = document.createElement("div");
@@ -1404,25 +1414,25 @@
                 filterContainer.appendChild(btn);
             });
         }
-
+ 
         // 渲染管理奖品
         function renderManagePrizes() {
             managePrizesContainer.innerHTML = "";
             
             // 初始化筛选器
             initManagePoolFilter();
-
+ 
             // 根据筛选条件过滤奖品
             let filteredPrizes = prizes;
             if (managePoolFilter !== 'all') {
                 filteredPrizes = prizes.filter(prize => (prize.pool || "normal") === managePoolFilter);
             }
-
+ 
             if (filteredPrizes.length === 0) {
                 managePrizesContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px; grid-column: 1/-1;">暂无奖品，请添加</p>';
                 return;
             }
-
+ 
             filteredPrizes.forEach(prize => {
                 const prizePool = prize.pool || "normal";
                 const poolConfig = POOL_CONFIG[prizePool];
@@ -1449,14 +1459,14 @@
                         <button class="btn btn-danger" data-id="${prize.id}">删除</button>
                     </div>
                 `;
-
+ 
                 managePrizesContainer.appendChild(prizeCard);
-
+ 
                 const editBtn = prizeCard.querySelector(".btn-edit");
                 editBtn.addEventListener("click", () => {
                     openEditPrizeModal(prize.id);
                 });
-
+ 
                 const deleteBtn = prizeCard.querySelector(".btn-danger");
                 deleteBtn.addEventListener("click", () => {
                     if (confirm(`确定要删除奖品"${prize.name}"吗？`)) {
@@ -1491,13 +1501,12 @@
                     : record.prize.rewardType === "jixing"
                     ? `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">+${record.prize.currencyAmount || 0} 纪行券</div>`
                     : "";
-
-                const useButton = record.prize.rewardType !== "currency" && record.prize.rewardType !== "bankTicket" && record.prize.rewardType !== "jixing"
-                    ? (record.used
-                        ? `<div class="used-tag" style="background: linear-gradient(135deg, #757575, #9e9e9e); color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.9rem; text-align: center;">已使用<br><small style="font-size: 0.7rem;">${record.usedTime}</small></div>`
-                        : `<button class="use-btn" data-index="${records.indexOf(record)}" style="background: linear-gradient(135deg, #2196f3, #1976d2); color: white; border: none; padding: 8px 16px; border-radius: 15px; font-size: 0.9rem; cursor: pointer; min-width: 60px;">使用</button>`)
+ 
+                // 使用按钮已移至背包页面，此处仅保留"已使用"状态显示
+                const useButton = (record.prize.rewardType !== "currency" && record.prize.rewardType !== "bankTicket" && record.prize.rewardType !== "jixing" && record.used)
+                    ? `<div class="used-tag" style="background: linear-gradient(135deg, #757575, #9e9e9e); color: white; padding: 6px 12px; border-radius: 15px; font-size: 0.9rem; text-align: center;">已使用<br><small style="font-size: 0.7rem;">${record.usedTime}</small></div>`
                     : "";
-
+ 
                 const recordItem = document.createElement("div");
                 recordItem.classList.add("record-item");
                 recordItem.innerHTML = `
@@ -1511,17 +1520,8 @@
                         ${useButton}
                     </div>
                 `;
-
+ 
                 recordsList.appendChild(recordItem);
-
-                if (record.prize.rewardType !== "currency" && record.prize.rewardType !== "bankTicket" && record.prize.rewardType !== "jixing" && !record.used) {
-                    const useBtn = recordItem.querySelector(".use-btn");
-                    if (useBtn) {
-                        useBtn.addEventListener("click", function() {
-                            markRecordAsUsed(parseInt(this.dataset.index));
-                        });
-                    }
-                }
             });
         }
         
@@ -1533,7 +1533,7 @@
             updateLotteryButton();
             updateVoucherLotteryButtonText(voucherAmount);
         }
-
+ 
         // 更新高级抽奖券按钮文字和提示文字
         function updateLotteryButton() {
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
@@ -1542,24 +1542,24 @@
             const premiumCost = getPremiumCost(voucherPool, poolType);
             const startLotteryBtn = document.getElementById("startLotteryBtn");
             startLotteryBtn.textContent = `🎡 使用${premiumCost}高级抽奖券抽奖`;
-
+ 
             // 更新提示文字
             const lotteryHint = document.getElementById("lotteryHint");
             if (lotteryHint) {
                 lotteryHint.textContent = `试试你的手气吧！当前${POOL_CONFIG[poolType].name}每次抽奖消耗${premiumCost}张高级抽奖券`;
             }
         }
-
+ 
         // 更新兑换券抽奖按钮文字
         function updateVoucherLotteryButtonText(voucherAmount) {
             const MIN_VOUCHER_REQUIRED = 1200;
             const startVoucherLotteryBtn = document.getElementById("startVoucherLotteryBtn");
-
+ 
             const voucherPool = getCurrentPoolType(voucherAmount);
             const discountRatio = getPoolDiscountRatio(voucherPool, selectedPool || voucherPool);
             const baseCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(488, Math.round(voucherAmount * 0.30)) : 0;
             const voucherCost = Math.max(1, Math.round(baseCost * discountRatio));
-
+ 
             if (voucherAmount < MIN_VOUCHER_REQUIRED) {
                 startVoucherLotteryBtn.textContent = `🎫 兑换券不足${MIN_VOUCHER_REQUIRED}`;
                 startVoucherLotteryBtn.disabled = true;
@@ -1611,7 +1611,7 @@
                 resultCard.style.display = "none";
                 isLotteryRunning = false;
             });
-
+ 
             prizeRewardType.addEventListener("change", () => {
                 const isCurrency = prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket" || prizeRewardType.value === "jixing";
                 currencyAmountGroup.style.display = isCurrency ? "block" : "none";
@@ -1649,27 +1649,16 @@
             resetProgressBtn.addEventListener("click", resetProgressWithPassword);
         }
         
-        // 标记记录为已使用
-        function markRecordAsUsed(index) {
-            if (records[index] && !records[index].used) {
-                records[index].used = true;
-                records[index].usedTime = new Date().toLocaleString();
-                saveData();
-                renderRecords();
-                showNotification("记录已标记为已使用", "success");
-            }
-        }
-
         // 清空记录（带密码验证）
         function clearRecordsWithPassword() {
             showPasswordModal("clearRecords");
         }
-
+ 
         // 重置进度（带密码验证）
         function resetProgressWithPassword() {
             showPasswordModal("resetProgress");
         }
-
+ 
         // 执行清空记录操作
         function executeClearRecords() {
             records = [];
@@ -1677,7 +1666,7 @@
             renderRecords();
             showNotification("记录已清空", "success");
         }
-
+ 
         // 执行重置进度操作
         function executeResetProgress() {
             records = [];
@@ -1692,27 +1681,27 @@
         // 开始抽奖（使用高级抽奖券）
         function startLottery() {
             if (isLotteryRunning) return;
-
+ 
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             const voucherPool = getCurrentPoolType(voucherAmount);
             const poolType = selectedPool || voucherPool;
             const premiumCost = getPremiumCost(voucherPool, poolType);
-
+ 
             if (currencyAmount < premiumCost) {
                 showNotification(`高级抽奖券不足，需要${premiumCost}张`, "error");
                 return;
             }
-
+ 
             const poolPrizes = filterPrizesByPool(prizes, poolType);
             const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
-
+ 
             if (availablePrizes.length === 0) {
                 showNotification("当前奖池没有可用奖品", "error");
                 return;
             }
-
+ 
             isLotteryRunning = true;
-
+ 
             // 扣除高级抽奖券
             currencyAmount -= premiumCost;
             localStorage.setItem('premium', currencyAmount.toString());
@@ -1760,7 +1749,7 @@
                         localStorage.setItem('voucher', newVoucherAmount.toString());
             syncCurrencyToCloud('voucher');
                         syncCurrencyToCloud('voucher');
-
+ 
                         // 触发storage事件同步到主页
                         window.dispatchEvent(new StorageEvent('storage', {
                             key: 'voucher',
@@ -1771,11 +1760,11 @@
                         const bankTicketAmount = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
                         const bankTicketToAdd = result.prize.currencyAmount || 0;
                         const newBankTicketAmount = bankTicketAmount + bankTicketToAdd;
-
+ 
                         // 安全检查：确保newBankTicketAmount是有效数字
                         if (!isNaN(newBankTicketAmount) && newBankTicketAmount >= 0) {
                             localStorage.setItem('bankTicket', newBankTicketAmount.toString());
-
+ 
                             // 触发storage事件同步到银行页面
                             window.dispatchEvent(new StorageEvent('storage', {
                                 key: 'bankTicket',
@@ -1787,12 +1776,12 @@
                         const jixingAmount = parseInt(localStorage.getItem('jixing_muchun_currency') || '0') || 0;
                         const jixingToAdd = result.prize.currencyAmount || 0;
                         const newJixingAmount = jixingAmount + jixingToAdd;
-
+ 
                         // 安全检查：确保newJixingAmount是有效数字
                         if (!isNaN(newJixingAmount) && newJixingAmount >= 0) {
                             localStorage.setItem('jixing_muchun_currency', newJixingAmount.toString());
                             syncCurrencyToCloud('jixing_muchun_currency');
-
+ 
                             // 触发storage事件同步到其他页面
                             window.dispatchEvent(new StorageEvent('storage', {
                                 key: 'jixing_muchun_currency',
@@ -1804,12 +1793,12 @@
                         const jixingAmount = parseInt(localStorage.getItem('jixing_muchun_currency') || '0') || 0;
                         const jixingToAdd = result.prize.currencyAmount || 0;
                         const newJixingAmount = jixingAmount + jixingToAdd;
-
+ 
                         // 安全检查：确保newJixingAmount是有效数字
                         if (!isNaN(newJixingAmount) && newJixingAmount >= 0) {
                             localStorage.setItem('jixing_muchun_currency', newJixingAmount.toString());
                             syncCurrencyToCloud('jixing_muchun_currency');
-
+ 
                             // 触发storage事件同步到其他页面
                             window.dispatchEvent(new StorageEvent('storage', {
                                 key: 'jixing_muchun_currency',
@@ -1846,26 +1835,26 @@
         // 开始抽奖（使用兑换券）
         function startVoucherLottery() {
             if (isLotteryRunning) return;
-
+ 
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             const MIN_VOUCHER_REQUIRED = 1200;
-
+ 
             const voucherPool = getCurrentPoolType(voucherAmount);
             const poolType = selectedPool || voucherPool;
             const discountRatio = getPoolDiscountRatio(voucherPool, poolType);
             const baseCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(488, Math.round(voucherAmount * 0.30)) : 0;
             const VOUCHER_COST = Math.max(1, Math.round(baseCost * discountRatio));
-
+ 
             if (voucherAmount < MIN_VOUCHER_REQUIRED) {
                 showNotification(`兑换券不足${MIN_VOUCHER_REQUIRED}，无法使用兑换券抽奖`, "error");
                 return;
             }
-
+ 
             if (voucherAmount < VOUCHER_COST) {
                 showNotification("兑换券不足", "error");
                 return;
             }
-
+ 
             // 检查当前奖池是否有可用奖品
             const poolPrizes = filterPrizesByPool(prizes, poolType);
             const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
@@ -1918,7 +1907,7 @@
                         const updatedVoucherAmount = currentVoucherAmount + currencyToAdd;
                         localStorage.setItem('voucher', updatedVoucherAmount.toString());
                         syncCurrencyToCloud('voucher');
-
+ 
                         // 触发storage事件同步到主页
                         window.dispatchEvent(new StorageEvent('storage', {
                             key: 'voucher',
@@ -1929,11 +1918,11 @@
                         const bankTicketAmount = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
                         const bankTicketToAdd = result.prize.currencyAmount || 0;
                         const newBankTicketAmount = bankTicketAmount + bankTicketToAdd;
-
+ 
                         // 安全检查：确保newBankTicketAmount是有效数字
                         if (!isNaN(newBankTicketAmount) && newBankTicketAmount >= 0) {
                             localStorage.setItem('bankTicket', newBankTicketAmount.toString());
-
+ 
                             // 触发storage事件同步到银行页面
                             window.dispatchEvent(new StorageEvent('storage', {
                                 key: 'bankTicket',
@@ -2000,12 +1989,12 @@
             counterA++;
             counterB++;
             updateCountersDisplay();
-
+ 
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             const voucherPool = getCurrentPoolType(voucherAmount);
             const poolType = selectedPool || voucherPool;
             const poolPrizes = filterPrizesByPool(prizes, poolType);
-
+ 
             // 优先检查B类保底（每40次，权重1-4）
             if (counterB >= 40) {
                 const prize = drawGuaranteedPrize(1, 5, 'B', poolPrizes);
@@ -2013,7 +2002,7 @@
                 updateCountersDisplay();
                 return { prize: prize, isGuaranteed: true };
             }
-
+ 
             // 然后检查A类保底（每10次，权重5-9）
             if (counterA >= 10) {
                 const prize = drawGuaranteedPrize(5, 10, 'A', poolPrizes);
@@ -2021,24 +2010,24 @@
                 updateCountersDisplay();
                 return { prize: prize, isGuaranteed: true };
             }
-
+ 
             const eligiblePrizes = poolPrizes.filter(prize => prize.stock !== 0);
             if (eligiblePrizes.length === 0) return null;
-
+ 
             const totalWeight = eligiblePrizes.reduce((sum, prize) => sum + prize.weight, 0);
             let random = Math.random() * totalWeight;
-
+ 
             for (const prize of eligiblePrizes) {
                 if (random <= prize.weight) {
                     return { prize: prize, isGuaranteed: false };
                 }
                 random -= prize.weight;
             }
-
+ 
             return { prize: eligiblePrizes[0], isGuaranteed: false };
         }
-
-
+ 
+ 
         
         // 显示抽奖结果
         function showResult(prize, isGuaranteed = false) {
@@ -2220,7 +2209,7 @@
             editingPrizeId = null; // 重置编辑状态
             document.getElementById('prizeModalTitle').textContent = '添加新奖品';
             document.getElementById('confirmAddPrizeBtn').textContent = '添加奖品';
-
+ 
             // 重置表单
             prizeName.value = "";
             prizeWeight.value = "10";
@@ -2229,7 +2218,7 @@
             currencyAmountInput.value = "";
             prizeDescription.value = "";
             currencyAmountGroup.style.display = "none";
-
+ 
             // 显示模态框并设置居中样式
             const modal = document.getElementById('addPrizeModal');
             if (modal) {
@@ -2242,7 +2231,7 @@
                 modal.style.height = '100%';
                 modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // 半透明背景
                 modal.style.zIndex = '1000';
-
+ 
                 // 设置内层内容区域样式
                 const modalContent = modal.querySelector('.modal-content');
                 if (modalContent) {
@@ -2252,7 +2241,7 @@
                     modalContent.style.transitionProperty = 'none !important';
                     modalContent.style.animationDuration = '0s !important';
                     modalContent.style.transitionDuration = '0s !important';
-
+ 
                     modalContent.style.position = 'fixed';
                     modalContent.style.left = '50%';
                     modalContent.style.top = '50%';
@@ -2294,13 +2283,13 @@
                 icon: getRandomIcon(),
                 pool: prizePool.value || "normal" // 默认为普通奖池
             };
-
+ 
             // 如果是兑换券或银行券奖励，添加对应数量
             if (prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") {
                 newPrize.currencyAmount = parseInt(currencyAmountInput.value);
             }
-
-
+ 
+ 
             
             
             // 添加奖品
@@ -2325,25 +2314,25 @@
             const icons = ["🎁", "🧸", "🚗", "🎮", "🎨", "📱", "🎧", "🎭", "🎪", "🎯", "🎲", "🎫", "🏆", "🎖️", "🎟️", "💎", "👑", "🧩", "🎠", "🎡"];
             return icons[Math.floor(Math.random() * icons.length)];
         }
-
+ 
         // 编辑奖品相关
         let editingPrizeId = null; // 当前编辑的奖品ID
-
+ 
         // 打开编辑奖品模态框
         function openEditPrizeModal(prizeId) {
             const prize = prizes.find(p => p.id === prizeId);
-
+ 
             if (!prize) {
                 showNotification("奖品不存在", "error");
                 return;
             }
-
+ 
             editingPrizeId = prizeId;
-
+ 
             // 设置模态框标题和按钮文本
             document.getElementById('prizeModalTitle').textContent = '编辑奖品';
             document.getElementById('confirmAddPrizeBtn').textContent = '保存修改';
-
+ 
             // 填充奖品信息
             prizeName.value = prize.name;
             prizeWeight.value = prize.weight;
@@ -2351,7 +2340,7 @@
             prizeRewardType.value = prize.rewardType;
             prizeDescription.value = prize.description || "";
             prizePool.value = prize.pool || "normal";
-
+ 
             // 显示货币数量输入框（如果需要）
             if (prize.rewardType === "currency" || prize.rewardType === "bankTicket" || prize.rewardType === "jixing") {
                 currencyAmountGroup.style.display = "block";
@@ -2359,18 +2348,18 @@
             } else {
                 currencyAmountGroup.style.display = "none";
             }
-
+ 
             // 显示模态框
             addPrizeModal.style.display = "block";
         }
-
+ 
         // 编辑奖品
         function editPrize() {
             if (!prizeName.value) {
                 showNotification("请输入奖品名称", "error");
                 return;
             }
-
+ 
             if ((prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket" || prizeRewardType.value === "jixing") && (!currencyAmountInput.value || parseInt(currencyAmountInput.value) <= 0)) {
                 let currencyName = "兑换券";
                 if (prizeRewardType.value === "bankTicket") currencyName = "银行券";
@@ -2378,14 +2367,14 @@
                 showNotification(`请输入有效的${currencyName}数量`, "error");
                 return;
             }
-
+ 
             const prizeIndex = prizes.findIndex(p => p.id === editingPrizeId);
-
+ 
             if (prizeIndex === -1) {
                 showNotification("奖品不存在", "error");
                 return;
             }
-
+ 
             // 更新奖品信息（保留原来的图标）
             prizes[prizeIndex] = {
                 ...prizes[prizeIndex],
@@ -2396,29 +2385,29 @@
                 description: prizeDescription.value,
                 pool: prizePool.value || "normal"
             };
-
+ 
             // 如果是兑换券或银行券奖励，更新对应数量
             if (prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") {
                 prizes[prizeIndex].currencyAmount = parseInt(currencyAmountInput.value);
             }
-
+ 
             // 保存数据
             saveData();
-
+ 
             // 更新界面
             renderPrizes();
             renderManagePrizes();
-
+ 
             // 关闭模态框
             addPrizeModal.style.display = "none";
-
+ 
             editingPrizeId = null;
-
+ 
             // 显示通知
             showNotification("奖品修改成功", "success");
         }
-
-
+ 
+ 
         // 显示通知
         function showNotification(message, type) {
             const notification = document.getElementById("statusNotification");
