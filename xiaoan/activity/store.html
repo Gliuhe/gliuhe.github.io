@@ -16,7 +16,7 @@
             position: relative;
             overflow-x: hidden;
         }
-
+ 
         /* 装饰气泡 */
         body::before {
             content: '';
@@ -42,7 +42,7 @@
             0%, 100% { transform: translateY(0) scale(1); }
             50% { transform: translateY(-30px) scale(1.1); }
         }
-
+ 
         .back-btn {
             position: fixed; top: 16px; left: 16px; z-index: 100;
         }
@@ -53,7 +53,7 @@
             backdrop-filter: blur(10px);
         }
         .back-btn button:hover { background: rgba(255,255,255,0.8); }
-
+ 
         .top-bar {
             display: flex; justify-content: space-between; align-items: center;
             padding: 20px 14px 10px; max-width: 900px; margin: 0 auto;
@@ -75,12 +75,12 @@
         }
         .ticket-badge .icon { font-size: 1.2rem; }
         .ticket-badge .val { color: #764ba2; font-weight: bold; font-size: 1.1rem; }
-
+ 
         .container {
             max-width: 900px; margin: 0 auto; padding: 10px 14px 40px;
             position: relative; z-index: 10;
         }
-
+ 
         /* 分类筛选 */
         .category-tabs {
             display: flex; gap: 8px; padding: 10px 0;
@@ -100,7 +100,7 @@
             color: #fff;
             box-shadow: 0 4px 12px rgba(102,126,234,0.3);
         }
-
+ 
         /* 商品网格 */
         .products-grid {
             display: grid;
@@ -108,7 +108,7 @@
             gap: 18px;
             margin-top: 16px;
         }
-
+ 
         .product-card {
             background: rgba(255,255,255,0.85);
             border-radius: 20px;
@@ -124,7 +124,7 @@
             box-shadow: 0 10px 30px rgba(102,126,234,0.2);
             border-color: rgba(102,126,234,0.3);
         }
-
+ 
         .product-img-wrap {
             width: 100%; height: 160px;
             background: linear-gradient(135deg, #f0f4ff, #e8ecf5);
@@ -143,7 +143,7 @@
             font-size: 3.5rem;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
-
+ 
         .product-info {
             padding: 14px 16px;
         }
@@ -180,12 +180,12 @@
         .buy-btn:disabled {
             background: #ccc; cursor: not-allowed; transform: none; box-shadow: none;
         }
-
+ 
         .empty-state {
             text-align: center; padding: 60px 20px; color: #8b88b0;
         }
         .empty-state .icon { font-size: 4rem; margin-bottom: 16px; }
-
+ 
         /* 加载 */
         .loading-state {
             text-align: center; padding: 60px; color: #667eea;
@@ -197,7 +197,7 @@
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
+ 
         /* 确认弹窗 */
         .modal-overlay {
             display: none;
@@ -235,7 +235,7 @@
             background: linear-gradient(135deg, #667eea, #764ba2); color: #fff;
         }
         .modal-confirm:hover { box-shadow: 0 4px 12px rgba(118,75,162,0.3); }
-
+ 
         /* 状态提示 */
         .status-toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -251,7 +251,7 @@
         }
         .status-toast.success { border-left: 4px solid #10b981; }
         .status-toast.error { border-left: 4px solid #ef4444; }
-
+ 
         @media (max-width: 600px) {
             .products-grid { grid-template-columns: 1fr; }
             .top-bar { padding: 16px 10px 8px; }
@@ -263,20 +263,20 @@
     <div class="back-btn">
         <button onclick="window.location.href='lottery.html'">← 返回抽奖页</button>
     </div>
-
+ 
     <div class="top-bar">
         <div class="pool-title">🛍️ 纪行商城</div>
         <div class="ticket-badge">
-            <span class="icon">🎫</span>
+            <span class="icon">💴</span>
             <span class="val" id="jixingBalance">0</span>
         </div>
     </div>
-
+ 
     <div class="container">
         <div class="category-tabs" id="categoryTabs">
             <button class="cat-tab active" data-cat="all">全部</button>
         </div>
-
+ 
         <div id="productsContainer">
             <div class="loading-state">
                 <div class="loading-spinner"></div>
@@ -284,7 +284,7 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- 确认弹窗 -->
     <div class="modal-overlay" id="confirmModal" onclick="if(event.target===this)closeConfirmModal()">
         <div class="modal-card" onclick="event.stopPropagation()">
@@ -297,35 +297,35 @@
             </div>
         </div>
     </div>
-
+ 
     <!-- 状态提示 -->
     <div class="status-toast" id="statusToast"></div>
-
+ 
     <script>
         const SB_URL = 'https://qhnudlhpwmdzdxufcqjc.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2Mzc4MzUsImV4cCI6MjA5MTIxMzgzNX0.QKHOt8xopEa5cMkpzTPxOaIMyHuU8Jr2bLkFIiJ9w3I';
         const sb = window.supabase.createClient(SB_URL, SB_KEY);
-
+ 
         let allProducts = [];
         let categories = [];
         let currentCategory = 'all';
         let currentProduct = null;
-
+ 
         const CDN_BASE = './';
-
+ 
         async function init() {
             await loadJixingBalance();
             await Promise.all([loadCategories(), loadProducts()]);
         }
-
+ 
         async function loadJixingBalance() {
             const userId = localStorage.getItem('xiaoan_user_id');
             if (!userId) return;
-
+ 
             // 先读本地
             const localJixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0');
             document.getElementById('jixingBalance').textContent = localJixing;
-
+ 
             // 云端同步
             try {
                 const { data, error } = await sb
@@ -341,7 +341,7 @@
                 }
             } catch(e) {}
         }
-
+ 
         async function loadCategories() {
             try {
                 const { data, error } = await sb
@@ -351,7 +351,7 @@
                     .order('sort_order', { ascending: true });
                 if (error) throw error;
                 categories = data || [];
-
+ 
                 const tabsEl = document.getElementById('categoryTabs');
                 tabsEl.innerHTML = '<button class="cat-tab active" data-cat="all" onclick="filterCategory(\'all\', this)">🌟 全部</button>';
                 categories.forEach(cat => {
@@ -361,11 +361,11 @@
                 console.warn('[Store] 加载分类失败:', e.message);
             }
         }
-
+ 
         async function loadProducts() {
             const container = document.getElementById('productsContainer');
             container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div><div>商品加载中...</div></div>';
-
+ 
             try {
                 const { data, error } = await sb
                     .from('jixing_shop_products')
@@ -373,38 +373,41 @@
                     .eq('is_active', true)
                     .order('created_at', { ascending: false });
                 if (error) throw error;
-                allProducts = data || [];
+ 
+                // 按用户过滤可见性：target_user_id 为空 = 所有人可见；否则仅定向用户可见
+                const currentUserId = localStorage.getItem('xiaoan_user_id');
+                allProducts = (data || []).filter(p => !p.target_user_id || p.target_user_id === currentUserId);
                 renderProducts();
             } catch(e) {
                 console.error('[Store] 加载商品失败:', e);
                 container.innerHTML = '<div class="empty-state"><div class="icon">😢</div><div>加载失败，请稍后重试</div></div>';
             }
         }
-
+ 
         function filterCategory(catId, el) {
             currentCategory = catId;
             document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
             renderProducts();
         }
-
+ 
         function renderProducts() {
             const container = document.getElementById('productsContainer');
             let filtered = [...allProducts];
             if (currentCategory !== 'all') {
                 filtered = filtered.filter(p => p.category_id === currentCategory);
             }
-
+ 
             if (filtered.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="icon">🛍️</div><div>暂无商品，敬请期待~</div></div>';
                 return;
             }
-
+ 
             const gridHTML = filtered.map(p => {
                 const imgHTML = p.image_name
                     ? `<img src="${CDN_BASE}${escapeHtml(p.image_name)}" alt="${escapeHtml(p.name)}" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'>${p.icon || '🎁'}</div>'">`
                     : `<div class="product-img-placeholder">${p.icon || '🎁'}</div>`;
-
+ 
                 return `
                     <div class="product-card" onclick="showPurchaseConfirm('${p.id}')">
                         <div class="product-img-wrap">${imgHTML}</div>
@@ -413,7 +416,7 @@
                             <div class="product-desc">${escapeHtml(p.description || '暂无描述')}</div>
                             <div class="product-bottom">
                                 <div class="product-price">
-                                    <span class="price-icon">🎫</span>
+                                    <span class="price-icon">💴</span>
                                     <span>${p.price}</span>
                                 </div>
                                 <button class="buy-btn" onclick="event.stopPropagation();showPurchaseConfirm('${p.id}')">立即兑换</button>
@@ -422,19 +425,19 @@
                     </div>
                 `;
             }).join('');
-
+ 
             container.innerHTML = `<div class="products-grid">${gridHTML}</div>`;
         }
-
+ 
         async function showPurchaseConfirm(productId) {
             const product = allProducts.find(p => p.id === productId);
             if (!product) return;
             currentProduct = product;
-
+ 
             const userId = localStorage.getItem('xiaoan_user_id');
             const balance = parseInt(document.getElementById('jixingBalance').textContent);
             const canAfford = balance >= product.price;
-
+ 
             let limitInfo = '';
             let canPurchase = true;
             
@@ -454,7 +457,7 @@
                     limitInfo += '\n⚠️ 已达到限购次数，请下个周期再来！';
                 }
             }
-
+ 
             const canBuy = canAfford && canPurchase;
             
             document.getElementById('confirmTitle').textContent = `兑换「${product.name}」？`;
@@ -468,37 +471,37 @@
             } else {
                 document.getElementById('confirmBtn').textContent = '确认兑换';
             }
-
+ 
             document.getElementById('confirmModal').classList.add('show');
         }
-
+ 
         function closeConfirmModal() {
             document.getElementById('confirmModal').classList.remove('show');
             currentProduct = null;
         }
-
+ 
         async function confirmPurchase() {
             if (!currentProduct) return;
             const product = currentProduct;
             const userId = localStorage.getItem('xiaoan_user_id');
-
+ 
             if (!userId) {
                 showToast('请先登录', 'error');
                 closeConfirmModal();
                 return;
             }
-
+ 
             closeConfirmModal();
-
+ 
             // 扣减纪行券
             const currentBalance = parseInt(document.getElementById('jixingBalance').textContent);
             if (currentBalance < product.price) {
                 showToast('纪行券余额不足！', 'error');
                 return;
             }
-
+ 
             const newBalance = currentBalance - product.price;
-
+ 
             try {
                 // 更新云端余额
                 await sb.from('user_currencies').upsert({
@@ -507,29 +510,29 @@
                     amount: newBalance,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id,currency_type' });
-
+ 
                 // 更新本地
                 localStorage.setItem('jixing_muchun_currency', String(newBalance));
                 document.getElementById('jixingBalance').textContent = newBalance;
-
+ 
                 // 发放奖励
                 await deliverReward(product);
-
+ 
                 // 保存购买记录（用于限购统计）
                 if (userId) {
                     await savePurchaseRecord(userId, product.id);
                 }
-
+ 
                 showToast(`🎉 兑换成功！${product.name}`, 'success');
             } catch(e) {
                 console.error('[Store] 兑换失败:', e);
                 showToast('兑换失败，请重试', 'error');
             }
         }
-
+ 
         async function deliverReward(product) {
             const userId = localStorage.getItem('xiaoan_user_id');
-
+ 
             if (product.product_type === 'physical' || product.product_type === 'custom') {
                 // 实物/自定义：放入背包记录
                 let records = JSON.parse(localStorage.getItem('records') || '[]');
@@ -550,7 +553,7 @@
                 // 货币类：根据 reward_currency_type 和 reward_amount 发放
                 let targetCurrency = product.reward_currency_type;
                 let rewardAmount = product.reward_amount || product.price; // 默认回退
-
+ 
                 // 如果没有设置 reward_currency_type，根据 product_type 推断
                 if (!targetCurrency) {
                     const map = {
@@ -562,7 +565,7 @@
                     };
                     targetCurrency = map[product.product_type] || 'voucher';
                 }
-
+ 
                 const current = await getCurrencyAmount(userId, targetCurrency);
                 const newAmount = current + rewardAmount;
                 await sb.from('user_currencies').upsert({
@@ -574,7 +577,7 @@
                 localStorage.setItem(targetCurrency, String(newAmount));
             }
         }
-
+ 
         async function getCurrencyAmount(userId, currencyType) {
             try {
                 const { data } = await sb
@@ -588,21 +591,21 @@
                 return parseInt(localStorage.getItem(currencyType) || '0');
             }
         }
-
+ 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('statusToast');
             toast.textContent = message;
             toast.className = `status-toast ${type} show`;
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
-
+ 
         function escapeHtml(str) {
             if (!str) return '';
             return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
-
+ 
         // ========== 限购相关功能 ==========
-
+ 
         // 获取当前周期的起始时间
         function getPeriodStart(period) {
             const now = new Date();
@@ -621,18 +624,18 @@
                     return null;
             }
         }
-
+ 
         // 检查用户是否已达到限购次数
         async function checkPurchaseLimit(product, userId) {
             if (!product.purchase_limit_period || product.purchase_limit_period === 'none') {
                 return { canPurchase: true, currentCount: 0, limitCount: 0 };
             }
-
+ 
             const periodStart = getPeriodStart(product.purchase_limit_period);
             if (!periodStart) {
                 return { canPurchase: true, currentCount: 0, limitCount: 0 };
             }
-
+ 
             try {
                 const { count, error } = await sb
                     .from('jixing_shop_purchase_records')
@@ -640,12 +643,12 @@
                     .eq('user_id', userId)
                     .eq('product_id', product.id)
                     .gte('created_at', periodStart);
-
+ 
                 if (error) throw error;
-
+ 
                 const currentCount = count || 0;
                 const limitCount = product.purchase_limit_count;
-
+ 
                 return {
                     canPurchase: currentCount < limitCount,
                     currentCount,
@@ -656,7 +659,7 @@
                 return { canPurchase: true, currentCount: 0, limitCount: 0 };
             }
         }
-
+ 
         // 保存购买记录
         async function savePurchaseRecord(userId, productId) {
             try {
@@ -668,20 +671,20 @@
                         product_id: productId,
                         created_at: new Date().toISOString()
                     });
-
+ 
                 if (error) throw error;
             } catch(e) {
                 console.error('[Store] 保存购买记录失败:', e);
             }
         }
-
+ 
         function generateUUID() {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
         }
-
+ 
         init();
     </script>
 </body>

@@ -11,7 +11,7 @@
             padding: 0;
             font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
         }
-
+ 
         :root {
             --primary-color: #0EA5E9;
             --secondary-color: #38BDF8;
@@ -20,13 +20,13 @@
             --summer-orange: #FB923C;
             --summer-yellow: #FBBF24;
         }
-
+ 
         body {
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
         }
-
+ 
         /* 背景大图 */
         .bg-image {
             position: fixed;
@@ -40,7 +40,7 @@
             background-attachment: scroll;
             z-index: -2;
         }
-
+ 
         /* 渐变遮罩层 */
         .bg-overlay {
             position: fixed;
@@ -56,7 +56,7 @@
             );
             z-index: -1;
         }
-
+ 
         /* 返回按钮 */
         .back-btn {
             position: fixed;
@@ -64,7 +64,7 @@
             left: 20px;
             z-index: 1000;
         }
-
+ 
         .btn {
             padding: 12px 24px;
             font-size: 1rem;
@@ -75,37 +75,37 @@
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-
+ 
         .btn-primary {
             background: rgba(255, 255, 255, 0.95);
             color: #0EA5E9;
             backdrop-filter: blur(10px);
         }
-
+ 
         .btn-primary:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
-
+ 
         .btn-reward {
             background: linear-gradient(135deg, #38BDF8, #0EA5E9);
             color: white;
             padding: 15px 40px;
             font-size: 1.2rem;
         }
-
+ 
         .btn-reward:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
         }
-
+ 
         .btn-reward:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-
+ 
         /* 主容器 */
         .container {
             position: relative;
@@ -114,19 +114,19 @@
             max-width: 900px;
             margin: 0 auto;
         }
-
+ 
         /* 活动标题区 */
         .event-header {
             text-align: center;
             margin-bottom: 50px;
             padding: 30px 20px;
         }
-
+ 
         .event-icon {
             font-size: 5rem;
             margin-bottom: 15px;
         }
-
+ 
         .event-title {
             font-size: 3rem;
             color: white;
@@ -138,7 +138,7 @@
                 0 5px 20px rgba(0, 0, 0, 0.4);
             margin-bottom: 15px;
         }
-
+ 
         .event-subtitle {
             font-size: 1.2rem;
             color: rgba(255, 255, 255, 0.95);
@@ -146,7 +146,7 @@
             margin-bottom: 25px;
             line-height: 1.6;
         }
-
+ 
         .event-badge {
             background: linear-gradient(135deg, #0EA5E9, #38BDF8);
             color: white;
@@ -157,7 +157,7 @@
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
         }
-
+ 
         /* 进度区域 */
         .progress-section {
             background: rgba(255, 255, 255, 0.2);
@@ -169,33 +169,33 @@
             border: 2px solid rgba(255, 255, 255, 0.25);
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
         }
-
+ 
         .progress-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
-
+ 
         .progress-title {
             font-size: 1.3rem;
             color: white;
             font-weight: bold;
             text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
+ 
         .progress-count {
             color: #38BDF8;
             font-weight: bold;
             font-size: 1.4rem;
             text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
         }
-
+ 
         .progress-bar-container {
             position: relative;
             margin-bottom: 25px;
         }
-
+ 
         .progress-bar {
             height: 20px;
             background: rgba(255, 255, 255, 0.25);
@@ -203,7 +203,7 @@
             overflow: hidden;
             box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-
+ 
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #0EA5E9, #38BDF8, #7DD3FC, #bae6fd);
@@ -212,7 +212,7 @@
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
             position: relative;
         }
-
+ 
         /* 统一日期容器 */
         .days-grid {
             display: grid;
@@ -220,7 +220,7 @@
             gap: 10px;
             margin-top: 20px;
         }
-
+ 
         .day-cell {
             background: rgba(255, 255, 255, 0.15);
             border-radius: 15px;
@@ -231,12 +231,12 @@
             position: relative;
             cursor: default;
         }
-
+ 
         .day-cell.completed {
             background: linear-gradient(135deg, rgba(186, 230, 253, 0.4), rgba(253, 224, 71, 0.4));
             border-color: #bae6fd;
         }
-
+ 
         .day-cell.completed::after {
             content: '✓';
             position: absolute;
@@ -247,62 +247,71 @@
             font-weight: bold;
             text-shadow: 0 0 5px rgba(186, 230, 253, 0.8);
         }
-
+ 
         .day-cell.today {
             border-color: #38BDF8;
             box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
             cursor: pointer;
             animation: pulse 2s infinite;
         }
-
+ 
         /* 周中区样式 */
         .day-cell.zone-a {
             background: rgba(14, 165, 233, 0.15);
         }
-
-        /* 周末区样式 */
+ 
+        /* 周末区样式（周六，黄色加倍区） */
         .day-cell.zone-b {
             background: rgba(251, 146, 60, 0.15);
         }
-
+ 
         .day-cell.zone-b .day-reward {
             color: #FB923C;
         }
-
+ 
+        /* 周日样式（红色加倍区） */
+        .day-cell.zone-c {
+            background: rgba(239, 68, 68, 0.18);
+        }
+ 
+        .day-cell.zone-c .day-reward {
+            color: #F87171;
+        }
+ 
         .day-cell.zone-a .day-reward {
             color: #38BDF8;
         }
-
+ 
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.02); }
         }
-
+ 
         .day-name {
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.9);
             font-weight: bold;
             margin-bottom: 5px;
         }
-
+ 
         .day-reward {
             font-size: 1.1rem;
             color: #FFD166;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 209, 102, 0.5);
         }
-
+ 
         .day-status {
             font-size: 0.75rem;
             color: rgba(255, 255, 255, 0.7);
             margin-top: 5px;
         }
-
+ 
         .day-cell.completed .day-status {
             color: #bae6fd;
             font-weight: bold;
         }
-
+ 
         /* 底部统计 */
         .monthly-stats {
             background: rgba(255, 255, 255, 0.1);
@@ -312,41 +321,41 @@
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
+ 
         .stats-title {
             font-size: 1.1rem;
             color: white;
             margin-bottom: 15px;
             font-weight: bold;
         }
-
+ 
         .stats-grid {
             display: flex;
             justify-content: center;
             gap: 40px;
             flex-wrap: wrap;
         }
-
+ 
         .stat-item {
             text-align: center;
         }
-
+ 
         .stat-label {
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 5px;
         }
-
+ 
         .stat-value {
             font-size: 1.3rem;
             color: #38BDF8;
             font-weight: bold;
         }
-
+ 
         .stat-value.weekend {
             color: #FB923C;
         }
-
+ 
         /* 纪行券显示 */
         .currency-section {
             background: rgba(255, 255, 255, 0.25);
@@ -358,7 +367,7 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             text-align: center;
         }
-
+ 
         .currency-display {
             display: flex;
             align-items: center;
@@ -366,29 +375,29 @@
             gap: 15px;
             margin-bottom: 10px;
         }
-
+ 
         .currency-icon {
             font-size: 3rem;
         }
-
+ 
         .currency-label {
             font-size: 1.3rem;
             color: white;
             font-weight: bold;
         }
-
+ 
         .currency-amount {
             font-size: 2.5rem;
             color: #38BDF8;
             font-weight: bold;
             text-shadow: 0 0 15px rgba(56, 189, 248, 0.6);
         }
-
+ 
         .currency-tip {
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.95rem;
         }
-
+ 
         /* 抽奖模块 */
         .lottery-section {
             background: rgba(255, 255, 255, 0.18);
@@ -399,7 +408,7 @@
             margin-bottom: 40px;
             border: 2px solid rgba(214, 158, 46, 0.3);
         }
-
+ 
         .lottery-title {
             font-size: 2rem;
             color: white;
@@ -407,14 +416,14 @@
             margin-bottom: 10px;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-
+ 
         .lottery-desc {
             text-align: center;
             color: rgba(255, 255, 255, 0.9);
             margin-bottom: 25px;
             font-size: 1.1rem;
         }
-
+ 
         .lottery-card {
             position: relative;
             border-radius: 20px;
@@ -424,19 +433,19 @@
             border: 2px solid rgba(214, 158, 46, 0.5);
             box-shadow: 0 0 20px rgba(214, 158, 46, 0.2);
         }
-
+ 
         .lottery-card:hover {
             transform: translateY(-5px) scale(1.02);
             box-shadow: 0 0 40px rgba(214, 158, 46, 0.4);
         }
-
+ 
         .lottery-card-bg {
             height: 200px;
             background: linear-gradient(135deg, #d69e2e, #e53e3e, #d69e2e);
             position: relative;
             overflow: hidden;
         }
-
+ 
         .lottery-card-bg::before {
             content: '🎲';
             position: absolute;
@@ -446,37 +455,37 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
-
+ 
         .lottery-card-content {
             padding: 25px;
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(5px);
             text-align: center;
         }
-
+ 
         .lottery-icon {
             font-size: 4rem;
             margin-bottom: 10px;
             animation: bounce 2s infinite;
         }
-
+ 
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
-
+ 
         .lottery-name {
             font-size: 1.8rem;
             color: white;
             font-weight: bold;
             margin-bottom: 8px;
         }
-
+ 
         .lottery-hint {
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 15px;
         }
-
+ 
         .lottery-rewards-hint {
             display: flex;
             flex-wrap: wrap;
@@ -484,12 +493,12 @@
             gap: 15px;
             margin-bottom: 20px;
         }
-
+ 
         .lottery-rewards-hint span {
             color: rgba(255, 255, 255, 0.9);
             font-size: 0.95rem;
         }
-
+ 
         .lottery-btn {
             background: linear-gradient(135deg, #d69e2e, #e53e3e);
             color: white;
@@ -500,7 +509,7 @@
             display: inline-block;
             box-shadow: 0 4px 15px rgba(214, 158, 46, 0.4);
         }
-
+ 
         /* 规则说明 */
         .rules-section {
             background: rgba(255, 255, 255, 0.12);
@@ -510,7 +519,7 @@
             padding: 25px;
             border: 2px solid rgba(255, 255, 255, 0.2);
         }
-
+ 
         .rules-title {
             color: white;
             font-size: 1.3rem;
@@ -519,73 +528,73 @@
             align-items: center;
             gap: 10px;
         }
-
+ 
         .rules-list {
             list-style: none;
             color: rgba(255, 255, 255, 0.85);
             line-height: 1.8;
         }
-
+ 
         .rules-list li {
             padding: 8px 0;
             padding-left: 25px;
             position: relative;
         }
-
+ 
         .rules-list li::before {
             content: '🌴';
             position: absolute;
             left: 0;
         }
-
+ 
         /* 响应式 */
         @media (max-width: 768px) {
             .event-title {
                 font-size: 2.2rem;
             }
-
+ 
             .days-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
-
+ 
             .progress-header {
                 flex-direction: column;
                 gap: 10px;
                 text-align: center;
             }
-
+ 
             .currency-amount {
                 font-size: 2rem;
             }
-
+ 
             .choice-message {
                 padding: 25px 20px;
                 margin: 20px;
             }
-
+ 
             .choice-options {
                 gap: 12px;
             }
-
+ 
             .choice-option {
                 padding: 15px;
             }
-
+ 
             .choice-icon {
                 font-size: 2.5rem;
             }
-
+ 
             .choice-info h3 {
                 font-size: 1.1rem;
             }
         }
-
+ 
         @media (max-width: 480px) {
             .days-grid {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
-
+ 
         /* 完成动画 */
         .complete-animation {
             position: fixed;
@@ -602,12 +611,12 @@
             pointer-events: none;
             transition: opacity 0.5s;
         }
-
+ 
         .complete-animation.active {
             opacity: 1;
             pointer-events: all;
         }
-
+ 
         .success-message {
             background: white;
             padding: 40px;
@@ -617,25 +626,25 @@
             max-width: 400px;
             animation: popup 0.5s ease-out;
         }
-
+ 
         @keyframes popup {
             0% { transform: scale(0.5); opacity: 0; }
             70% { transform: scale(1.1); }
             100% { transform: scale(1); opacity: 1; }
         }
-
+ 
         .success-message h2 {
             color: #0EA5E9;
             font-size: 2rem;
             margin-bottom: 20px;
         }
-
+ 
         .success-message p {
             color: #666;
             font-size: 1.1rem;
             margin-bottom: 20px;
         }
-
+ 
         /* 彩带动画 */
         .confetti {
             position: absolute;
@@ -644,12 +653,12 @@
             border-radius: 50%;
             animation: confetti-fall 2s ease-in-out forwards;
         }
-
+ 
         @keyframes confetti-fall {
             0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
             100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
-
+ 
         /* 选择弹窗样式 */
         .choice-message {
             background: white;
@@ -659,28 +668,28 @@
             max-width: 500px;
             animation: popup 0.5s ease-out;
         }
-
+ 
         .choice-message h2 {
             color: #0EA5E9;
             font-size: 2rem;
             margin-bottom: 15px;
             text-align: center;
         }
-
+ 
         .choice-desc {
             color: #666;
             font-size: 1.1rem;
             margin-bottom: 25px;
             text-align: center;
         }
-
+ 
         .choice-options {
             display: flex;
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
         }
-
+ 
         .choice-option {
             display: flex;
             align-items: center;
@@ -692,49 +701,49 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-
+ 
         .choice-option:hover {
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
             border-color: #0EA5E9;
         }
-
+ 
         .choice-icon {
             font-size: 3rem;
         }
-
+ 
         .choice-info h3 {
             color: #0EA5E9;
             font-size: 1.3rem;
             margin-bottom: 5px;
         }
-
+ 
         .choice-info p {
             color: #666;
             font-size: 0.95rem;
         }
-
+ 
         .btn-secondary {
             background: #e0e0e0;
             color: #666;
             width: 100%;
             margin-top: 10px;
         }
-
+ 
         .btn-secondary:hover {
             background: #d0d0d0;
         }
-
+ 
     </style>
 </head>
 <body>
     <div class="bg-image"></div>
     <div class="bg-overlay"></div>
-
+ 
     <div class="back-btn">
         <button class="btn btn-primary" onclick="window.location.href='/xiaoan/activity/'">🏠 返回活动</button>
     </div>
-
+ 
     <div class="container">
         <!-- 活动标题 -->
         <div class="event-header">
@@ -743,7 +752,7 @@
             <p class="event-subtitle">夏日炎炎，每日完成任务，收集纪行券兑换大奖</p>
             <span class="event-badge">🎯 纪行活动</span>
         </div>
-
+ 
         <!-- 进度区域 -->
         <div class="progress-section">
             <div class="progress-header">
@@ -755,38 +764,38 @@
                     <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                 </div>
             </div>
-
+ 
             <!-- 统一日历（周中周末合并） -->
             <div class="days-grid" id="daysGrid">
                 <!-- 动态生成 -->
             </div>
-
+ 
             <!-- 本月统计 -->
             <div class="monthly-stats">
                 <div class="stats-title">📊 本月累计统计</div>
                 <div class="stats-grid">
                     <div class="stat-item">
-                        <div class="stat-label">周中区共完成</div>
-                        <div class="stat-value" id="zoneAStats">0 天 / 0 券</div>
+                        <div class="stat-label">工作日共完成</div>
+                        <div class="stat-value" id="zoneAStats">0 天</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-label">周末区共完成</div>
-                        <div class="stat-value weekend" id="zoneBStats">0 天 / 0 券</div>
+                        <div class="stat-label">加倍区共完成</div>
+                        <div class="stat-value weekend" id="zoneBStats">0 天</div>
                     </div>
                 </div>
             </div>
         </div>
-
+ 
         <!-- 纪行券显示 -->
         <div class="currency-section">
             <div class="currency-display">
-                <span class="currency-icon">🎫</span>
+                <span class="currency-icon">💴</span>
                 <span class="currency-label">纪行券</span>
                 <span class="currency-amount" id="jixingCurrency">0</span>
             </div>
-            <p class="currency-tip">每日完成任务即可领取纪行券 | 周中300券/周五600券/周六250券/周日50券</p>
+            <p class="currency-tip">每日完成任务领取奖励 | 周一~周五：500兑换券+连续高级券 | 周六：10抽奖券+700兑换券 | 周日：500纪行券+1000兑换券</p>
         </div>
-
+ 
         <!-- 商城入口 -->
         <div class="lottery-section">
             <h2 class="lottery-title">🛍️ 纪行商城</h2>
@@ -807,19 +816,21 @@
                 </div>
             </div>
         </div>
-
+ 
         <!-- 规则说明 -->
         <div class="rules-section">
             <h3 class="rules-title">📜 活动规则</h3>
             <ul class="rules-list">
-                <li><strong>周一至周五：</strong>完成任务中心的"每日任务奖励"可获得500张纪行券</li>
+                <li><strong>工作日（周一~周五）：</strong>完成每日任务奖励可获得 500 兑换券</li>
+                <li><strong>连续高级券：</strong>工作日连续完成，从周二起每天递增 1 张高级抽奖券（周二1张、周三2张、周四3张、周五4张）。中断后本周工作日不再获得高级券</li>
+                <li><strong>周六（加倍区）：</strong>10 张抽奖券 + 700 兑换券</li>
+                <li><strong>周日（加倍区）：</strong>500 纪行券 + 1000 兑换券</li>
                 <li>每周一自动重置进度，开始新一周的纪行</li>
                 <li>使用纪行券前往商城兑换心仪商品</li>
-                <li>实物奖品将在活动结束后统一发放</li>
             </ul>
         </div>
     </div>
-
+ 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="../cloud-sync-helper.js"></script>
     <script>
@@ -830,18 +841,53 @@
         const BOUGHT_KEY = 'jixing_summer_bought';
         const INIT_KEY = 'jixing_summer_initialized_v2';
         const PRICE_PER_ITEM = 15;
-
+ 
         // 星期配置
+        // zone: A=工作日(蓝), B=加倍区(黄, 周六), C=加倍区(红, 周日)
+        // reward: 显示用文本；rewards: 实际发放 { voucher, lottery, premium, jixing }
         const WEEK_DAYS = [
-            { name: '周一', dayOfWeek: 1, zone: 'A', reward: 500 },
-            { name: '周二', dayOfWeek: 2, zone: 'A', reward: 500 },
-            { name: '周三', dayOfWeek: 3, zone: 'A', reward: 500 },
-            { name: '周四', dayOfWeek: 4, zone: 'A', reward: 500 },
-            { name: '周五', dayOfWeek: 5, zone: 'B', reward: 500 },
-            { name: '周六', dayOfWeek: 6, zone: 'B', reward: 500 },
-            { name: '周日', dayOfWeek: 0, zone: 'B', reward: 500 }
+            { name: '周一', dayOfWeek: 1, zone: 'A', rewards: { voucher: 500 } },
+            { name: '周二', dayOfWeek: 2, zone: 'A', rewards: { voucher: 500 } },
+            { name: '周三', dayOfWeek: 3, zone: 'A', rewards: { voucher: 500 } },
+            { name: '周四', dayOfWeek: 4, zone: 'A', rewards: { voucher: 500 } },
+            { name: '周五', dayOfWeek: 5, zone: 'A', rewards: { voucher: 500 } },
+            { name: '周六', dayOfWeek: 6, zone: 'B', rewards: { voucher: 700, lottery: 10 } },
+            { name: '周日', dayOfWeek: 0, zone: 'C', rewards: { voucher: 1000, jixing: 500 } }
         ];
-
+ 
+        // 货币中文名映射（用于显示）
+        const CURRENCY_LABELS = {
+            voucher: '兑换券',
+            lottery: '抽奖券',
+            premium: '高级抽奖券',
+            jixing: '纪行券'
+        };
+ 
+        // 获取当前用户 ID（与 rule/index.html 保持一致的三级回退）
+        function getCurrentUserId() {
+            return window.__cloudUserId ||
+                   (typeof localStorage !== 'undefined' ? localStorage.getItem('xiaoan_user_id') : null) ||
+                   (typeof localStorage !== 'undefined' ? localStorage.getItem('userId') : null) ||
+                   'default';
+        }
+ 
+        // 生成用户隔离的 localStorage 键（与 rule/index.html 格式一致）
+        function userKey(baseKey) {
+            var uid = getCurrentUserId() || 'default';
+            return String(uid).substring(0, 8) + '_' + baseKey;
+        }
+ 
+        // 获取某天奖励的显示文本
+        function getDayRewardText(day) {
+            const r = day.rewards;
+            const parts = [];
+            if (r.voucher) parts.push(`${r.voucher}券`);
+            if (r.lottery) parts.push(`${r.lottery}抽`);
+            if (r.premium) parts.push(`${r.premium}高`);
+            if (r.jixing) parts.push(`${r.jixing}纪`);
+            return parts.join('+') || '无';
+        }
+ 
         // 获取本周进度
         function getWeeklyProgress() {
             const data = localStorage.getItem(JIXING_KEY);
@@ -855,7 +901,7 @@
             }
             return createNewWeeklyProgress();
         }
-
+ 
         // 创建新的周进度
         function createNewWeeklyProgress() {
             return {
@@ -864,7 +910,7 @@
                 lastClaimDate: null
             };
         }
-
+ 
         // 获取周标识（用于判断是否需要重置）
         function getWeekKey() {
             const now = new Date();
@@ -877,46 +923,46 @@
             const day = String(monday.getDate()).padStart(2, '0');
             return `${year}-W${month}${day}`;
         }
-
+ 
         // 获取月份标识
         function getMonthKey() {
             const now = new Date();
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         }
-
+ 
         // 判断是否需要重置周进度
         function shouldResetWeekly(lastResetWeek) {
             if (!lastResetWeek) return true;
             return lastResetWeek !== getWeekKey();
         }
-
+ 
         // 保存周进度
         function saveWeeklyProgress(data) {
             localStorage.setItem(JIXING_KEY, JSON.stringify(data));
             if(typeof syncJixingProgressToCloud==='function')syncJixingProgressToCloud();
         }
-
+ 
         // 获取纪行券数量
         function getJixingCurrency() {
             return parseInt(localStorage.getItem(CURRENCY_KEY) || '0');
         }
-
+ 
         // 保存纪行券
         function saveJixingCurrency(amount) {
             localStorage.setItem(CURRENCY_KEY, amount.toString());
         }
-
+ 
         // 获取已购买的奖品
         function getBoughtRewards() {
             const data = localStorage.getItem(BOUGHT_KEY);
             return data ? JSON.parse(data) : [];
         }
-
+ 
         // 保存已购买记录
         function saveBoughtRewards(data) {
             localStorage.setItem(BOUGHT_KEY, JSON.stringify(data));
         }
-
+ 
         // 初始化默认进度
         function initializeDefaultProgress() {
             if (localStorage.getItem(INIT_KEY) === 'true') {
@@ -926,7 +972,7 @@
             saveJixingCurrency(2);
             localStorage.setItem(INIT_KEY, 'true');
         }
-
+ 
         // 获取今天的日期字符串
         function getTodayStr() {
             const today = new Date();
@@ -935,71 +981,235 @@
             const day = String(today.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
-
+ 
         // 获取今天是星期几
         function getTodayDayOfWeek() {
             return new Date().getDay();
         }
-
+ 
         // 检查今天是否可以签到（检查每日任务奖励是否完成）
         function canCheckInToday() {
-            const dailyRewardKey = `dailyReward_${new Date().toDateString()}`;
+            const dailyRewardKey = userKey('dailyReward_' + new Date().toDateString());
             return localStorage.getItem(dailyRewardKey) === 'true';
         }
-
+ 
         // 检查今天是否已经签到
         function hasCheckedInToday() {
             const progress = getWeeklyProgress();
             const todayDayOfWeek = getTodayDayOfWeek();
             return progress.completedDays.includes(todayDayOfWeek);
         }
-
-        // 获取今天的奖励数量
-        function getTodayReward() {
-            return 500;
+ 
+        // 获取工作日的连续完成天数（周一=1, 周二=2... 周五=5）
+        // 用于计算高级券奖励：连续天数-1 张
+        function getWorkdayStreak(progress) {
+            // 工作日顺序：周一(1)→周二(2)→周三(3)→周四(4)→周五(5)
+            const workdayOrder = [1, 2, 3, 4, 5];
+            let streak = 0;
+            for (const dow of workdayOrder) {
+                if (progress.completedDays.includes(dow)) {
+                    streak++;
+                } else {
+                    break; // 遇到第一个未完成的就中断
+                }
+            }
+            return streak;
         }
-
+ 
+        // 判断本周工作日高级券是否已中断（即存在某天之前已完成、某天未完成、之后又有完成的情况视为中断）
+        // 简化：只要工作日序列中出现"已完成→未完成→已完成"的断裂，就视为中断
+        function isWorkdayStreakBroken(progress) {
+            const workdayOrder = [1, 2, 3, 4, 5];
+            let foundGap = false;
+            for (let i = 0; i < workdayOrder.length; i++) {
+                const done = progress.completedDays.includes(workdayOrder[i]);
+                if (!done && foundGap) {
+                    // 已经出现过已完成，现在又未完成 → 但后续是否还有完成？
+                    // 这里需要继续检查后面是否还有已完成
+                    for (let j = i + 1; j < workdayOrder.length; j++) {
+                        if (progress.completedDays.includes(workdayOrder[j])) {
+                            return true; // 中断后又完成 → 已断
+                        }
+                    }
+                    return false;
+                }
+                if (done) foundGap = true;
+            }
+            return false;
+        }
+ 
+        // 获取今天的奖励配置（含连续高级券）
+        function getTodayRewardConfig() {
+            const todayDayOfWeek = getTodayDayOfWeek();
+            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
+            if (!dayConfig) return null;
+ 
+            const progress = getWeeklyProgress();
+            const rewards = { ...dayConfig.rewards };
+ 
+            // 工作日（周一~周五）的连续高级券逻辑
+            if (dayConfig.zone === 'A') {
+                // 当前已经完成的工作日天数（不含今天，因为今天还没签到）
+                // 完成今天后连续天数 = 已完成工作日数 + 1
+                const currentWorkdayDone = [1,2,3,4,5].filter(d => progress.completedDays.includes(d)).length;
+                // 计算从周一开始的连续天数（严格连续）
+                let streakAfterToday = 0;
+                const workdayOrder = [1, 2, 3, 4, 5];
+                for (const dow of workdayOrder) {
+                    if (dow === todayDayOfWeek) {
+                        streakAfterToday++;
+                        break;
+                    }
+                    if (progress.completedDays.includes(dow)) {
+                        streakAfterToday++;
+                    } else {
+                        // 中断：今天不是连续的
+                        streakAfterToday = 0;
+                        break;
+                    }
+                }
+                // 高级券 = 连续天数 - 1（周一=1天→0张，周二=2天→1张...）
+                const premiumAmount = Math.max(0, streakAfterToday - 1);
+                if (premiumAmount > 0) {
+                    rewards.premium = premiumAmount;
+                }
+            }
+ 
+            return { dayConfig, rewards };
+        }
+ 
         // 今日签到
         function checkInToday() {
             if (hasCheckedInToday()) {
                 return { success: false, message: '今天已经签到过了！' };
             }
-
+ 
             if (!canCheckInToday()) {
                 alert('请先完成今日的"每日任务奖励"任务！');
                 return { success: false };
             }
-
+ 
             const progress = getWeeklyProgress();
             const todayDayOfWeek = getTodayDayOfWeek();
-            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDayOfWeek);
-            const reward = 500;
-
+            const todayDow = new Date().getDay();
+            const dayConfig = WEEK_DAYS.find(d => d.dayOfWeek === todayDow);
+            if (!dayConfig) {
+                return { success: false, message: '今日不可签到' };
+            }
+ 
+            // 计算本次奖励
+            const rewardConfig = getTodayRewardConfig();
+            const rewards = rewardConfig.rewards;
+ 
             // 更新周进度
-            progress.completedDays.push(todayDayOfWeek);
+            progress.completedDays.push(todayDow);
             progress.lastClaimDate = getTodayStr();
             saveWeeklyProgress(progress);
-
-            // 增加纪行券
-            const currentCurrency = getJixingCurrency();
-            saveJixingCurrency(currentCurrency + reward);
-
-            return { 
-                success: true, 
-                reward: reward,
+ 
+            // 发放奖励到 localStorage（货币统一走 localStorage，由 index.html 同步云端）
+            const rewardMessages = [];
+            if (rewards.voucher) {
+                addCurrency('voucher', rewards.voucher);
+                rewardMessages.push(`${rewards.voucher}兑换券`);
+            }
+            if (rewards.lottery) {
+                addCurrency('lottery', rewards.lottery);
+                rewardMessages.push(`${rewards.lottery}抽奖券`);
+            }
+            if (rewards.premium) {
+                addCurrency('premium', rewards.premium);
+                rewardMessages.push(`${rewards.premium}高级抽奖券`);
+            }
+            if (rewards.jixing) {
+                // 纪行券走纪行专用存储
+                const currentJixing = getJixingCurrency();
+                saveJixingCurrency(currentJixing + rewards.jixing);
+                rewardMessages.push(`${rewards.jixing}纪行券`);
+            }
+ 
+            // 记录月度统计
+            recordMonthlyStat(dayConfig.zone, rewards);
+ 
+            return {
+                success: true,
+                rewards: rewards,
+                rewardText: rewardMessages.join(' + '),
                 dayName: dayConfig.name
             };
         }
-
+ 
+        // 通用货币增减（voucher/lottery/premium）
+        function addCurrency(type, amount) {
+            const current = parseInt(localStorage.getItem(type) || '0');
+            localStorage.setItem(type, String(current + amount));
+        }
+ 
+        // ===== 月度统计 =====
+        function getMonthlyStats() {
+            const data = localStorage.getItem(MONTHLY_STATS_KEY);
+            const monthKey = getMonthKey();
+            if (data) {
+                const parsed = JSON.parse(data);
+                if (parsed.monthKey === monthKey) return parsed;
+            }
+            // 新月份重置
+            const fresh = {
+                monthKey: monthKey,
+                zoneA: { days: 0, voucher: 0, lottery: 0, premium: 0, jixing: 0 },
+                zoneB: { days: 0, voucher: 0, lottery: 0, premium: 0, jixing: 0 },
+                zoneC: { days: 0, voucher: 0, lottery: 0, premium: 0, jixing: 0 }
+            };
+            localStorage.setItem(MONTHLY_STATS_KEY, JSON.stringify(fresh));
+            return fresh;
+        }
+ 
+        function recordMonthlyStat(zone, rewards) {
+            const stats = getMonthlyStats();
+            const zoneKey = zone === 'A' ? 'zoneA' : (zone === 'B' ? 'zoneB' : 'zoneC');
+            stats[zoneKey].days++;
+            ['voucher', 'lottery', 'premium', 'jixing'].forEach(type => {
+                if (rewards[type]) stats[zoneKey][type] += rewards[type];
+            });
+            localStorage.setItem(MONTHLY_STATS_KEY, JSON.stringify(stats));
+        }
+ 
+        function renderMonthlyStats() {
+            const stats = getMonthlyStats();
+            // 工作日区（zoneA）
+            const a = stats.zoneA;
+            const aParts = [];
+            if (a.voucher) aParts.push(`${a.voucher}券`);
+            if (a.lottery) aParts.push(`${a.lottery}抽`);
+            if (a.premium) aParts.push(`${a.premium}高`);
+            if (a.jixing) aParts.push(`${a.jixing}纪`);
+            document.getElementById('zoneAStats').textContent = `${a.days} 天${aParts.length ? ' / ' + aParts.join('+') : ''}`;
+ 
+            // 加倍区（zoneB + zoneC 合并显示）
+            const b = stats.zoneB, c = stats.zoneC;
+            const totalDays = b.days + c.days;
+            const totals = {
+                voucher: b.voucher + c.voucher,
+                lottery: b.lottery + c.lottery,
+                premium: b.premium + c.premium,
+                jixing: b.jixing + c.jixing
+            };
+            const bParts = [];
+            if (totals.voucher) bParts.push(`${totals.voucher}券`);
+            if (totals.lottery) bParts.push(`${totals.lottery}抽`);
+            if (totals.premium) bParts.push(`${totals.premium}高`);
+            if (totals.jixing) bParts.push(`${totals.jixing}纪`);
+            document.getElementById('zoneBStats').textContent = `${totalDays} 天${bParts.length ? ' / ' + bParts.join('+') : ''}`;
+        }
+ 
         // 渲染进度
         function renderProgress() {
             const progress = getWeeklyProgress();
             const completedCount = progress.completedDays.length;
             const percentage = Math.min((completedCount / 7) * 100, 100);
-
+ 
             document.getElementById('progressFill').style.width = percentage + '%';
             document.getElementById('progressCount').textContent = `${completedCount} / 7 天`;
-
+ 
             // 渲染统一日历（周中周末合并）
             const daysGrid = document.getElementById('daysGrid');
             daysGrid.innerHTML = '';
@@ -1009,60 +1219,105 @@
                 const cell = createDayCell(day, progress, todayDayOfWeek);
                 daysGrid.appendChild(cell);
             });
-
+ 
             // 更新本月统计
             renderMonthlyStats();
         }
-
+ 
         // 创建日期格子
         function createDayCell(day, progress, todayDayOfWeek) {
             const cell = document.createElement('div');
             cell.className = `day-cell zone-${day.zone.toLowerCase()}`;
-
+ 
             const isCompleted = progress.completedDays.includes(day.dayOfWeek);
             const isToday = day.dayOfWeek === todayDayOfWeek;
             const canCheckIn = isToday && !isCompleted;
-
+ 
             if (isCompleted) cell.classList.add('completed');
             if (isToday) cell.classList.add('today');
-
+ 
+            // 计算该格子显示的奖励文本（含工作日连续高级券预览）
+            let displayRewards = { ...day.rewards };
+            let streakBroken = false;
+ 
+            if (day.zone === 'A') {
+                // 工作日：计算若完成今天的连续天数
+                // 对于"今日"格子，预览完成后的高级券；对于已完成格子，显示当时获得的高级券
+                if (isToday) {
+                    // 模拟完成今天后的连续天数
+                    let streakAfterToday = 0;
+                    const workdayOrder = [1, 2, 3, 4, 5];
+                    for (const dow of workdayOrder) {
+                        if (dow === day.dayOfWeek) {
+                            streakAfterToday++;
+                            break;
+                        }
+                        if (progress.completedDays.includes(dow)) {
+                            streakAfterToday++;
+                        } else {
+                            streakAfterToday = 0;
+                            streakBroken = true;
+                            break;
+                        }
+                    }
+                    const premiumAmount = Math.max(0, streakAfterToday - 1);
+                    if (premiumAmount > 0 && !streakBroken) {
+                        displayRewards.premium = premiumAmount;
+                    }
+                }
+            }
+ 
+            // 生成奖励显示文本（多行）
+            const rewardLines = [];
+            if (displayRewards.voucher) rewardLines.push(`🎫${displayRewards.voucher}`);
+            if (displayRewards.lottery) rewardLines.push(`🎲${displayRewards.lottery}`);
+            if (displayRewards.premium) rewardLines.push(`⭐${displayRewards.premium}`);
+            if (displayRewards.jixing) rewardLines.push(`💴${displayRewards.jixing}`);
+            const rewardText = rewardLines.length ? rewardLines.join(' ') : '—';
+ 
             // 状态文字根据是否可签到变化
             let statusText = '未完成';
             if (isCompleted) {
                 statusText = '已完成';
             } else if (isToday) {
-                statusText = canCheckInToday() ? '今日可领' : '需先完成任务';
+                if (streakBroken && day.zone === 'A') {
+                    statusText = '连续已断';
+                } else {
+                    statusText = canCheckInToday() ? '今日可领' : '需先完成任务';
+                }
+            } else if (day.zone === 'A' && isWorkdayStreakBroken(progress)) {
+                // 非今日的工作日，若连续已断则显示
+                statusText = '连续已断';
             }
-
+ 
             cell.innerHTML = `
                 <div class="day-name">${day.name}</div>
-                <div class="day-reward">+${day.reward}</div>
+                <div class="day-reward">${rewardText}</div>
                 <div class="day-status">${statusText}</div>
             `;
-
+ 
             // 今日格子始终可点击，点击时检查是否完成任务
             if (canCheckIn) {
                 cell.onclick = function() {
                     const result = checkInToday();
                     if (result.success) {
-                        showSuccess(`${result.dayName}签到成功！获得${result.reward}张纪行券！`);
+                        showSuccess(`${result.dayName}签到成功！获得 ${result.rewardText}！`);
                         renderProgress();
                         updateCurrencyDisplay();
-                        updateShopItems();
                     }
                     // 如果未完成任务，checkInToday 内部会弹出提示
                 };
             }
-
+ 
             return cell;
         }
-
+ 
         // 更新纪行券显示
         function updateCurrencyDisplay() {
             const currency = getJixingCurrency();
             document.getElementById('jixingCurrency').textContent = currency;
         }
-
+ 
         // 显示成功提示
         function showSuccess(message) {
             const animation = document.getElementById('completeAnimation');
@@ -1073,19 +1328,19 @@
                 animation.classList.remove('active');
             }, 2000);
         }
-
+ 
         // 初始化
         async function init() {
             const userId = localStorage.getItem('xiaoan_user_id') || localStorage.getItem('userId');
             if (userId && typeof CloudStore !== 'undefined') { CloudStore.init(userId); }
-
+ 
             // 初始化默认进度（首次访问）
             initializeDefaultProgress();
-
+ 
             renderProgress();
             updateCurrencyDisplay();
         }
-
+ 
         init();
         
         // 初始化页面同步（进入/退出时自动同步）
