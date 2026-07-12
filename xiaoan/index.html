@@ -2080,18 +2080,18 @@
             }
         }
  
-        /* 排行榜样式 - 全屏大模态框 */
+        /* 排行榜样式 - 3/4屏幕模态框 */
         .leaderboard-modal-content {
             position: relative;
             background: #ffffff;
-            border-radius: 0;
-            width: 100%;
-            height: 100%;
-            max-width: 100%;
-            max-height: 100%;
+            border-radius: 16px;
+            width: 75vw;
+            height: 75vh;
+            max-width: 900px;
+            max-height: 85vh;
             padding: 0;
-            overflow-y: auto;
-            box-shadow: none;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: lbFadeIn 0.3s ease-out;
             display: flex;
             flex-direction: column;
@@ -2117,28 +2117,35 @@
             align-items: center;
             gap: 8px;
         }
-        .leaderboard-header button {
-            background: rgba(255,255,255,0.85);
-            border: 2px solid rgba(255,255,255,1);
-            color: #d97706;
-            font-size: 1.4rem;
-            font-weight: bold;
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        .leaderboard-close-btn {
+            background: #fff !important;
+            border: 2px solid #d97706 !important;
+            color: #d97706 !important;
+            font-size: 1.5rem !important;
+            font-weight: bold !important;
+            width: 44px !important;
+            height: 44px !important;
+            min-width: 44px !important;
+            border-radius: 10px !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            line-height: 1 !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+            z-index: 10 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            text-align: center !important;
+            vertical-align: middle !important;
         }
-        .leaderboard-header button:hover {
-            background: #fff;
-            transform: scale(1.08);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        .leaderboard-close-btn:hover {
+            background: #d97706 !important;
+            color: #fff !important;
+            transform: scale(1.1) !important;
+            box-shadow: 0 4px 14px rgba(217,119,6,0.4) !important;
         }
         .leaderboard-body {
             padding: 24px 28px;
@@ -2452,8 +2459,10 @@
             background: #e2e8f0;
         }
         @media (max-width: 600px) {
+            .leaderboard-modal-content { width: 92vw; height: 85vh; border-radius: 12px; }
             .leaderboard-header { padding: 14px 16px; }
             .leaderboard-header h2 { font-size: 1.2rem; }
+            .leaderboard-close-btn { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 1.3rem !important; }
             .leaderboard-body { padding: 16px; }
             .leaderboard-item { padding: 12px; gap: 10px; }
             .leaderboard-avatar { width: 40px; height: 40px; font-size: 1.1rem; }
@@ -6458,16 +6467,16 @@
             const data = await loadLeaderboardData(true);
             if (data.length === 0) return;
  
-            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
- 
+            const sorted = [...data].sort((a, b) => (b.voucher || 0) - (a.voucher || 0));
+
             // 计算第一名领先第二名的差距
             if (sorted.length >= 2) {
                 const first = sorted[0];
                 const second = sorted[1];
-                const gap = (first.task_points || 0) - (second.task_points || 0);
+                const gap = (first.voucher || 0) - (second.voucher || 0);
                 const tier = getRewardTier(gap);
- 
-                console.log(`[Leaderboard] 第一名: ${first.task_points}, 第二名: ${second.task_points}, 差距: ${gap}, 档位: ${tier.label}`);
+
+                console.log(`[Leaderboard] 第一名: ${first.voucher}, 第二名: ${second.voucher}, 差距: ${gap}, 档位: ${tier.label}`);
  
                 if (tier.aReward > 0 || tier.bReward > 0) {
                     // 为每个用户发放对应奖励（通过邮件系统定向发送）
@@ -6481,7 +6490,7 @@
                                     target_user_id: userId,
                                     notification_type: 'success',
                                     title: '🏆 排行榜结算奖励',
-                                    content: `本周期排行榜已结算！\n第一名积分：${first.task_points}\n第二名积分：${second.task_points}\n领先差距：${gap} 兑换券\n\n您的奖励：${reward} 纪行券\n\n请点击下方"领取附件"获取奖励。`,
+                                    content: `本周期排行榜已结算！\n第一名兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${reward} 纪行券\n\n请点击下方"领取附件"获取奖励。`,
                                     attachment_type1: 'jixing_muchun_currency',
                                     attachment_amount1: reward,
                                     created_at: new Date().toISOString()
@@ -6502,7 +6511,7 @@
                                 target_user_id: userId,
                                 notification_type: 'info',
                                 title: '🏆 排行榜结算通知',
-                                content: `本周期排行榜已结算。\n第一名积分：${first.task_points}\n第二名积分：${second.task_points}\n领先差距：${gap} 兑换券\n\n因领先差距不足100，本周期无奖励发放。`,
+                                content: `本周期排行榜已结算。\n第一名兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n因领先差距不足100，本周期无奖励发放。`,
                                 created_at: new Date().toISOString()
                             });
                         } catch(e) {}
@@ -6711,13 +6720,13 @@
                 return;
             }
  
-            const sorted = [...data].sort((a, b) => (b.task_points || 0) - (a.task_points || 0));
+            const sorted = [...data].sort((a, b) => (b.voucher || 0) - (a.voucher || 0));
             const rankClasses = ['gold', 'silver', 'bronze'];
- 
+
             // 计算领先差距
             let gapInfo = '';
             if (sorted.length >= 2) {
-                const gap = (sorted[0].task_points || 0) - (sorted[1].task_points || 0);
+                const gap = (sorted[0].voucher || 0) - (sorted[1].voucher || 0);
                 const tier = getRewardTier(gap);
                 gapInfo = `<div style="text-align:center;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
                     <span style="font-size:0.88rem;color:#166534;">📊 当前领先差距：<strong style="font-size:1.05rem;color:#059669;">${gap}</strong> 兑换券 → ${tier.aReward > 0 || tier.bReward > 0 ? '有奖励' : '无奖励'}</span>
@@ -6744,11 +6753,11 @@
                         <div class="leaderboard-avatar" id="lbAvatar_${item.user_id}">${initial}</div>
                         <div class="leaderboard-info">
                             <div class="leaderboard-name">${name}${isCurrentUser ? ' (我)' : ''}</div>
-                            <div class="leaderboard-subtitle">🏆 第${rank}名 · 🎫${item.voucher || 0}</div>
+                            <div class="leaderboard-subtitle">🏆 第${rank}名</div>
                         </div>
                         <div class="leaderboard-score">
-                            <div class="leaderboard-score-value">${item.task_points || 0}</div>
-                            <div class="leaderboard-score-label">任务积分</div>
+                            <div class="leaderboard-score-value">🎫 ${item.voucher || 0}</div>
+                            <div class="leaderboard-score-label">兑换券</div>
                         </div>
                         ${giftBtn}
                     </div>
@@ -7959,12 +7968,12 @@
         </div>
     </div>
  
-    <!-- 排行榜模态框（全屏） -->
+    <!-- 排行榜模态框（3/4屏幕） -->
     <div class="modal" id="leaderboardModal" style="display:none;">
         <div class="leaderboard-modal-content">
             <div class="leaderboard-header">
-                <h2>🏆 任务积分排行榜</h2>
-                <button onclick="closeLeaderboard()">✕</button>
+                <h2>🏆 兑换券排行榜</h2>
+                <button class="leaderboard-close-btn" onclick="closeLeaderboard()" title="关闭">✕</button>
             </div>
             <div class="leaderboard-body">
                 <div class="leaderboard-timer-bar">
