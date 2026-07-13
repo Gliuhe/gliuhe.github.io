@@ -58,6 +58,7 @@
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn-danger { background: var(--admin-red); color: white; }
         .btn-success { background: var(--green); color: white; }
+        .btn-warning { background: var(--orange); color: white; }
         
         h3 { margin-bottom: 16px; font-size: 16px; }
         
@@ -246,12 +247,20 @@
                 
                 <button class="btn btn-danger" onclick="createFine()" style="width:100%;">🚨 发布罚款</button>
             </div>
+
+            <div style="background:#fffbeb;padding:16px;border-radius:12px;margin-bottom:16px;border:2px solid #f59e0b;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div>
+                    <div style="font-weight:600;color:#92400e;">🧹 强制清除罚款状态</div>
+                    <small style="color:#b45309;">删除该用户所有罚款记录（含逾期未缴），用于用户已缴清但仍显示逾期的异常情况</small>
+                </div>
+                <button class="btn btn-warning" onclick="clearAllFines()" style="flex-shrink:0;">🧹 强制清除</button>
+            </div>
             
             <h3>罚款记录</h3>
             <div class="data-table-container">
                 <table class="data-table">
-                    <thead><tr><th>ID</th><th>原因</th><th>总金额</th><th>剩余</th><th>到期日</th><th>状态</th></tr></thead>
-                    <tbody id="finesBody"><tr><td colspan="6" style="text-align:center;color:#94a3b8;">加载中...</td></tr></tbody>
+                    <thead><tr><th>ID</th><th>原因</th><th>总金额</th><th>剩余</th><th>到期日</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody id="finesBody"><tr><td colspan="7" style="text-align:center;color:#94a3b8;">加载中...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -679,27 +688,65 @@
                     .select('*')
                     .eq('user_id', USER_ID)
                     .order('created_at', { ascending: false });
-                
+
                 if (error) throw error;
-                
+
                 const tbody = document.getElementById('finesBody');
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">暂无罚款记录</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;">暂无罚款记录</td></tr>';
                     return;
                 }
-                
-                tbody.innerHTML = data.map(f => `
+
+                const now = new Date();
+                tbody.innerHTML = data.map(f => {
+                    const isOverdue = !f.is_paid && f.remaining > 0 && f.due_date && new Date(f.due_date) < now;
+                    const statusBadge = f.is_paid ?
+                        '<span class="badge badge-green">已缴</span>' :
+                        (isOverdue ? '<span class="badge badge-red">逾期未缴</span>' : '<span class="badge badge-red">未缴</span>');
+
+                    return `
                     <tr>
                         <td><code>${f.id.substring(0,8)}...</code></td>
                         <td>${f.reason}</td>
                         <td>${f.original_amount}</td>
                         <td>${f.remaining}</td>
                         <td>${f.due_date || '-'}</td>
-                        <td><span class="badge ${f.is_paid ? 'badge-green' : 'badge-red'}">${f.is_paid ? '已缴' : '未缴'}</span></td>
-                    </tr>
-                `).join('');
+                        <td>${statusBadge}</td>
+                        <td><button class="btn btn-success" style="padding:4px 12px;font-size:12px;" onclick="clearFine('${f.id}')">清除</button></td>
+                    </tr>`;
+                }).join('');
             } catch (e) {
                 console.error('[Admin] 加载罚款列表失败:', e);
+            }
+        }
+
+        // 强制清除该用户所有罚款记录（含逾期未缴）
+        async function clearAllFines() {
+            if (!confirm('⚠️ 确定强制清除该用户的所有罚款记录？\n\n此操作将删除云端所有罚款记录（含逾期未缴），不可恢复。\n适用于用户已缴清但仍显示逾期的异常情况。')) return;
+
+            try {
+                const { error } = await sb.from('fine_items').delete().eq('user_id', USER_ID);
+                if (error) throw error;
+                alert('✅ 已清除所有罚款记录');
+                loadFinesList();
+            } catch (e) {
+                console.error('[Admin] 清除罚款失败:', e);
+                alert('❌ 清除失败: ' + e.message);
+            }
+        }
+
+        // 清除单条罚款记录
+        async function clearFine(fineId) {
+            if (!confirm('确定清除该条罚款记录？')) return;
+
+            try {
+                const { error } = await sb.from('fine_items').delete().eq('id', fineId);
+                if (error) throw error;
+                alert('✅ 已清除该罚款记录');
+                loadFinesList();
+            } catch (e) {
+                console.error('[Admin] 清除罚款失败:', e);
+                alert('❌ 清除失败: ' + e.message);
             }
         }
         
