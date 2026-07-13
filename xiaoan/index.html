@@ -6474,107 +6474,95 @@
         async function loadLeaderboardData(force = false) {
             const sb = window.__cloudClient;
             const uid = window.__cloudUserId;
-            if (!sb || !uid) return [];
- 
+            if (!sb || !uid) {
+                console.warn('[Leaderboard] 云端未连接，无法加载数据');
+                return [];
+            }
+
             const now = Date.now();
             if (!force && _leaderboardCache && (now - _leaderboardLastFetch) < 60000) {
                 return _leaderboardCache;
             }
- 
+
+            const allowedIds = LEADERBOARD_ALLOWED_USERS;
+
+            // 1. 查询用户货币数据（核心数据，必须成功）
+            let currencyData = [];
             try {
-                const allowedIds = LEADERBOARD_ALLOWED_USERS;
                 const { data, error } = await sb
                     .from('user_currencies')
                     .select('user_id, currency_type, amount')
                     .in('user_id', allowedIds);
- 
-                if (error) {
-                    throw new Error(error.message);
+
+                if (error) throw new Error(error.message);
+                currencyData = data || [];
+            } catch(e) {
+                console.error('[Leaderboard] 查询 user_currencies 失败:', e.message);
+                return _leaderboardCache || [];
+            }
+
+            // 2. 构建用户映射
+            const userMap = {};
+            currencyData.forEach(row => {
+                if (!userMap[row.user_id]) {
+                    userMap[row.user_id] = { user_id: row.user_id, task_points: 0, voucher: 0 };
                 }
- 
-                const userMap = {};
-                (data || []).forEach(row => {
-                    if (!userMap[row.user_id]) {
-                        userMap[row.user_id] = { user_id: row.user_id, task_points: 0, voucher: 0 };
-                    }
-                    if (row.currency_type === 'task_points') {
-                        userMap[row.user_id].task_points = parseFloat(row.amount) || 0;
-                    }
-                    if (row.currency_type === 'voucher') {
-                        userMap[row.user_id].voucher = parseFloat(row.amount) || 0;
-                    }
-                });
- 
-                const usernames = await sb
+                if (row.currency_type === 'task_points') {
+                    userMap[row.user_id].task_points = parseFloat(row.amount) || 0;
+                }
+                if (row.currency_type === 'voucher') {
+                    userMap[row.user_id].voucher = parseFloat(row.amount) || 0;
+                }
+            });
+
+            // 3. 查询用户名（非核心，失败不影响主流程）
+            try {
+                const { data: unameData, error: unameError } = await sb
                     .from('user_profiles')
                     .select('user_id, username')
                     .in('user_id', allowedIds);
- 
-                if (usernames?.data) {
-                    usernames.data.forEach(u => {
+
+                if (!unameError && unameData) {
+                    unameData.forEach(u => {
                         const found = Object.values(userMap).find(r => r.user_id === u.user_id);
                         if (found) found.username = u.username;
                     });
                 }
- 
-                // 确保所有用户都在列表中
-                allowedIds.forEach(uid2 => {
-                    if (!userMap[uid2]) {
-                        userMap[uid2] = { user_id: uid2, task_points: 0, voucher: 0, username: uid2.substring(0, 8) };
-                    }
-                });
- 
-                _leaderboardCache = Object.values(userMap);
-                _leaderboardLastFetch = now;
-                return _leaderboardCache;
             } catch(e) {
-                if (e.message && e.message.includes('user_profiles')) {
-                    console.warn('[Leaderboard] user_profiles 表不存在');
-                    const allowedIds = LEADERBOARD_ALLOWED_USERS;
-                    try {
-                        const { data, error } = await sb
-                            .from('user_currencies')
-                            .select('user_id, currency_type, amount')
-                            .in('user_id', allowedIds);
-                        if (error) throw new Error(error.message);
-                        const userMap2 = {};
-                        (data || []).forEach(row => {
-                            if (!userMap2[row.user_id]) {
-                                userMap2[row.user_id] = { user_id: row.user_id, task_points: 0, voucher: 0, username: row.user_id.substring(0, 8) };
-                            }
-                            if (row.currency_type === 'task_points') {
-                                userMap2[row.user_id].task_points = parseFloat(row.amount) || 0;
-                            }
-                            if (row.currency_type === 'voucher') {
-                                userMap2[row.user_id].voucher = parseFloat(row.amount) || 0;
-                            }
-                        });
-                        allowedIds.forEach(uid2 => {
-                            if (!userMap2[uid2]) {
-                                userMap2[uid2] = { user_id: uid2, task_points: 0, voucher: 0, username: uid2.substring(0, 8) };
-                            }
-                        });
-                        _leaderboardCache = Object.values(userMap2);
-                        _leaderboardLastFetch = now;
-                        return _leaderboardCache;
-                    } catch(e2) {
-                        console.warn('[Leaderboard] 备用查询也失败:', e2.message);
-                    }
-                }
-                return _leaderboardCache || [];
+                console.warn('[Leaderboard] 查询 user_profiles 失败（不影响货币数据）:', e.message);
             }
+
+            // 4. 确保所有用户都在列表中
+            allowedIds.forEach(uid2 => {
+                if (!userMap[uid2]) {
+                    userMap[uid2] = { user_id: uid2, task_points: 0, voucher: 0, username: uid2.substring(0, 8) };
+                }
+            });
+
+            _leaderboardCache = Object.values(userMap);
+            _leaderboardLastFetch = now;
+            return _leaderboardCache;
         }
  
         async function refreshLeaderboard() {
             const btn = document.getElementById('leaderboardRefreshBtn');
+            if (!btn) return;
             btn.disabled = true;
             btn.textContent = '🔄 刷新中...';
- 
-            _leaderboardCache = null;
-            await renderLeaderboard(true);
- 
-            btn.disabled = false;
-            btn.textContent = '🔄 刷新数据';
+
+            try {
+                // 清除缓存，强制重新从云端获取
+                _leaderboardCache = null;
+                _leaderboardLastFetch = 0;
+                await renderLeaderboard(true);
+                showStatus('✅ 排行榜已刷新', 'success');
+            } catch(e) {
+                console.error('[Leaderboard] 刷新失败:', e);
+                showStatus('❌ 刷新失败: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔄 刷新数据';
+            }
         }
  
         async function renderLeaderboard(isRefresh = false) {
@@ -6673,10 +6661,12 @@
                     const { data } = sb.storage.from('avatars').getPublicUrl(`${userId}/${avatarFile.name}`);
                     const el = document.getElementById(`lbAvatar_${userId}`);
                     if (el && data?.publicUrl) {
-                        el.innerHTML = `<img src="${data.publicUrl}" alt="头像">`;
+                        // 加时间戳防止浏览器缓存头像
+                        const bustUrl = data.publicUrl + '?t=' + Date.now();
+                        el.innerHTML = `<img src="${bustUrl}" alt="头像" onerror="this.style.display='none'">`;
                     }
                 }
-            } catch(e) {}
+            } catch(e) { console.warn('[Leaderboard] 加载头像失败:', e.message); }
         }
  
         // ===== 赠与功能 =====
