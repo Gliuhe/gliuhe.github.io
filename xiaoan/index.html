@@ -6715,7 +6715,7 @@
                 return;
             }
  
-            if (!confirm(`确认赠与 ${amount} 兑换券给 ${_lbGiftTargetName}？\n\n赠与后您的余额：${myVoucher - amount}`)) return;
+            if (!confirm(`确认赠与 ${amount} 兑换券给 ${_lbGiftTargetName}？\n\n赠与后您的余额：${myVoucher - amount}\n对方需在邮件中手动领取附件。`)) return;
  
             const btn = document.getElementById('lbGiftConfirmBtn');
             btn.disabled = true;
@@ -6732,41 +6732,33 @@
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id,currency_type' });
  
-                // 2. 增加对方兑换券
-                const { data: targetRows } = await sb.from('user_currencies')
-                    .select('amount').eq('user_id', _lbGiftTargetUserId).eq('currency_type', 'voucher').maybeSingle();
-                const targetCurrent = parseFloat(targetRows?.amount) || 0;
-                const targetNewAmount = targetCurrent + amount;
-                await sb.from('user_currencies').upsert({
-                    user_id: _lbGiftTargetUserId,
-                    currency_type: 'voucher',
-                    amount: targetNewAmount,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id,currency_type' });
- 
-                // 3. 给对方发送通知邮件
+                // 2. 查询己方用户名
                 const myName = '对方';
                 try {
                     const { data: myProfile } = await sb.from('user_profiles')
                         .select('username').eq('user_id', uid).maybeSingle();
                     if (myProfile?.username) myName = myProfile.username;
                 } catch(e) {}
- 
+
+                // 3. 给对方发送邮件，兑换券作为附件（需对方手动领取）
                 await sb.from('notifications').insert({
                     target_user_id: _lbGiftTargetUserId,
-                    notification_type: 'info',
+                    notification_type: 'reward',
                     title: '🎁 收到兑换券赠与',
-                    content: `${myName} 向您赠与了 ${amount} 兑换券。\n\n当前兑换券余额已更新。`,
-                    created_at: new Date().toISOString()
+                    content: `${myName} 向您赠与了 ${amount} 兑换券。\n\n请点击下方"领取附件"按钮领取兑换券。`,
+                    attachment_type1: 'voucher',
+                    attachment_amount1: amount,
+                    created_at: new Date().toISOString(),
+                    read_at: null
                 });
- 
+
                 // 4. 刷新UI
                 updateUI();
                 _leaderboardCache = null;
                 await renderLeaderboard(true);
- 
+
                 closeLbGift();
-                showStatus(`✅ 成功赠与 ${amount} 兑换券给 ${_lbGiftTargetName}！`, 'success');
+                showStatus(`✅ 成功赠与 ${amount} 兑换券给 ${_lbGiftTargetName}！对方需在邮件中领取。`, 'success');
             } catch(e) {
                 alert('❌ 赠与失败：' + e.message);
             } finally {
