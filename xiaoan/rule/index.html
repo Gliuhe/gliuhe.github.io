@@ -1302,8 +1302,16 @@
                     dailyRewardStatus = `<div class="task-status status-in-progress">已完成 ${completedCount}/${dailyRules.length} 个每日系列任务</div>`;
                 }
                 
+                // 根据用户ID确定奖励显示
+                const userId = getCurrentUserId();
+                const USER_B_ID = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
+                const isUserB = userId === USER_B_ID;
+                const jixingAmount = isUserB ? 2800 : 1000;
+                const voucherAmount = 1888;
+                const rewardText = `${jixingAmount} 纪行券 + ${voucherAmount} 兑换券`;
+                
                 // 构建规则说明文字
-                let ruleContent = '完成所有【每日】系列任务即可领取300兑换券+1抽奖券！';
+                let ruleContent = `完成所有【每日】系列任务即可领取${rewardText}！`;
                 if (specialRulesToday.length > 0) {
                     ruleContent += '<br><span style="color:#ff6b6b;">💡 今日完成特需任务也可直接领取奖励！</span>';
                 }
@@ -1312,7 +1320,7 @@
                     <div class="rule-header">
                         <div class="rule-title" style="color: #8338ec;">🎁 每日任务奖励</div>
                         <div class="rule-reward" style="background: #8338ec; color: white;">
-                            奖励: 300 兑换券 + 1 抽奖券
+                            奖励: ${rewardText}
                         </div>
                     </div>
                     <div class="rule-content">${ruleContent}</div>
@@ -2312,18 +2320,39 @@
                 return;
             }
  
-            // 发放奖励：300兑换券 + 1抽奖券
-            const voucherAmount = 300;
-            const lotteryAmount = 1;
- 
+            // 根据用户ID确定奖励数量
+            const userId = getCurrentUserId();
+            const USER_B_ID = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
+            const isUserB = userId === USER_B_ID;
+
+            // B用户: 2800纪行券 + 1888兑换券
+            // A用户: 1000纪行券 + 1888兑换券
+            const jixingAmount = isUserB ? 2800 : 1000;
+            const voucherAmount = 1888;
+
+            // 更新纪行券
+            const currentJixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0');
+            localStorage.setItem('jixing_muchun_currency', String(currentJixing + jixingAmount));
+
+            // 更新兑换券
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
-            const currentLottery = parseInt(localStorage.getItem('lottery') || '0');
- 
             localStorage.setItem('voucher', currentVoucher + voucherAmount);
-            localStorage.setItem('lottery', currentLottery + lotteryAmount);
+
+            // 同步货币到云端
+            syncCurrencyToCloud('jixing_muchun_currency', currentJixing + jixingAmount);
+            syncCurrencyToCloud('voucher', currentVoucher + voucherAmount);
  
             // 记录历史
             const history = JSON.parse(localStorage.getItem('history')) || [];
+            history.push({
+                date: new Date().toISOString(),
+                amount: jixingAmount,
+                reason: '每日任务奖励',
+                type: 'add',
+                currencyType: 'jixing_muchun_currency',
+                currencyName: '纪行券',
+                status: 'completed'
+            });
             history.push({
                 date: new Date().toISOString(),
                 amount: voucherAmount,
@@ -2333,22 +2362,13 @@
                 currencyName: '兑换券',
                 status: 'completed'
             });
-            history.push({
-                date: new Date().toISOString(),
-                amount: lotteryAmount,
-                reason: '每日任务奖励',
-                type: 'add',
-                currencyType: 'lottery',
-                currencyName: '抽奖券',
-                status: 'completed'
-            });
             localStorage.setItem('history', JSON.stringify(history));
- 
+
             // 标记已领取
             localStorage.setItem(dailyRewardKey, 'true');
- 
+
             // 显示动画
-            document.getElementById('rewardAmount').textContent = '300 兑换券 和 1 抽奖券';
+            document.getElementById('rewardAmount').textContent = `${jixingAmount} 纪行券 和 ${voucherAmount} 兑换券`;
             showCompleteAnimation();
  
             updateUI();
