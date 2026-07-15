@@ -6496,7 +6496,7 @@
             const cycleStart = new Date(cycleStartStr);
             const nextReset = getNextSettlementTime(cycleStart);
             const msLeft = nextReset.getTime() - Date.now();
-            return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
+            return Math.max(0, Math.floor(msLeft / (24 * 60 * 60 * 1000)));
         }
  
         // 渲染奖励规则（根据当前用户身份显示对应规则）
