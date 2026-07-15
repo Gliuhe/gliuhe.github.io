@@ -6693,9 +6693,19 @@
             if (sorted.length >= 2) {
                 const gap = (sorted[0].voucher || 0) - (sorted[1].voucher || 0);
                 const tier = getRewardTier(gap);
-                gapInfo = `<div style="text-align:center;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
-                    <span style="font-size:0.88rem;color:#166534;">📊 当前领先差距：<strong style="font-size:1.05rem;color:#059669;">${gap}</strong> 兑换券 → ${tier.aReward > 0 || tier.bReward > 0 ? '有奖励' : '无奖励'}</span>
-                </div>`;
+                const isCurrentUserFirst = String(sorted[0].user_id) === String(uid);
+                
+                if (isCurrentUserFirst) {
+                    // 当前用户是第一名，显示领先差距（绿色背景）
+                    gapInfo = `<div style="text-align:center;margin-bottom:16px;padding:10px 16px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
+                        <span style="font-size:0.88rem;color:#166534;">📊 当前领先差距：<strong style="font-size:1.05rem;color:#059669;">${gap}</strong> 兑换券 → ${tier.aReward > 0 || tier.bReward > 0 ? '有奖励' : '无奖励'}</span>
+                    </div>`;
+                } else {
+                    // 当前用户是第二名，显示落后差距（淡红色背景）
+                    gapInfo = `<div style="text-align:center;margin-bottom:16px;padding:10px 16px;background:#fef2f2;border-radius:10px;border:1px solid #fecaca;">
+                        <span style="font-size:0.88rem;color:#991b1b;">📊 当前落后差距：<strong style="font-size:1.05rem;color:#dc2626;">${gap}</strong> 兑换券</span>
+                    </div>`;
+                }
             }
  
             list.innerHTML = gapInfo + sorted.map((item, index) => {
