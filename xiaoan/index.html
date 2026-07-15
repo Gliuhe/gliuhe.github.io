@@ -6244,7 +6244,9 @@
         // ===== 🏆 排行榜系统 =====
         const LEADERBOARD_ALLOWED_USERS = ['34b895c9-effa-4647-bfca-160cf0d4c7d4', 'd71f9173-bd5d-4d30-a033-0429ae162fd7'];
         const LEADERBOARD_RESET_DAYS = 3; // 三天一结算
-        const LEADERBOARD_FIRST_CYCLE_START = new Date('2026-07-13T00:00:00+08:00'); // 首次比拼日期
+        const LEADERBOARD_SETTLEMENT_HOUR = 22; // 结算时间：22点
+        const LEADERBOARD_SETTLEMENT_MINUTE = 30; // 结算时间：30分
+        const LEADERBOARD_FIRST_CYCLE_START = new Date('2026-07-15T00:00:00+08:00'); // 首次比拼日期（调整为7月15日，下次结算为7月18日22:30）
         let _leaderboardCache = null;
         let _leaderboardLastFetch = 0;
  
@@ -6337,15 +6339,17 @@
             const sb = window.__cloudClient;
             const uid = window.__cloudUserId;
             if (!sb || !uid) return;
- 
+
             const cycleStart = await ensureLeaderboardCycle();
             if (!cycleStart) return;
- 
+
             const now = new Date();
+            // 计算下次结算时间：周期开始 + 3天，但时间固定为22:30
             const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
             if (now < nextReset) return;
- 
-            console.log('[Leaderboard] 🔄 开始重置排行榜（三天结算）...');
+
+            console.log('[Leaderboard] 🔄 开始重置排行榜（22:30结算）...');
  
             // 获取当前排行榜
             const data = await loadLeaderboardData(true);
@@ -6418,13 +6422,39 @@
                 }
             }
  
+            // 保存历史胜者记录到localStorage
+            if (sorted.length >= 2) {
+                const winner = sorted[0];
+                const gap = (winner.voucher || 0) - (sorted[1].voucher || 0);
+                const cycleEndDate = new Date();
+                const cycleStartStr = cycleStart.toISOString().split('T')[0];
+                const cycleEndStr = cycleEndDate.toISOString().split('T')[0];
+
+                try {
+                    const history = JSON.parse(localStorage.getItem('leaderboard_winners_history') || '[]');
+                    history.unshift({
+                        cycle_start: cycleStartStr,
+                        cycle_end: cycleEndStr,
+                        winner_id: winner.user_id,
+                        winner_name: winner.username || winner.user_id.substring(0, 8),
+                        winner_voucher: winner.voucher || 0,
+                        gap: gap
+                    });
+                    // 最多保留10条
+                    localStorage.setItem('leaderboard_winners_history', JSON.stringify(history.slice(0, 10)));
+                    console.log('[Leaderboard] ✅ 已保存历史胜者记录');
+                } catch(e) {
+                    console.warn('[Leaderboard] 保存历史记录失败:', e.message);
+                }
+            }
+
             // 更新周期起始时间
             const newStart = new Date();
             await sb.from('leaderboard_cycle')
                 .update({ cycle_start: newStart.toISOString(), updated_at: new Date().toISOString() })
                 .eq('id', 1);
             setCycleStartToLocal(newStart.toISOString());
- 
+
             _leaderboardCache = null;
         }
  
@@ -6432,6 +6462,7 @@
             if (!cycleStartStr) return LEADERBOARD_RESET_DAYS;
             const cycleStart = new Date(cycleStartStr);
             const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
             const msLeft = nextReset.getTime() - Date.now();
             return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
         }
@@ -6464,8 +6495,8 @@
                         </tbody>
                     </table>
                     <div class="lb-rules-note">
-                        💡 每 ${LEADERBOARD_RESET_DAYS} 天自动结算一次，奖励通过邮件系统自动发放。<br>
-                        📅 首次比拼从 2026年7月13日 开始。
+                        💡 每 ${LEADERBOARD_RESET_DAYS} 天自动结算一次，结算时间为 22:30，奖励通过邮件系统自动发放。<br>
+                        📅 下次结算时间：2026年7月18日 22:30。
                     </div>
                 </div>
             `;
@@ -6639,6 +6670,62 @@
             sorted.forEach(item => {
                 loadLeaderboardAvatar(item.user_id);
             });
+
+            // 渲染历史胜者记录
+            renderLeaderboardHistory();
+        }
+
+        // 渲染历史胜者记录
+        function renderLeaderboardHistory() {
+            const historyEl = document.getElementById('leaderboardHistory');
+            if (!historyEl) return;
+
+            try {
+                const history = JSON.parse(localStorage.getItem('leaderboard_winners_history') || '[]');
+                
+                if (history.length === 0) {
+                    historyEl.innerHTML = '';
+                    return;
+                }
+
+                let historyHtml = `
+                    <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);padding:16px;border-radius:12px;border:2px solid #f59e0b;">
+                        <div style="font-size:1rem;font-weight:700;color:#92400e;margin-bottom:12px;">🏆 历史胜者</div>
+                        <div style="display:flex;flex-direction:column;gap:8px;">
+                `;
+
+                history.forEach((record, index) => {
+                    const cycleLabel = `${record.cycle_start} ~ ${record.cycle_end}`;
+                    const winnerName = record.winner_name || record.winner_id.substring(0, 8);
+                    const gapText = record.gap > 0 ? `领先 ${record.gap} 兑换券` : '平局';
+                    
+                    historyHtml += `
+                        <div style="background:white;padding:10px 14px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div style="font-size:1.2rem;">${index === 0 ? '🥇' : '🏅'}</div>
+                                <div>
+                                    <div style="font-weight:600;color:#1f2937;">${winnerName}</div>
+                                    <div style="font-size:0.75rem;color:#6b7280;">${cycleLabel}</div>
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-size:0.88rem;font-weight:600;color:#059669;">${gapText}</div>
+                                <div style="font-size:0.75rem;color:#6b7280;">${record.winner_voucher} 兑换券</div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                historyHtml += `
+                        </div>
+                    </div>
+                `;
+
+                historyEl.innerHTML = historyHtml;
+            } catch(e) {
+                console.warn('[Leaderboard] 渲染历史记录失败:', e.message);
+                historyEl.innerHTML = '';
+            }
         }
  
         async function openLeaderboard() {
@@ -7855,6 +7942,7 @@
 <div>加载中...</div>
                     </div>
                 </div>
+                <div id="leaderboardHistory" style="margin-top:20px;"></div>
             </div>
         </div>
     </div>
