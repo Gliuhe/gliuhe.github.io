@@ -6640,14 +6640,43 @@
             // 渲染奖励规则（按当前用户身份）
             renderLeaderboardRules(uid);
  
-            // 显示距结算天数（考虑22:30结算时间）
+            // 显示距结算倒计时（精确到秒，实时更新）
             const cycleStart = getCycleStartFromLocal();
-            const daysLeft = computeResetDays(cycleStart);
             const nextReset = getNextSettlementTime(cycleStart);
-            const hoursLeft = Math.max(0, Math.ceil((nextReset.getTime() - Date.now()) / (60 * 60 * 1000)));
-            if (timer) {
-                timer.innerHTML = `<span style="font-size:0.9rem;color:#64748b;">⏰ 距结算还剩 <strong style="color:#f59e0b;font-size:1.05rem;">${daysLeft}</strong> 天 <strong style="color:#f59e0b;">${hoursLeft % 24}</strong> 小时</span>`;
+            
+            // 清除之前的定时器
+            if (window._leaderboardTimerInterval) {
+                clearInterval(window._leaderboardTimerInterval);
             }
+            
+            // 更新倒计时显示函数
+            function updateCountdown() {
+                const msLeft = nextReset.getTime() - Date.now();
+                if (msLeft <= 0) {
+                    if (timer) {
+                        timer.innerHTML = `<span style="font-size:0.9rem;color:#64748b;">⏰ <strong style="color:#ef4444;font-size:1.05rem;">结算时间已到</strong></span>`;
+                    }
+                    if (window._leaderboardTimerInterval) {
+                        clearInterval(window._leaderboardTimerInterval);
+                    }
+                    return;
+                }
+                
+                const days = Math.floor(msLeft / (24 * 60 * 60 * 1000));
+                const hours = Math.floor((msLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+                const minutes = Math.floor((msLeft % (60 * 60 * 1000)) / (60 * 1000));
+                const seconds = Math.floor((msLeft % (60 * 1000)) / 1000);
+                
+                if (timer) {
+                    timer.innerHTML = `<span style="font-size:0.9rem;color:#64748b;">⏰ 距结算还剩 <strong style="color:#f59e0b;font-size:1.05rem;">${days}</strong> 天 <strong style="color:#f59e0b;">${hours}</strong> 小时 <strong style="color:#f59e0b;">${minutes}</strong> 分 <strong style="color:#f59e0b;">${seconds}</strong> 秒</span>`;
+                }
+            }
+            
+            // 立即执行一次
+            updateCountdown();
+            
+            // 每秒更新一次
+            window._leaderboardTimerInterval = setInterval(updateCountdown, 1000);
  
             const data = await loadLeaderboardData(isRefresh);
  
