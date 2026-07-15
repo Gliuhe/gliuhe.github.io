@@ -6370,6 +6370,8 @@
                 const winner = sorted[0];
                 const winnerRole = getUserRole(winner.user_id);
                 const winnerReward = winnerRole === 'A' ? tier.aReward : (winnerRole === 'B' ? tier.bReward : 0);
+                // 第一名额外获得领先幅度46%的兑换券（向上取整）
+                const winnerVoucherBonus = Math.ceil(gap * 0.46);
 
                 if (winnerReward > 0) {
                     try {
@@ -6377,7 +6379,7 @@
                             target_user_id: winner.user_id,
                             notification_type: 'success',
                             title: '🏆 排行榜结算奖励',
-                            content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${winnerReward} 纪行券\n\n请点击下方"领取附件"获取奖励。`,
+                            content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${winnerReward} 纪行券 + ${winnerVoucherBonus} 兑换券\n\n纪行券请点击"领取附件"获取，兑换券已直接发放。`,
                             attachment_type1: 'jixing_muchun_currency',
                             attachment_amount1: winnerReward,
                             created_at: new Date().toISOString()
@@ -6388,20 +6390,35 @@
                     }
                     showStatus(`🏆 排行榜已结算！第一名领先 ${gap} 兑换券，奖励已发放！`, 'success');
                 } else {
-                    console.log('[Leaderboard] 领先差距不足100，本周期无奖励');
-                    showStatus(`🏆 排行榜已结算！领先差距 ${gap}（不足100，无奖励）`, 'info');
+                    console.log('[Leaderboard] 领先差距不足100，本周期无纪行券奖励');
+                    showStatus(`🏆 排行榜已结算！领先差距 ${gap}（不足100，无纪行券奖励），兑换券已发放`, 'info');
                 }
             }
  
-            // 重置所有用户的 task_points
+            // 重置所有用户的兑换券和task_points，第一名额外获得领先幅度46%的兑换券
             for (const userId of LEADERBOARD_ALLOWED_USERS) {
                 try {
+                    const isWinner = sorted.length >= 2 && sorted[0].user_id === userId;
+                    const gap = sorted.length >= 2 ? (sorted[0].voucher || 0) - (sorted[1].voucher || 0) : 0;
+                    const voucherBonus = isWinner ? Math.ceil(gap * 0.46) : 0;
+                    
+                    // 重置兑换券（第一名获得46%领先幅度的奖励）
+                    await sb.from('user_currencies').upsert({
+                        user_id: userId,
+                        currency_type: 'voucher',
+                        amount: voucherBonus,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,currency_type' });
+                    
+                    // 重置 task_points
                     await sb.from('user_currencies').upsert({
                         user_id: userId,
                         currency_type: 'task_points',
                         amount: 0,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
+                    
+                    console.log(`[Leaderboard] 用户 ${userId.substring(0,8)} 兑换券已重置${isWinner ? `，获得 ${voucherBonus} 兑换券奖励` : ''}`);
                 } catch(e) {
                     console.warn(`[Leaderboard] 重置用户 ${userId} 失败:`, e.message);
                 }
