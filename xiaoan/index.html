@@ -6610,10 +6610,12 @@
             // 渲染奖励规则（按当前用户身份）
             renderLeaderboardRules(uid);
  
-            // 显示距结算天数
+            // 显示距结算天数（考虑22:30结算时间）
             const cycleStart = getCycleStartFromLocal();
             const daysLeft = computeResetDays(cycleStart);
-            const hoursLeft = Math.max(0, Math.ceil((new Date(cycleStart).getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000 - Date.now()) / (60 * 60 * 1000)));
+            const nextReset = new Date(new Date(cycleStart).getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
+            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
+            const hoursLeft = Math.max(0, Math.ceil((nextReset.getTime() - Date.now()) / (60 * 60 * 1000)));
             if (timer) {
                 timer.innerHTML = `<span style="font-size:0.9rem;color:#64748b;">⏰ 距结算还剩 <strong style="color:#f59e0b;font-size:1.05rem;">${daysLeft}</strong> 天 <strong style="color:#f59e0b;">${hoursLeft % 24}</strong> 小时</span>`;
             }
