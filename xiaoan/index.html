@@ -6267,9 +6267,41 @@
         function getCycleStartFromLocal() {
             return localStorage.getItem('leaderboard_cycle_start');
         }
- 
+
         function setCycleStartToLocal(val) {
             localStorage.setItem('leaderboard_cycle_start', val);
+        }
+
+        // 从周期起始值中提取日期字符串（YYYY-MM-DD），统一按中国时区处理
+        function getCycleStartDateStr(cycleStart) {
+            if (!cycleStart) return '2026-07-15';
+            const d = new Date(cycleStart);
+            // 转换为UTC时间戳（毫秒）
+            const utcMs = d.getTime();
+            // 加上8小时偏移，得到中国时区的"伪UTC时间"
+            const chinaMs = utcMs + 8 * 60 * 60 * 1000;
+            // 用这个伪UTC时间构造Date对象
+            const chinaDate = new Date(chinaMs);
+            // 使用getUTC*方法提取正确的年月日
+            const year = chinaDate.getUTCFullYear();
+            const month = String(chinaDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(chinaDate.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 根据周期起始日期计算下次结算时间（中国时间22:30）
+        function getNextSettlementTime(cycleStart) {
+            const dateStr = getCycleStartDateStr(cycleStart);
+            const parts = dateStr.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1; // JS月份从0开始
+            const day = parseInt(parts[2]);
+            // 周期开始日 + 3天 = 结算日
+            const settlementDay = day + LEADERBOARD_RESET_DAYS;
+            // 构造结算日的中国时间22:30，转为UTC存储
+            // 中国时间22:30 = UTC 14:30
+            const settlementUTC = Date.UTC(year, month, settlementDay, 14, 30, 0, 0);
+            return new Date(settlementUTC);
         }
  
         // 获取当前用户是 A 还是 B
@@ -6344,9 +6376,8 @@
             if (!cycleStart) return;
 
             const now = new Date();
-            // 计算下次结算时间：周期开始 + 3天，但时间固定为22:30
-            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
-            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
+            // 使用统一的时区处理函数计算下次结算时间（中国时间22:30）
+            const nextReset = getNextSettlementTime(cycleStart);
             if (now < nextReset) return;
 
             console.log('[Leaderboard] 🔄 开始重置排行榜（22:30结算）...');
@@ -6463,8 +6494,7 @@
         function computeResetDays(cycleStartStr) {
             if (!cycleStartStr) return LEADERBOARD_RESET_DAYS;
             const cycleStart = new Date(cycleStartStr);
-            const nextReset = new Date(cycleStart.getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
-            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
+            const nextReset = getNextSettlementTime(cycleStart);
             const msLeft = nextReset.getTime() - Date.now();
             return Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
         }
@@ -6613,8 +6643,7 @@
             // 显示距结算天数（考虑22:30结算时间）
             const cycleStart = getCycleStartFromLocal();
             const daysLeft = computeResetDays(cycleStart);
-            const nextReset = new Date(new Date(cycleStart).getTime() + LEADERBOARD_RESET_DAYS * 24 * 60 * 60 * 1000);
-            nextReset.setHours(LEADERBOARD_SETTLEMENT_HOUR, LEADERBOARD_SETTLEMENT_MINUTE, 0, 0);
+            const nextReset = getNextSettlementTime(cycleStart);
             const hoursLeft = Math.max(0, Math.ceil((nextReset.getTime() - Date.now()) / (60 * 60 * 1000)));
             if (timer) {
                 timer.innerHTML = `<span style="font-size:0.9rem;color:#64748b;">⏰ 距结算还剩 <strong style="color:#f59e0b;font-size:1.05rem;">${daysLeft}</strong> 天 <strong style="color:#f59e0b;">${hoursLeft % 24}</strong> 小时</span>`;
