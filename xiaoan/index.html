@@ -6366,44 +6366,29 @@
 
                 console.log(`[Leaderboard] 第一名: ${first.voucher}, 第二名: ${second.voucher}, 差距: ${gap}, 档位: ${tier.label}`);
  
-                if (tier.aReward > 0 || tier.bReward > 0) {
-                    // 为每个用户发放对应奖励（通过邮件系统定向发送）
-                    for (const userId of LEADERBOARD_ALLOWED_USERS) {
-                        const role = getUserRole(userId);
-                        const reward = role === 'A' ? tier.aReward : (role === 'B' ? tier.bReward : 0);
-                        if (reward > 0) {
-                            try {
-                                // 通过 notifications 表定向发送邮件（非公共邮件）
-                                await sb.from('notifications').insert({
-                                    target_user_id: userId,
-                                    notification_type: 'success',
-                                    title: '🏆 排行榜结算奖励',
-                                    content: `本周期排行榜已结算！\n第一名兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${reward} 纪行券\n\n请点击下方"领取附件"获取奖励。`,
-                                    attachment_type1: 'jixing_muchun_currency',
-                                    attachment_amount1: reward,
-                                    created_at: new Date().toISOString()
-                                });
-                                console.log(`[Leaderboard] ✅ 已给用户 ${role} (${userId.substring(0,8)}) 发送 ${reward} 纪行券奖励邮件`);
-                            } catch(e) {
-                                console.error(`[Leaderboard] 发送奖励邮件给 ${userId} 失败:`, e.message);
-                            }
-                        }
+                // 只给第一名发奖励
+                const winner = sorted[0];
+                const winnerRole = getUserRole(winner.user_id);
+                const winnerReward = winnerRole === 'A' ? tier.aReward : (winnerRole === 'B' ? tier.bReward : 0);
+
+                if (winnerReward > 0) {
+                    try {
+                        await sb.from('notifications').insert({
+                            target_user_id: winner.user_id,
+                            notification_type: 'success',
+                            title: '🏆 排行榜结算奖励',
+                            content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${winnerReward} 纪行券\n\n请点击下方"领取附件"获取奖励。`,
+                            attachment_type1: 'jixing_muchun_currency',
+                            attachment_amount1: winnerReward,
+                            created_at: new Date().toISOString()
+                        });
+                        console.log(`[Leaderboard] ✅ 已给第一名 ${winnerRole} (${winner.user_id.substring(0,8)}) 发送 ${winnerReward} 纪行券奖励邮件`);
+                    } catch(e) {
+                        console.error(`[Leaderboard] 发送奖励邮件失败:`, e.message);
                     }
-                    showStatus(`🏆 排行榜已结算！领先差距 ${gap}，奖励已通过邮件发放！`, 'success');
+                    showStatus(`🏆 排行榜已结算！第一名领先 ${gap} 兑换券，奖励已发放！`, 'success');
                 } else {
                     console.log('[Leaderboard] 领先差距不足100，本周期无奖励');
-                    // 发送通知邮件告知无奖励
-                    for (const userId of LEADERBOARD_ALLOWED_USERS) {
-                        try {
-                            await sb.from('notifications').insert({
-                                target_user_id: userId,
-                                notification_type: 'info',
-                                title: '🏆 排行榜结算通知',
-                                content: `本周期排行榜已结算。\n第一名兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n因领先差距不足100，本周期无奖励发放。`,
-                                created_at: new Date().toISOString()
-                            });
-                        } catch(e) {}
-                    }
                     showStatus(`🏆 排行榜已结算！领先差距 ${gap}（不足100，无奖励）`, 'info');
                 }
             }
