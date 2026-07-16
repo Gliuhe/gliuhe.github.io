@@ -200,9 +200,9 @@
                             <select id="attachmentType" onchange="toggleAttachmentFields()" style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
                                 <option value="">无附件</option>
                                 <option value="voucher">兑换券</option>
-                                <option value="lottery_ticket">抽奖券</option>
-                                <option value="premium_lottery_ticket">高级抽奖券</option>
-                                <option value="jixing_ticket">纪行券</option>
+                                <option value="lottery">抽奖券</option>
+                                <option value="premium">高级抽奖券</option>
+                                <option value="jixing_muchun_currency">纪行券</option>
                                 <option value="physical">实物</option>
                             </select>
                             <input type="number" id="attachmentAmount" placeholder="数量" style="width:80px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;display:none;">
@@ -248,12 +248,21 @@
                 <button class="btn btn-danger" onclick="createFine()" style="width:100%;">🚨 发布罚款</button>
             </div>
 
-            <div style="background:#fffbeb;padding:16px;border-radius:12px;margin-bottom:16px;border:2px solid #f59e0b;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                <div>
-                    <div style="font-weight:600;color:#92400e;">🧹 强制清除罚款状态</div>
-                    <small style="color:#b45309;">删除该用户所有罚款记录（含逾期未缴），用于用户已缴清但仍显示逾期的异常情况</small>
+            <div style="background:#fffbeb;padding:16px;border-radius:12px;margin-bottom:16px;border:2px solid #f59e0b;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+                    <div>
+                        <div style="font-weight:600;color:#92400e;">🧹 强制清除罚款状态</div>
+                        <small style="color:#b45309;">删除该用户所有罚款记录（含逾期未缴），用于用户已缴清但仍显示逾期的异常情况</small>
+                    </div>
+                    <button class="btn btn-warning" onclick="clearAllFines()" style="flex-shrink:0;">🧹 强制清除</button>
                 </div>
-                <button class="btn btn-warning" onclick="clearAllFines()" style="flex-shrink:0;">🧹 强制清除</button>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <label style="font-weight:600;font-size:13px;color:#92400e;">目标用户：</label>
+                    <select id="clearFinesUserId" style="padding:6px 10px;border:1px solid #f59e0b;border-radius:6px;font-size:13px;">
+                        <option value="d71f9173-bd5d-4d30-a033-0429ae162fd7">👤 用户 A (d71f9173…)</option>
+                        <option value="34b895c9-effa-4647-bfca-160cf0d4c7d4">👤 用户 B (34b895c9…)</option>
+                    </select>
+                </div>
             </div>
             
             <h3>罚款记录</h3>
@@ -722,10 +731,12 @@
 
         // 强制清除该用户所有罚款记录（含逾期未缴）
         async function clearAllFines() {
-            if (!confirm('⚠️ 确定强制清除该用户的所有罚款记录？\n\n此操作将删除云端所有罚款记录（含逾期未缴），不可恢复。\n适用于用户已缴清但仍显示逾期的异常情况。')) return;
+            const targetUserId = document.getElementById('clearFinesUserId').value;
+            const targetUserLabel = targetUserId === '34b895c9-effa-4647-bfca-160cf0d4c7d4' ? '用户 B' : '用户 A';
+            if (!confirm(`⚠️ 确定强制清除 ${targetUserLabel} 的所有罚款记录？\n\n此操作将删除云端所有罚款记录（含逾期未缴），不可恢复。\n适用于用户已缴清但仍显示逾期的异常情况。`)) return;
 
             try {
-                const { error } = await sb.from('fine_items').delete().eq('user_id', USER_ID);
+                const { error } = await sb.from('fine_items').delete().eq('user_id', targetUserId);
                 if (error) throw error;
                 alert('✅ 已清除所有罚款记录');
                 loadFinesList();
