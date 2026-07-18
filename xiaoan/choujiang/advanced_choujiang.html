@@ -1742,6 +1742,12 @@
                 tag.style.background = "linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)";
                 tag.textContent = `获得 ${prize.currencyAmount || 0} 纪行券`;
                 rewardTags.appendChild(tag);
+            } else if (prize.rewardType === "key") {
+                const tag = document.createElement("div");
+                tag.classList.add("reward-tag");
+                tag.style.background = "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)";
+                tag.textContent = "🔑 密钥道具（进背包激活）";
+                rewardTags.appendChild(tag);
             }
             
             // 检查并重置保底计数器

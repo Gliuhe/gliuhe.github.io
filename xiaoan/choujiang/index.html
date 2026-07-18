@@ -1238,6 +1238,20 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             let jixingEarned = 0;
  
             prizes.forEach(prize => {
+                if (prize.rewardType === 'key') {
+                    // 密钥道具：进背包待手动激活，不发放任何货币
+                    records.push({
+                        prize: prize.name,
+                        rewardType: 'key',
+                        keyId: prize.keyId,
+                        icon: prize.icon,
+                        description: prize.description,
+                        usable: true,
+                        date: new Date().toISOString()
+                    });
+                    return; // 跳过下方货币累加
+                }
+
                 records.push({
                     prize: prize.name,
                     rewardType: prize.rewardType,
@@ -1355,6 +1369,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                                 `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
                             ${prize.rewardType === 'jixing' ?
                                 `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>` : ''}
+                            ${prize.rewardType === 'key' ?
+                                `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; align-self:center; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">🔑 密钥（进背包激活）</div>` : ''}
                         </div>
                     `).join('')}
                 </div>
@@ -1382,9 +1398,11 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                         `<div class="reward-tag" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
                     ${prize.rewardType === 'jixing' ?
                         `<div class="reward-tag" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>` : ''}
+                    ${prize.rewardType === 'key' ?
+                        `<div class="reward-tag" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">🔑 密钥（进背包激活）</div>` : ''}
                 </div>
             `;
- 
+
             rewardTags.innerHTML = '';
             if (prize.rewardType === 'currency') {
                 rewardTags.innerHTML = `<div class="reward-tag pulse">${prize.currencyAmount || 0}兑换券</div>`;
@@ -1392,6 +1410,8 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>`;
             } else if (prize.rewardType === 'jixing') {
                 rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>`;
+            } else if (prize.rewardType === 'key') {
+                rewardTags.innerHTML = `<div class="reward-tag pulse" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">🔑 密钥道具（进背包激活）</div>`;
             } else {
                 rewardTags.innerHTML = `<div class="reward-tag">实物奖品</div>`;
             }

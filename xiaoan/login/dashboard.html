@@ -428,12 +428,25 @@
                         <option value="currency">🎫 兑换券</option>
                         <option value="bankTicket">💳 银行券</option>
                         <option value="jixing">🎪 纪行券</option>
+                        <option value="key">🔑 密钥道具（进背包手动使用）</option>
                     </select>
                 </div>
                 <div class="form-group" id="lotteryPrizeAmountGroup" style="display:none;">
                     <label id="lotteryPrizeAmountLabel">数量</label>
                     <input type="number" id="lotteryPrizeAmount" min="1" value="1" placeholder="数量">
                 </div>
+            </div>
+
+            <div class="form-group" id="lotteryPrizeKeyGroup" style="display:none;">
+                <label>密钥类型 *</label>
+                <select id="lotteryPrizeKey" onchange="autoFillKeyInfo()" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                    <option value="task_key_1">🗝️ 任务密钥 Ⅰ（+20%）</option>
+                    <option value="task_key_2">🔑 任务密钥 Ⅱ（+50%）</option>
+                    <option value="task_key_3">🔐 任务密钥 Ⅲ（+100%）</option>
+                    <option value="time_key_1">⏰ 时间密钥 Ⅰ（13:00前）</option>
+                    <option value="time_key_2">⏱️ 时间密钥 Ⅱ（16:00前）</option>
+                    <option value="time_key_3">⌛ 时间密钥 Ⅲ（18:30前）</option>
+                </select>
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -1694,7 +1707,7 @@
                         <td style="font-size:22px;text-align:center;">${p.icon || '🎁'}</td>
                         <td>${escapeHtml(p.name || '')}</td>
                         <td>${_rewardTypeLabel(p.rewardType)}</td>
-                        <td>${p.rewardType === 'item' ? '—' : (p.currencyAmount || 0)}</td>
+                        <td>${p.rewardType === 'item' ? '—' : (p.rewardType === 'key' ? _keyIdLabel(p.keyId) : (p.currencyAmount || 0))}</td>
                         <td>${p.weight || 0}</td>
                         <td>${p.usable === false ? '❌ 否' : '✅ 是'}</td>
                         <td style="max-width:200px;color:#64748b;font-size:12px;">${escapeHtml(p.description || '')}</td>
@@ -1722,7 +1735,7 @@
                         <td style="font-size:22px;text-align:center;">${p.icon || '🎁'}</td>
                         <td>${escapeHtml(p.name || '')}</td>
                         <td>${_rewardTypeLabel(p.rewardType)}</td>
-                        <td>${p.rewardType === 'item' ? '—' : (p.currencyAmount || 0)}</td>
+                        <td>${p.rewardType === 'item' ? '—' : (p.rewardType === 'key' ? _keyIdLabel(p.keyId) : (p.currencyAmount || 0))}</td>
                         <td>${p.weight || 0}</td>
                         <td>${_poolLabel(p.pool)}</td>
                         <td style="max-width:200px;color:#64748b;font-size:12px;">${escapeHtml(p.description || '')}</td>
@@ -1740,8 +1753,16 @@
                 case 'currency': return '🎫 兑换券';
                 case 'bankTicket': return '💳 银行券';
                 case 'jixing': return '🎪 纪行券';
+                case 'key': return '🔑 密钥';
                 default: return '🎁 实物';
             }
+        }
+        function _keyIdLabel(keyId) {
+            const map = {
+                task_key_1: '🗝️ 任务Ⅰ', task_key_2: '🔑 任务Ⅱ', task_key_3: '🔐 任务Ⅲ',
+                time_key_1: '⏰ 时间Ⅰ', time_key_2: '⏱️ 时间Ⅱ', time_key_3: '⌛ 时间Ⅲ'
+            };
+            return map[keyId] || keyId || '—';
         }
         function _poolLabel(p) {
             switch (p) {
@@ -1781,6 +1802,10 @@
                 document.getElementById('lotteryPrizePool').value = prize.pool || 'normal';
                 document.getElementById('lotteryPrizeUsable').value = (prize.usable === false) ? 'false' : 'true';
                 document.getElementById('lotteryPrizeDesc').value = prize.description || '';
+                // 密钥类型回填
+                if (prize.rewardType === 'key' && prize.keyId) {
+                    document.getElementById('lotteryPrizeKey').value = prize.keyId;
+                }
             } else {
                 // 新增模式
                 titleEl.textContent = '添加奖品（' + (isAdvanced ? '高级抽奖' : '普通抽奖') + '）';
@@ -1792,6 +1817,7 @@
                 document.getElementById('lotteryPrizePool').value = 'normal';
                 document.getElementById('lotteryPrizeUsable').value = 'true';
                 document.getElementById('lotteryPrizeDesc').value = '';
+                document.getElementById('lotteryPrizeKey').value = 'task_key_1';
             }
 
             // 记录当前编辑的子tab（用于saveLotteryPrize判断目标列表）
@@ -1806,18 +1832,51 @@
             _editingLotteryPrizeId = null;
         }
 
+        // 密钥元数据（用于自动填充名称/图标/描述）
+        const KEY_PRIZE_META = {
+            task_key_1: { name: '任务密钥 Ⅰ', icon: '🗝️', desc: '抽奖获得。在背包中激活后，当天所有任务的兑换券奖励提升20%（向上取整）。本周期仅可激活一种任务密钥。' },
+            task_key_2: { name: '任务密钥 Ⅱ', icon: '🔑', desc: '抽奖获得。在背包中激活后，当天所有任务的兑换券奖励提升50%（向上取整）。本周期仅可激活一种任务密钥。' },
+            task_key_3: { name: '任务密钥 Ⅲ', icon: '🔐', desc: '抽奖获得。在背包中激活后，当天所有任务的兑换券奖励提升100%（向上取整）。本周期仅可激活一种任务密钥。' },
+            time_key_1: { name: '时间密钥 Ⅰ', icon: '⏰', desc: '抽奖获得。在背包中激活后，须在当天13:00前领取每日任务奖励，兑换券提升30%。本周期仅可激活一种时间密钥；激活时当前时间必须早于13:00。' },
+            time_key_2: { name: '时间密钥 Ⅱ', icon: '⏱️', desc: '抽奖获得。在背包中激活后，须在当天16:00前领取每日任务奖励，兑换券提升30%。本周期仅可激活一种时间密钥；激活时当前时间必须早于16:00。' },
+            time_key_3: { name: '时间密钥 Ⅲ', icon: '⌛', desc: '抽奖获得。在背包中激活后，须在当天18:30前领取每日任务奖励，兑换券提升30%。本周期仅可激活一种时间密钥；激活时当前时间必须早于18:30。' }
+        };
+
+        // 选择密钥类型时自动填充名称、图标、描述（仅新增模式或字段为空时填充）
+        function autoFillKeyInfo() {
+            const keyId = document.getElementById('lotteryPrizeKey').value;
+            const meta = KEY_PRIZE_META[keyId];
+            if (!meta) return;
+            // 仅在新增模式（_editingLotteryPrizeId === null）下自动填充，避免覆盖编辑中的自定义内容
+            if (_editingLotteryPrizeId === null) {
+                document.getElementById('lotteryPrizeName').value = meta.name;
+                document.getElementById('lotteryPrizeIcon').value = meta.icon;
+                document.getElementById('lotteryPrizeDesc').value = meta.desc;
+            }
+        }
+
         // 切换奖励类型时显示/隐藏数量字段、可用字段
         function toggleLotteryPrizeFields() {
             const type = document.getElementById('lotteryPrizeRewardType').value;
             const isItem = (type === 'item');
-            document.getElementById('lotteryPrizeAmountGroup').style.display = isItem ? 'none' : 'block';
+            const isKey = (type === 'key');
+            // 数量字段：仅 currency/bankTicket/jixing 显示
+            document.getElementById('lotteryPrizeAmountGroup').style.display = (isItem || isKey) ? 'none' : 'block';
+            // 可使用字段：仅 item 显示（密钥必然可使用）
             document.getElementById('lotteryPrizeUsableGroup').style.display = isItem ? 'block' : 'none';
+            // 密钥选择器：仅 key 显示
+            document.getElementById('lotteryPrizeKeyGroup').style.display = isKey ? 'block' : 'none';
 
             const labelEl = document.getElementById('lotteryPrizeAmountLabel');
             const inputEl = document.getElementById('lotteryPrizeAmount');
             if (type === 'currency') { labelEl.textContent = '兑换券数量'; inputEl.placeholder = '兑换券数量'; }
             else if (type === 'bankTicket') { labelEl.textContent = '银行券数量'; inputEl.placeholder = '银行券数量'; }
             else if (type === 'jixing') { labelEl.textContent = '纪行券数量'; inputEl.placeholder = '纪行券数量'; }
+
+            // 切换到密钥类型时自动填充
+            if (isKey) {
+                autoFillKeyInfo();
+            }
         }
 
         // 保存奖品（新增或更新到缓存，未保存到云端）
@@ -1833,8 +1892,9 @@
             const desc = document.getElementById('lotteryPrizeDesc').value.trim();
             const usable = document.getElementById('lotteryPrizeUsable').value === 'true';
             const pool = document.getElementById('lotteryPrizePool').value;
+            const keyId = document.getElementById('lotteryPrizeKey').value;
             let amount = 0;
-            if (rewardType !== 'item') {
+            if (rewardType !== 'item' && rewardType !== 'key') {
                 amount = parseInt(document.getElementById('lotteryPrizeAmount').value) || 0;
                 if (amount <= 0) {
                     alert('请输入有效的数量');
@@ -1844,27 +1904,32 @@
 
             if (!name) { alert('请输入奖品名称'); return; }
             if (!weight || weight <= 0) { alert('请输入有效的权重值'); return; }
+            if (rewardType === 'key' && !keyId) { alert('请选择密钥类型'); return; }
+
+            // 构造奖品对象的基础字段
+            const buildPrizeObj = () => {
+                const obj = {
+                    name: name, weight: weight, rewardType: rewardType,
+                    currencyAmount: amount, description: desc, icon: icon,
+                    usable: usable
+                };
+                if (rewardType === 'key') {
+                    obj.keyId = keyId;
+                    obj.usable = true;       // 密钥必然可使用
+                    obj.currencyAmount = 0;  // 密钥无数量概念
+                }
+                if (isAdvanced) obj.pool = pool;
+                return obj;
+            };
 
             if (_editingLotteryPrizeId !== null) {
                 // 编辑
                 const idx = list.findIndex(p => p.id === _editingLotteryPrizeId);
                 if (idx === -1) { alert('奖品不存在'); return; }
-                list[idx] = {
-                    ...list[idx],
-                    name: name, weight: weight, rewardType: rewardType,
-                    currencyAmount: amount, description: desc, icon: icon,
-                    usable: usable
-                };
-                if (isAdvanced) list[idx].pool = pool;
+                list[idx] = { ...list[idx], ...buildPrizeObj() };
             } else {
                 // 新增
-                const newPrize = {
-                    id: _genLotteryPrizeId(list),
-                    name: name, weight: weight, rewardType: rewardType,
-                    currencyAmount: amount, description: desc, icon: icon,
-                    usable: usable
-                };
-                if (isAdvanced) newPrize.pool = pool;
+                const newPrize = { id: _genLotteryPrizeId(list), ...buildPrizeObj() };
                 list.push(newPrize);
             }
 

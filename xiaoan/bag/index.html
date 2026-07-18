@@ -596,7 +596,80 @@
 
     <script>
         // ========== 数据管理 ==========
-        
+
+        // 密钥道具元数据（与 dashboard.html / index.html 保持一致）
+        // keyId → { name, type, deadline(分钟, 仅时间密钥) }
+        const KEY_PRIZE_INFO = {
+            task_key_1: { name: '任务密钥 Ⅰ', type: 'task_key', deadline: null },
+            task_key_2: { name: '任务密钥 Ⅱ', type: 'task_key', deadline: null },
+            task_key_3: { name: '任务密钥 Ⅲ', type: 'task_key', deadline: null },
+            time_key_1: { name: '时间密钥 Ⅰ', type: 'time_key', deadline: 780 },   // 13:00 = 780
+            time_key_2: { name: '时间密钥 Ⅱ', type: 'time_key', deadline: 960 },   // 16:00 = 960
+            time_key_3: { name: '时间密钥 Ⅲ', type: 'time_key', deadline: 1110 }   // 18:30 = 1110
+        };
+
+        // 读取当前排行榜周期起始（与 index.html 一致）
+        function getCycleStartFromLocal() {
+            return localStorage.getItem('leaderboard_cycle_start');
+        }
+
+        // 检查本周期是否已激活同类型密钥（任务/时间密钥互斥）
+        function isSameTypeKeyActivatedThisCycle(type, currentKeyId) {
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) return false;
+            const cycleStartDate = new Date(cycleStart);
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            for (const itemId in purchasedItems) {
+                if (itemId.startsWith(type + '_') && itemId !== currentKeyId) {
+                    const d = new Date(purchasedItems[itemId]);
+                    if (d >= cycleStartDate) return true;
+                }
+            }
+            return false;
+        }
+
+        // 检查本周期是否已激活该具体密钥本身
+        function isKeyItselfActivatedThisCycle(keyId) {
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) return false;
+            const cycleStartDate = new Date(cycleStart);
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            if (!purchasedItems[keyId]) return false;
+            return new Date(purchasedItems[keyId]) >= cycleStartDate;
+        }
+
+        // 校验密钥是否可激活：返回 {ok:boolean, reason:string}
+        function validateKeyActivation(keyId) {
+            const info = KEY_PRIZE_INFO[keyId];
+            if (!info) return { ok: false, reason: '未知密钥类型' };
+
+            // 1. 本周期该密钥本身已激活 → 不可重复激活
+            if (isKeyItselfActivatedThisCycle(keyId)) {
+                return { ok: false, reason: `本周期已激活过 ${info.name}，无法重复激活` };
+            }
+
+            // 2. 同类型互斥（任务密钥之间互斥，时间密钥之间互斥）
+            if (isSameTypeKeyActivatedThisCycle(info.type, keyId)) {
+                const typeName = info.type === 'task_key' ? '任务密钥' : '时间密钥';
+                return { ok: false, reason: `本周期已激活过同类型${typeName}，无法激活` };
+            }
+
+            // 3. 时间密钥：当前时间必须早于 deadline
+            if (info.type === 'time_key' && info.deadline != null) {
+                const now = new Date();
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                if (currentMinutes >= info.deadline) {
+                    const h = Math.floor(info.deadline / 60);
+                    const m = info.deadline % 60;
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    return { ok: false, reason: `当前时间已超过 ${hh}:${mm}，无法激活此时间密钥` };
+                }
+            }
+
+            return { ok: true, reason: '' };
+        }
+
         // 从 localStorage 加载所有奖品记录
         function loadAllRecords() {
             const normalRecords = JSON.parse(localStorage.getItem('records') || '[]');
@@ -636,6 +709,7 @@
                 allItems.push({
                     prize: prizeName,
                     rewardType: rewardType,
+                    keyId: record.prize?.keyId || null,  // 密钥道具：保留 keyId
                     usable: !record.used,
                     isExchangeItem: (prizeName === '下次一定'),
                     used: !!record.used,
@@ -766,6 +840,10 @@
                     const sourceLabel = item._source === 'advanced' ? '高级' : '普通';
                     const usedTimeStr = formatUsedTime(item.usedTime);
                     const displayName = typeof item.prize === 'object' ? (item.prize?.name || String(item.prize)) : item.prize;
+                    const isKeyUsed = (item.rewardType === 'key');
+                    const usedTagHtml = isKeyUsed ?
+                        `<div class="used-tag" style="background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);color:white;">&#128273; 已激活</div>` :
+                        `<div class="used-tag">&#9989; 已使用</div>`;
 
                     return `
                         <div class="bag-item used-record-item" data-index="${idx}">
@@ -774,22 +852,24 @@
                             <div class="item-name">${displayName}</div>
                             ${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
                             <div class="item-used-time">&#128337; ${usedTimeStr}</div>
-                            <div class="used-tag">&#9989; 已使用</div>
+                            ${usedTagHtml}
                         </div>
                     `;
                 }).join('');
                 return;
             }
 
-            // 按名称分组统计数量
+            // 按名称分组统计数量（密钥道具按 keyId+source 分组，并记录所有 originalIndex 以便逐个激活）
             const grouped = {};
             filtered.forEach(item => {
                 const prizeName = typeof item.prize === 'object' ? (item.prize?.name || JSON.stringify(item.prize)) : item.prize;
-                const key = prizeName + '_' + item._source;
-                if (!grouped[key]) {
-                    grouped[key] = { ...item, count: 1 };
+                const isKey = item.rewardType === 'key';
+                const groupKey = isKey ? ('key_' + (item.keyId || prizeName) + '_' + item._source) : (prizeName + '_' + item._source);
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = { ...item, count: 1, _allIndices: [item._originalIndex] };
                 } else {
-                    grouped[key].count++;
+                    grouped[groupKey].count++;
+                    grouped[groupKey]._allIndices.push(item._originalIndex);
                 }
             });
 
@@ -813,14 +893,28 @@
 
             grid.innerHTML = groupValues.map((item, idx) => {
                 const isExchangeItem = item.isExchangeItem;
-                const isUsable = !isExchangeItem;
+                const isKeyItem = (item.rewardType === 'key');
                 const sourceClass = item._source === 'advanced' ? 'source-advanced' : 'source-normal';
                 const sourceLabel = item._source === 'advanced' ? '高级' : '普通';
                 const dateStr = item.date ? formatDate(item.date) : '';
                 const displayName = typeof item.prize === 'object' ? (item.prize?.name || String(item.prize)) : item.prize;
 
+                // 密钥道具：显示"激活"按钮，并预校验是否可激活
+                let keyBtnHtml = '';
+                if (isKeyItem) {
+                    const keyId = item.keyId;
+                    const validation = validateKeyActivation(keyId);
+                    if (validation.ok) {
+                        // 可激活：传入所有 originalIndex，激活时取第一个未使用的
+                        const indicesAttr = JSON.stringify(item._allIndices || [item._originalIndex]);
+                        keyBtnHtml = `<button class="use-btn key-activate-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}" data-key-id="${keyId}" data-all-indices='${indicesAttr}' style="background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">&#128273; 激活</button>`;
+                    } else {
+                        keyBtnHtml = `<div style="font-size:0.75rem;color:#dc2626;padding:6px 8px;background:#fef2f2;border-radius:8px;text-align:center;margin-top:4px;">${validation.reason}</div>`;
+                    }
+                }
+
                 return `
-                    <div class="bag-item ${isExchangeItem ? 'exchange-item' : ''}" data-index="${idx}">
+                    <div class="bag-item ${isExchangeItem ? 'exchange-item' : ''} ${isKeyItem ? 'key-item' : ''}" data-index="${idx}" ${isKeyItem ? 'style="border-color:#6366f1;"' : ''}>
                         ${item.count > 1 ? `<div class="item-count-badge">${item.count}</div>` : ''}
                         <div class="item-source ${sourceClass}">${sourceLabel}</div>
                         <div class="item-icon">${item.icon || '&#127873;'}</div>
@@ -836,9 +930,14 @@
                                     `<div class="exchange-waiting">还需${20 - xiaciTotalCount}个</div>`
                                 }
                             </div>` :
-                            `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
-                             <div class="item-date">${dateStr}</div>
-                             <button class="use-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}">&#127873; 使用</button>`
+                            (isKeyItem ?
+                                `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                                 <div class="item-date">${dateStr}</div>
+                                 ${keyBtnHtml}` :
+                                `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
+                                 <div class="item-date">${dateStr}</div>
+                                 <button class="use-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}">&#127873; 使用</button>`
+                            )
                         }
                     </div>
                 `;
@@ -900,12 +999,54 @@
             const btn = e.currentTarget;
             const listKey = btn.dataset.listKey;
             const originalIndex = parseInt(btn.dataset.originalIndex);
+            const keyId = btn.dataset.keyId;  // 密钥道具特有
+            const allIndicesAttr = btn.dataset.allIndices;  // 密钥道具：所有同类记录的索引
 
             const records = JSON.parse(localStorage.getItem(listKey) || '[]');
             const record = records[originalIndex];
 
             if (!record || record.used) {
                 showNotification('该物品已使用或不存在！', 'error');
+                return;
+            }
+
+            // 密钥道具：先校验是否可激活，再显示确认模态框
+            if (keyId) {
+                // 再次校验（防止用户在打开页面后状态发生变化，例如在其他页面购买了同类密钥）
+                const validation = validateKeyActivation(keyId);
+                if (!validation.ok) {
+                    showNotification('❌ ' + validation.reason, 'error');
+                    render();  // 刷新界面，让按钮状态同步
+                    return;
+                }
+                const info = KEY_PRIZE_INFO[keyId];
+                const keyDisplayName = info ? info.name : '密钥';
+                const icon = record.prize?.icon || record.icon || '🔑';
+
+                // 构造激活提示文案
+                let effectDesc = '';
+                if (info.type === 'task_key') {
+                    effectDesc = `激活后，今天完成的所有任务的兑换券奖励将获得加成。本周期仅可激活一种任务密钥。`;
+                } else if (info.type === 'time_key') {
+                    const h = Math.floor(info.deadline / 60);
+                    const m = info.deadline % 60;
+                    const hh = String(h).padStart(2, '0');
+                    const mm = String(m).padStart(2, '0');
+                    effectDesc = `激活后，须在今天 ${hh}:${mm} 前领取每日任务奖励，兑换券提升 30%。本周期仅可激活一种时间密钥。`;
+                }
+
+                document.getElementById('modalIcon').innerHTML = icon;
+                document.getElementById('modalItemName').textContent = keyDisplayName;
+                document.querySelector('#useModal p').textContent = effectDesc || '激活后该密钥将在今天生效，道具将被消耗。';
+                document.getElementById('confirmUseBtn').textContent = '🔑 激活';
+                document.getElementById('useModal').style.display = 'flex';
+
+                // 记录待激活密钥信息（含所有同类索引，激活时取第一个未使用的）
+                let allIndices = [originalIndex];
+                if (allIndicesAttr) {
+                    try { allIndices = JSON.parse(allIndicesAttr); } catch (_) {}
+                }
+                pendingUseItem = { listKey, originalIndex, record, isKey: true, keyId, allIndices };
                 return;
             }
 
@@ -1125,6 +1266,57 @@
 
                     closeModal();
                     showNotification('🎉 兑换成功！获得1张高级抽奖券', 'success');
+                    createConfetti();
+                    render();
+                    renderStats();
+                    return;
+                }
+
+                // 密钥激活逻辑
+                if (pendingUseItem.isKey) {
+                    const { listKey, keyId, allIndices } = pendingUseItem;
+
+                    // 激活前最后一次校验（防止模态框打开期间状态变化）
+                    const validation = validateKeyActivation(keyId);
+                    if (!validation.ok) {
+                        showNotification('❌ ' + validation.reason, 'error');
+                        closeModal();
+                        render();
+                        return;
+                    }
+
+                    // 写入 itemshop_purchased（与 index.html 购买逻辑一致）
+                    // rule/index.html 会读取此值判断今天是否生效
+                    const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+                    purchasedItems[keyId] = new Date().toISOString();
+                    localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+
+                    // 标记背包中该密钥记录为已使用（从 allIndices 中取第一个未使用的）
+                    const records = JSON.parse(localStorage.getItem(listKey) || '[]');
+                    let activatedIndex = -1;
+                    for (const idx of allIndices) {
+                        if (records[idx] && !records[idx].used) {
+                            records[idx].used = true;
+                            records[idx].usedTime = new Date().toISOString();
+                            records[idx].activatedKeyId = keyId;  // 记录激活的密钥类型
+                            activatedIndex = idx;
+                            break;
+                        }
+                    }
+                    if (activatedIndex === -1) {
+                        // 兜底：原索引
+                        if (records[pendingUseItem.originalIndex]) {
+                            records[pendingUseItem.originalIndex].used = true;
+                            records[pendingUseItem.originalIndex].usedTime = new Date().toISOString();
+                            records[pendingUseItem.originalIndex].activatedKeyId = keyId;
+                        }
+                    }
+                    localStorage.setItem(listKey, JSON.stringify(records));
+
+                    const info = KEY_PRIZE_INFO[keyId];
+                    const keyDisplayName = info ? info.name : '密钥';
+                    closeModal();
+                    showNotification(`✅ 已激活 ${keyDisplayName}！今天生效，请前往任务页完成任务以享受加成。`, 'success');
                     createConfetti();
                     render();
                     renderStats();
