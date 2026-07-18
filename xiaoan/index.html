@@ -2500,23 +2500,29 @@
                     </div>
                 </div>
                 
-                <div class="currency-card lottery">
-                    <div class="currency-icon">🎲</div>
-                    <div class="currency-title">抽奖券</div>
-                    <div class="currency-amount" id="lotteryAmount">0</div>
+                <div class="currency-card jixing">
+                    <div class="currency-icon">💴</div>
+                    <div class="currency-title">纪行券</div>
+                    <div class="currency-amount" id="jixingAmount">0</div>
                     <div class="currency-actions">
-                        <button class="currency-btn add" onclick="openAddModal('lottery')">➕</button>
-                        <button class="currency-btn subtract" onclick="openSubtractModal('lottery')">➖</button>
+                        <button class="currency-btn add" onclick="openAddModal('jixing_muchun_currency')">➕</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('jixing_muchun_currency')">➖</button>
                     </div>
                 </div>
                 
                 <div class="currency-card premium">
                     <div class="currency-icon">💎</div>
-                    <div class="currency-title">高级抽奖券</div>
-                    <div class="currency-amount" id="premiumAmount">0</div>
+                    <div class="currency-title">抽奖券 / 高级抽奖券</div>
+                    <div class="currency-amount" style="display:flex;gap:8px;justify-content:center;align-items:center;">
+                        <span id="lotteryAmount" style="color:#f59e0b;">0</span>
+                        <span style="font-size:1rem;color:#94a3b8;">/</span>
+                        <span id="premiumAmount" style="color:#8b5cf6;">0</span>
+                    </div>
                     <div class="currency-actions">
-                        <button class="currency-btn add" onclick="openAddModal('premium')">➕</button>
-                        <button class="currency-btn subtract" onclick="openSubtractModal('premium')">➖</button>
+                        <button class="currency-btn add" onclick="openAddModal('lottery')">➕抽奖</button>
+                        <button class="currency-btn add" onclick="openAddModal('premium')">➕高级</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('lottery')">➖抽奖</button>
+                        <button class="currency-btn subtract" onclick="openSubtractModal('premium')">➖高级</button>
                     </div>
                 </div>
             </div>
