@@ -6561,6 +6561,15 @@
         const LEADERBOARD_SETTLEMENT_HOUR = 22; // 结算时间：22点
         const LEADERBOARD_SETTLEMENT_MINUTE = 30; // 结算时间：30分
         const LEADERBOARD_FIRST_CYCLE_START = new Date('2026-07-15T00:00:00+08:00'); // 首次比拼日期（调整为7月15日，下次结算为7月18日22:30）
+        // 新规则启用时间：2026-07-21 22:30 (中国时间) = 2026-07-21 14:30 UTC
+        // 7月18日22:30结算用旧规则；7月21日22:30起用新规则
+        const LEADERBOARD_NEW_RULE_START = new Date('2026-07-21T14:30:00+00:00');
+        // 新规则常量：双方重置基础值、第二名扣除比例、第一名获赠比例、各自上限
+        const LEADERBOARD_NEW_RULE_BASE = 1000;
+        const LEADERBOARD_NEW_RULE_DEDUCT_RATE = 0.5;   // 第二名扣 gap 的 50%
+        const LEADERBOARD_NEW_RULE_GIFT_RATE = 0.3;     // 第一名得"第二名实际被扣金额"的 30%
+        const LEADERBOARD_NEW_RULE_DEDUCT_CAP = 600;    // 第二名最多被扣 600
+        const LEADERBOARD_NEW_RULE_GIFT_CAP = 600;      // 第一名最多得 600
         let _leaderboardCache = null;
         let _leaderboardLastFetch = 0;
  
@@ -6680,7 +6689,23 @@
             }
             return LEADERBOARD_REWARD_TIERS[0]; // 默认无奖励
         }
- 
+
+        // 新规则：根据本次结算的领先差距 gap，计算双方新周期兑换券
+        // 第二名扣 = min(ceil(gap * 50%), 600)
+        // 第一名得 = min(ceil(第二名实际被扣 * 30%), 600)
+        // 返回 { firstVoucher, secondVoucher, secondDeduction, firstGain }
+        function computeNewRuleVouchers(gap) {
+            const safeGap = Math.max(0, gap || 0);
+            const secondDeduction = Math.min(Math.ceil(safeGap * LEADERBOARD_NEW_RULE_DEDUCT_RATE), LEADERBOARD_NEW_RULE_DEDUCT_CAP);
+            const firstGain = Math.min(Math.ceil(secondDeduction * LEADERBOARD_NEW_RULE_GIFT_RATE), LEADERBOARD_NEW_RULE_GIFT_CAP);
+            return {
+                firstVoucher: LEADERBOARD_NEW_RULE_BASE + firstGain,
+                secondVoucher: Math.max(0, LEADERBOARD_NEW_RULE_BASE - secondDeduction),
+                secondDeduction,
+                firstGain
+            };
+        }
+
         async function checkAndResetLeaderboard() {
             const sb = window.__cloudClient;
             const uid = window.__cloudUserId;
@@ -6702,6 +6727,10 @@
  
             const sorted = [...data].sort((a, b) => (b.voucher || 0) - (a.voucher || 0));
 
+            // 判断本次结算是否使用新规则（7月21日22:30起）
+            const useNewRule = nextReset >= LEADERBOARD_NEW_RULE_START;
+            console.log(`[Leaderboard] 本次结算使用${useNewRule ? '新规则' : '旧规则'}（结算时间 ${nextReset.toISOString()}）`);
+
             // 计算第一名领先第二名的差距
             if (sorted.length >= 2) {
                 const first = sorted[0];
@@ -6710,51 +6739,108 @@
                 const tier = getRewardTier(gap);
 
                 console.log(`[Leaderboard] 第一名: ${first.voucher}, 第二名: ${second.voucher}, 差距: ${gap}, 档位: ${tier.label}`);
- 
-                // 只给第一名发奖励
+
+                // 纪行券奖励（新旧规则均适用，按档位发放给第一名）
                 const winner = sorted[0];
                 const winnerRole = getUserRole(winner.user_id);
                 const winnerReward = winnerRole === 'A' ? tier.aReward : (winnerRole === 'B' ? tier.bReward : 0);
-                // 第一名额外获得领先幅度46%的兑换券（向上取整）
-                const winnerVoucherBonus = Math.ceil(gap * 0.46);
 
-                if (winnerReward > 0) {
+                if (useNewRule) {
+                    // ===== 新规则（7月21日起）=====
+                    const newV = computeNewRuleVouchers(gap);
+                    console.log(`[Leaderboard] 新规则: 双方重置为 ${LEADERBOARD_NEW_RULE_BASE}，第二名扣 ${newV.secondDeduction}，第一名得 ${newV.firstGain}`);
+
+                    // 给第一名发邮件：纪行券奖励 + 新周期兑换券说明
+                    if (winnerReward > 0) {
+                        try {
+                            await sb.from('notifications').insert({
+                                target_user_id: winner.user_id,
+                                notification_type: 'success',
+                                title: '🏆 排行榜结算奖励（新规则）',
+                                content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n【新规则结算】\n双方兑换券重置为 ${LEADERBOARD_NEW_RULE_BASE}\n第一名获赠：${newV.firstGain} 兑换券（第二名被扣 ${newV.secondDeduction} 的 30%）\n您的新周期兑换券：${LEADERBOARD_NEW_RULE_BASE} + ${newV.firstGain} = ${newV.firstVoucher}\n\n纪行券奖励：${winnerReward}（请点击"领取附件"获取）`,
+                                attachment_type1: 'jixing_muchun_currency',
+                                attachment_amount1: winnerReward,
+                                created_at: new Date().toISOString()
+                            });
+                            console.log(`[Leaderboard] ✅ 已给第一名 ${winnerRole} (${winner.user_id.substring(0,8)}) 发送 ${winnerReward} 纪行券奖励邮件`);
+                        } catch(e) {
+                            console.error(`[Leaderboard] 发送第一名奖励邮件失败:`, e.message);
+                        }
+                    } else {
+                        console.log('[Leaderboard] 领先差距不足101，本周期无纪行券奖励');
+                    }
+
+                    // 给第二名发邮件：说明扣除情况
                     try {
                         await sb.from('notifications').insert({
-                            target_user_id: winner.user_id,
-                            notification_type: 'success',
-                            title: '🏆 排行榜结算奖励',
-                            content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${winnerReward} 纪行券 + ${winnerVoucherBonus} 兑换券\n\n纪行券请点击"领取附件"获取，兑换券已直接发放。`,
-                            attachment_type1: 'jixing_muchun_currency',
-                            attachment_amount1: winnerReward,
+                            target_user_id: second.user_id,
+                            notification_type: 'info',
+                            title: '📊 排行榜结算通知（新规则）',
+                            content: `本周期排行榜已结算。\n您的兑换券：${second.voucher}\n第一名兑换券：${first.voucher}\n落后差距：${gap} 兑换券\n\n【新规则结算】\n双方兑换券重置为 ${LEADERBOARD_NEW_RULE_BASE}\n第二名被扣：${newV.secondDeduction} 兑换券（差距的 50%，上限 ${LEADERBOARD_NEW_RULE_DEDUCT_CAP}）\n您的新周期兑换券：${LEADERBOARD_NEW_RULE_BASE} - ${newV.secondDeduction} = ${newV.secondVoucher}`,
                             created_at: new Date().toISOString()
                         });
-                        console.log(`[Leaderboard] ✅ 已给第一名 ${winnerRole} (${winner.user_id.substring(0,8)}) 发送 ${winnerReward} 纪行券奖励邮件`);
                     } catch(e) {
-                        console.error(`[Leaderboard] 发送奖励邮件失败:`, e.message);
+                        console.error(`[Leaderboard] 发送第二名通知邮件失败:`, e.message);
                     }
-                    showStatus(`🏆 排行榜已结算！第一名领先 ${gap} 兑换券，奖励已发放！`, 'success');
+
+                    showStatus(`🏆 排行榜已结算（新规则）！第一名领先 ${gap}，双方重置为${LEADERBOARD_NEW_RULE_BASE}，第二名扣${newV.secondDeduction}，第一名得${newV.firstGain}`, 'success');
                 } else {
-                    console.log('[Leaderboard] 领先差距不足100，本周期无纪行券奖励');
-                    showStatus(`🏆 排行榜已结算！领先差距 ${gap}（不足100，无纪行券奖励），兑换券已发放`, 'info');
+                    // ===== 旧规则（7月18日及之前）=====
+                    // 第一名额外获得领先幅度46%的兑换券（向上取整）
+                    const winnerVoucherBonus = Math.ceil(gap * 0.46);
+
+                    if (winnerReward > 0) {
+                        try {
+                            await sb.from('notifications').insert({
+                                target_user_id: winner.user_id,
+                                notification_type: 'success',
+                                title: '🏆 排行榜结算奖励',
+                                content: `恭喜您获得本周期排行榜第一名！\n您的兑换券：${first.voucher}\n第二名兑换券：${second.voucher}\n领先差距：${gap} 兑换券\n\n您的奖励：${winnerReward} 纪行券 + ${winnerVoucherBonus} 兑换券\n\n纪行券请点击"领取附件"获取，兑换券已直接发放。`,
+                                attachment_type1: 'jixing_muchun_currency',
+                                attachment_amount1: winnerReward,
+                                created_at: new Date().toISOString()
+                            });
+                            console.log(`[Leaderboard] ✅ 已给第一名 ${winnerRole} (${winner.user_id.substring(0,8)}) 发送 ${winnerReward} 纪行券奖励邮件`);
+                        } catch(e) {
+                            console.error(`[Leaderboard] 发送奖励邮件失败:`, e.message);
+                        }
+                        showStatus(`🏆 排行榜已结算！第一名领先 ${gap} 兑换券，奖励已发放！`, 'success');
+                    } else {
+                        console.log('[Leaderboard] 领先差距不足100，本周期无纪行券奖励');
+                        showStatus(`🏆 排行榜已结算！领先差距 ${gap}（不足100，无纪行券奖励），兑换券已发放`, 'info');
+                    }
                 }
             }
- 
-            // 重置所有用户的兑换券和task_points，第一名额外获得领先幅度46%的兑换券
+
+            // 重置所有用户的兑换券和task_points
             for (const userId of LEADERBOARD_ALLOWED_USERS) {
                 try {
-                    const isWinner = sorted.length >= 2 && sorted[0].user_id === userId;
+                    let newVoucherAmount;
+                    let logMsg;
                     const gap = sorted.length >= 2 ? (sorted[0].voucher || 0) - (sorted[1].voucher || 0) : 0;
-                    const voucherBonus = isWinner ? Math.ceil(gap * 0.46) : 0;
-                    
-                    // 重置兑换券（第一名获得46%领先幅度的奖励）
+                    const isFirst = sorted.length >= 2 && sorted[0].user_id === userId;
+
+                    if (useNewRule) {
+                        // 新规则：双方重置为 1000，第一名 +firstGain，第二名 -secondDeduction
+                        const newV = computeNewRuleVouchers(gap);
+                        newVoucherAmount = isFirst ? newV.firstVoucher : newV.secondVoucher;
+                        logMsg = isFirst
+                            ? `重置为 ${LEADERBOARD_NEW_RULE_BASE} + ${newV.firstGain} = ${newV.firstVoucher}`
+                            : `重置为 ${LEADERBOARD_NEW_RULE_BASE} - ${newV.secondDeduction} = ${newV.secondVoucher}`;
+                    } else {
+                        // 旧规则：清零，第一名额外获得 gap*46%
+                        newVoucherAmount = isFirst ? Math.ceil(gap * 0.46) : 0;
+                        logMsg = isFirst ? `清零并获得 ${newVoucherAmount} 兑换券奖励` : '清零';
+                    }
+
+                    // 重置兑换券
                     await sb.from('user_currencies').upsert({
                         user_id: userId,
                         currency_type: 'voucher',
-                        amount: voucherBonus,
+                        amount: newVoucherAmount,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
-                    
+
                     // 重置 task_points
                     await sb.from('user_currencies').upsert({
                         user_id: userId,
@@ -6762,8 +6848,8 @@
                         amount: 0,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
-                    
-                    console.log(`[Leaderboard] 用户 ${userId.substring(0,8)} 兑换券已重置${isWinner ? `，获得 ${voucherBonus} 兑换券奖励` : ''}`);
+
+                    console.log(`[Leaderboard] 用户 ${userId.substring(0,8)} 兑换券${logMsg}`);
                 } catch(e) {
                     console.warn(`[Leaderboard] 重置用户 ${userId} 失败:`, e.message);
                 }
