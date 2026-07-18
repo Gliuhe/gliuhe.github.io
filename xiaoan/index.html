@@ -3073,14 +3073,16 @@
             // 更新银行账户昨日收益
             updateBankEarnings();
             
-            // 更新三种货币数量（带动画效果）
+            // 更新四种货币数量（带动画效果）
             const voucherElement = document.getElementById('voucherAmount');
             const lotteryElement = document.getElementById('lotteryAmount');
             const premiumElement = document.getElementById('premiumAmount');
+            const jixingElement = document.getElementById('jixingAmount');
             
             animateNumber(voucherElement, localStorage.getItem('voucher') || '0');
             animateNumber(lotteryElement, localStorage.getItem('lottery') || '0');
             animateNumber(premiumElement, localStorage.getItem('premium') || '0');
+            animateNumber(jixingElement, localStorage.getItem('jixing_muchun_currency') || '0');
             
             // 更新商品列表
             const products = JSON.parse(localStorage.getItem('products'));
