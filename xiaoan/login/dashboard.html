@@ -86,6 +86,7 @@
             <button class="tab-btn" onclick="switchTab('notify', this)">📬 邮件管理</button>
             <button class="tab-btn" onclick="switchTab('fines', this)">💰 罚款管理</button>
             <button class="tab-btn" onclick="switchTab('bans', this)">🚫 封禁管理</button>
+            <button class="tab-btn" onclick="switchTab('lottery', this)">🎰 抽奖配置</button>
         </div>
  
         <!-- 面板1：商城管理 -->
@@ -324,8 +325,147 @@
                 </table>
             </div>
         </div>
+
+        <!-- 面板5：抽奖配置 -->
+        <div class="tab-panel" id="panel-lottery">
+            <div class="section-header">
+                <span class="section-title">🎰 抽奖奖品池配置（全局共享）</span>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn btn-success" onclick="saveLotteryPrizesConfig()" style="padding:8px 18px;font-size:13px;">💾 保存到云端</button>
+                    <button class="btn btn-primary" onclick="showLotteryPrizeModal()" style="padding:8px 18px;font-size:13px;">➕ 添加奖品</button>
+                </div>
+            </div>
+
+            <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:16px;border-left:4px solid var(--orange);font-size:13px;color:#64748b;">
+                💡 说明：奖品池由管理员统一编辑，所有用户共享同一份奖品配置。库存功能已移除，如需"下架"请直接删除奖品。配置保存到云端后，用户下次打开抽奖页将自动拉取最新配置。
+            </div>
+
+            <!-- 子标签：普通抽奖 / 高级抽奖 -->
+            <div style="display:flex;gap:8px;margin-bottom:20px;background:#fff;padding:6px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                <button class="tab-btn active" onclick="switchLotterySubTab('normal', this)" id="lotteryTabNormal" style="border-radius:8px;padding:8px 16px;font-size:13px;">🎟️ 普通抽奖</button>
+                <button class="tab-btn" onclick="switchLotterySubTab('advanced', this)" id="lotteryTabAdvanced" style="border-radius:8px;padding:8px 16px;font-size:13px;">⭐ 高级抽奖</button>
+            </div>
+
+            <!-- 子面板：普通抽奖 -->
+            <div class="lottery-sub-panel active" id="lotteryPanel-normal">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:var(--admin-dark);" id="normalPrizeCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">普通奖品数</div>
+                    </div>
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:var(--green);" id="normalPrizeWeight">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">总权重</div>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead><tr><th>图标</th><th>名称</th><th>奖励类型</th><th>数量</th><th>权重</th><th>可使用</th><th>描述</th><th>操作</th></tr></thead>
+                        <tbody id="normalPrizesBody"><tr><td colspan="8" style="text-align:center;color:#94a3b8;">加载中...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 子面板：高级抽奖 -->
+            <div class="lottery-sub-panel" id="lotteryPanel-advanced" style="display:none;">
+                <div style="background:#fff;border-radius:10px;padding:12px;margin-bottom:16px;border-left:4px solid #9c27b0;font-size:13px;color:#64748b;">
+                    🌟 高级抽奖包含 3 个奖池：<b>normal</b>（基础池，1张高级券）、<b>gold</b>（金池，2张高级券）、<b>diamond</b>（钻石池，3张高级券）。用户根据兑换券数量解锁奖池。
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:var(--admin-dark);" id="advPrizeCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">高级奖品数</div>
+                    </div>
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:#9c27b0;" id="advPrizeNormalCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">基础池</div>
+                    </div>
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:#f59e0b;" id="advPrizeGoldCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">金池</div>
+                    </div>
+                    <div style="background:#fff;padding:16px;border-radius:10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+                        <div style="font-size:1.8rem;font-weight:bold;color:#06d6a0;" id="advPrizeDiamondCount">0</div>
+                        <div style="color:var(--text-light);margin-top:4px;font-size:13px;">钻石池</div>
+                    </div>
+                </div>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead><tr><th>图标</th><th>名称</th><th>奖励类型</th><th>数量</th><th>权重</th><th>奖池</th><th>描述</th><th>操作</th></tr></thead>
+                        <tbody id="advPrizesBody"><tr><td colspan="8" style="text-align:center;color:#94a3b8;">加载中...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
- 
+
+    <!-- 抽奖奖品编辑模态框 -->
+    <div class="modal" id="lotteryPrizeModal">
+        <div class="modal-content" style="max-width:600px;">
+            <div class="modal-title" id="lotteryPrizeModalTitle">添加奖品</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label>图标（Emoji）</label>
+                    <input type="text" id="lotteryPrizeIcon" placeholder="例如：🧸 🎟️ 🎁" maxlength="2" style="font-size:24px;text-align:center;">
+                </div>
+                <div class="form-group">
+                    <label>权重 *</label>
+                    <input type="number" id="lotteryPrizeWeight" min="1" value="10" placeholder="权重越高概率越大">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>奖品名称 *</label>
+                <input type="text" id="lotteryPrizeName" placeholder="例如：玩具小熊">
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group">
+                    <label>奖励类型 *</label>
+                    <select id="lotteryPrizeRewardType" onchange="toggleLotteryPrizeFields()" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="item">🎁 实物奖品</option>
+                        <option value="currency">🎫 兑换券</option>
+                        <option value="bankTicket">💳 银行券</option>
+                        <option value="jixing">🎪 纪行券</option>
+                    </select>
+                </div>
+                <div class="form-group" id="lotteryPrizeAmountGroup" style="display:none;">
+                    <label id="lotteryPrizeAmountLabel">数量</label>
+                    <input type="number" id="lotteryPrizeAmount" min="1" value="1" placeholder="数量">
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div class="form-group" id="lotteryPrizePoolGroup" style="display:none;">
+                    <label>奖池 *</label>
+                    <select id="lotteryPrizePool" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="normal">🌱 基础池（1张高级券）</option>
+                        <option value="gold">🥇 金池（2张高级券）</option>
+                        <option value="diamond">💎 钻石池（3张高级券）</option>
+                    </select>
+                </div>
+                <div class="form-group" id="lotteryPrizeUsableGroup">
+                    <label>是否可使用（实物奖品）</label>
+                    <select id="lotteryPrizeUsable" style="padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;width:100%;">
+                        <option value="true">是（显示在背包可使用）</option>
+                        <option value="false">否</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>描述</label>
+                <textarea id="lotteryPrizeDesc" placeholder="奖品描述（可选）"></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn" onclick="closeLotteryPrizeModal()" style="background:#e2e8f0;color:#334155;">取消</button>
+                <button class="btn btn-primary" onclick="saveLotteryPrize()">保存</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 商品编辑模态框 - 增强版（支持双数量） -->
     <div class="modal" id="productModal">
         <div class="modal-content" style="max-width:700px;">
@@ -553,6 +693,7 @@
             if (tabId === 'notify') loadMailList();
             if (tabId === 'fines') loadFinesList();
             if (tabId === 'bans') loadBansList();
+            if (tabId === 'lottery') loadLotteryPrizesConfig();
         }
         
         // 切换商城子标签（商品/分类）
@@ -1453,9 +1594,300 @@
             }
         }
         
+        // ===== 抽奖配置管理 =====
+
+        // 抽奖配置缓存：{ normal: [...], advanced: [...], updatedAt: '...' }
+        let _lotteryPrizesCache = { normal: [], advanced: [], updatedAt: null };
+        // 当前抽奖子tab：'normal' | 'advanced'
+        let _lotteryActiveSubTab = 'normal';
+        // 当前编辑奖品状态：null=新增, 否则=编辑(值为该奖品的临时id)
+        let _editingLotteryPrizeId = null;
+        // 唯一id生成（用于本地编辑）
+        function _genLotteryPrizeId(list) {
+            if (!list || list.length === 0) return 1;
+            return Math.max(...list.map(p => p.id || 0)) + 1;
+        }
+
+        // 切换抽奖子tab
+        function switchLotterySubTab(subTabId, btnElement) {
+            _lotteryActiveSubTab = subTabId;
+            document.querySelectorAll('#panel-lottery .tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+            document.getElementById('lotteryPanel-normal').style.display = subTabId === 'normal' ? 'block' : 'none';
+            document.getElementById('lotteryPanel-advanced').style.display = subTabId === 'advanced' ? 'block' : 'none';
+            renderLotteryPrizes();
+        }
+
+        // 从云端加载抽奖配置
+        async function loadLotteryPrizesConfig() {
+            if (!sb) { alert('Supabase 未初始化'); return; }
+            try {
+                const { data, error } = await sb
+                    .from('lottery_prizes_config')
+                    .select('*')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
+                    _lotteryPrizesCache = {
+                        normal: Array.isArray(data.normal_prizes) ? data.normal_prizes : [],
+                        advanced: Array.isArray(data.advanced_prizes) ? data.advanced_prizes : [],
+                        updatedAt: data.updated_at
+                    };
+                    console.log('[Admin] 抽奖配置加载成功: normal=', _lotteryPrizesCache.normal.length,
+                                'advanced=', _lotteryPrizesCache.advanced.length,
+                                'updatedAt=', _lotteryPrizesCache.updatedAt);
+                } else {
+                    // 云端无数据，使用空列表（管理员将新建）
+                    _lotteryPrizesCache = { normal: [], advanced: [], updatedAt: null };
+                    console.log('[Admin] 云端暂无抽奖配置，使用空列表');
+                }
+                renderLotteryPrizes();
+            } catch (e) {
+                console.error('[Admin] 加载抽奖配置失败:', e);
+                alert('❌ 加载抽奖配置失败: ' + e.message + '\n\n如果尚未建表，请先在 Supabase 中执行 lottery_prizes_config 建表SQL。');
+            }
+        }
+
+        // 保存抽奖配置到云端
+        async function saveLotteryPrizesConfig() {
+            if (!sb) { alert('Supabase 未初始化'); return; }
+            try {
+                const payload = {
+                    id: 1,
+                    normal_prizes: _lotteryPrizesCache.normal,
+                    advanced_prizes: _lotteryPrizesCache.advanced,
+                    updated_at: new Date().toISOString(),
+                    updated_by: USER_ID
+                };
+
+                const { error } = await sb
+                    .from('lottery_prizes_config')
+                    .upsert(payload, { onConflict: 'id' });
+
+                if (error) throw error;
+
+                _lotteryPrizesCache.updatedAt = payload.updated_at;
+                alert('✅ 抽奖配置已保存到云端！用户下次打开抽奖页将自动拉取。');
+                console.log('[Admin] 抽奖配置已保存, updatedAt=', payload.updated_at);
+            } catch (e) {
+                console.error('[Admin] 保存抽奖配置失败:', e);
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
+
+        // 渲染奖品表格
+        function renderLotteryPrizes() {
+            // 普通抽奖
+            const normalList = _lotteryPrizesCache.normal || [];
+            const normalBody = document.getElementById('normalPrizesBody');
+            document.getElementById('normalPrizeCount').textContent = normalList.length;
+            document.getElementById('normalPrizeWeight').textContent = normalList.reduce((s, p) => s + (parseInt(p.weight) || 0), 0);
+
+            if (normalList.length === 0) {
+                normalBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">暂无奖品，点击右上角"添加奖品"</td></tr>';
+            } else {
+                normalBody.innerHTML = normalList.map(p => `
+                    <tr>
+                        <td style="font-size:22px;text-align:center;">${p.icon || '🎁'}</td>
+                        <td>${escapeHtml(p.name || '')}</td>
+                        <td>${_rewardTypeLabel(p.rewardType)}</td>
+                        <td>${p.rewardType === 'item' ? '—' : (p.currencyAmount || 0)}</td>
+                        <td>${p.weight || 0}</td>
+                        <td>${p.usable === false ? '❌ 否' : '✅ 是'}</td>
+                        <td style="max-width:200px;color:#64748b;font-size:12px;">${escapeHtml(p.description || '')}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="showLotteryPrizeModal('normal', ${p.id})" style="padding:5px 10px;font-size:12px;">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteLotteryPrize('normal', ${p.id})" style="padding:5px 10px;font-size:12px;">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // 高级抽奖
+            const advList = _lotteryPrizesCache.advanced || [];
+            const advBody = document.getElementById('advPrizesBody');
+            document.getElementById('advPrizeCount').textContent = advList.length;
+            document.getElementById('advPrizeNormalCount').textContent = advList.filter(p => (p.pool || 'normal') === 'normal').length;
+            document.getElementById('advPrizeGoldCount').textContent = advList.filter(p => p.pool === 'gold').length;
+            document.getElementById('advPrizeDiamondCount').textContent = advList.filter(p => p.pool === 'diamond').length;
+
+            if (advList.length === 0) {
+                advBody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;">暂无奖品，点击右上角"添加奖品"</td></tr>';
+            } else {
+                advBody.innerHTML = advList.map(p => `
+                    <tr>
+                        <td style="font-size:22px;text-align:center;">${p.icon || '🎁'}</td>
+                        <td>${escapeHtml(p.name || '')}</td>
+                        <td>${_rewardTypeLabel(p.rewardType)}</td>
+                        <td>${p.rewardType === 'item' ? '—' : (p.currencyAmount || 0)}</td>
+                        <td>${p.weight || 0}</td>
+                        <td>${_poolLabel(p.pool)}</td>
+                        <td style="max-width:200px;color:#64748b;font-size:12px;">${escapeHtml(p.description || '')}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="showLotteryPrizeModal('advanced', ${p.id})" style="padding:5px 10px;font-size:12px;">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteLotteryPrize('advanced', ${p.id})" style="padding:5px 10px;font-size:12px;">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function _rewardTypeLabel(t) {
+            switch (t) {
+                case 'currency': return '🎫 兑换券';
+                case 'bankTicket': return '💳 银行券';
+                case 'jixing': return '🎪 纪行券';
+                default: return '🎁 实物';
+            }
+        }
+        function _poolLabel(p) {
+            switch (p) {
+                case 'gold': return '🥇 金';
+                case 'diamond': return '💎 钻';
+                default: return '🌱 基础';
+            }
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        // 打开奖品模态框（新增或编辑）
+        function showLotteryPrizeModal(subTab, prizeId) {
+            // subTab未传时使用当前激活的子tab
+            subTab = subTab || _lotteryActiveSubTab;
+            _editingLotteryPrizeId = (typeof prizeId !== 'undefined') ? prizeId : null;
+
+            const isAdvanced = (subTab === 'advanced');
+            const titleEl = document.getElementById('lotteryPrizeModalTitle');
+            const saveBtn = document.querySelector('#lotteryPrizeModal .btn-primary');
+
+            // 控制奖池字段显示
+            document.getElementById('lotteryPrizePoolGroup').style.display = isAdvanced ? 'block' : 'none';
+
+            if (_editingLotteryPrizeId !== null) {
+                // 编辑模式
+                const list = isAdvanced ? _lotteryPrizesCache.advanced : _lotteryPrizesCache.normal;
+                const prize = list.find(p => p.id === _editingLotteryPrizeId);
+                if (!prize) { alert('奖品不存在'); return; }
+                titleEl.textContent = '编辑奖品';
+                document.getElementById('lotteryPrizeIcon').value = prize.icon || '';
+                document.getElementById('lotteryPrizeWeight').value = prize.weight || 10;
+                document.getElementById('lotteryPrizeName').value = prize.name || '';
+                document.getElementById('lotteryPrizeRewardType').value = prize.rewardType || 'item';
+                document.getElementById('lotteryPrizeAmount').value = prize.currencyAmount || 1;
+                document.getElementById('lotteryPrizePool').value = prize.pool || 'normal';
+                document.getElementById('lotteryPrizeUsable').value = (prize.usable === false) ? 'false' : 'true';
+                document.getElementById('lotteryPrizeDesc').value = prize.description || '';
+            } else {
+                // 新增模式
+                titleEl.textContent = '添加奖品（' + (isAdvanced ? '高级抽奖' : '普通抽奖') + '）';
+                document.getElementById('lotteryPrizeIcon').value = '';
+                document.getElementById('lotteryPrizeWeight').value = '10';
+                document.getElementById('lotteryPrizeName').value = '';
+                document.getElementById('lotteryPrizeRewardType').value = 'item';
+                document.getElementById('lotteryPrizeAmount').value = '1';
+                document.getElementById('lotteryPrizePool').value = 'normal';
+                document.getElementById('lotteryPrizeUsable').value = 'true';
+                document.getElementById('lotteryPrizeDesc').value = '';
+            }
+
+            // 记录当前编辑的子tab（用于saveLotteryPrize判断目标列表）
+            _editingLotterySubTab = subTab;
+            toggleLotteryPrizeFields();
+            document.getElementById('lotteryPrizeModal').style.display = 'flex';
+        }
+        let _editingLotterySubTab = 'normal';
+
+        function closeLotteryPrizeModal() {
+            document.getElementById('lotteryPrizeModal').style.display = 'none';
+            _editingLotteryPrizeId = null;
+        }
+
+        // 切换奖励类型时显示/隐藏数量字段、可用字段
+        function toggleLotteryPrizeFields() {
+            const type = document.getElementById('lotteryPrizeRewardType').value;
+            const isItem = (type === 'item');
+            document.getElementById('lotteryPrizeAmountGroup').style.display = isItem ? 'none' : 'block';
+            document.getElementById('lotteryPrizeUsableGroup').style.display = isItem ? 'block' : 'none';
+
+            const labelEl = document.getElementById('lotteryPrizeAmountLabel');
+            const inputEl = document.getElementById('lotteryPrizeAmount');
+            if (type === 'currency') { labelEl.textContent = '兑换券数量'; inputEl.placeholder = '兑换券数量'; }
+            else if (type === 'bankTicket') { labelEl.textContent = '银行券数量'; inputEl.placeholder = '银行券数量'; }
+            else if (type === 'jixing') { labelEl.textContent = '纪行券数量'; inputEl.placeholder = '纪行券数量'; }
+        }
+
+        // 保存奖品（新增或更新到缓存，未保存到云端）
+        function saveLotteryPrize() {
+            const subTab = _editingLotterySubTab;
+            const isAdvanced = (subTab === 'advanced');
+            const list = isAdvanced ? _lotteryPrizesCache.advanced : _lotteryPrizesCache.normal;
+
+            const name = document.getElementById('lotteryPrizeName').value.trim();
+            const weight = parseInt(document.getElementById('lotteryPrizeWeight').value);
+            const rewardType = document.getElementById('lotteryPrizeRewardType').value;
+            const icon = document.getElementById('lotteryPrizeIcon').value.trim() || '🎁';
+            const desc = document.getElementById('lotteryPrizeDesc').value.trim();
+            const usable = document.getElementById('lotteryPrizeUsable').value === 'true';
+            const pool = document.getElementById('lotteryPrizePool').value;
+            let amount = 0;
+            if (rewardType !== 'item') {
+                amount = parseInt(document.getElementById('lotteryPrizeAmount').value) || 0;
+                if (amount <= 0) {
+                    alert('请输入有效的数量');
+                    return;
+                }
+            }
+
+            if (!name) { alert('请输入奖品名称'); return; }
+            if (!weight || weight <= 0) { alert('请输入有效的权重值'); return; }
+
+            if (_editingLotteryPrizeId !== null) {
+                // 编辑
+                const idx = list.findIndex(p => p.id === _editingLotteryPrizeId);
+                if (idx === -1) { alert('奖品不存在'); return; }
+                list[idx] = {
+                    ...list[idx],
+                    name: name, weight: weight, rewardType: rewardType,
+                    currencyAmount: amount, description: desc, icon: icon,
+                    usable: usable
+                };
+                if (isAdvanced) list[idx].pool = pool;
+            } else {
+                // 新增
+                const newPrize = {
+                    id: _genLotteryPrizeId(list),
+                    name: name, weight: weight, rewardType: rewardType,
+                    currencyAmount: amount, description: desc, icon: icon,
+                    usable: usable
+                };
+                if (isAdvanced) newPrize.pool = pool;
+                list.push(newPrize);
+            }
+
+            closeLotteryPrizeModal();
+            renderLotteryPrizes();
+            // 提醒用户需手动保存到云端
+            console.log('[Admin] 抽奖奖品已暂存，请点击"保存到云端"以生效');
+        }
+
+        // 删除奖品（仅从缓存删除）
+        function deleteLotteryPrize(subTab, prizeId) {
+            const isAdvanced = (subTab === 'advanced');
+            const list = isAdvanced ? _lotteryPrizesCache.advanced : _lotteryPrizesCache.normal;
+            const prize = list.find(p => p.id === prizeId);
+            if (!prize) return;
+            if (!confirm(`确定删除奖品「${prize.name}」吗？\n\n⚠️ 删除后请点击"保存到云端"以生效。`)) return;
+            const idx = list.findIndex(p => p.id === prizeId);
+            if (idx !== -1) list.splice(idx, 1);
+            renderLotteryPrizes();
+        }
+
         // 初始化
         initSupabase();
-        loadLotteryConfig();
     </script>
 </body>
 </html>

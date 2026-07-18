@@ -441,18 +441,7 @@
             display: inline-block;
             margin-bottom: 8px;
         }
-        
-        .prize-stock {
-            background: linear-gradient(135deg, #ffd700, #ff9800);
-            color: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-block;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
+
         .prize-description {
             color: #666;
             font-size: 0.9rem;
@@ -762,7 +751,6 @@
         <div class="nav-tabs">
             <div class="nav-tab active" data-tab="lottery">🎡 豪华抽奖</div>
             <div class="nav-tab" data-tab="records">📝 抽奖记录</div>
-            <div class="nav-tab" data-tab="management">⚙️ 高级设置</div>
         </div>
         
         <!-- 抽奖界面 -->
@@ -818,45 +806,12 @@
                 <button class="btn btn-danger" id="clearRecordsBtn">清空记录</button>
                 <button class="btn btn-warning" id="resetProgressBtn">重置进度</button>
             </div>
-            
+
             <div class="rules-container" id="recordsList">
                 <!-- 抽奖记录将通过JavaScript动态添加 -->
             </div>
         </div>
-        
-        <!-- 设置 -->
-        <div id="management" class="tab-content">
-            <h2>高级设置</h2>
-            <button class="btn pulse" id="addPrizeBtn">➕ 添加新奖品</button>
-            
-            <!-- 奖池筛选器 -->
-            <div id="managePoolFilter" style="margin: 20px 0; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <!-- 奖池筛选按钮将通过JavaScript动态添加 -->
-            </div>
-            
-            <div class="prizes-grid" id="managePrizesContainer">
-                <!-- 管理奖品将通过JavaScript动态添加 -->
-            </div>
-        </div>
-        
-        <!-- 密码验证模态框 -->
-        <div class="modal" id="passwordModal" style="display:none;">
-            <div class="modal-content">
-                <h2 id="passwordModalTitle">请输入密码</h2>
-                <div id="passwordModalDescription" style="color: #666; margin-bottom: 20px; font-size: 1rem;">
-                    请输入管理员密码以继续操作
-                </div>
-                <div class="form-group">
-                    <label for="passwordInput">密码</label>
-                    <input type="password" id="passwordInput" placeholder="请输入访问密码">
-                </div>
-                <div class="form-group" style="display: flex; gap: 10px; justify-content: center;">
-                    <button class="btn" id="confirmPasswordBtn">确认</button>
-                    <button class="btn btn-danger" id="cancelPasswordBtn">取消</button>
-                </div>
-            </div>
-        </div>
-        
+
         <!-- 抽奖结果卡片 -->
         <div class="result-card" id="resultCard" style="display:none;">
             <div class="result-title">恭喜你获得了</div>
@@ -865,59 +820,7 @@
             <button class="btn" id="confirmResultBtn">确定</button>
         </div>
     </div>
-    
-    <!-- 模态框部分 -->
-    <!-- 添加奖品模态框 -->
-    <div class="modal" id="addPrizeModal">
-        <div class="modal-content">
-            <h2 id="prizeModalTitle">添加新奖品</h2>
-            <div class="form-group">
-                <label for="prizeName">奖品名称</label>
-                <input type="text" id="prizeName" placeholder="例如：豪华玩具">
-            </div>
-            <div class="form-group">
-                <label for="prizeWeight">奖品权重</label>
-                <input type="number" id="prizeWeight" min="1" value="10" placeholder="权重越高，中奖概率越大">
-            </div>
-            <div class="form-group">
-                <label for="prizeStock">库存（-1为无限）</label>
-                <input type="number" id="prizeStock" min="-1" value="-1">
-            </div>
-            <div class="form-group">
-                <label for="prizeRewardType">奖励类型</label>
-                <select id="prizeRewardType">
-                    <option value="item">实物奖品</option>
-                    <option value="currency">兑换券</option>
-                    <option value="bankTicket">银行券</option>
-                    <option value="jixing">纪行券</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="prizePool">奖池类型（普通＜黄金＜钻石）</label>
-                <select id="prizePool">
-                    <option value="normal">普通奖池</option>
-                    <option value="gold">黄金奖池</option>
-                    <option value="diamond">钻石奖池</option>
-                </select>
-            </div>
-            <div class="form-group" id="currencyAmountGroup" style="display:none;">
-                <label id="currencyAmountLabel">兑换券数量</label>
-                <input type="number" id="currencyAmountInput" min="1" placeholder="请输入兑换券数量">
-            </div>
- 
-            <div class="form-group">
-                <label for="prizeDescription">奖品描述</label>
-                <textarea id="prizeDescription" placeholder="请输入奖品描述"></textarea>
-            </div>
-            <button class="btn" id="confirmAddPrizeBtn">添加奖品</button>
-            <button class="btn btn-danger" id="cancelAddPrizeBtn">取消</button>
-        </div>
-    </div>
-    
- 
-    
- 
-    
+
     <!-- 状态通知 -->
     <div class="status-notification" id="statusNotification"></div>
     
@@ -976,10 +879,7 @@
  
         // 当前选中的奖池(用户可主动降级)
         let selectedPool = null;
-        
-        // 管理页奖池筛选状态（"all"表示全部）
-        let managePoolFilter = "all";
- 
+
         // 初始化奖池选择器
         function initPoolSelector() {
             // 移除旧的池选择器（如果存在）
@@ -1107,7 +1007,6 @@
                 name: "豪华玩具熊",
                 rewardType: "item",
                 weight: 20,
-                stock: 5,
                 description: "精美的豪华玩具熊，柔软舒适",
                 icon: "🧸",
                 pool: "normal"
@@ -1117,7 +1016,6 @@
                 name: "高级积木套装",
                 rewardType: "item",
                 weight: 15,
-                stock: 3,
                 description: "培养创造力的高级积木套装",
                 icon: "🧩",
                 pool: "normal"
@@ -1127,7 +1025,6 @@
                 name: "兑换券 x5",
                 rewardType: "currency",
                 weight: 30,
-                stock: -1,
                 currencyAmount: 5,
                 description: "获得5张兑换券",
                 icon: "🎫",
@@ -1138,7 +1035,6 @@
                 name: "豪华遥控车",
                 rewardType: "item",
                 weight: 10,
-                stock: 2,
                 description: "高速遥控赛车，炫酷外观",
                 icon: "🏎️",
                 pool: "gold"
@@ -1148,7 +1044,6 @@
                 name: "兑换券 x20",
                 rewardType: "currency",
                 weight: 5,
-                stock: -1,
                 currencyAmount: 20,
                 description: "获得20张兑换券",
                 icon: "🎫",
@@ -1159,7 +1054,6 @@
                 name: "神秘礼盒",
                 rewardType: "item",
                 weight: 8,
-                stock: 1,
                 description: "内含神秘惊喜",
                 icon: "🎁",
                 pool: "diamond"
@@ -1176,7 +1070,6 @@
         
         // DOM元素
         const prizesContainer = document.getElementById("prizesContainer");
-        const managePrizesContainer = document.getElementById("managePrizesContainer");
         const recordsList = document.getElementById("recordsList");
         const premiumAmountElement = document.getElementById("premiumAmount");
         const voucherAmountElement = document.getElementById("voucherAmount");
@@ -1187,44 +1080,15 @@
         const resultContent = document.getElementById("resultContent");
         const rewardTags = document.getElementById("rewardTags");
         const confirmResultBtn = document.getElementById("confirmResultBtn");
-        const addPrizeBtn = document.getElementById("addPrizeBtn");
         const clearRecordsBtn = document.getElementById("clearRecordsBtn");
         const resetProgressBtn = document.getElementById("resetProgressBtn");
-        
-        // 模态框元素
-        const addPrizeModal = document.getElementById("addPrizeModal");
-        const confirmAddPrizeBtn = document.getElementById("confirmAddPrizeBtn");
-        const cancelAddPrizeBtn = document.getElementById("cancelAddPrizeBtn");
-        
-        // 表单元素
-        const prizeName = document.getElementById("prizeName");
-        const prizeWeight = document.getElementById("prizeWeight");
-        const prizeStock = document.getElementById("prizeStock");
-        const prizeRewardType = document.getElementById("prizeRewardType");
-        const prizePool = document.getElementById("prizePool");
-        const currencyAmountGroup = document.getElementById("currencyAmountGroup");
-        const currencyAmountInput = document.getElementById("currencyAmountInput");
-        const prizeDescription = document.getElementById("prizeDescription");
-        
-        // 密码验证元素
-        const passwordModal = document.getElementById("passwordModal");
-        const passwordInput = document.getElementById("passwordInput");
-        const confirmPasswordBtn = document.getElementById("confirmPasswordBtn");
-        const cancelPasswordBtn = document.getElementById("cancelPasswordBtn");
-        
-        // 密码设置
-        // 从localStorage读取密码，与主页保持同步
-        const getAdminPassword = () => {
-            return localStorage.getItem('adminPassword') || "1234"; // 默认密码
-        }; // 默认密码
-        
+
         // 初始化
         function init() {
             createDecorations();
             loadData();
             initPoolSelector();
             renderPrizes();
-            renderManagePrizes();
             renderRecords();
             updateCurrencyDisplay();
             updateCountersDisplay();
@@ -1300,6 +1164,70 @@
             localStorage.setItem("advancedCounterA", counterA.toString());
             localStorage.setItem("advancedCounterB", counterB.toString());
         }
+
+        // 从云端拉取抽奖配置（管理员在控制台统一编辑的全局奖品池）
+        // 决策2A：加载时检查云端updated_at，新则拉取覆盖
+        async function loadPrizesFromCloud() {
+            if (!window.supabase) {
+                console.warn('[AdvancedChoujiang] Supabase SDK 未加载，跳过奖品配置云端同步');
+                return;
+            }
+            try {
+                const sbClient = window.supabase.createClient(
+                    'https://qhnudlhpwmdzdxufcqjc.supabase.co',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobnVkbGhwd21kemR4dWZjcWpjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NTYzNzgzNSwiZXhwIjoyMDkxMjEzODM1fQ.WuH9mFVKKKQGFwjHBFO4NQhs6mL0oVRVlAlzGR5GYqc',
+                    {
+                        db: { schema: 'public' },
+                        global: { headers: { 'Cache-Control': 'no-cache,no-store,must-revalidate', 'Pragma': 'no-cache', 'Expires': '0' } }
+                    }
+                );
+
+                const { data, error } = await sbClient
+                    .from('lottery_prizes_config')
+                    .select('normal_prizes, advanced_prizes, updated_at')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (!data) {
+                    console.log('[AdvancedChoujiang] 云端暂无抽奖配置，使用本地兜底');
+                    return;
+                }
+
+                const cloudPrizes = Array.isArray(data.advanced_prizes) ? data.advanced_prizes : null;
+                if (!cloudPrizes || cloudPrizes.length === 0) {
+                    console.log('[AdvancedChoujiang] 云端高级奖品池为空，使用本地兜底');
+                    return;
+                }
+
+                // 比较云端 updated_at 与本地缓存的时间戳
+                const cloudUpdatedAt = data.updated_at || '';
+                const localUpdatedAt = localStorage.getItem(userKey('advancedPrizes_updated_at')) || '';
+
+                if (localUpdatedAt && cloudUpdatedAt <= localUpdatedAt) {
+                    console.log('[AdvancedChoujiang] 本地奖品配置已是最新，跳过覆盖 (cloud:', cloudUpdatedAt, ')');
+                    return;
+                }
+
+                // 云端较新或本地无缓存，覆盖本地
+                // 清理可能残留的 stock 字段（管理员配置已不含 stock）
+                const cleanedPrizes = cloudPrizes.map(p => {
+                    const { stock, ...rest } = p;
+                    return rest;
+                });
+                localStorage.setItem(userKey("advancedPrizes"), JSON.stringify(cleanedPrizes));
+                localStorage.setItem(userKey('advancedPrizes_updated_at'), cloudUpdatedAt);
+                // 同步更新全局 prizes 变量
+                prizes = cleanedPrizes;
+                console.log('[AdvancedChoujiang] 🎁 云端高级奖品配置已拉取并覆盖本地 (cloud:', cloudUpdatedAt, ', 数量:', cleanedPrizes.length, ')');
+
+                // 刷新UI
+                if (typeof renderPrizes === 'function') renderPrizes();
+            } catch (e) {
+                console.error('[AdvancedChoujiang] 加载云端奖品配置失败:', e);
+            }
+        }
         
         // 渲染奖品
         function renderPrizes() {
@@ -1334,149 +1262,15 @@
             }
  
             filteredPrizes.forEach(prize => {
-                if (prize.stock !== 0) {
-                    const prizeCard = document.createElement("div");
-                    prizeCard.classList.add("prize-card");
-                    prizeCard.innerHTML = `
-                        <div class="prize-icon">${prize.icon || "🎁"}</div>
-                        <div class="prize-name">${prize.name}</div>
-                        <div class="prize-weight">权重: ${prize.weight}</div>
-                        <div class="prize-stock">库存: ${prize.stock === -1 ? "无限" : prize.stock}</div>
-                        <div class="prize-description">${prize.description || ""}</div>
-                    `;
-                    prizesContainer.appendChild(prizeCard);
-                }
-            });
-        }
-        
-        // 初始化管理页奖池筛选器
-        function initManagePoolFilter() {
-            const filterContainer = document.getElementById('managePoolFilter');
-            if (!filterContainer) return;
-            
-            filterContainer.innerHTML = '';
-            
-            // 统计各奖池奖品数量
-            const poolCounts = {
-                all: prizes.length,
-                normal: prizes.filter(p => (p.pool || "normal") === "normal").length,
-                gold: prizes.filter(p => p.pool === "gold").length,
-                diamond: prizes.filter(p => p.pool === "diamond").length
-            };
-            
-            // 创建"全部"按钮
-            const allBtn = document.createElement('button');
-            allBtn.className = `pool-filter-btn ${managePoolFilter === 'all' ? 'selected' : ''}`;
-            allBtn.dataset.pool = 'all';
-            allBtn.style.cssText = `
-                padding: 12px 20px;
-                border-radius: 15px;
-                border: 2px solid #9c27b0;
-                background: ${managePoolFilter === 'all' ? 'linear-gradient(135deg, #9c27b0, #673ab7)' : 'white'};
-                color: ${managePoolFilter === 'all' ? 'white' : '#9c27b0'};
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s;
-                min-width: 120px;
-            `;
-            allBtn.innerHTML = `📋 全部<br><span style="font-size: 0.85rem; opacity: 0.9;">(${poolCounts.all}个)</span>`;
-            allBtn.addEventListener('click', () => {
-                managePoolFilter = 'all';
-                initManagePoolFilter();
-                renderManagePrizes();
-            });
-            filterContainer.appendChild(allBtn);
-            
-            // 创建各奖池筛选按钮
-            Object.entries(POOL_CONFIG).forEach(([poolType, config]) => {
-                const btn = document.createElement('button');
-                btn.className = `pool-filter-btn ${managePoolFilter === poolType ? 'selected' : ''}`;
-                btn.dataset.pool = poolType;
-                btn.style.cssText = `
-                    padding: 12px 20px;
-                    border-radius: 15px;
-                    border: 2px solid ${config.color};
-                    background: ${managePoolFilter === poolType ? `linear-gradient(135deg, ${config.color}, ${config.color}88)` : 'white'};
-                    color: ${managePoolFilter === poolType ? 'white' : config.color};
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: all 0.3s;
-                    min-width: 120px;
-                `;
-                
-                const icon = poolType === 'diamond' ? '💎' : poolType === 'gold' ? '🥇' : '🥉';
-                btn.innerHTML = `${icon} ${config.name}<br><span style="font-size: 0.85rem; opacity: 0.9;">(${poolCounts[poolType]}个)</span>`;
-                btn.addEventListener('click', () => {
-                    managePoolFilter = poolType;
-                    initManagePoolFilter();
-                    renderManagePrizes();
-                });
-                filterContainer.appendChild(btn);
-            });
-        }
- 
-        // 渲染管理奖品
-        function renderManagePrizes() {
-            managePrizesContainer.innerHTML = "";
-            
-            // 初始化筛选器
-            initManagePoolFilter();
- 
-            // 根据筛选条件过滤奖品
-            let filteredPrizes = prizes;
-            if (managePoolFilter !== 'all') {
-                filteredPrizes = prizes.filter(prize => (prize.pool || "normal") === managePoolFilter);
-            }
- 
-            if (filteredPrizes.length === 0) {
-                managePrizesContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px; grid-column: 1/-1;">暂无奖品，请添加</p>';
-                return;
-            }
- 
-            filteredPrizes.forEach(prize => {
-                const prizePool = prize.pool || "normal";
-                const poolConfig = POOL_CONFIG[prizePool];
-                
                 const prizeCard = document.createElement("div");
                 prizeCard.classList.add("prize-card");
-                prizeCard.style.borderLeftColor = poolConfig.color;
                 prizeCard.innerHTML = `
                     <div class="prize-icon">${prize.icon || "🎁"}</div>
                     <div class="prize-name">${prize.name}</div>
-                    <div style="margin: 5px 0;">
-                        <span style="background: ${poolConfig.color}; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.85rem;">
-                            ${poolConfig.name}
-                        </span>
-                    </div>
                     <div class="prize-weight">权重: ${prize.weight}</div>
-                    <div class="prize-stock">库存: ${prize.stock === -1 ? "无限" : prize.stock}</div>
-                    ${prize.rewardType === 'currency' ? `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem;">${prize.currencyAmount || 0}兑换券</div>` : ''}
-                    ${prize.rewardType === 'bankTicket' ? `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; background: linear-gradient(135deg, #ff6b9d 0%, #ff9a9e 100%);">${prize.currencyAmount || 0}银行券</div>` : ''}
-                    ${prize.rewardType === 'jixing' ? `<div class="reward-tag" style="margin-top:5px; font-size:0.9rem; background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">${prize.currencyAmount || 0}纪行券</div>` : ''}
                     <div class="prize-description">${prize.description || ""}</div>
-                    <div class="prize-actions">
-                        <button class="btn btn-edit" data-id="${prize.id}">编辑</button>
-                        <button class="btn btn-danger" data-id="${prize.id}">删除</button>
-                    </div>
                 `;
- 
-                managePrizesContainer.appendChild(prizeCard);
- 
-                const editBtn = prizeCard.querySelector(".btn-edit");
-                editBtn.addEventListener("click", () => {
-                    openEditPrizeModal(prize.id);
-                });
- 
-                const deleteBtn = prizeCard.querySelector(".btn-danger");
-                deleteBtn.addEventListener("click", () => {
-                    if (confirm(`确定要删除奖品"${prize.name}"吗？`)) {
-                        prizes = prizes.filter(p => p.id !== prize.id);
-                        saveData();
-                        renderPrizes();
-                        renderManagePrizes();
-                        showNotification("奖品已删除", "success");
-                    }
-                });
+                prizesContainer.appendChild(prizeCard);
             });
         }
         
@@ -1584,81 +1378,36 @@
             document.querySelectorAll(".nav-tab").forEach(tab => {
                 tab.addEventListener("click", function() {
                     const targetTab = this.dataset.tab;
-                    if (targetTab === "management") {
-                        showPasswordModal("management");
-                    } else if (targetTab === "lottery") {
-                        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-                        this.classList.add("active");
-                        document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
-                        document.getElementById(targetTab).classList.add("active");
+                    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
+                    document.getElementById(targetTab).classList.add("active");
+                    if (targetTab === "lottery") {
                         initPoolSelector();
-                    } else {
-                        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-                        this.classList.add("active");
-                        document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
-                        document.getElementById(targetTab).classList.add("active");
                     }
                 });
             });
-            
-            if (confirmPasswordBtn) confirmPasswordBtn.addEventListener("click", checkPassword);
-            if (cancelPasswordBtn) cancelPasswordBtn.addEventListener("click", closePasswordModal);
-            if (addPrizeBtn) addPrizeBtn.addEventListener("click", showAddPrizeModal);
-            
+
             startLotteryBtn.addEventListener("click", startLottery);
             startVoucherLotteryBtn.addEventListener("click", startVoucherLottery);
             confirmResultBtn.addEventListener("click", () => {
                 resultCard.style.display = "none";
                 isLotteryRunning = false;
             });
- 
-            prizeRewardType.addEventListener("change", () => {
-                const isCurrency = prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket" || prizeRewardType.value === "jixing";
-                currencyAmountGroup.style.display = isCurrency ? "block" : "none";
-                
-                // 动态更新标签文本
-                const label = document.getElementById('currencyAmountLabel');
-                const input = document.getElementById('currencyAmountInput');
-                if (prizeRewardType.value === "currency") {
-                    label.textContent = '兑换券数量';
-                    input.placeholder = '请输入兑换券数量';
-                } else if (prizeRewardType.value === "bankTicket") {
-                    label.textContent = '银行券数量';
-                    input.placeholder = '请输入银行券数量';
-                } else if (prizeRewardType.value === "jixing") {
-                    label.textContent = '纪行券数量';
-                    input.placeholder = '请输入纪行券数量';
+
+            clearRecordsBtn.addEventListener("click", () => {
+                if (confirm("确定要清空所有抽奖记录吗？")) {
+                    executeClearRecords();
                 }
             });
-            
-            confirmAddPrizeBtn.addEventListener("click", function() {
-                if (editingPrizeId !== null) {
-                    editPrize();
-                } else {
-                    addPrize();
+
+            resetProgressBtn.addEventListener("click", () => {
+                if (confirm("确定要重置保底进度吗？")) {
+                    executeResetProgress();
                 }
             });
-            cancelAddPrizeBtn.addEventListener("click", () => {
-                const modal = document.getElementById('addPrizeModal');
-                if (modal) modal.style.display = 'none';
-                editingPrizeId = null; // 重置编辑状态
-            });
-            
-            clearRecordsBtn.addEventListener("click", clearRecordsWithPassword);
-            
-            resetProgressBtn.addEventListener("click", resetProgressWithPassword);
         }
-        
-        // 清空记录（带密码验证）
-        function clearRecordsWithPassword() {
-            showPasswordModal("clearRecords");
-        }
- 
-        // 重置进度（带密码验证）
-        function resetProgressWithPassword() {
-            showPasswordModal("resetProgress");
-        }
- 
+
         // 执行清空记录操作
         function executeClearRecords() {
             records = [];
@@ -1666,7 +1415,7 @@
             renderRecords();
             showNotification("记录已清空", "success");
         }
- 
+
         // 执行重置进度操作
         function executeResetProgress() {
             records = [];
@@ -1693,8 +1442,8 @@
             }
  
             const poolPrizes = filterPrizesByPool(prizes, poolType);
-            const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
- 
+            const availablePrizes = poolPrizes;
+
             if (availablePrizes.length === 0) {
                 showNotification("当前奖池没有可用奖品", "error");
                 return;
@@ -1807,17 +1556,11 @@
                         }
                     }
                     
-                    // 减少库存
-                    if (result.prize.stock > 0) {
-                        result.prize.stock--;
-                    }
-                    
                     // 保存数据
                     saveData();
-                    
+
                     // 更新界面
                     renderPrizes();
-                    renderManagePrizes();
                     renderRecords();
                     
                     // 更新保底进度显示
@@ -1857,7 +1600,7 @@
  
             // 检查当前奖池是否有可用奖品
             const poolPrizes = filterPrizesByPool(prizes, poolType);
-            const availablePrizes = poolPrizes.filter(prize => prize.stock !== 0);
+            const availablePrizes = poolPrizes;
             if (availablePrizes.length === 0) {
                 showNotification("当前奖池没有可用奖品", "error");
                 return;
@@ -1931,17 +1674,11 @@
                         }
                     }
                     
-                    // 减少库存
-                    if (result.prize.stock > 0) {
-                        result.prize.stock--;
-                    }
-                    
                     // 保存数据
                     saveData();
-                    
+
                     // 更新界面
                     renderPrizes();
-                    renderManagePrizes();
                     renderRecords();
                     
                     // 更新保底进度显示
@@ -1960,27 +1697,26 @@
         function drawGuaranteedPrize(minWeight, maxWeight, isGuaranteedType, poolPrizes = null) {
             const prizesToUse = poolPrizes || prizes;
             const eligiblePrizes = prizesToUse.filter(prize =>
-                prize.stock !== 0 && prize.weight >= minWeight && prize.weight < maxWeight
+                prize.weight >= minWeight && prize.weight < maxWeight
             );
-            
+
             if (eligiblePrizes.length === 0) {
                 const currentVoucherAmount = parseInt(localStorage.getItem('voucher') || '0');
                 const currencyAmount = Math.max(1, Math.round(
                     currentVoucherAmount * (isGuaranteedType === 'A' ? 0.40 : 1.15)
                 ));
-                
+
                 return {
                     id: Date.now(),
                     name: `保底兑换券 x${currencyAmount}`,
                     rewardType: "currency",
                     weight: isGuaranteedType === 'A' ? 5 : 1,
-                    stock: -1,
                     currencyAmount: currencyAmount,
                     description: `保底奖励：${currencyAmount}张兑换券`,
                     icon: "🎫"
                 };
             }
-            
+
             return eligiblePrizes[Math.floor(Math.random() * eligiblePrizes.length)];
         }
         
@@ -2011,7 +1747,7 @@
                 return { prize: prize, isGuaranteed: true };
             }
  
-            const eligiblePrizes = poolPrizes.filter(prize => prize.stock !== 0);
+            const eligiblePrizes = poolPrizes;
             if (eligiblePrizes.length === 0) return null;
  
             const totalWeight = eligiblePrizes.reduce((sum, prize) => sum + prize.weight, 0);
@@ -2132,282 +1868,6 @@
             return colors[Math.floor(Math.random() * colors.length)];
         }
         
-        // 显示密码验证模态框
-        function showPasswordModal(actionType) {
-            passwordInput.value = "";
-            passwordModal.dataset.actionType = actionType || "";
-            
-            // 更新模态框标题和描述
-            const titleElement = document.getElementById('passwordModalTitle');
-            const descriptionElement = document.getElementById('passwordModalDescription');
-            
-            if (actionType === "clearRecords") {
-                titleElement.textContent = "清空记录 - 密码验证";
-                descriptionElement.textContent = "请输入管理员密码以清空所有抽奖记录";
-            } else if (actionType === "resetProgress") {
-                titleElement.textContent = "重置进度 - 密码验证";
-                descriptionElement.textContent = "请输入管理员密码以重置所有进度和保底计数器";
-            } else if (actionType === "management") {
-                titleElement.textContent = "抽奖设置 - 密码验证";
-                descriptionElement.textContent = "请输入管理员密码以进入抽奖设置页面";
-            } else {
-                titleElement.textContent = "请输入密码";
-                descriptionElement.textContent = "请输入管理员密码以继续操作";
-            }
-            
-            // 直接显示模态框，依赖CSS样式实现绝对居中
-            if (passwordModal) {
-                passwordModal.style.display = 'block';
-            }
-            
-            // 聚焦到密码输入框
-            setTimeout(() => passwordInput.focus(), 100);
-        }
-        
-        // 关闭密码验证模态框
-        function closePasswordModal() {
-            if (passwordModal) {
-                passwordModal.style.display = 'none';
-            }
-        }
-        
-        // 验证密码
-        function checkPassword() {
-            const inputPassword = passwordInput.value.trim();
-            if (inputPassword === getAdminPassword()) {
-                const actionType = passwordModal.dataset.actionType;
-                closePasswordModal();
-                
-                if (actionType === "clearRecords") {
-                    executeClearRecords();
-                } else if (actionType === "resetProgress") {
-                    executeResetProgress();
-                } else if (actionType === "management") {
-                    // 切换到高级设置页面
-                    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-                    document.querySelector('[data-tab="management"]').classList.add("active");
-                    document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
-                    document.getElementById("management").classList.add("active");
-                } else {
-                    // 默认行为：切换到高级设置页面
-                    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-                    document.querySelector('[data-tab="management"]').classList.add("active");
-                    document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
-                    document.getElementById("management").classList.add("active");
-                }
-                return true;
-            } else {
-                showNotification("密码错误，请重新输入", "error");
-                passwordInput.value = "";
-                passwordInput.focus();
-                return false;
-            }
-        }
-        
-        // 显示添加奖品模态框
-        function showAddPrizeModal() {
-            editingPrizeId = null; // 重置编辑状态
-            document.getElementById('prizeModalTitle').textContent = '添加新奖品';
-            document.getElementById('confirmAddPrizeBtn').textContent = '添加奖品';
- 
-            // 重置表单
-            prizeName.value = "";
-            prizeWeight.value = "10";
-            prizeStock.value = "-1";
-            prizeRewardType.value = "item";
-            currencyAmountInput.value = "";
-            prizeDescription.value = "";
-            currencyAmountGroup.style.display = "none";
- 
-            // 显示模态框并设置居中样式
-            const modal = document.getElementById('addPrizeModal');
-            if (modal) {
-                // 设置外层模态框容器样式
-                modal.style.display = 'block';
-                modal.style.position = 'fixed';
-                modal.style.left = '0';
-                modal.style.top = '0';
-                modal.style.width = '100%';
-                modal.style.height = '100%';
-                modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'; // 半透明背景
-                modal.style.zIndex = '1000';
- 
-                // 设置内层内容区域样式
-                const modalContent = modal.querySelector('.modal-content');
-                if (modalContent) {
-                    // 彻底禁用所有动画和过渡
-                    modalContent.style.transition = 'none !important';
-                    modalContent.style.animation = 'none !important';
-                    modalContent.style.transitionProperty = 'none !important';
-                    modalContent.style.animationDuration = '0s !important';
-                    modalContent.style.transitionDuration = '0s !important';
- 
-                    modalContent.style.position = 'fixed';
-                    modalContent.style.left = '50%';
-                    modalContent.style.top = '50%';
-                    modalContent.style.transform = 'translate(-50%, -50%)';
-                    modalContent.style.backgroundColor = 'white';
-                    modalContent.style.padding = '30px';
-                    modalContent.style.borderRadius = '16px';
-                    modalContent.style.zIndex = '1001';
-                    modalContent.style.width = '90%';
-                    modalContent.style.maxWidth = '500px';
-                    modalContent.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.3)';
-                }
-            }
-        }
-        
-        // 添加奖品
-        function addPrize() {
-            if (!prizeName.value) {
-                showNotification("请输入奖品名称", "error");
-                return;
-            }
-            
-            if ((prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket" || prizeRewardType.value === "jixing") && (!currencyAmountInput.value || parseInt(currencyAmountInput.value) <= 0)) {
-                let currencyName = "兑换券";
-                if (prizeRewardType.value === "bankTicket") currencyName = "银行券";
-                else if (prizeRewardType.value === "jixing") currencyName = "纪行券";
-                showNotification(`请输入有效的${currencyName}数量`, "error");
-                return;
-            }
-            
-            // 创建奖品对象
-            const newPrize = {
-                id: Date.now(),
-                name: prizeName.value,
-                rewardType: prizeRewardType.value,
-                weight: parseInt(prizeWeight.value),
-                stock: parseInt(prizeStock.value),
-                description: prizeDescription.value,
-                icon: getRandomIcon(),
-                pool: prizePool.value || "normal" // 默认为普通奖池
-            };
- 
-            // 如果是兑换券或银行券奖励，添加对应数量
-            if (prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") {
-                newPrize.currencyAmount = parseInt(currencyAmountInput.value);
-            }
- 
- 
-            
-            
-            // 添加奖品
-            prizes.push(newPrize);
-            
-            // 保存数据
-            saveData();
-            
-            // 更新界面
-            renderPrizes();
-            renderManagePrizes();
-            
-            // 关闭模态框
-            addPrizeModal.style.display = "none";
-            
-            // 显示通知
-            showNotification("奖品添加成功", "success");
-        }
-        
-        // 获取随机图标
-        function getRandomIcon() {
-            const icons = ["🎁", "🧸", "🚗", "🎮", "🎨", "📱", "🎧", "🎭", "🎪", "🎯", "🎲", "🎫", "🏆", "🎖️", "🎟️", "💎", "👑", "🧩", "🎠", "🎡"];
-            return icons[Math.floor(Math.random() * icons.length)];
-        }
- 
-        // 编辑奖品相关
-        let editingPrizeId = null; // 当前编辑的奖品ID
- 
-        // 打开编辑奖品模态框
-        function openEditPrizeModal(prizeId) {
-            const prize = prizes.find(p => p.id === prizeId);
- 
-            if (!prize) {
-                showNotification("奖品不存在", "error");
-                return;
-            }
- 
-            editingPrizeId = prizeId;
- 
-            // 设置模态框标题和按钮文本
-            document.getElementById('prizeModalTitle').textContent = '编辑奖品';
-            document.getElementById('confirmAddPrizeBtn').textContent = '保存修改';
- 
-            // 填充奖品信息
-            prizeName.value = prize.name;
-            prizeWeight.value = prize.weight;
-            prizeStock.value = prize.stock;
-            prizeRewardType.value = prize.rewardType;
-            prizeDescription.value = prize.description || "";
-            prizePool.value = prize.pool || "normal";
- 
-            // 显示货币数量输入框（如果需要）
-            if (prize.rewardType === "currency" || prize.rewardType === "bankTicket" || prize.rewardType === "jixing") {
-                currencyAmountGroup.style.display = "block";
-                currencyAmountInput.value = prize.currencyAmount || 0;
-            } else {
-                currencyAmountGroup.style.display = "none";
-            }
- 
-            // 显示模态框
-            addPrizeModal.style.display = "block";
-        }
- 
-        // 编辑奖品
-        function editPrize() {
-            if (!prizeName.value) {
-                showNotification("请输入奖品名称", "error");
-                return;
-            }
- 
-            if ((prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket" || prizeRewardType.value === "jixing") && (!currencyAmountInput.value || parseInt(currencyAmountInput.value) <= 0)) {
-                let currencyName = "兑换券";
-                if (prizeRewardType.value === "bankTicket") currencyName = "银行券";
-                else if (prizeRewardType.value === "jixing") currencyName = "纪行券";
-                showNotification(`请输入有效的${currencyName}数量`, "error");
-                return;
-            }
- 
-            const prizeIndex = prizes.findIndex(p => p.id === editingPrizeId);
- 
-            if (prizeIndex === -1) {
-                showNotification("奖品不存在", "error");
-                return;
-            }
- 
-            // 更新奖品信息（保留原来的图标）
-            prizes[prizeIndex] = {
-                ...prizes[prizeIndex],
-                name: prizeName.value,
-                rewardType: prizeRewardType.value,
-                weight: parseInt(prizeWeight.value),
-                stock: parseInt(prizeStock.value),
-                description: prizeDescription.value,
-                pool: prizePool.value || "normal"
-            };
- 
-            // 如果是兑换券或银行券奖励，更新对应数量
-            if (prizeRewardType.value === "currency" || prizeRewardType.value === "bankTicket") {
-                prizes[prizeIndex].currencyAmount = parseInt(currencyAmountInput.value);
-            }
- 
-            // 保存数据
-            saveData();
- 
-            // 更新界面
-            renderPrizes();
-            renderManagePrizes();
- 
-            // 关闭模态框
-            addPrizeModal.style.display = "none";
- 
-            editingPrizeId = null;
- 
-            // 显示通知
-            showNotification("奖品修改成功", "success");
-        }
- 
- 
         // 显示通知
         function showNotification(message, type) {
             const notification = document.getElementById("statusNotification");
@@ -2510,25 +1970,29 @@
                 btn.disabled = true;
                 btn.textContent = '🔄 同步中...';
             }
-            
+
             console.log('[AdvancedChoujiang] 🔄 强制从云端同步...');
-            
+
             try {
                 // 清除本地货币数据，强制从云端重新加载
                 localStorage.removeItem('voucher');
                 localStorage.removeItem('lottery');
                 localStorage.removeItem('premium');
                 localStorage.removeItem('bankTicket');
-                
+
+                // 清除本地奖品配置缓存时间戳，强制重新从云端拉取
+                localStorage.removeItem(userKey('advancedPrizes_updated_at'));
+
                 await loadDataFromCloud();
-                
+                await loadPrizesFromCloud();
+
                 // 显示成功提示
                 const notification = document.createElement('div');
                 notification.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(34,197,94,0.95);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;animation:fadeInDown 0.3s ease;';
                 notification.textContent = '✅ 云端同步完成！';
                 document.body.appendChild(notification);
                 setTimeout(() => notification.remove(), 3000);
-                
+
             } catch(e) {
                 console.error('[AdvancedChoujiang] 强制同步失败:', e);
                 const notification = document.createElement('div');
@@ -2549,11 +2013,14 @@
             // 检查是否被封禁（抽奖功能）
             var isBanned = await checkPageBan('lottery');
             if (isBanned) return;
-            
+
             init();
             // 从云端加载数据
             loadDataFromCloud();
-            
+
+            // 拉取云端奖品配置（管理员统一编辑的全局奖品池，决策2A：检查updated_at决定是否覆盖）
+            setTimeout(loadPrizesFromCloud, 150);
+
             // 初始化页面同步（进入/退出时自动同步）
             initPageSync('advanced_choujiang');
         });
