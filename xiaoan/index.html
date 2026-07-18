@@ -3479,7 +3479,9 @@
                 { id: 'time_key_3', name: '时间密钥 Ⅲ', icon: '⌛', desc: '18:30前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 400, deadline: '18:30' }
             ],
             convertKeys: [
-                { id: 'convert_key_1', name: '转换密钥', icon: '🔄', desc: '选择2个普通任务转换为每日任务（贯穿本排行榜周期，下周期失效）。购买后任务页新增聚宝盆模块，每领一次每日任务奖励则聚宝盆累加所有每日任务兑换券奖励的100%，仅结算日领完每日奖励后可领取聚宝盆全部兑换券。若任一日未领每日奖励，聚宝盆立即销毁。', price: 600 }
+                { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 712, boostRatio: 0.6 },
+                { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的90%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.9 },
+                { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的120%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 1.2 }
             ]
         };
         
@@ -3541,21 +3543,25 @@
                 `;
             }).join('');
 
-            // 渲染转换密钥（独立一类，不与任务/时间密钥互斥，周期内仅可购1次）
+            // 渲染转换密钥（独立一类，不与任务/时间密钥互斥；同档之间互斥，周期内仅可购1次）
             if (convertKeyGrid) {
                 convertKeyGrid.innerHTML = ITEM_SHOP_DATA.convertKeys.map(item => {
                     const purchased = isItemPurchasedThisCycle(item.id);
                     // 转换密钥贯穿整个周期，购买即生效（直到周期结束）
                     const isActive = purchased;
+                    // 同类型（convert_key）互斥：本周期是否已购其它档位
+                    const sameTypePurchased = isSameTypePurchasedThisCycle('convert_key', item.id);
                     // 购买时机检查：仅周期第一天且未领每日奖励时可购买
                     const canBuyWindow = isConvertKeyPurchaseWindow();
-                    const canBuy = !purchased && canBuyWindow;
                     const todayDailyClaimed = isTodayDailyRewardClaimed();
+                    const canBuy = !purchased && !sameTypePurchased && canBuyWindow;
 
                     let btnText = '购买';
                     let btnDisabled = !canBuy;
                     if (purchased) {
                         btnText = '已生效';
+                    } else if (sameTypePurchased) {
+                        btnText = '本周期已购';
                     } else if (!canBuyWindow) {
                         btnText = todayDailyClaimed ? '今日已领每日奖励' : '非周期首日';
                     }
@@ -3568,7 +3574,7 @@
                             <div class="item-name">${item.name}</div>
                             <div class="item-desc">${item.desc}</div>
                             <div class="item-price">💰 ${item.price} 兑换券</div>
-                            <button class="item-buy-btn" onclick="openConvertKeyModal()" ${btnDisabled ? 'disabled' : ''}>
+                            <button class="item-buy-btn" onclick="openConvertKeyModal('${item.id}')" ${btnDisabled ? 'disabled' : ''}>
                                 ${btnText}
                             </button>
                         </div>
@@ -3603,17 +3609,27 @@
 
         // 打开转换密钥购买模态框
         let _convertKeySelected = []; // 待选中的普通任务 id 列表
-        function openConvertKeyModal() {
+        let _convertKeyPendingItem = null; // 待购买的转换密钥 item 对象
+        function openConvertKeyModal(itemId) {
+            const item = ITEM_SHOP_DATA.convertKeys.find(k => k.id === itemId);
+            if (!item) {
+                showStatus('❌ 道具不存在！', 'error');
+                return;
+            }
             // 再次校验购买时机
             if (!isConvertKeyPurchaseWindow()) {
                 showStatus('❌ 转换密钥仅可在周期第一天、领取每日奖励前购买！', 'error');
                 return;
             }
+            // 同类型互斥校验
+            if (isSameTypePurchasedThisCycle('convert_key', itemId)) {
+                showStatus('❌ 本周期已购买转换密钥！', 'error');
+                return;
+            }
             // 余额检查
-            const price = ITEM_SHOP_DATA.convertKeys[0].price;
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
-            if (currentVoucher < price) {
-                showStatus('❌ 兑换券不足！', 'error');
+            if (currentVoucher < item.price) {
+                showStatus(`❌ 兑换券不足！需要 ${item.price}，当前 ${currentVoucher}`, 'error');
                 return;
             }
 
@@ -3622,14 +3638,15 @@
                          localStorage.getItem('xiaoan_user_id') ||
                          'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
             const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
-            // 普通任务：既非 isDaily 也非 isSpecial
+            // 普通任务：既非 isDaily 也非 isSpecial（不可转换特需任务）
             const normalRules = rules.filter(r => !r.isDaily && !r.isSpecial);
 
             if (normalRules.length < 2) {
-                showStatus('❌ 普通任务不足2个，无法购买转换密钥！', 'error');
+                showStatus('❌ 可转换的普通任务不足2个（特需任务不可转换），无法购买转换密钥！', 'error');
                 return;
             }
 
+            _convertKeyPendingItem = item;
             _convertKeySelected = [];
             const listEl = document.getElementById('convertKeyTaskList');
             listEl.innerHTML = normalRules.map(r => {
@@ -3647,6 +3664,7 @@
             }).join('');
 
             document.getElementById('convertKeySelectedCount').textContent = '0';
+            document.getElementById('convertKeyConfirmBtn').textContent = `确认购买（${item.price} 兑换券）`;
             document.getElementById('convertKeyConfirmBtn').disabled = true;
             document.getElementById('convertKeyModal').style.display = 'flex';
         }
@@ -3684,23 +3702,32 @@
 
         // 确认购买转换密钥
         function confirmConvertKeyPurchase() {
+            if (!_convertKeyPendingItem) {
+                showStatus('❌ 未选择道具', 'error');
+                return;
+            }
             if (_convertKeySelected.length !== 2) {
                 showStatus('⚠️ 请选择2个任务', 'warning');
                 return;
             }
+            const item = _convertKeyPendingItem;
             // 再次校验购买时机与余额
             if (!isConvertKeyPurchaseWindow()) {
                 showStatus('❌ 购买时机已过！', 'error');
                 closeConvertKeyModal();
                 return;
             }
-            const item = ITEM_SHOP_DATA.convertKeys[0];
+            if (isSameTypePurchasedThisCycle('convert_key', item.id)) {
+                showStatus('❌ 本周期已购买转换密钥！', 'error');
+                closeConvertKeyModal();
+                return;
+            }
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
             if (currentVoucher < item.price) {
                 showStatus('❌ 兑换券不足！', 'error');
                 return;
             }
-            if (!confirm(`确定花费 ${item.price} 兑换券购买转换密钥吗？\n选中任务将转换为每日任务（贯穿本周期）。`)) {
+            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中任务将转换为每日任务（贯穿本周期），聚宝盆累加比例为 ${Math.round(item.boostRatio * 100)}%。`)) {
                 return;
             }
 
@@ -3715,6 +3742,9 @@
 
             // 写入转换任务记录（独立 key，供 rule/index.html 读取）
             const convertRecord = {
+                itemId: item.id,
+                level: item.id.replace('convert_key_', ''),
+                boostRatio: item.boostRatio,
                 ruleIds: _convertKeySelected.slice(),
                 purchasedAt: new Date().toISOString(),
                 cycleStart: getCycleStartFromLocal()
@@ -3727,7 +3757,8 @@
                 createdAt: new Date().toISOString(),
                 cycleStart: getCycleStartFromLocal(),
                 destroyed: false,
-                lastClaimDate: null
+                lastClaimDate: null,
+                boostRatio: item.boostRatio
             };
             localStorage.setItem('treasure_pot', JSON.stringify(potRecord));
 
@@ -3745,7 +3776,7 @@
             localStorage.setItem('history', JSON.stringify(history));
 
             closeConvertKeyModal();
-            showStatus(`✅ 转换密钥购买成功！2个任务已转为每日任务，聚宝盆已开启`, 'success');
+            showStatus(`✅ ${item.name} 购买成功！2个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(item.boostRatio * 100)}%）`, 'success');
             updateUI();
             renderItemShop();
         }

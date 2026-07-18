@@ -1279,10 +1279,10 @@
             const shouldShowDailyReward = (dailyRules.length > 0 && allDailyVisible) || specialRulesToday.length > 0;
  
             if (shouldShowDailyReward) {
-                // 检查是否所有每日系列任务都已完成
+                // 检查是否所有每日系列任务都已完成（completed 或 force-completed 均算完成）
                 const allDailyCompleted = dailyRules.every(rule => {
                     const taskStatus = activeTasks[rule.id] || {};
-                    return taskStatus.status === 'completed';
+                    return taskStatus.status === 'completed' || taskStatus.status === 'force-completed';
                 });
                 
                 // 是否可以领取奖励：完成所有每日任务，或完成特需任务
@@ -1312,7 +1312,7 @@
                 } else {
                     const completedCount = dailyRules.filter(rule => {
                         const taskStatus = activeTasks[rule.id] || {};
-                        return taskStatus.status === 'completed';
+                        return taskStatus.status === 'completed' || taskStatus.status === 'force-completed';
                     }).length;
                     dailyRewardButton = `<button class="btn" disabled>🔒 未完成</button>`;
                     dailyRewardStatus = `<div class="task-status status-in-progress">已完成 ${completedCount}/${dailyRules.length} 个每日系列任务</div>`;
@@ -1350,6 +1350,27 @@
 
             // ===== 聚宝盆模块（仅当本周期购买了转换密钥且聚宝盆未销毁时显示）=====
             const treasurePot = getTreasurePot();
+            // 判断聚宝盆是否已销毁（本周期购买过转换密钥，但 pot 已被销毁）
+            const _convertRecForPotCheck = getActiveConvertKeyRecord();
+            const _potDestroyedRaw = _convertRecForPotCheck ? JSON.parse(localStorage.getItem('treasure_pot') || '{}') : null;
+            const _isPotDestroyed = _convertRecForPotCheck && _potDestroyedRaw && _potDestroyedRaw.destroyed === true;
+            if (_isPotDestroyed && _potDestroyedRaw.destroyReason === 'missed_daily_yesterday') {
+                // 顶部销毁提示
+                const destroyNotice = document.createElement('div');
+                destroyNotice.className = 'rule-item';
+                destroyNotice.style.borderLeftColor = '#ef4444';
+                destroyNotice.style.background = 'rgba(239,68,68,0.08)';
+                destroyNotice.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-title" style="color:#ef4444;">💥 聚宝盆已销毁</div>
+                    </div>
+                    <div class="rule-content" style="color:#7f1d1d;">
+                        您的聚宝盆因昨日未领每日任务奖励已销毁。<br>
+                        被转换的任务现在可以<strong>强制完成</strong>（不领取任务奖励，但扣除该任务兑换券奖励的 50%）。
+                    </div>
+                `;
+                rulesList.appendChild(destroyNotice);
+            }
             if (treasurePot) {
                 const potElement = document.createElement('div');
                 potElement.className = 'rule-item';
@@ -1361,7 +1382,8 @@
 
                 let potButton = '';
                 let potStatus = '';
-                let potContent = `本周期通过转换密钥开启。每领一次每日任务奖励，聚宝盆累加 <strong>所有每日任务兑换券奖励总和的 100%</strong>。`;
+                const potRatio = (typeof treasurePot.boostRatio === 'number') ? treasurePot.boostRatio : 0.6;
+                let potContent = `本周期通过转换密钥开启。每领一次每日任务奖励，聚宝盆累加 <strong>所有每日任务兑换券奖励总和的 ${Math.round(potRatio * 100)}%</strong>。`;
 
                 if (isSettlementDay && todayDailyClaimed && !potAlreadyClaimedToday && treasurePot.amount > 0) {
                     // 可领取
@@ -1421,6 +1443,17 @@
                     // 任务未完成，直接显示完成按钮
                     actionButton = `<button class="btn btn-warning" onclick="openCompleteRuleModal(${rule.id})">✅ 完成任务</button>`;
                     statusDisplay = `<div class="task-status status-pending">等待完成</div>`;
+                    // 聚宝盆销毁后，被转换的任务可强制完成（状态转为完成但不领奖励，并扣兑换券 50%）
+                    if (_isPotDestroyed && isConvertedToDaily(rule.id) && taskStatus.status !== 'force-completed') {
+                        actionButton += `<button class="btn btn-danger" onclick="forceCompleteConvertedTask(${rule.id})">⚡ 强制完成</button>`;
+                        statusDisplay += `<div class="task-status status-in-progress" style="color:#ef4444;">聚宝盆已销毁，可强制完成（不领奖励，扣兑换券50%）</div>`;
+                    }
+                }
+
+                // 强制完成状态显示
+                if (taskStatus.status === 'force-completed') {
+                    actionButton = `<button class="btn" disabled>⚡ 已强制完成</button>`;
+                    statusDisplay = `<div class="task-status status-completed" style="color:#ef4444;">已强制完成（未领奖励）</div>`;
                 }
  
                 ruleElement.innerHTML = `
@@ -2588,6 +2621,82 @@
             showStatus(`🎉 聚宝盆领取成功！获得 ${claimAmount} 兑换券`);
         }
 
+        // 强制完成被转换的任务（聚宝盆销毁后可用）
+        // 效果：任务状态转为 force-completed，不领取任何任务奖励，扣除该任务兑换券奖励的 50%（向上取整）
+        function forceCompleteConvertedTask(ruleId) {
+            const rules = JSON.parse(localStorage.getItem(userKey('rules'))) || [];
+            const rule = rules.find(r => r.id === ruleId);
+            if (!rule) {
+                showStatus('任务不存在', 'error');
+                return;
+            }
+            // 必须是被转换密钥选中的任务
+            if (!isConvertedToDaily(ruleId)) {
+                showStatus('该任务非转换密钥任务，不可强制完成', 'error');
+                return;
+            }
+            // 聚宝盆必须已销毁
+            const rec = getActiveConvertKeyRecord();
+            const potRaw = JSON.parse(localStorage.getItem('treasure_pot') || '{}');
+            if (!rec || !potRaw.destroyed) {
+                showStatus('聚宝盆未销毁，无需强制完成', 'error');
+                return;
+            }
+
+            const activeTasks = JSON.parse(localStorage.getItem(userKey('activeTasks'))) || {};
+            if (activeTasks[ruleId] && activeTasks[ruleId].status === 'force-completed') {
+                showStatus('该任务已强制完成', 'warning');
+                return;
+            }
+            if (activeTasks[ruleId] && activeTasks[ruleId].status === 'completed') {
+                showStatus('该任务已正常完成', 'warning');
+                return;
+            }
+
+            // 计算该任务兑换券奖励的 50%（向上取整）
+            let voucherReward = 0;
+            if (rule.rewardType1 === 'voucher') voucherReward += (rule.rewardAmount1 || 0);
+            if (rule.rewardType2 === 'voucher') voucherReward += (rule.rewardAmount2 || 0);
+            const deductAmount = Math.ceil(voucherReward * 0.5);
+
+            if (!confirm(`确定强制完成「${rule.title}」吗？\n\n• 任务状态将转为已完成（但不领取任何任务奖励）\n• 扣除 ${deductAmount} 兑换券（该任务兑换券奖励的50%）`)) {
+                return;
+            }
+
+            // 扣兑换券
+            if (deductAmount > 0) {
+                const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+                const newVoucher = Math.max(0, currentVoucher - deductAmount);
+                localStorage.setItem('voucher', String(newVoucher));
+                syncCurrencyToCloud('voucher', newVoucher);
+
+                // 历史记录
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: -deductAmount,
+                    reason: `强制完成转换任务：${rule.title}（扣50%兑换券）`,
+                    type: 'subtract',
+                    currencyType: 'voucher',
+                    currencyName: '兑换券',
+                    status: 'completed'
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+            }
+
+            // 标记任务状态为 force-completed
+            activeTasks[ruleId] = {
+                status: 'force-completed',
+                completedTime: new Date().toISOString(),
+                forceCompleted: true
+            };
+            localStorage.setItem(userKey('activeTasks'), JSON.stringify(activeTasks));
+            if (typeof syncActiveTasksToCloud === 'function') syncActiveTasksToCloud();
+
+            showStatus(`⚡ 已强制完成「${rule.title}」${deductAmount > 0 ? `，扣除 ${deductAmount} 兑换券` : ''}`);
+            updateUI();
+        }
+
         // 领取每日任务奖励
         function claimDailyReward() {
             const dailyRewardKey = userKey('dailyReward_' + new Date().toDateString());
@@ -2612,10 +2721,10 @@
                 return days.length === 0 || days.includes(today);
             });
  
-            // 检查是否所有每日系列任务都已完成
+            // 检查是否所有每日系列任务都已完成（completed 或 force-completed 均算完成）
             const allDailyCompleted = dailyRules.every(rule => {
                 const taskStatus = activeTasks[rule.id] || {};
-                return taskStatus.status === 'completed';
+                return taskStatus.status === 'completed' || taskStatus.status === 'force-completed';
             });
  
             // 检查是否有已完成的特需任务
@@ -2684,14 +2793,17 @@
             localStorage.setItem(dailyRewardKey, 'true');
 
             // ===== 聚宝盆累加 =====
-            // 若本周期购买了转换密钥且聚宝盆存在（未销毁），则累加所有每日任务（含转换任务）的兑换券奖励总和
+            // 若本周期购买了转换密钥且聚宝盆存在（未销毁），按密钥等级的累加比例累加兑换券
             const pot = getTreasurePot();
             if (pot) {
                 const voucherSum = calcDailyVoucherSum(rules);
-                if (voucherSum > 0) {
-                    pot.amount += voucherSum;
+                // 累加比例：购买时记录在 pot.boostRatio，默认 0.6（兼容旧数据）
+                const ratio = (typeof pot.boostRatio === 'number') ? pot.boostRatio : 0.6;
+                const addAmount = Math.ceil(voucherSum * ratio);
+                if (addAmount > 0) {
+                    pot.amount += addAmount;
                     saveTreasurePot(pot);
-                    console.log(`[TreasurePot] 💰 聚宝盆累加 ${voucherSum}，当前总额 ${pot.amount}`);
+                    console.log(`[TreasurePot] 💰 聚宝盆累加 ${addAmount}（基数 ${voucherSum} × ${Math.round(ratio*100)}%），当前总额 ${pot.amount}`);
                 }
             }
 
