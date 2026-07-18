@@ -1199,6 +1199,22 @@
                     keysToRemove.push(key);
                 }
             }
+
+            // ===== 聚宝盆销毁判定（必须在清理 keysToRemove 之前，否则昨日 key 已被删）=====
+            // 若昨日未领每日任务奖励 且 聚宝盆存在（未销毁），则立即销毁
+            // 注意：仅判定昨日，因为"第二天不能领第一天的奖励"，漏领即销毁，不给宽限
+            const pot = getTreasurePot();
+            if (pot) {
+                const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
+                const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
+                if (!yesterdayClaimed) {
+                    destroyTreasurePot('missed_daily_yesterday');
+                    setTimeout(() => {
+                        showStatus('💥 您的聚宝盆因昨日未领每日任务奖励已销毁！', 'error');
+                    }, 500);
+                }
+            }
+
             keysToRemove.forEach(key => localStorage.removeItem(key));
             if (keysToRemove.length > 0) {
                 console.log('已清理旧每日奖励状态:', keysToRemove);
@@ -1234,8 +1250,8 @@
             const activeTasks = JSON.parse(localStorage.getItem(userKey('activeTasks'))) || {};
  
             // ===== 固定任务：每日任务奖励 =====
-            // 筛选每日系列任务（isDaily为true的任务）
-            const dailyRules = rules.filter(rule => rule.isDaily === true);
+            // 筛选每日系列任务（含转换密钥在本周期转为每日任务的普通任务）
+            const dailyRules = getEffectiveDailyRules(rules);
             
             // 筛选今日特需任务（isSpecial为true且今日显示的任务）
             const specialRulesToday = rules.filter(rule => {
@@ -1331,6 +1347,52 @@
                 `;
                 rulesList.appendChild(dailyRewardElement);
             }
+
+            // ===== 聚宝盆模块（仅当本周期购买了转换密钥且聚宝盆未销毁时显示）=====
+            const treasurePot = getTreasurePot();
+            if (treasurePot) {
+                const potElement = document.createElement('div');
+                potElement.className = 'rule-item';
+                potElement.style.borderLeftColor = '#f59e0b';
+
+                const isSettlementDay = isTodaySettlementDay();
+                const todayDailyClaimed = localStorage.getItem(userKey('dailyReward_' + new Date().toDateString())) === 'true';
+                const potAlreadyClaimedToday = treasurePot.lastClaimDate === new Date().toDateString();
+
+                let potButton = '';
+                let potStatus = '';
+                let potContent = `本周期通过转换密钥开启。每领一次每日任务奖励，聚宝盆累加 <strong>所有每日任务兑换券奖励总和的 100%</strong>。`;
+
+                if (isSettlementDay && todayDailyClaimed && !potAlreadyClaimedToday && treasurePot.amount > 0) {
+                    // 可领取
+                    potButton = `<button class="btn" style="background:#f59e0b;" onclick="claimTreasurePot()">💰 领取聚宝盆（${treasurePot.amount} 兑换券）</button>`;
+                    potStatus = `<div class="task-status status-completed">今日为结算日，可领取聚宝盆内全部兑换券</div>`;
+                } else if (isSettlementDay && todayDailyClaimed && potAlreadyClaimedToday) {
+                    potButton = `<button class="btn" disabled>✅ 今日已领取</button>`;
+                    potStatus = `<div class="task-status status-completed">今日聚宝盆已领取</div>`;
+                } else if (isSettlementDay && !todayDailyClaimed) {
+                    potButton = `<button class="btn" disabled>🔒 需先领每日奖励</button>`;
+                    potStatus = `<div class="task-status status-in-progress">今日为结算日，请先领取每日任务奖励</div>`;
+                } else {
+                    potButton = `<button class="btn" disabled>⏳ 仅结算日可领</button>`;
+                    potStatus = `<div class="task-status status-in-progress">累计中，仅结算日可领取</div>`;
+                }
+
+                potElement.innerHTML = `
+                    <div class="rule-header">
+                        <div class="rule-title" style="color: #f59e0b;">💰 聚宝盆</div>
+                        <div class="rule-reward" style="background: #f59e0b; color: white;">
+                            当前: ${treasurePot.amount} 兑换券
+                        </div>
+                    </div>
+                    <div class="rule-content">${potContent}<br><span style="color:#ef4444;font-size:0.85rem;">⚠️ 若任一日未领每日任务奖励，聚宝盆将立即销毁</span></div>
+                    ${potStatus}
+                    <div class="rule-actions">
+                        ${potButton}
+                    </div>
+                `;
+                rulesList.appendChild(potElement);
+            }
  
             rules.forEach(rule => {
                 const taskStatus = activeTasks[rule.id] || {};
@@ -1363,12 +1425,12 @@
  
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}${isConvertedToDaily(rule.id) ? ' 🔄📌' : ''}</div>
                         <div class="rule-reward">
                     ${getRewardDisplayText(rule)}
                 </div>
                     </div>
-                    <div class="rule-content">${rule.content}</div>
+                    <div class="rule-content">${rule.content}${isConvertedToDaily(rule.id) ? '<br><span style="color:#f59e0b;font-size:0.82rem;">🔄 本周期已转换为每日任务（转换密钥）</span>' : ''}</div>
                     ${statusDisplay}
                     <div class="rule-actions">
                         ${actionButton}
@@ -2318,7 +2380,7 @@
             const today = new Date().toDateString();
             const now = new Date();
             const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            
+
             // 检查三个等级的时间密钥
             // Ⅲ: 18:30前 (1110分钟)
             if (purchasedItems['time_key_3'] && new Date(purchasedItems['time_key_3']).toDateString() === today) {
@@ -2341,6 +2403,191 @@
             return 0;
         }
 
+        // ===== 转换密钥 & 聚宝盆 =====
+        // 排行榜周期常量（与 index.html 保持一致）
+        const LB_RESET_DAYS = 3;
+        const LB_SETTLEMENT_HOUR = 22;
+        const LB_SETTLEMENT_MINUTE = 30;
+
+        // 获取当前排行榜周期起始时间（从 localStorage 读取，由 index.html 写入）
+        function getLeaderboardCycleStart() {
+            const v = localStorage.getItem('leaderboard_cycle_start');
+            return v ? new Date(v) : null;
+        }
+
+        // 从日期提取中国时区 YYYY-MM-DD 字符串
+        function getDateStrChina(d) {
+            if (!d) return '';
+            const ms = new Date(d).getTime() + 8 * 60 * 60 * 1000;
+            const cd = new Date(ms);
+            return cd.getUTCFullYear() + '-' +
+                   String(cd.getUTCMonth() + 1).padStart(2, '0') + '-' +
+                   String(cd.getUTCDate()).padStart(2, '0');
+        }
+
+        // 计算下次结算时间（中国时间22:30）
+        function getNextSettlementTime(cycleStart) {
+            if (!cycleStart) return null;
+            const dateStr = getDateStrChina(cycleStart);
+            const parts = dateStr.split('-');
+            const year = parseInt(parts[0]);
+            const month = parseInt(parts[1]) - 1;
+            const day = parseInt(parts[2]);
+            const settlementDay = day + LB_RESET_DAYS;
+            const settlementUTC = Date.UTC(year, month, settlementDay, 14, 30, 0, 0);
+            return new Date(settlementUTC);
+        }
+
+        // 判断今日是否为结算日（即下次结算时间落在今日中国时区22:30）
+        function isTodaySettlementDay() {
+            const cycleStart = getLeaderboardCycleStart();
+            if (!cycleStart) return false;
+            const nextReset = getNextSettlementTime(cycleStart);
+            if (!nextReset) return false;
+            // 比较中国时区日期
+            return getDateStrChina(nextReset) === getDateStrChina(new Date());
+        }
+
+        // 读取转换密钥记录（本周期内有效）
+        function getActiveConvertKeyRecord() {
+            const raw = localStorage.getItem('convert_key_record');
+            if (!raw) return null;
+            try {
+                const rec = JSON.parse(raw);
+                // 检查是否属于本周期（cycleStart 一致）
+                const currentCycle = localStorage.getItem('leaderboard_cycle_start');
+                if (!rec.cycleStart || !currentCycle) return null;
+                if (rec.cycleStart !== currentCycle) return null; // 跨周期失效
+                return rec;
+            } catch(e) { return null; }
+        }
+
+        // 获取本周期被转换为每日任务的 rule id 列表
+        function getConvertedRuleIds() {
+            const rec = getActiveConvertKeyRecord();
+            return rec && Array.isArray(rec.ruleIds) ? rec.ruleIds : [];
+        }
+
+        // 判断某 rule 是否被转换密钥转为每日任务（本周期内）
+        function isConvertedToDaily(ruleId) {
+            const ids = getConvertedRuleIds();
+            return ids.includes(Number(ruleId)) || ids.includes(String(ruleId));
+        }
+
+        // 获取本周期生效的每日任务列表（原 isDaily + 转换密钥选中的普通任务）
+        function getEffectiveDailyRules(rules) {
+            const convertedIds = getConvertedRuleIds();
+            return (rules || []).filter(rule => {
+                if (rule.isDaily === true) return true;
+                // 转换密钥选中的任务在本周期内视为每日任务
+                if (convertedIds.includes(Number(rule.id)) || convertedIds.includes(String(rule.id))) return true;
+                return false;
+            });
+        }
+
+        // 读取聚宝盆记录
+        function getTreasurePot() {
+            const raw = localStorage.getItem('treasure_pot');
+            if (!raw) return null;
+            try {
+                const pot = JSON.parse(raw);
+                // 跨周期失效
+                const currentCycle = localStorage.getItem('leaderboard_cycle_start');
+                if (!pot.cycleStart || !currentCycle || pot.cycleStart !== currentCycle) return null;
+                if (pot.destroyed) return null;
+                return pot;
+            } catch(e) { return null; }
+        }
+
+        // 保存聚宝盆记录
+        function saveTreasurePot(pot) {
+            if (!pot) {
+                localStorage.removeItem('treasure_pot');
+                return;
+            }
+            localStorage.setItem('treasure_pot', JSON.stringify(pot));
+        }
+
+        // 销毁聚宝盆
+        function destroyTreasurePot(reason) {
+            const pot = getTreasurePot();
+            if (!pot) return;
+            pot.destroyed = true;
+            pot.destroyedAt = new Date().toISOString();
+            pot.destroyReason = reason || 'missed_daily';
+            saveTreasurePot(pot);
+            console.log('[TreasurePot] 💥 聚宝盆已销毁:', reason);
+        }
+
+        // 计算所有每日任务（含转换任务）中兑换券奖励总和（聚宝盆累加基数）
+        function calcDailyVoucherSum(rules) {
+            const dailyRules = getEffectiveDailyRules(rules);
+            let sum = 0;
+            dailyRules.forEach(rule => {
+                if (rule.rewardType1 === 'voucher') sum += (rule.rewardAmount1 || 0);
+                if (rule.rewardType2 === 'voucher') sum += (rule.rewardAmount2 || 0);
+            });
+            return sum;
+        }
+
+        // 领取聚宝盆
+        function claimTreasurePot() {
+            const pot = getTreasurePot();
+            if (!pot) {
+                showStatus('聚宝盆不存在或已销毁', 'error');
+                return;
+            }
+            // 仅结算日可领
+            if (!isTodaySettlementDay()) {
+                showStatus('聚宝盆仅可在结算日领取', 'warning');
+                return;
+            }
+            // 必须今日已领每日任务奖励
+            const dailyRewardKey = userKey('dailyReward_' + new Date().toDateString());
+            if (localStorage.getItem(dailyRewardKey) !== 'true') {
+                showStatus('请先领取今日每日任务奖励', 'warning');
+                return;
+            }
+            // 今日已领聚宝盆
+            if (pot.lastClaimDate === new Date().toDateString()) {
+                showStatus('今日已领取聚宝盆', 'warning');
+                return;
+            }
+            if (pot.amount <= 0) {
+                showStatus('聚宝盆内暂无兑换券', 'warning');
+                return;
+            }
+
+            const claimAmount = pot.amount;
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            const newVoucher = currentVoucher + claimAmount;
+            localStorage.setItem('voucher', String(newVoucher));
+            syncCurrencyToCloud('voucher', newVoucher);
+
+            // 记录历史
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({
+                date: new Date().toISOString(),
+                amount: claimAmount,
+                reason: '领取聚宝盆',
+                type: 'add',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                status: 'completed'
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+
+            // 清零聚宝盆并标记领取日
+            pot.amount = 0;
+            pot.lastClaimDate = new Date().toDateString();
+            saveTreasurePot(pot);
+
+            document.getElementById('rewardAmount').textContent = `${claimAmount} 兑换券（聚宝盆）`;
+            showCompleteAnimation();
+            updateUI();
+            showStatus(`🎉 聚宝盆领取成功！获得 ${claimAmount} 兑换券`);
+        }
+
         // 领取每日任务奖励
         function claimDailyReward() {
             const dailyRewardKey = userKey('dailyReward_' + new Date().toDateString());
@@ -2355,8 +2602,8 @@
             const activeTasks = JSON.parse(localStorage.getItem(userKey('activeTasks'))) || {};
             const today = new Date().getDay();
  
-            // 筛选每日系列任务（isDaily为true的任务）
-            const dailyRules = rules.filter(rule => rule.isDaily === true);
+            // 筛选每日系列任务（含转换密钥在本周期转为每日任务的普通任务）
+            const dailyRules = getEffectiveDailyRules(rules);
  
             // 筛选今日特需任务（isSpecial为true且今日显示的任务）
             const specialRulesToday = rules.filter(rule => {
@@ -2436,10 +2683,22 @@
             // 标记已领取
             localStorage.setItem(dailyRewardKey, 'true');
 
+            // ===== 聚宝盆累加 =====
+            // 若本周期购买了转换密钥且聚宝盆存在（未销毁），则累加所有每日任务（含转换任务）的兑换券奖励总和
+            const pot = getTreasurePot();
+            if (pot) {
+                const voucherSum = calcDailyVoucherSum(rules);
+                if (voucherSum > 0) {
+                    pot.amount += voucherSum;
+                    saveTreasurePot(pot);
+                    console.log(`[TreasurePot] 💰 聚宝盆累加 ${voucherSum}，当前总额 ${pot.amount}`);
+                }
+            }
+
             // 显示动画
             document.getElementById('rewardAmount').textContent = `${jixingAmount} 纪行券 和 ${voucherAmount} 兑换券`;
             showCompleteAnimation();
- 
+
             updateUI();
             showStatus('每日任务奖励领取成功！');
         }

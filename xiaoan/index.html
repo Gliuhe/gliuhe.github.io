@@ -2637,6 +2637,23 @@
             <h3 style="margin:20px 0 12px;">⏰ 时间密钥</h3>
             <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">购买后立即生效，在指定时间前领取每日任务奖励，兑换券数量提升30%，仅购买当天有效。</p>
             <div class="itemshop-grid" id="timeKeyGrid"></div>
+
+            <h3 style="margin:20px 0 12px;">🔄 转换密钥</h3>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在周期第一天领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
+            <div class="itemshop-grid" id="convertKeyGrid"></div>
+        </div>
+
+        <!-- 转换密钥购买模态框 -->
+        <div class="modal" id="convertKeyModal">
+            <div class="modal-content" style="max-width:600px;">
+                <h2>🔄 转换密钥 - 选择任务</h2>
+                <p style="color:#64748b;font-size:0.88rem;margin-bottom:12px;">请选择 <strong style="color:#ef4444;">2 个普通任务</strong> 转换为每日任务（贯穿本周期）。已选 <span id="convertKeySelectedCount" style="color:#ef4444;font-weight:700;">0</span>/2</p>
+                <div id="convertKeyTaskList" style="max-height:50vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn" style="background:#94a3b8;" onclick="closeConvertKeyModal()">取消</button>
+                    <button class="btn" style="background:linear-gradient(135deg, #667eea, #764ba2);" id="convertKeyConfirmBtn" onclick="confirmConvertKeyPurchase()" disabled>确认购买（600 兑换券）</button>
+                </div>
+            </div>
         </div>
         
         <!-- 商品兑换（已注释） -->
@@ -3460,6 +3477,9 @@
                 { id: 'time_key_1', name: '时间密钥 Ⅰ', icon: '⏰', desc: '13:00前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 100, deadline: '13:00' },
                 { id: 'time_key_2', name: '时间密钥 Ⅱ', icon: '⏱️', desc: '16:00前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 200, deadline: '16:00' },
                 { id: 'time_key_3', name: '时间密钥 Ⅲ', icon: '⌛', desc: '18:30前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 400, deadline: '18:30' }
+            ],
+            convertKeys: [
+                { id: 'convert_key_1', name: '转换密钥', icon: '🔄', desc: '选择2个普通任务转换为每日任务（贯穿本排行榜周期，下周期失效）。购买后任务页新增聚宝盆模块，每领一次每日任务奖励则聚宝盆累加所有每日任务兑换券奖励的100%，仅结算日领完每日奖励后可领取聚宝盆全部兑换券。若任一日未领每日奖励，聚宝盆立即销毁。', price: 600 }
             ]
         };
         
@@ -3467,7 +3487,8 @@
         function renderItemShop() {
             const taskKeyGrid = document.getElementById('taskKeyGrid');
             const timeKeyGrid = document.getElementById('timeKeyGrid');
-            
+            const convertKeyGrid = document.getElementById('convertKeyGrid');
+
             if (!taskKeyGrid || !timeKeyGrid) return;
             
             // 渲染任务密钥
@@ -3519,6 +3540,214 @@
                     </div>
                 `;
             }).join('');
+
+            // 渲染转换密钥（独立一类，不与任务/时间密钥互斥，周期内仅可购1次）
+            if (convertKeyGrid) {
+                convertKeyGrid.innerHTML = ITEM_SHOP_DATA.convertKeys.map(item => {
+                    const purchased = isItemPurchasedThisCycle(item.id);
+                    // 转换密钥贯穿整个周期，购买即生效（直到周期结束）
+                    const isActive = purchased;
+                    // 购买时机检查：仅周期第一天且未领每日奖励时可购买
+                    const canBuyWindow = isConvertKeyPurchaseWindow();
+                    const canBuy = !purchased && canBuyWindow;
+                    const todayDailyClaimed = isTodayDailyRewardClaimed();
+
+                    let btnText = '购买';
+                    let btnDisabled = !canBuy;
+                    if (purchased) {
+                        btnText = '已生效';
+                    } else if (!canBuyWindow) {
+                        btnText = todayDailyClaimed ? '今日已领每日奖励' : '非周期首日';
+                    }
+
+                    return `
+                        <div class="itemshop-card ${purchased ? 'purchased' : ''}">
+                            ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
+                            ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                            <div class="item-icon">${item.icon}</div>
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-desc">${item.desc}</div>
+                            <div class="item-price">💰 ${item.price} 兑换券</div>
+                            <button class="item-buy-btn" onclick="openConvertKeyModal()" ${btnDisabled ? 'disabled' : ''}>
+                                ${btnText}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // 检查转换密钥购买时机：仅排行榜周期第一天 且 今日未领每日任务奖励
+        function isConvertKeyPurchaseWindow() {
+            const cycleStartStr = getCycleStartFromLocal();
+            if (!cycleStartStr) return false;
+            const cycleStart = new Date(cycleStartStr);
+            const today = new Date();
+            // 周期第一天：今日日期（中国时区）=== 周期起始日期（中国时区）
+            const cycleStartChinaStr = getCycleStartDateStr(cycleStartStr);
+            const todayChinaStr = getCycleStartDateStr(today.toISOString());
+            if (cycleStartChinaStr !== todayChinaStr) return false;
+            // 今日未领每日任务奖励（跨页面读取 rule 页用的同 key 格式）
+            if (isTodayDailyRewardClaimed()) return false;
+            return true;
+        }
+
+        // 检查今日是否已领每日任务奖励（与 rule/index.html 的 key 格式一致）
+        function isTodayDailyRewardClaimed() {
+            const uid = (window.__cloudUserId ||
+                         localStorage.getItem('xiaoan_user_id') ||
+                         'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+            const key = uid + '_dailyReward_' + new Date().toDateString();
+            return localStorage.getItem(key) === 'true';
+        }
+
+        // 打开转换密钥购买模态框
+        let _convertKeySelected = []; // 待选中的普通任务 id 列表
+        function openConvertKeyModal() {
+            // 再次校验购买时机
+            if (!isConvertKeyPurchaseWindow()) {
+                showStatus('❌ 转换密钥仅可在周期第一天、领取每日奖励前购买！', 'error');
+                return;
+            }
+            // 余额检查
+            const price = ITEM_SHOP_DATA.convertKeys[0].price;
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < price) {
+                showStatus('❌ 兑换券不足！', 'error');
+                return;
+            }
+
+            // 读取当前用户规则（与 rule/index.html 同样的 userKey 格式）
+            const uid = (window.__cloudUserId ||
+                         localStorage.getItem('xiaoan_user_id') ||
+                         'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+            const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+            // 普通任务：既非 isDaily 也非 isSpecial
+            const normalRules = rules.filter(r => !r.isDaily && !r.isSpecial);
+
+            if (normalRules.length < 2) {
+                showStatus('❌ 普通任务不足2个，无法购买转换密钥！', 'error');
+                return;
+            }
+
+            _convertKeySelected = [];
+            const listEl = document.getElementById('convertKeyTaskList');
+            listEl.innerHTML = normalRules.map(r => {
+                const rewardText = (r.rewardType1 ? `${r.rewardAmount1||0} ${currencyLabel(r.rewardType1)}` : '') +
+                                   (r.rewardType2 ? ` + ${r.rewardAmount2||0} ${currencyLabel(r.rewardType2)}` : '');
+                return `
+                    <label class="checkbox-wrapper" style="display:flex;align-items:center;padding:10px;margin:6px 0;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;background:#f8fafc;width:auto;">
+                        <input type="checkbox" value="${r.id}" onchange="toggleConvertKeySelect(${r.id}, this.checked)" style="width:auto;margin-right:10px;">
+                        <div style="flex:1;">
+                            <div style="font-weight:700;color:#1e293b;">${r.title}</div>
+                            <div style="font-size:0.82rem;color:#64748b;">奖励: ${rewardText || '无'}</div>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('convertKeySelectedCount').textContent = '0';
+            document.getElementById('convertKeyConfirmBtn').disabled = true;
+            document.getElementById('convertKeyModal').style.display = 'flex';
+        }
+
+        // 货币类型中文映射（转换密钥模态框用）
+        function currencyLabel(type) {
+            const map = { voucher:'兑换券', lottery:'抽奖券', premium:'高级抽奖券', bankTicket:'银行券', jixing_muchun_currency:'纪行券', none:'无' };
+            return map[type] || type || '';
+        }
+
+        // 切换任务选择
+        function toggleConvertKeySelect(ruleId, checked) {
+            if (checked) {
+                if (_convertKeySelected.length >= 2) {
+                    // 超过2个，阻止勾选
+                    event && event.target && (event.target.checked = false);
+                    showStatus('⚠️ 最多只能选择2个任务', 'warning');
+                    return;
+                }
+                if (!_convertKeySelected.includes(ruleId)) {
+                    _convertKeySelected.push(ruleId);
+                }
+            } else {
+                _convertKeySelected = _convertKeySelected.filter(id => id !== ruleId);
+            }
+            document.getElementById('convertKeySelectedCount').textContent = _convertKeySelected.length;
+            document.getElementById('convertKeyConfirmBtn').disabled = (_convertKeySelected.length !== 2);
+        }
+
+        // 关闭模态框
+        function closeConvertKeyModal() {
+            document.getElementById('convertKeyModal').style.display = 'none';
+            _convertKeySelected = [];
+        }
+
+        // 确认购买转换密钥
+        function confirmConvertKeyPurchase() {
+            if (_convertKeySelected.length !== 2) {
+                showStatus('⚠️ 请选择2个任务', 'warning');
+                return;
+            }
+            // 再次校验购买时机与余额
+            if (!isConvertKeyPurchaseWindow()) {
+                showStatus('❌ 购买时机已过！', 'error');
+                closeConvertKeyModal();
+                return;
+            }
+            const item = ITEM_SHOP_DATA.convertKeys[0];
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < item.price) {
+                showStatus('❌ 兑换券不足！', 'error');
+                return;
+            }
+            if (!confirm(`确定花费 ${item.price} 兑换券购买转换密钥吗？\n选中任务将转换为每日任务（贯穿本周期）。`)) {
+                return;
+            }
+
+            // 扣费
+            const newVoucher = currentVoucher - item.price;
+            localStorage.setItem('voucher', String(newVoucher));
+
+            // 写入购买记录（itemshop_purchased）
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            purchasedItems[item.id] = new Date().toISOString();
+            localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+
+            // 写入转换任务记录（独立 key，供 rule/index.html 读取）
+            const convertRecord = {
+                ruleIds: _convertKeySelected.slice(),
+                purchasedAt: new Date().toISOString(),
+                cycleStart: getCycleStartFromLocal()
+            };
+            localStorage.setItem('convert_key_record', JSON.stringify(convertRecord));
+
+            // 初始化聚宝盆（金额0，创建时间）
+            const potRecord = {
+                amount: 0,
+                createdAt: new Date().toISOString(),
+                cycleStart: getCycleStartFromLocal(),
+                destroyed: false,
+                lastClaimDate: null
+            };
+            localStorage.setItem('treasure_pot', JSON.stringify(potRecord));
+
+            // 历史记录
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({
+                date: new Date().toISOString(),
+                amount: -item.price,
+                reason: `购买道具：${item.name}（转换任务 #${_convertKeySelected.join(',#')}）`,
+                type: 'exchange',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                balanceAfter: newVoucher
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+
+            closeConvertKeyModal();
+            showStatus(`✅ 转换密钥购买成功！2个任务已转为每日任务，聚宝盆已开启`, 'success');
+            updateUI();
+            renderItemShop();
         }
         
         // 检查道具是否在当前排行榜周期内已购买
