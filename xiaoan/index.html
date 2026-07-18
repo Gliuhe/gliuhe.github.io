@@ -3623,6 +3623,15 @@
                     } else if (!within18h) {
                         btnText = msRemaining <= 0 ? '已过结算时间' : '剩余时间>18h';
                         btnDisabled = true;
+                    } else if (msRemaining <= item.offsetMinutes * 60 * 1000) {
+                        // 剩余时间不足加急密钥提前时长，无法购买
+                        const remainMinutes = Math.floor(msRemaining / 60000);
+                        const remainHours = Math.floor(remainMinutes / 60);
+                        const remainMins = remainMinutes % 60;
+                        const remainText = remainHours > 0 ? `${remainHours}小时${remainMins}分钟` : `${remainMinutes}分钟`;
+                        btnText = '剩余时间不足';
+                        btnDisabled = true;
+                        extraInfo = `<div style="font-size:0.75rem;color:#dc2626;margin-top:4px;">距结算仅剩 ${remainText}，需提前 ${item.offsetMinutes / 60} 小时，无法购买</div>`;
                     } else if (sameTypePurchased) {
                         btnText = '本周期已购';
                         btnDisabled = true;
@@ -3897,6 +3906,16 @@
             const msRemaining = nextReset.getTime() - Date.now();
             if (msRemaining <= 0) {
                 showStatus('❌ 已过结算时间', 'error');
+                return;
+            }
+            // 剩余时间必须大于加急密钥提前的时长，否则会导致结算时间被提前到过去
+            const offsetMs = item.offsetMinutes * 60 * 1000;
+            if (msRemaining <= offsetMs) {
+                const remainMinutes = Math.floor(msRemaining / 60000);
+                const remainHours = Math.floor(remainMinutes / 60);
+                const remainMins = remainMinutes % 60;
+                const remainText = remainHours > 0 ? `${remainHours}小时${remainMins}分钟` : `${remainMinutes}分钟`;
+                showStatus(`❌ 距结算仅剩 ${remainText}，无法购买 ${item.name}（需提前 ${item.offsetMinutes / 60} 小时结算，剩余时间不足）`, 'error');
                 return;
             }
             if (msRemaining >= 18 * 60 * 60 * 1000) {
