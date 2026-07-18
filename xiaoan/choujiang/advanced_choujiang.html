@@ -1000,65 +1000,9 @@
             return prizes.filter(prize => (prize.pool || "normal") === poolType);
         }
  
-        // 默认奖品
-        const defaultPrizes = [
-            {
-                id: 1,
-                name: "豪华玩具熊",
-                rewardType: "item",
-                weight: 20,
-                description: "精美的豪华玩具熊，柔软舒适",
-                icon: "🧸",
-                pool: "normal"
-            },
-            {
-                id: 2,
-                name: "高级积木套装",
-                rewardType: "item",
-                weight: 15,
-                description: "培养创造力的高级积木套装",
-                icon: "🧩",
-                pool: "normal"
-            },
-            {
-                id: 3,
-                name: "兑换券 x5",
-                rewardType: "currency",
-                weight: 30,
-                currencyAmount: 5,
-                description: "获得5张兑换券",
-                icon: "🎫",
-                pool: "normal"
-            },
-            {
-                id: 4,
-                name: "豪华遥控车",
-                rewardType: "item",
-                weight: 10,
-                description: "高速遥控赛车，炫酷外观",
-                icon: "🏎️",
-                pool: "gold"
-            },
-            {
-                id: 5,
-                name: "兑换券 x20",
-                rewardType: "currency",
-                weight: 5,
-                currencyAmount: 20,
-                description: "获得20张兑换券",
-                icon: "🎫",
-                pool: "gold"
-            },
-            {
-                id: 6,
-                name: "神秘礼盒",
-                rewardType: "item",
-                weight: 8,
-                description: "内含神秘惊喜",
-                icon: "🎁",
-                pool: "diamond"
-            }
-        ];
+        // 奖品配置完全由管理员在云端统一编辑，本地不再内置默认奖品
+        // 首次加载（本地无缓存）时为空数组，由 loadPrizesFromCloud() 从云端拉取填充
+        const defaultPrizes = [];
         
         // 全局变量
         let prizes = [];

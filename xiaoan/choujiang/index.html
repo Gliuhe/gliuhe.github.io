@@ -852,64 +852,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             return uid.substring(0, 8) + '_' + baseKey;
         }
         
-        // 默认奖品（仅作为本地兜底，实际奖品池由管理员在控制台统一配置并从云端拉取）
-        const defaultPrizes = [
-            {
-                id: 1,
-                name: "玩具小熊",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "可爱的毛绒小熊玩具",
-                icon: "🧸",
-                weight: 10
-            },
-            {
-                id: 2,
-                name: "兑换券奖励",
-                rewardType: "currency",
-                currencyAmount: 20,
-                description: "20张兑换券",
-                icon: "🎟️",
-                weight: 20
-            },
-            {
-                id: 3,
-                name: "故事书",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "精美绘本故事书",
-                icon: "📚",
-                weight: 15
-            },
-            {
-                id: 4,
-                name: "兑换券奖励",
-                rewardType: "currency",
-                currencyAmount: 50,
-                description: "50张兑换券",
-                icon: "🎟️",
-                weight: 5
-            },
-            {
-                id: 5,
-                name: "拼图",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "100片精美拼图",
-                icon: "🧩",
-                weight: 15
-            },
-            {
-                id: 6,
-                name: "贴纸包",
-                rewardType: "item",
-                currencyAmount: 0,
-                description: "卡通主题贴纸包",
-                icon: "🎗️",
-                weight: 20
-            }
-        ];
-        
+        // 奖品配置完全由管理员在云端统一编辑，本地不再内置默认奖品
+        // 首次加载（本地无缓存）时为空数组，由 loadPrizesFromCloud() 从云端拉取填充
+        const defaultPrizes = [];
+
         // 从云端拉取抽奖配置（管理员在控制台统一编辑的全局奖品池）
         // 决策2A：加载时检查云端updated_at，新则拉取覆盖
         async function loadPrizesFromCloud() {
