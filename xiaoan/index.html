@@ -6561,9 +6561,9 @@
         const LEADERBOARD_SETTLEMENT_HOUR = 22; // 结算时间：22点
         const LEADERBOARD_SETTLEMENT_MINUTE = 30; // 结算时间：30分
         const LEADERBOARD_FIRST_CYCLE_START = new Date('2026-07-15T00:00:00+08:00'); // 首次比拼日期（调整为7月15日，下次结算为7月18日22:30）
-        // 新规则启用时间：2026-07-21 22:30 (中国时间) = 2026-07-21 14:30 UTC
-        // 7月18日22:30结算用旧规则；7月21日22:30起用新规则
-        const LEADERBOARD_NEW_RULE_START = new Date('2026-07-21T14:30:00+00:00');
+        // 新规则启用时间：2026-07-18 22:30 (中国时间) = 2026-07-18 14:30 UTC
+        // 7月18日22:30结算起即用新规则
+        const LEADERBOARD_NEW_RULE_START = new Date('2026-07-18T14:30:00+00:00');
         // 新规则常量：双方重置基础值、第二名扣除比例、第一名获赠比例、各自上限
         const LEADERBOARD_NEW_RULE_BASE = 1000;
         const LEADERBOARD_NEW_RULE_DEDUCT_RATE = 0.5;   // 第二名扣 gap 的 50%
@@ -6727,7 +6727,7 @@
  
             const sorted = [...data].sort((a, b) => (b.voucher || 0) - (a.voucher || 0));
 
-            // 判断本次结算是否使用新规则（7月21日22:30起）
+            // 判断本次结算是否使用新规则（7月18日22:30起）
             const useNewRule = nextReset >= LEADERBOARD_NEW_RULE_START;
             console.log(`[Leaderboard] 本次结算使用${useNewRule ? '新规则' : '旧规则'}（结算时间 ${nextReset.toISOString()}）`);
 
@@ -6746,7 +6746,7 @@
                 const winnerReward = winnerRole === 'A' ? tier.aReward : (winnerRole === 'B' ? tier.bReward : 0);
 
                 if (useNewRule) {
-                    // ===== 新规则（7月21日起）=====
+                    // ===== 新规则（7月18日起）=====
                     const newV = computeNewRuleVouchers(gap);
                     console.log(`[Leaderboard] 新规则: 双方重置为 ${LEADERBOARD_NEW_RULE_BASE}，第二名扣 ${newV.secondDeduction}，第一名得 ${newV.firstGain}`);
 
@@ -6785,7 +6785,7 @@
 
                     showStatus(`🏆 排行榜已结算（新规则）！第一名领先 ${gap}，双方重置为${LEADERBOARD_NEW_RULE_BASE}，第二名扣${newV.secondDeduction}，第一名得${newV.firstGain}`, 'success');
                 } else {
-                    // ===== 旧规则（7月18日及之前）=====
+                    // ===== 旧规则（历史兜底，正常情况7月18日起不再触发）=====
                     // 第一名额外获得领先幅度46%的兑换券（向上取整）
                     const winnerVoucherBonus = Math.ceil(gap * 0.46);
 
