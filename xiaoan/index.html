@@ -3183,91 +3183,95 @@
             animateNumber(premiumElement, localStorage.getItem('premium') || '0');
             animateNumber(jixingElement, localStorage.getItem('jixing_muchun_currency') || '0');
             
-            // 更新商品列表
-            const products = JSON.parse(localStorage.getItem('products'));
+            // 更新商品列表（兑换商品页已下线，元素可能不存在，需做 null 检查）
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
             const productsList = document.getElementById('productsList');
-            productsList.innerHTML = '';
- 
-            // 获取当前星期几 (0=周日, 1=周一, ..., 6=周六)
-            const today = new Date().getDay();
- 
-            // 获取今日兑换记录
-            const dailyExchange = JSON.parse(localStorage.getItem('dailyExchange'));
-            const todayDate = new Date().toDateString();
- 
-            // 检查是否有逾期罚款
-            const hasOverdueFines = checkExchangeRestriction();
-            
-            // 检查是否被封禁（商店功能）- 异步检查，使用缓存结果
-            const isShopBanned = window._shopBanned || false;
-            const banReason = window._banReason || '';
- 
-            products.forEach(product => {
-                const days = product.days || [];
- 
-                // 判断商品是否应该在今天显示
-                // 如果 days 为空数组或未设置，则每天显示
-                const shouldShowToday = days.length === 0 || days.includes(today);
- 
-                if (!shouldShowToday) {
-                    return; // 跳过今天不显示的商品
-                }
- 
-                const todayExchanges = dailyExchange[product.id] || 0;
-                const remaining = product.dailyLimit > 0 ? product.dailyLimit - todayExchanges : Infinity;
-                const isDisabled = remaining <= 0 || hasOverdueFines || isShopBanned;
- 
-                const productElement = document.createElement('div');
-                productElement.className = 'product';
-                
-                // 确定按钮显示文本
-                let buttonText = '兑换';
-                if (isShopBanned) {
-                    buttonText = '🚫 已封禁';
-                } else if (hasOverdueFines) {
-                    buttonText = '逾期罚款，禁止兑换';
-                } else if (remaining <= 0) {
-                    buttonText = '已达限额';
-                }
-                
-                productElement.innerHTML = `
-                    <h3>${product.name}</h3>
-                    <p>${product.price} 兑换券</p>
-                    ${product.dailyLimit > 0 ?
-                        `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` :
-                        ''}
-                    <button class="btn" onclick="exchangeProduct(${product.id})" ${isDisabled ? 'disabled' : ''}>
-                        ${buttonText}
-                    </button>
-                `;
-                productsList.appendChild(productElement);
-            });
-            
-            // 更新管理商品列表
+            if (productsList) {
+                productsList.innerHTML = '';
+
+                // 获取当前星期几 (0=周日, 1=周一, ..., 6=周六)
+                const today = new Date().getDay();
+
+                // 获取今日兑换记录
+                const dailyExchange = JSON.parse(localStorage.getItem('dailyExchange') || '{}');
+                const todayDate = new Date().toDateString();
+
+                // 检查是否有逾期罚款
+                const hasOverdueFines = checkExchangeRestriction();
+
+                // 检查是否被封禁（商店功能）- 异步检查，使用缓存结果
+                const isShopBanned = window._shopBanned || false;
+                const banReason = window._banReason || '';
+
+                products.forEach(product => {
+                    const days = product.days || [];
+
+                    // 判断商品是否应该在今天显示
+                    // 如果 days 为空数组或未设置，则每天显示
+                    const shouldShowToday = days.length === 0 || days.includes(today);
+
+                    if (!shouldShowToday) {
+                        return; // 跳过今天不显示的商品
+                    }
+
+                    const todayExchanges = dailyExchange[product.id] || 0;
+                    const remaining = product.dailyLimit > 0 ? product.dailyLimit - todayExchanges : Infinity;
+                    const isDisabled = remaining <= 0 || hasOverdueFines || isShopBanned;
+
+                    const productElement = document.createElement('div');
+                    productElement.className = 'product';
+
+                    // 确定按钮显示文本
+                    let buttonText = '兑换';
+                    if (isShopBanned) {
+                        buttonText = '🚫 已封禁';
+                    } else if (hasOverdueFines) {
+                        buttonText = '逾期罚款，禁止兑换';
+                    } else if (remaining <= 0) {
+                        buttonText = '已达限额';
+                    }
+
+                    productElement.innerHTML = `
+                        <h3>${product.name}</h3>
+                        <p>${product.price} 兑换券</p>
+                        ${product.dailyLimit > 0 ?
+                            `<div class="daily-limit">今日剩余: ${remaining}/${product.dailyLimit}</div>` :
+                            ''}
+                        <button class="btn" onclick="exchangeProduct(${product.id})" ${isDisabled ? 'disabled' : ''}>
+                            ${buttonText}
+                        </button>
+                    `;
+                    productsList.appendChild(productElement);
+                });
+            }
+
+            // 更新管理商品列表（商品管理页已下线，元素可能不存在，需做 null 检查）
             const manageProductsList = document.getElementById('manageProductsList');
-            manageProductsList.innerHTML = '';
- 
-            products.forEach(product => {
-                const productElement = document.createElement('div');
-                productElement.className = 'product';
- 
-                // 生成星期显示文本
-                let daysText = '每天';
-                if (product.days && product.days.length > 0) {
-                    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-                    daysText = product.days.map(d => dayNames[d]).join(' ');
-                }
- 
-                productElement.innerHTML = `
-                    <h3>${product.name}</h3>
-                    <p>${product.price} 兑换券</p>
-                    <div class="daily-limit">每日限额: ${product.dailyLimit > 0 ? product.dailyLimit : '无限制'}</div>
-                    <div class="daily-limit" style="color: #ff6b6b; font-size: 0.95rem;">📅 上架: ${daysText}</div>
-                    <button class="btn" onclick="openEditProductModal(${product.id})">编辑</button>
-                    <button class="btn btn-danger" onclick="openDeleteProductModal(${product.id}, '${product.name}')">删除</button>
-                `;
-                manageProductsList.appendChild(productElement);
-            });
+            if (manageProductsList) {
+                manageProductsList.innerHTML = '';
+
+                products.forEach(product => {
+                    const productElement = document.createElement('div');
+                    productElement.className = 'product';
+
+                    // 生成星期显示文本
+                    let daysText = '每天';
+                    if (product.days && product.days.length > 0) {
+                        const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                        daysText = product.days.map(d => dayNames[d]).join(' ');
+                    }
+
+                    productElement.innerHTML = `
+                        <h3>${product.name}</h3>
+                        <p>${product.price} 兑换券</p>
+                        <div class="daily-limit">每日限额: ${product.dailyLimit > 0 ? product.dailyLimit : '无限制'}</div>
+                        <div class="daily-limit" style="color: #ff6b6b; font-size: 0.95rem;">📅 上架: ${daysText}</div>
+                        <button class="btn" onclick="openEditProductModal(${product.id})">编辑</button>
+                        <button class="btn btn-danger" onclick="openDeleteProductModal(${product.id}, '${product.name}')">删除</button>
+                    `;
+                    manageProductsList.appendChild(productElement);
+                });
+            }
             
             // 更新历史记录
             const history = JSON.parse(localStorage.getItem('history'));
