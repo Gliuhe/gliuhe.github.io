@@ -2641,6 +2641,10 @@
             <h3 style="margin:20px 0 12px;">🔄 转换密钥</h3>
             <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在周期第一天领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
             <div class="itemshop-grid" id="convertKeyGrid"></div>
+
+            <h3 style="margin:20px 0 12px;">⚡ 加急密钥</h3>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">提前本周期结算时间。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效，价格随当前名次动态变化。</p>
+            <div class="itemshop-grid" id="urgentKeyGrid"></div>
         </div>
 
         <!-- 转换密钥购买模态框 -->
@@ -3462,7 +3466,8 @@
             
             // 切换到道具商城时渲染商品
             if (tabId === 'itemshop') {
-                renderItemShop();
+                // 先刷新加急密钥云端记录（先到先得判定需要最新数据），再渲染
+                refreshUrgentOffset().then(() => renderItemShop());
             }
         }
         
@@ -3482,6 +3487,11 @@
                 { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 712, boostRatio: 0.6 },
                 { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的90%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.9 },
                 { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的120%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 1.2 }
+            ],
+            urgentKeys: [
+                { id: 'urgent_key_1', name: '加急密钥 Ⅰ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 0.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×10%，第二名购买减价被领先差额×10%。加价后价格上限1000。', price: 200, offsetMinutes: 30, firstRate: 0.10, secondRate: 0.10, priceCap: 1000 },
+                { id: 'urgent_key_2', name: '加急密钥 Ⅱ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 1.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×25%，第二名购买减价被领先差额×15%。加价后价格上限1000。', price: 400, offsetMinutes: 90, firstRate: 0.25, secondRate: 0.15, priceCap: 1000 },
+                { id: 'urgent_key_3', name: '加急密钥 Ⅲ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 3 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×50%，第二名购买减价被领先差额×25%。加价后价格上限1000。', price: 600, offsetMinutes: 180, firstRate: 0.50, secondRate: 0.25, priceCap: 1000 }
             ]
         };
         
@@ -3581,9 +3591,66 @@
                     `;
                 }).join('');
             }
-        }
 
-        // 检查转换密钥购买时机：仅排行榜周期第一天 且 今日未领每日任务奖励
+            // 渲染加急密钥（先到先得，本周期仅首位购买者生效）
+            if (convertKeyGrid) {} // 占位保持结构
+            const urgentKeyGrid = document.getElementById('urgentKeyGrid');
+            if (urgentKeyGrid) {
+                // 先到先得判定：本周期是否已有加急记录（从缓存读取）
+                const urgentPurchased = _urgentOffsetCache > 0 && _urgentRecordCache;
+                // 购买时机：剩余时间 < 18 小时 且 本周期无加急记录
+                const cycleStart = getCycleStartFromLocal();
+                const nextReset = cycleStart ? getNextSettlementTime(cycleStart) : null;
+                const msRemaining = nextReset ? (nextReset.getTime() - Date.now()) : Infinity;
+                const within18h = msRemaining < 18 * 60 * 60 * 1000 && msRemaining > 0;
+
+                urgentKeyGrid.innerHTML = ITEM_SHOP_DATA.urgentKeys.map(item => {
+                    const sameTypePurchased = isSameTypePurchasedThisCycle('urgent_key', item.id);
+                    let btnText = '购买';
+                    let btnDisabled = false;
+                    let priceLabel = `💰 ${item.price} 兑换券`;
+                    let extraInfo = '';
+
+                    if (urgentPurchased) {
+                        // 本周期已有加急记录
+                        btnText = _urgentRecordCache && _urgentRecordCache.level === parseInt(item.id.replace('urgent_key_', '')) ? '已生效' : '本周期已购';
+                        btnDisabled = true;
+                        if (_urgentRecordCache) {
+                            const lvlNames = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ'];
+                            const lvl = _urgentRecordCache.level || 1;
+                            extraInfo = `<div style="font-size:0.75rem;color:#64748b;margin-top:4px;">本周期由 ${_urgentRecordCache.purchaser_name || '某用户'} 购买 ${lvlNames[lvl] || lvl}级，提前 ${(_urgentRecordCache.offset_minutes || 0) / 60}h</div>`;
+                        }
+                    } else if (!within18h) {
+                        btnText = msRemaining <= 0 ? '已过结算时间' : '剩余时间>18h';
+                        btnDisabled = true;
+                    } else if (sameTypePurchased) {
+                        btnText = '本周期已购';
+                        btnDisabled = true;
+                    } else {
+                        // 显示"价格随名次动态变化"提示
+                        priceLabel = `💰 ${item.price} 兑换券起（动态）`;
+                        extraInfo = `<div style="font-size:0.75rem;color:#64748b;margin-top:4px;">第一名：+领先差额×${Math.round(item.firstRate*100)}%（上限${item.priceCap}）<br>第二名：-被领先差额×${Math.round(item.secondRate*100)}%</div>`;
+                    }
+
+                    const isActive = urgentPurchased && _urgentRecordCache && _urgentRecordCache.level === parseInt(item.id.replace('urgent_key_', ''));
+
+                    return `
+                        <div class="itemshop-card ${isActive ? 'purchased' : ''}">
+                            ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
+                            ${urgentPurchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                            <div class="item-icon">${item.icon}</div>
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-desc">${item.desc}</div>
+                            <div class="item-price">${priceLabel}</div>
+                            ${extraInfo}
+                            <button class="item-buy-btn" onclick="buyUrgentKey('${item.id}')" ${btnDisabled ? 'disabled' : ''}>
+                                ${btnText}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
         function isConvertKeyPurchaseWindow() {
             const cycleStartStr = getCycleStartFromLocal();
             if (!cycleStartStr) return false;
@@ -3780,8 +3847,216 @@
             updateUI();
             renderItemShop();
         }
-        
-        // 检查道具是否在当前排行榜周期内已购买
+
+        // ===== 加急密钥购买流程 =====
+        // 查询当前排行榜并计算动态价格
+        async function calcUrgentKeyPrice(item) {
+            const data = await loadLeaderboardData(true);
+            if (!data || data.length < 2) {
+                return { ok: false, error: '无法获取排行榜数据' };
+            }
+            const sorted = [...data].sort((a, b) => (b.voucher || 0) - (a.voucher || 0));
+            const firstPlace = sorted[0];
+            const secondPlace = sorted[1];
+            const gap = (firstPlace.voucher || 0) - (secondPlace.voucher || 0);
+            const currentUserId = window.__cloudUserId || localStorage.getItem('xiaoan_user_id');
+            const isFirst = firstPlace.user_id === currentUserId;
+            const isSecond = secondPlace.user_id === currentUserId;
+            if (!isFirst && !isSecond) {
+                return { ok: false, error: '当前用户不在排行榜A/B名单内' };
+            }
+            let price;
+            if (isFirst) {
+                price = item.price + Math.ceil(gap * item.firstRate);
+                if (price > item.priceCap) price = item.priceCap;
+            } else {
+                price = item.price - Math.ceil(gap * item.secondRate);
+                if (price < 0) price = 0;
+            }
+            return { ok: true, price, isFirst, isSecond, gap, firstPlace, secondPlace };
+        }
+
+        async function buyUrgentKey(itemId) {
+            const item = ITEM_SHOP_DATA.urgentKeys.find(k => k.id === itemId);
+            if (!item) {
+                showStatus('❌ 道具不存在！', 'error');
+                return;
+            }
+            const sb = window.__cloudClient;
+            if (!sb) {
+                showStatus('❌ 未连接云端，无法购买加急密钥', 'error');
+                return;
+            }
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) {
+                showStatus('❌ 周期数据异常', 'error');
+                return;
+            }
+            // 购买时机：剩余时间 < 18h 且 > 0
+            const nextReset = getNextSettlementTime(cycleStart);
+            const msRemaining = nextReset.getTime() - Date.now();
+            if (msRemaining <= 0) {
+                showStatus('❌ 已过结算时间', 'error');
+                return;
+            }
+            if (msRemaining >= 18 * 60 * 60 * 1000) {
+                showStatus('❌ 仅可在结算剩余时间小于18小时时购买', 'error');
+                return;
+            }
+            // 先到先得：再次校验云端无本周期记录
+            try {
+                const { data: existing } = await sb
+                    .from('leaderboard_urgent')
+                    .select('id')
+                    .eq('cycle_start', cycleStart)
+                    .maybeSingle();
+                if (existing) {
+                    showStatus('❌ 本周期已有用户购买加急密钥（先到先得）', 'error');
+                    await refreshUrgentOffset();
+                    renderItemShop();
+                    return;
+                }
+            } catch (e) {
+                console.warn('[UrgentKey] 查询已有记录失败:', e);
+            }
+
+            // 计算动态价格
+            showStatus('⏳ 正在查询排行榜计算价格...', 'info');
+            const priceResult = await calcUrgentKeyPrice(item);
+            if (!priceResult.ok) {
+                showStatus(`❌ ${priceResult.error}`, 'error');
+                return;
+            }
+            const finalPrice = priceResult.price;
+            const role = priceResult.isFirst ? '第一名' : '第二名';
+
+            // 余额检查
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < finalPrice) {
+                showStatus(`❌ 兑换券不足！需要 ${finalPrice}（${role}价），当前 ${currentVoucher}`, 'error');
+                return;
+            }
+
+            if (!confirm(`确定购买 ${item.name} 吗？\n\n当前名次：${role}\n领先差额：${priceResult.gap} 兑换券\n动态价格：${finalPrice} 兑换券\n结算将提前 ${item.offsetMinutes / 60} 小时\n\n注意：购买后本周期所有用户结算时间提前，且不可撤销。`)) {
+                return;
+            }
+
+            // 扣费
+            const newVoucher = currentVoucher - finalPrice;
+            localStorage.setItem('voucher', String(newVoucher));
+
+            // 写入购买记录（itemshop_purchased）
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            purchasedItems[item.id] = new Date().toISOString();
+            localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+
+            // 写入云端 leaderboard_urgent 表（先到先得：利用唯一约束 cycle_start）
+            const level = parseInt(item.id.replace('urgent_key_', ''));
+            const currentUserName = localStorage.getItem('xiaoan_username') ||
+                                    (window.__cloudUserId || '').substring(0, 8);
+            try {
+                const { error: insertError } = await sb
+                    .from('leaderboard_urgent')
+                    .insert({
+                        cycle_start: cycleStart,
+                        purchased_by: window.__cloudUserId || localStorage.getItem('xiaoan_user_id'),
+                        purchaser_name: currentUserName,
+                        level: level,
+                        offset_minutes: item.offsetMinutes,
+                        price_paid: finalPrice,
+                        created_at: new Date().toISOString()
+                    });
+                if (insertError) {
+                    // 可能是唯一约束冲突（并发购买）
+                    console.error('[UrgentKey] 写入云端失败:', insertError);
+                    // 回滚扣费
+                    localStorage.setItem('voucher', String(currentVoucher));
+                    delete purchasedItems[item.id];
+                    localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+                    showStatus('❌ 购买失败：本周期可能已被其他用户抢先购买', 'error');
+                    await refreshUrgentOffset();
+                    renderItemShop();
+                    return;
+                }
+            } catch (e) {
+                console.error('[UrgentKey] 写入异常:', e);
+                localStorage.setItem('voucher', String(currentVoucher));
+                delete purchasedItems[item.id];
+                localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+                showStatus('❌ 购买异常，已回滚', 'error');
+                return;
+            }
+
+            // 更新缓存
+            _urgentOffsetCache = item.offsetMinutes;
+            _urgentRecordCache = {
+                cycle_start: cycleStart,
+                purchased_by: window.__cloudUserId,
+                purchaser_name: currentUserName,
+                level: level,
+                offset_minutes: item.offsetMinutes,
+                price_paid: finalPrice,
+                created_at: new Date().toISOString()
+            };
+
+            // 历史记录
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({
+                date: new Date().toISOString(),
+                amount: -finalPrice,
+                reason: `购买道具：${item.name}（${role}价，提前${item.offsetMinutes / 60}h结算）`,
+                type: 'exchange',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                balanceAfter: newVoucher
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+
+            // 给所有用户发送通知（target_user_id=null 广播）
+            try {
+                const newSettleTime = nextReset;
+                const timeStr = newSettleTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' });
+                const notifyTitle = `⚡ 排行榜结算提前`;
+                const notifyBody = `${currentUserName} 购买了 ${item.name}，本周期结算时间提前至 ${timeStr}（原 22:30）`;
+                await sb.from('notifications').insert({
+                    target_user_id: null,
+                    notification_type: 'urgent_key',
+                    title: notifyTitle,
+                    content: notifyBody,
+                    created_at: new Date().toISOString(),
+                    read_at: null,
+                    attachment_type1: 'none'
+                });
+            } catch (e) {
+                console.warn('[UrgentKey] 发送通知失败:', e);
+            }
+
+            // 显示横幅
+            showUrgentBannerIfActive();
+
+            showStatus(`✅ ${item.name} 购买成功！${role}价 ${finalPrice} 兑换券，结算提前 ${item.offsetMinutes / 60} 小时`, 'success');
+            updateUI();
+            renderItemShop();
+        }
+
+        // 显示加急密钥横幅（本周期有加急记录时持续显示）
+        function showUrgentBannerIfActive() {
+            const rec = _urgentRecordCache;
+            if (!rec) return;
+            const cycleStart = getCycleStartFromLocal();
+            // 仅当前周期的记录才显示
+            if (rec.cycle_start !== cycleStart) return;
+            const nextReset = getNextSettlementTime(cycleStart);
+            const timeStr = nextReset.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Shanghai' });
+            const dateStr = nextReset.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', timeZone: 'Asia/Shanghai' });
+            const lvlNames = ['', 'Ⅰ', 'Ⅱ', 'Ⅲ'];
+            const content = `⚡ 本周期结算已提前至 ${dateStr} ${timeStr}（由 ${rec.purchaser_name || '某用户'} 购买加急密钥 ${lvlNames[rec.level] || rec.level}级）`;
+            if (typeof showNotificationBanner === 'function') {
+                showNotificationBanner(content, 'warning');
+            }
+        }
+
+
         function isItemPurchasedThisCycle(itemId) {
             const cycleStart = getCycleStartFromLocal();
             if (!cycleStart) return false;
@@ -5609,10 +5884,15 @@
                     
                     // 更新罚款横幅（云连接成功后）
                     updateFineBanner();
-                    
+
                     // 预加载排行榜数据
                     loadLeaderboardData().then(() => {}).catch(() => {});
-                    
+
+                    // 刷新加急密钥 offset 并显示横幅（本周期若有人购买过加急密钥）
+                    refreshUrgentOffset().then(() => {
+                        showUrgentBannerIfActive();
+                    });
+
                     // 检查并执行排行榜重置
                     checkAndResetLeaderboard();
                     
@@ -6872,7 +7152,7 @@
             return `${year}-${month}-${day}`;
         }
 
-        // 根据周期起始日期计算下次结算时间（中国时间22:30）
+        // 根据周期起始日期计算下次结算时间（中国时间22:30，减去加急密钥提前量）
         function getNextSettlementTime(cycleStart) {
             const dateStr = getCycleStartDateStr(cycleStart);
             const parts = dateStr.split('-');
@@ -6884,7 +7164,50 @@
             // 构造结算日的中国时间22:30，转为UTC存储
             // 中国时间22:30 = UTC 14:30
             const settlementUTC = Date.UTC(year, month, settlementDay, 14, 30, 0, 0);
-            return new Date(settlementUTC);
+            // 减去加急密钥的提前量（分钟），offset 缓存由 refreshUrgentOffset 异步维护
+            const offsetMinutes = getUrgentOffsetMinutes();
+            return new Date(settlementUTC - offsetMinutes * 60 * 1000);
+        }
+
+        // ===== 加急密钥 offset 缓存机制 =====
+        // 全局缓存：本周期加急密钥提前的分钟数（0 表示无加急）
+        let _urgentOffsetCache = 0;
+        let _urgentRecordCache = null; // 完整的加急记录，用于横幅显示
+        let _urgentOffsetLastFetch = 0;
+
+        // 读取缓存的 offset 分钟数（同步，供 getNextSettlementTime 使用）
+        function getUrgentOffsetMinutes() {
+            return _urgentOffsetCache || 0;
+        }
+
+        // 从云端刷新本周期加急密钥记录（异步）
+        async function refreshUrgentOffset() {
+            const sb = window.__cloudClient;
+            if (!sb) return;
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) return;
+            // 节流：5秒内不重复查询
+            if (Date.now() - _urgentOffsetLastFetch < 5000) return;
+            _urgentOffsetLastFetch = Date.now();
+            try {
+                const { data, error } = await sb
+                    .from('leaderboard_urgent')
+                    .select('*')
+                    .eq('cycle_start', cycleStart)
+                    .maybeSingle();
+                if (error) throw error;
+                if (data) {
+                    _urgentOffsetCache = data.offset_minutes || 0;
+                    _urgentRecordCache = data;
+                    // 同步显示横幅
+                    showUrgentBannerIfActive();
+                } else {
+                    _urgentOffsetCache = 0;
+                    _urgentRecordCache = null;
+                }
+            } catch (e) {
+                console.warn('[UrgentKey] 刷新加急记录失败:', e);
+            }
         }
  
         // 获取当前用户是 A 还是 B
@@ -6974,8 +7297,11 @@
             const cycleStart = await ensureLeaderboardCycle();
             if (!cycleStart) return;
 
+            // 刷新加急密钥 offset（结算时间可能被加急密钥提前）
+            await refreshUrgentOffset();
+
             const now = new Date();
-            // 使用统一的时区处理函数计算下次结算时间（中国时间22:30）
+            // 使用统一的时区处理函数计算下次结算时间（中国时间22:30，减去加急提前量）
             const nextReset = getNextSettlementTime(cycleStart);
             if (now < nextReset) return;
 
