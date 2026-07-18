@@ -780,18 +780,7 @@
                     <button class="btn btn-premium pulse" id="multiLotteryBtn">🎟️🎟️ 10抽奖券抽10次</button>
                 </div>
             </div>
-            
-            <!-- 兑换券购买确认模态框 -->
-            <div class="modal" id="exchangeModal">
-                <div class="modal-content">
-                    <h2 id="exchangeModalTitle">兑换券购买确认</h2>
-                    <p id="exchangeModalText">确定要用200兑换券购买1张抽奖券吗？</p>
-                    <div class="action-buttons">
-                        <button class="btn" id="confirmExchangeBtn">确认购买</button>
-                        <button class="btn btn-danger" id="cancelExchangeBtn">取消</button>
-                    </div>
-                </div>
-            </div>
+
         </div>
         
         <!-- 抽奖记录 -->
@@ -838,8 +827,6 @@
     <script>
         // 常量定义
         const DEFAULT_PASSWORD = "1234";
-const LOTTERY_COST = 10;  // 抽奖消耗的兑换券
-const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
         let lotteryTickets = 0;   // 当前抽奖券数量
  
         // 用户隔离的 localStorage key 生成器（与 rule/index.html 一致）
@@ -1154,19 +1141,10 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 updateUI();
                 performLottery(1);
             } else {
-                // 询问是否用兑换券购买
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                if (voucher >= EXCHANGE_RATE) {
-                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
-                    document.getElementById('exchangeModalText').textContent = 
-                        '抽奖券不足！确定要用200兑换券购买1张抽奖券吗？';
-                    document.getElementById('exchangeModal').style.display = 'flex';
-                } else {
-                    showStatus('抽奖券不足且兑换券也不足！', "error");
-                }
+                showStatus('抽奖券不足！请通过任务或纪行商城获取抽奖券。', "error");
             }
         }
- 
+
         // 多次抽奖
         function startMultiLottery() {
             if (lotteryTickets >= 10) {
@@ -1180,19 +1158,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                 updateUI();
                 performLottery(10);
             } else {
-                // 计算需要补充的抽奖券数量
-                const neededTickets = 10 - lotteryTickets;
-                const totalCost = neededTickets * EXCHANGE_RATE;
-                const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                
-                if (voucher >= totalCost) {
-                    document.getElementById('exchangeModalTitle').textContent = '兑换券购买确认';
-                    document.getElementById('exchangeModalText').textContent = 
-                        `抽奖券不足！需要补充${neededTickets}张抽奖券，确定要用${totalCost}兑换券购买吗？`;
-                    document.getElementById('exchangeModal').style.display = 'flex';
-                } else {
-                    showStatus(`抽奖券不足且兑换券不足（需要${totalCost}兑换券）！`, "error");
-                }
+                showStatus(`抽奖券不足（需要10张，当前${lotteryTickets}张）！请通过任务或纪行商城获取抽奖券。`, "error");
             }
         }
  
@@ -1510,8 +1476,6 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
             const clearRecordsBtn = document.getElementById('clearRecordsBtn');
             const confirmClearRecordsBtn = document.getElementById('confirmClearRecordsBtn');
             const cancelClearRecordsBtn = document.getElementById('cancelClearRecordsBtn');
-            const confirmExchangeBtn = document.getElementById('confirmExchangeBtn');
-            const cancelExchangeBtn = document.getElementById('cancelExchangeBtn');
             const navTabs = document.querySelector('.nav-tabs');
 
             if (singleLotteryBtn) singleLotteryBtn.addEventListener('click', startSingleLottery);
@@ -1532,58 +1496,7 @@ const EXCHANGE_RATE = 200; // 200兑换券=1抽奖券
                     if (modal) modal.style.display = 'none';
                 });
             }
-            if (confirmExchangeBtn) {
-                confirmExchangeBtn.addEventListener('click', function() {
-                    const modalTextEl = document.getElementById('exchangeModalText');
-                    const modalEl = document.getElementById('exchangeModal');
-                    if (!modalTextEl) return;
-                    
-                    const modalText = modalTextEl.textContent;
-                    const voucher = parseInt(localStorage.getItem('voucher') || '100');
-                    
-                    // 解析需要购买的抽奖券数量
-                    let ticketsToBuy = 1;
-                    if (modalText.includes('补充')) {
-                        const match = modalText.match(/需要补充(\d+)张/);
-                        if (match) ticketsToBuy = parseInt(match[1]);
-                    }
-                    
-                    const totalCost = ticketsToBuy * EXCHANGE_RATE;
-                    
-                    if (voucher >= totalCost) {
-                        // 扣除兑换券
-                        const newVoucher = voucher - totalCost;
-                        localStorage.setItem('voucher', newVoucher.toString());
-                        syncCurrencyToCloud('voucher');
- 
-                        // 增加抽奖券
-                        lotteryTickets += ticketsToBuy;
-                        localStorage.setItem('lottery', lotteryTickets.toString());
-                        syncCurrencyToCloud('lottery');
-                        
-                        // 更新UI
-                        updateUI();
-                        if (modalEl) modalEl.style.display = 'none';
-                        showStatus(`成功购买${ticketsToBuy}张抽奖券！`, "success");
-                        
-                        // 自动开始抽奖
-                        if (modalText.includes('1张抽奖券')) {
-                            startSingleLottery();
-                        } else if (modalText.includes('10抽奖券') || modalText.includes('补充')) {
-                            startMultiLottery();
-                        }
-                    } else {
-                        showStatus('兑换券不足！', "error");
-                    }
-                });
-            }
-            if (cancelExchangeBtn) {
-                cancelExchangeBtn.addEventListener('click', function() {
-                    const modal = document.getElementById('exchangeModal');
-                    if (modal) modal.style.display = 'none';
-                });
-            }
-            
+
             // 标签页切换事件
             if (navTabs) {
                 navTabs.addEventListener('click', function(e) {

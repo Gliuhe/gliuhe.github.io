@@ -795,7 +795,6 @@
             <div class="action-buttons">
                 <div class="action-message" id="actionMessage"></div>
                 <button class="btn" id="startLotteryBtn">🎡 使用高级抽奖券抽奖</button>
-                <button class="btn btn-premium" id="startVoucherLotteryBtn">🎫 使用兑换券抽奖</button>
             </div>
         </div>
         
@@ -1018,7 +1017,6 @@
         const premiumAmountElement = document.getElementById("premiumAmount");
         const voucherAmountElement = document.getElementById("voucherAmount");
         const startLotteryBtn = document.getElementById("startLotteryBtn");
-        const startVoucherLotteryBtn = document.getElementById("startVoucherLotteryBtn");
         const actionMessage = document.getElementById("actionMessage");
         const resultCard = document.getElementById("resultCard");
         const resultContent = document.getElementById("resultContent");
@@ -1269,7 +1267,6 @@
             const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
             voucherAmountElement.textContent = voucherAmount;
             updateLotteryButton();
-            updateVoucherLotteryButtonText(voucherAmount);
         }
  
         // 更新高级抽奖券按钮文字和提示文字
@@ -1287,28 +1284,7 @@
                 lotteryHint.textContent = `试试你的手气吧！当前${POOL_CONFIG[poolType].name}每次抽奖消耗${premiumCost}张高级抽奖券`;
             }
         }
- 
-        // 更新兑换券抽奖按钮文字
-        function updateVoucherLotteryButtonText(voucherAmount) {
-            const MIN_VOUCHER_REQUIRED = 1200;
-            const startVoucherLotteryBtn = document.getElementById("startVoucherLotteryBtn");
- 
-            const voucherPool = getCurrentPoolType(voucherAmount);
-            const discountRatio = getPoolDiscountRatio(voucherPool, selectedPool || voucherPool);
-            const baseCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(488, Math.round(voucherAmount * 0.30)) : 0;
-            const voucherCost = Math.max(1, Math.round(baseCost * discountRatio));
- 
-            if (voucherAmount < MIN_VOUCHER_REQUIRED) {
-                startVoucherLotteryBtn.textContent = `🎫 兑换券不足${MIN_VOUCHER_REQUIRED}`;
-                startVoucherLotteryBtn.disabled = true;
-            } else {
-                const discountPercent = Math.round((1 - discountRatio) * 100);
-                const discountText = discountPercent > 0 ? ` (立减${discountPercent}%)` : '';
-                startVoucherLotteryBtn.textContent = `🎫 使用${voucherCost}兑换券抽奖${discountText}`;
-                startVoucherLotteryBtn.disabled = false;
-            }
-        }
-        
+
         // 更新保底进度显示
         function updateCountersDisplay() {
             document.getElementById('counterAProgress').value = counterA;
@@ -1333,7 +1309,6 @@
             });
 
             startLotteryBtn.addEventListener("click", startLottery);
-            startVoucherLotteryBtn.addEventListener("click", startVoucherLottery);
             confirmResultBtn.addEventListener("click", () => {
                 resultCard.style.display = "none";
                 isLotteryRunning = false;
@@ -1415,7 +1390,6 @@
             // 显示抽奖动画
             actionMessage.textContent = "抽奖中...";
             startLotteryBtn.disabled = true;
-            startVoucherLotteryBtn.disabled = true;
             
             // 模拟抽奖过程
             setTimeout(() => {
@@ -1515,128 +1489,9 @@
                 
                 actionMessage.textContent = "";
                 startLotteryBtn.disabled = false;
-                startVoucherLotteryBtn.disabled = false;
             }, 1500);
         }
-        
-        // 开始抽奖（使用兑换券）
-        function startVoucherLottery() {
-            if (isLotteryRunning) return;
- 
-            const voucherAmount = parseInt(localStorage.getItem('voucher') || '0');
-            const MIN_VOUCHER_REQUIRED = 1200;
- 
-            const voucherPool = getCurrentPoolType(voucherAmount);
-            const poolType = selectedPool || voucherPool;
-            const discountRatio = getPoolDiscountRatio(voucherPool, poolType);
-            const baseCost = voucherAmount >= MIN_VOUCHER_REQUIRED ? Math.max(488, Math.round(voucherAmount * 0.30)) : 0;
-            const VOUCHER_COST = Math.max(1, Math.round(baseCost * discountRatio));
- 
-            if (voucherAmount < MIN_VOUCHER_REQUIRED) {
-                showNotification(`兑换券不足${MIN_VOUCHER_REQUIRED}，无法使用兑换券抽奖`, "error");
-                return;
-            }
- 
-            if (voucherAmount < VOUCHER_COST) {
-                showNotification("兑换券不足", "error");
-                return;
-            }
- 
-            // 检查当前奖池是否有可用奖品
-            const poolPrizes = filterPrizesByPool(prizes, poolType);
-            const availablePrizes = poolPrizes;
-            if (availablePrizes.length === 0) {
-                showNotification("当前奖池没有可用奖品", "error");
-                return;
-            }
-            
-            isLotteryRunning = true;
-            
-            // 扣除兑换券
-            const newVoucherAmount = voucherAmount - VOUCHER_COST;
-            localStorage.setItem('voucher', newVoucherAmount.toString());
-            syncCurrencyToCloud('voucher');
-            
-            // 触发storage事件同步到主页
-            window.dispatchEvent(new StorageEvent('storage', {
-                key: 'voucher',
-                newValue: newVoucherAmount.toString()
-            }));
-            
-            updateCurrencyDisplay();
-            
-            // 显示抽奖动画
-            actionMessage.textContent = "抽奖中...";
-            startLotteryBtn.disabled = true;
-            startVoucherLotteryBtn.disabled = true;
-            
-            // 模拟抽奖过程
-            setTimeout(() => {
-                const result = drawPrize();
-                if (result) {
-                    showResult(result.prize, result.isGuaranteed);
-                    
-                    // 添加记录
-                    const record = {
-                        prize: result.prize,
-                        date: new Date().toLocaleString(),
-                        cost: VOUCHER_COST,
-                        costType: "voucher",
-                        isGuaranteed: result.isGuaranteed
-                    };
-                    records.unshift(record);
-                    
-                    // 如果是兑换券奖励，增加兑换券(voucher)
-                    if (result.prize.rewardType === "currency") {
-                        // 更新兑换券(voucher)的localStorage
-                        const currentVoucherAmount = parseInt(localStorage.getItem('voucher') || '0');
-                        const currencyToAdd = result.prize.currencyAmount || 0;
-                        const updatedVoucherAmount = currentVoucherAmount + currencyToAdd;
-                        localStorage.setItem('voucher', updatedVoucherAmount.toString());
-                        syncCurrencyToCloud('voucher');
- 
-                        // 触发storage事件同步到主页
-                        window.dispatchEvent(new StorageEvent('storage', {
-                            key: 'voucher',
-                            newValue: updatedVoucherAmount.toString()
-                        }));
-                    } else if (result.prize.rewardType === "bankTicket") {
-                        // 更新银行券的localStorage
-                        const bankTicketAmount = parseInt(localStorage.getItem('bankTicket') || '0') || 0;
-                        const bankTicketToAdd = result.prize.currencyAmount || 0;
-                        const newBankTicketAmount = bankTicketAmount + bankTicketToAdd;
- 
-                        // 安全检查：确保newBankTicketAmount是有效数字
-                        if (!isNaN(newBankTicketAmount) && newBankTicketAmount >= 0) {
-                            localStorage.setItem('bankTicket', newBankTicketAmount.toString());
- 
-                            // 触发storage事件同步到银行页面
-                            window.dispatchEvent(new StorageEvent('storage', {
-                                key: 'bankTicket',
-                                newValue: newBankTicketAmount.toString()
-                            }));
-                        }
-                    }
-                    
-                    // 保存数据
-                    saveData();
 
-                    // 更新界面
-                    renderPrizes();
-                    renderRecords();
-                    
-                    // 更新保底进度显示
-                    updateCountersDisplay();
-                } else {
-                    showNotification("抽奖失败", "error");
-                }
-                
-                actionMessage.textContent = "";
-                startLotteryBtn.disabled = false;
-                startVoucherLotteryBtn.disabled = false;
-            }, 1500);
-        }
-        
         // 保底抽奖函数
         function drawGuaranteedPrize(minWeight, maxWeight, isGuaranteedType, poolPrizes = null) {
             const prizesToUse = poolPrizes || prizes;
