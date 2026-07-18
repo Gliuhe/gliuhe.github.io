@@ -3470,18 +3470,22 @@
             taskKeyGrid.innerHTML = ITEM_SHOP_DATA.taskKeys.map(item => {
                 const purchased = isItemPurchasedThisCycle(item.id);
                 const isActive = isItemActiveToday(item.id);
-                const canBuy = !purchased && !isActive;
+                // 检查同类型的其他密钥是否已购买或生效
+                const sameTypePurchased = isSameTypePurchasedThisCycle('task_key', item.id);
+                const sameTypeActive = isSameTypeActiveToday('task_key', item.id);
+                const canBuy = !purchased && !sameTypePurchased && !sameTypeActive;
                 
                 return `
                     <div class="itemshop-card ${purchased ? 'purchased' : ''}">
                         ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
                         ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                        ${sameTypePurchased && !purchased ? '<div class="item-badge bought">本周期已购买</div>' : ''}
                         <div class="item-icon">${item.icon}</div>
                         <div class="item-name">${item.name}</div>
                         <div class="item-desc">${item.desc}</div>
                         <div class="item-price">💰 ${item.price} 兑换券</div>
                         <button class="item-buy-btn" onclick="buyItem('${item.id}', ${item.price})" ${!canBuy ? 'disabled' : ''}>
-                            ${isActive ? '已生效' : purchased ? '已购买' : '购买'}
+                            ${isActive ? '已生效' : purchased ? '已购买' : sameTypePurchased ? '本周期已购买' : '购买'}
                         </button>
                     </div>
                 `;
@@ -3491,18 +3495,22 @@
             timeKeyGrid.innerHTML = ITEM_SHOP_DATA.timeKeys.map(item => {
                 const purchased = isItemPurchasedThisCycle(item.id);
                 const isActive = isItemActiveToday(item.id);
-                const canBuy = !purchased && !isActive;
+                // 检查同类型的其他密钥是否已购买或生效
+                const sameTypePurchased = isSameTypePurchasedThisCycle('time_key', item.id);
+                const sameTypeActive = isSameTypeActiveToday('time_key', item.id);
+                const canBuy = !purchased && !sameTypePurchased && !sameTypeActive;
                 
                 return `
                     <div class="itemshop-card ${purchased ? 'purchased' : ''}">
                         ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
                         ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                        ${sameTypePurchased && !purchased ? '<div class="item-badge bought">本周期已购买</div>' : ''}
                         <div class="item-icon">${item.icon}</div>
                         <div class="item-name">${item.name}</div>
                         <div class="item-desc">${item.desc}</div>
                         <div class="item-price">💰 ${item.price} 兑换券</div>
                         <button class="item-buy-btn" onclick="buyItem('${item.id}', ${item.price})" ${!canBuy ? 'disabled' : ''}>
-                            ${isActive ? '已生效' : purchased ? '已购买' : '购买'}
+                            ${isActive ? '已生效' : purchased ? '已购买' : sameTypePurchased ? '本周期已购买' : '购买'}
                         </button>
                     </div>
                 `;
@@ -3537,8 +3545,57 @@
             return new Date(purchaseDate).toDateString() === today;
         }
         
+        // 检查同类型的其他密钥是否在当前周期内已购买
+        function isSameTypePurchasedThisCycle(type, currentItemId) {
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) return false;
+            
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            const cycleStartDate = new Date(cycleStart);
+            
+            // 检查同类型的所有密钥
+            for (const itemId in purchasedItems) {
+                if (itemId.startsWith(type + '_') && itemId !== currentItemId) {
+                    const purchaseDateObj = new Date(purchasedItems[itemId]);
+                    if (purchaseDateObj >= cycleStartDate) {
+                        return true; // 同类型的其他密钥已购买
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // 检查同类型的其他密钥是否今天生效
+        function isSameTypeActiveToday(type, currentItemId) {
+            const today = new Date().toDateString();
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            
+            // 检查同类型的所有密钥
+            for (const itemId in purchasedItems) {
+                if (itemId.startsWith(type + '_') && itemId !== currentItemId) {
+                    if (new Date(purchasedItems[itemId]).toDateString() === today) {
+                        return true; // 同类型的其他密钥今天生效
+                    }
+                }
+            }
+            return false;
+        }
+        
         // 购买道具
         function buyItem(itemId, price) {
+            // 检查是否已购买（防止绕过UI）
+            if (isItemPurchasedThisCycle(itemId)) {
+                showStatus('❌ 本周期已购买过此道具！', 'error');
+                return;
+            }
+            
+            // 检查同类型的其他密钥是否已购买
+            const type = itemId.startsWith('task_key') ? 'task_key' : 'time_key';
+            if (isSameTypePurchasedThisCycle(type, itemId)) {
+                showStatus('❌ 本周期已购买过同类型密钥！', 'error');
+                return;
+            }
+            
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
             
             if (currentVoucher < price) {
