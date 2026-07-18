@@ -1852,15 +1852,27 @@
                 {type: rule.rewardType2 || 'none', amount: parseInt(rule.rewardAmount2 || 0)}
             ];
  
+            // 检查任务密钥加成（仅对兑换券有效）
+            const taskKeyBoost = getActiveTaskKeyBoost();
+            if (taskKeyBoost > 0) {
+                rewardTypes.forEach(reward => {
+                    if (reward.type === 'voucher' && reward.amount > 0) {
+                        const originalAmount = reward.amount;
+                        reward.amount = Math.ceil(originalAmount * (1 + taskKeyBoost));
+                        console.log(`[TaskKey] 🗝️ 任务密钥加成 ${taskKeyBoost * 100}%: 兑换券 ${originalAmount} → ${reward.amount}`);
+                    }
+                });
+            }
+
             const history = JSON.parse(localStorage.getItem('history')) || [];
- 
+
             // 生成奖励文本（使用实际奖励值）
             const actualRewardText = getRewardDisplayText({
                 ...rule,
                 rewardAmount1: rewardTypes[0].amount,
                 rewardAmount2: rewardTypes[1].amount
             });
- 
+
             rewardTypes.forEach(reward => {
                 if (reward.type !== 'none' && reward.amount > 0) {
                     const currentAmount = parseInt(localStorage.getItem(reward.type) || '0');
@@ -1869,7 +1881,7 @@
                     console.log(`[TaskPoints] 💰 货币 ${reward.type}: ${currentAmount} → ${newAmount} (+${reward.amount})`);
                     // 同步其他货币奖励到云端
                     syncCurrencyToCloud(reward.type, newAmount);
- 
+
                     history.push({
                         date: new Date().toISOString(),
                         amount: reward.amount,
@@ -2281,7 +2293,54 @@
                 }
             }
         }
- 
+
+        // 检查当前生效的任务密钥加成比例
+        function getActiveTaskKeyBoost() {
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            const today = new Date().toDateString();
+            
+            // 检查三个等级的任务密钥，返回最高加成
+            if (purchasedItems['task_key_3'] && new Date(purchasedItems['task_key_3']).toDateString() === today) {
+                return 1.0; // 100%
+            }
+            if (purchasedItems['task_key_2'] && new Date(purchasedItems['task_key_2']).toDateString() === today) {
+                return 0.5; // 50%
+            }
+            if (purchasedItems['task_key_1'] && new Date(purchasedItems['task_key_1']).toDateString() === today) {
+                return 0.2; // 20%
+            }
+            return 0;
+        }
+
+        // 检查当前生效的时间密钥加成比例
+        function getActiveTimeKeyBoost() {
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            const today = new Date().toDateString();
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            
+            // 检查三个等级的时间密钥
+            // Ⅲ: 18:30前 (1110分钟)
+            if (purchasedItems['time_key_3'] && new Date(purchasedItems['time_key_3']).toDateString() === today) {
+                if (currentMinutes < 1110) { // 18:30 = 18*60+30 = 1110
+                    return 0.3; // 30%
+                }
+            }
+            // Ⅱ: 16:00前 (960分钟)
+            if (purchasedItems['time_key_2'] && new Date(purchasedItems['time_key_2']).toDateString() === today) {
+                if (currentMinutes < 960) { // 16:00 = 16*60 = 960
+                    return 0.3; // 30%
+                }
+            }
+            // Ⅰ: 13:00前 (780分钟)
+            if (purchasedItems['time_key_1'] && new Date(purchasedItems['time_key_1']).toDateString() === today) {
+                if (currentMinutes < 780) { // 13:00 = 13*60 = 780
+                    return 0.3; // 30%
+                }
+            }
+            return 0;
+        }
+
         // 领取每日任务奖励
         function claimDailyReward() {
             const dailyRewardKey = userKey('dailyReward_' + new Date().toDateString());
@@ -2331,7 +2390,14 @@
             // B用户: 2800纪行券 + 1888兑换券
             // A用户: 1000纪行券 + 1888兑换券
             const jixingAmount = isUserB ? 2800 : 1000;
-            const voucherAmount = 1888;
+            let voucherAmount = 1888;
+
+            // 检查时间密钥加成（仅对兑换券有效）
+            const timeKeyBoost = getActiveTimeKeyBoost();
+            if (timeKeyBoost > 0) {
+                voucherAmount = Math.ceil(voucherAmount * (1 + timeKeyBoost));
+                console.log(`[TimeKey] ⏰ 时间密钥加成 ${timeKeyBoost * 100}%: 兑换券 1888 → ${voucherAmount}`);
+            }
 
             // 更新纪行券
             const currentJixing = parseInt(localStorage.getItem('jixing_muchun_currency') || '0');

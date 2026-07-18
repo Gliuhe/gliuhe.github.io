@@ -720,6 +720,92 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
+        /* 道具商城样式 */
+        .itemshop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .itemshop-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .itemshop-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .itemshop-card.purchased {
+            opacity: 0.6;
+            border-color: #94a3b8;
+        }
+        .itemshop-card .item-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+        .itemshop-card .item-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 6px;
+        }
+        .itemshop-card .item-desc {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .itemshop-card .item-price {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        .itemshop-card .item-buy-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .itemshop-card .item-buy-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+        .itemshop-card .item-buy-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .itemshop-card .item-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .itemshop-card .item-badge.active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .itemshop-card .item-badge.bought {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        
         .btn {
             background: var(--primary-color);
             color: white;
@@ -2480,9 +2566,10 @@
     <div class="container">
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="switchTab('dashboard')">🏠 控制面板</div>
-            <div class="nav-tab" onclick="switchTab('products')">🎁 兑换商品</div>
+            <div class="nav-tab" onclick="switchTab('itemshop')">🔑 道具商城</div>
             <div class="nav-tab" onclick="switchTab('history')">📜 交易历史</div>
-            <div class="nav-tab" onclick="switchTab('management')">🛒 商品管理</div>
+            <!-- <div class="nav-tab" onclick="switchTab('products')">🎁 兑换商品</div> -->
+            <!-- <div class="nav-tab" onclick="switchTab('management')">🛒 商品管理</div> -->
             <div class="nav-tab" onclick="switchTab('settings')">⚙️ 系统设置</div>
         </div>
         
@@ -2530,7 +2617,7 @@
  
  
             <div class="action-buttons">
-                <button class="btn btn-warning pulse" onclick="switchTab('products')">🎁 兑换商品</button>
+                <button class="btn btn-warning pulse" onclick="switchTab('itemshop')">🔑 道具商城</button>
                 <button class="btn" onclick="window.location.href='choujiang/index.html'">🎰 前往抽奖</button>
                 <button class="btn" onclick="window.location.href='rule/index.html'">📝 任务中心</button>
                 <button class="btn" onclick="window.location.href='activity/jixing.html'">🎪 夏日纪行</button>
@@ -2538,13 +2625,26 @@
             </div>
         </div>
         
-        <!-- 商品兑换 -->
-        <div id="products" class="tab-content">
+        <!-- 道具商城 -->
+        <div id="itemshop" class="tab-content">
+            <h2>🔑 道具商城</h2>
+            <p style="color:#64748b;font-size:0.88rem;margin-bottom:16px;">购买密钥道具，提升任务收益或影响排行榜结算。每个排行榜周期内每种密钥仅可购买1次。</p>
+            
+            <h3 style="margin-bottom:12px;">📋 任务密钥</h3>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">购买后立即生效，所有任务（除每日任务奖励）的兑换券奖励提升，仅购买当天有效。</p>
+            <div class="itemshop-grid" id="taskKeyGrid"></div>
+            
+            <h3 style="margin:20px 0 12px;">⏰ 时间密钥</h3>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">购买后立即生效，在指定时间前领取每日任务奖励，兑换券数量提升30%，仅购买当天有效。</p>
+            <div class="itemshop-grid" id="timeKeyGrid"></div>
+        </div>
+        
+        <!-- 商品兑换（已注释） -->
+        <!-- <div id="products" class="tab-content">
             <h2>可兑换商品</h2>
             <div class="products" id="productsList">
-                <!-- 商品将通过JavaScript动态添加 -->
             </div>
-        </div>
+        </div> -->
         
         <!-- 交易历史 -->
         <div id="history" class="tab-content">
@@ -2555,14 +2655,13 @@
             </div>
         </div>
         
-        <!-- 商品管理 -->
-        <div id="management" class="tab-content">
+        <!-- 商品管理（已注释） -->
+        <!-- <div id="management" class="tab-content">
             <h2>商品管理</h2>
             <button class="btn" onclick="openAddProductModal()">➕ 添加新商品</button>
             <div class="products" id="manageProductsList">
-                <!-- 管理商品列表将通过JavaScript动态添加 -->
             </div>
-        </div>
+        </div> -->
         
         <!-- 系统设置 -->
         <div id="settings" class="tab-content">
@@ -3339,6 +3438,152 @@
             if (tabId === 'settings' && typeof initCloudStatusPanel === 'function') {
                 initCloudStatusPanel();
             }
+            
+            // 切换到道具商城时渲染商品
+            if (tabId === 'itemshop') {
+                renderItemShop();
+            }
+        }
+        
+        // 道具商城数据
+        const ITEM_SHOP_DATA = {
+            taskKeys: [
+                { id: 'task_key_1', name: '任务密钥 Ⅰ', icon: '🗝️', desc: '所有任务的兑换券奖励提升20%（向上取整），仅当天有效', price: 100, boost: 0.2 },
+                { id: 'task_key_2', name: '任务密钥 Ⅱ', icon: '🔑', desc: '所有任务的兑换券奖励提升50%（向上取整），仅当天有效', price: 300, boost: 0.5 },
+                { id: 'task_key_3', name: '任务密钥 Ⅲ', icon: '🔐', desc: '所有任务的兑换券奖励提升100%（向上取整），仅当天有效', price: 600, boost: 1.0 }
+            ],
+            timeKeys: [
+                { id: 'time_key_1', name: '时间密钥 Ⅰ', icon: '⏰', desc: '13:00前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 100, deadline: '13:00' },
+                { id: 'time_key_2', name: '时间密钥 Ⅱ', icon: '⏱️', desc: '16:00前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 200, deadline: '16:00' },
+                { id: 'time_key_3', name: '时间密钥 Ⅲ', icon: '⌛', desc: '18:30前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 400, deadline: '18:30' }
+            ]
+        };
+        
+        // 渲染道具商城
+        function renderItemShop() {
+            const taskKeyGrid = document.getElementById('taskKeyGrid');
+            const timeKeyGrid = document.getElementById('timeKeyGrid');
+            
+            if (!taskKeyGrid || !timeKeyGrid) return;
+            
+            // 渲染任务密钥
+            taskKeyGrid.innerHTML = ITEM_SHOP_DATA.taskKeys.map(item => {
+                const purchased = isItemPurchasedThisCycle(item.id);
+                const isActive = isItemActiveToday(item.id);
+                const canBuy = !purchased && !isActive;
+                
+                return `
+                    <div class="itemshop-card ${purchased ? 'purchased' : ''}">
+                        ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
+                        ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                        <div class="item-icon">${item.icon}</div>
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-desc">${item.desc}</div>
+                        <div class="item-price">💰 ${item.price} 兑换券</div>
+                        <button class="item-buy-btn" onclick="buyItem('${item.id}', ${item.price})" ${!canBuy ? 'disabled' : ''}>
+                            ${isActive ? '已生效' : purchased ? '已购买' : '购买'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            // 渲染时间密钥
+            timeKeyGrid.innerHTML = ITEM_SHOP_DATA.timeKeys.map(item => {
+                const purchased = isItemPurchasedThisCycle(item.id);
+                const isActive = isItemActiveToday(item.id);
+                const canBuy = !purchased && !isActive;
+                
+                return `
+                    <div class="itemshop-card ${purchased ? 'purchased' : ''}">
+                        ${isActive ? '<div class="item-badge active">✅ 生效中</div>' : ''}
+                        ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                        <div class="item-icon">${item.icon}</div>
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-desc">${item.desc}</div>
+                        <div class="item-price">💰 ${item.price} 兑换券</div>
+                        <button class="item-buy-btn" onclick="buyItem('${item.id}', ${item.price})" ${!canBuy ? 'disabled' : ''}>
+                            ${isActive ? '已生效' : purchased ? '已购买' : '购买'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 检查道具是否在当前排行榜周期内已购买
+        function isItemPurchasedThisCycle(itemId) {
+            const cycleStart = getCycleStartFromLocal();
+            if (!cycleStart) return false;
+            
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            const purchaseDate = purchasedItems[itemId];
+            
+            if (!purchaseDate) return false;
+            
+            // 检查是否在当前周期内
+            const cycleStartDate = new Date(cycleStart);
+            const purchaseDateObj = new Date(purchaseDate);
+            
+            return purchaseDateObj >= cycleStartDate;
+        }
+        
+        // 检查道具是否今天生效
+        function isItemActiveToday(itemId) {
+            const today = new Date().toDateString();
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            const purchaseDate = purchasedItems[itemId];
+            
+            if (!purchaseDate) return false;
+            
+            return new Date(purchaseDate).toDateString() === today;
+        }
+        
+        // 购买道具
+        function buyItem(itemId, price) {
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            
+            if (currentVoucher < price) {
+                showStatus('❌ 兑换券不足！', 'error');
+                return;
+            }
+            
+            if (!confirm(`确定花费 ${price} 兑换券购买此道具吗？`)) {
+                return;
+            }
+            
+            // 扣除兑换券
+            const newVoucher = currentVoucher - price;
+            localStorage.setItem('voucher', newVoucher);
+            
+            // 记录购买
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            purchasedItems[itemId] = new Date().toISOString();
+            localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+            
+            // 添加历史记录
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({
+                date: new Date().toISOString(),
+                amount: -price,
+                reason: `购买道具：${getItemName(itemId)}`,
+                type: 'exchange',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                balanceAfter: newVoucher
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+            
+            showStatus(`✅ 购买成功！${getItemName(itemId)} 已生效`, 'success');
+            
+            // 刷新UI
+            updateUI();
+            renderItemShop();
+        }
+        
+        // 获取道具名称
+        function getItemName(itemId) {
+            const allItems = [...ITEM_SHOP_DATA.taskKeys, ...ITEM_SHOP_DATA.timeKeys];
+            const item = allItems.find(i => i.id === itemId);
+            return item ? item.name : itemId;
         }
         
         // 增加货币
