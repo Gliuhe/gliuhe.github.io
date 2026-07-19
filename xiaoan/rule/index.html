@@ -1351,13 +1351,19 @@
                 const USER_B_ID = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
                 const isUserB = userId === USER_B_ID;
                 const jixingAmount = isUserB ? 2800 : 1000;
-                const voucherAmount = 1888;
+                // 置换密钥生效时：兑换券数量替换为 voucherOverride（1488/1688/1888）
+                const _swapRecForDisplay = getActiveSwapKeyRecord();
+                const voucherAmount = (_swapRecForDisplay && typeof _swapRecForDisplay.voucherOverride === 'number')
+                    ? _swapRecForDisplay.voucherOverride : 1888;
                 const rewardText = `${jixingAmount} 纪行券 + ${voucherAmount} 兑换券`;
-                
+
                 // 构建规则说明文字
                 let ruleContent = `完成所有【每日】系列任务即可领取${rewardText}！`;
                 if (specialRulesToday.length > 0) {
                     ruleContent += '<br><span style="color:#ff6b6b;">💡 今日完成特需任务也可直接领取奖励！</span>';
+                }
+                if (_swapRecForDisplay && typeof _swapRecForDisplay.voucherOverride === 'number') {
+                    ruleContent += `<br><span style="color:#8b5cf6;font-size:0.82rem;">🔀 置换密钥生效中：今日每日奖励兑换券已变更为 ${_swapRecForDisplay.voucherOverride}</span>`;
                 }
  
                 dailyRewardElement.innerHTML = `
@@ -1486,12 +1492,12 @@
  
                 ruleElement.innerHTML = `
                     <div class="rule-header">
-                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}${isConvertedToDaily(rule.id) ? ' 🔄📌' : ''}</div>
+                        <div class="rule-title">${rule.title}${rule.isDaily ? ' 📌' : ''}${rule.isSpecial ? ' 🔥' : ''}${isConvertedToDaily(rule.id) ? ' 🔄📌' : ''}${isSwapKeyToDaily(rule.id) ? ' 🔀📌' : ''}${isSwapKeyToNormal(rule.id) ? ' 🔀' : ''}</div>
                         <div class="rule-reward">
                     ${getRewardDisplayText(rule)}
                 </div>
                     </div>
-                    <div class="rule-content">${rule.content}${isConvertedToDaily(rule.id) ? '<br><span style="color:#f59e0b;font-size:0.82rem;">🔄 本周期已转换为每日任务（转换密钥）</span>' : ''}</div>
+                    <div class="rule-content">${rule.content}${isConvertedToDaily(rule.id) ? '<br><span style="color:#f59e0b;font-size:0.82rem;">🔄 本周期已转换为每日任务（转换密钥）</span>' : ''}${isSwapKeyToDaily(rule.id) ? '<br><span style="color:#8b5cf6;font-size:0.82rem;">🔀 今日已由置换密钥转为每日任务</span>' : ''}${isSwapKeyToNormal(rule.id) ? '<br><span style="color:#64748b;font-size:0.82rem;">🔀 今日已由置换密钥转为普通任务</span>' : ''}</div>
                     ${statusDisplay}
                     <div class="rule-actions">
                         ${actionButton}
@@ -2050,8 +2056,8 @@
             {
                 const _pot = getTreasurePot();
                 if (_pot) {
-                    // 判断此任务是否属于每日系列（原 isDaily 或被转换密钥选中）
-                    const _isDailyTask = rule.isDaily === true || isConvertedToDaily(rule.id);
+                    // 判断此任务是否属于每日系列（原 isDaily 或被转换密钥选中 或 被置换密钥转为每日；被置换密钥转为普通的除外）
+                    const _isDailyTask = isEffectivelyDaily(rule);
                     if (_isDailyTask) {
                         // 统计此任务的兑换券奖励（双货币均检查）
                         let _taskVoucher = 0;
@@ -2569,13 +2575,62 @@
             return ids.includes(Number(ruleId)) || ids.includes(String(ruleId));
         }
 
-        // 获取本周期生效的每日任务列表（原 isDaily + 转换密钥选中的普通任务）
+        // 判断某 rule 是否被置换密钥从普通任务转为每日任务（当天有效）
+        function isSwapKeyToDaily(ruleId) {
+            const rec = getActiveSwapKeyRecord();
+            if (!rec || !rec.normalToDailyRuleId) return false;
+            return Number(rec.normalToDailyRuleId) === Number(ruleId);
+        }
+
+        // 判断某 rule 是否被置换密钥从每日任务转为普通任务（当天有效）
+        function isSwapKeyToNormal(ruleId) {
+            const rec = getActiveSwapKeyRecord();
+            if (!rec || !rec.dailyToNormalRuleId) return false;
+            return Number(rec.dailyToNormalRuleId) === Number(ruleId);
+        }
+
+        // 综合判定：此任务当前是否被视为"每日任务"（用于聚宝盆累加、领取每日奖励等）
+        function isEffectivelyDaily(rule) {
+            if (!rule) return false;
+            // 被置换密钥转为普通 → 排除
+            if (isSwapKeyToNormal(rule.id)) return false;
+            // 原每日 或 被转换密钥选中 或 被置换密钥转为每日
+            return rule.isDaily === true || isConvertedToDaily(rule.id) || isSwapKeyToDaily(rule.id);
+        }
+
+        // 读取置换密钥记录（本周期内 + 当天有效）
+        function getActiveSwapKeyRecord() {
+            const raw = localStorage.getItem('swap_key_record');
+            if (!raw) return null;
+            try {
+                const rec = JSON.parse(raw);
+                // 必须是本周期内
+                const currentCycle = localStorage.getItem('leaderboard_cycle_start');
+                if (!rec.cycleStart || !currentCycle) return null;
+                if (rec.cycleStart !== currentCycle) return null;
+                // 必须"当天有效"
+                const today = new Date().toDateString();
+                if (rec.purchaseDateStr !== today) return null;
+                return rec;
+            } catch(e) { return null; }
+        }
+
+        // 获取本周期生效的每日任务列表（原 isDaily + 转换密钥选中的普通任务 + 置换密钥的普通→每日 - 置换密钥的每日→普通）
         function getEffectiveDailyRules(rules) {
             const convertedIds = getConvertedRuleIds();
+            const swapRec = getActiveSwapKeyRecord();
+            const swapNormalToDaily = swapRec ? Number(swapRec.normalToDailyRuleId) : null;
+            const swapDailyToNormal = swapRec ? Number(swapRec.dailyToNormalRuleId) : null;
             return (rules || []).filter(rule => {
+                const ruleId = Number(rule.id);
+                // 置换密钥：被转为普通的每日任务 → 排除
+                if (swapDailyToNormal !== null && ruleId === swapDailyToNormal) return false;
+                // 原每日任务
                 if (rule.isDaily === true) return true;
                 // 转换密钥选中的任务在本周期内视为每日任务
                 if (convertedIds.includes(Number(rule.id)) || convertedIds.includes(String(rule.id))) return true;
+                // 置换密钥：被转为每日的普通任务 → 包含
+                if (swapNormalToDaily !== null && ruleId === swapNormalToDaily) return true;
                 return false;
             });
         }
@@ -2899,11 +2954,18 @@
             const jixingAmount = isUserB ? 2800 : 1000;
             let voucherAmount = 1888;
 
+            // 置换密钥覆盖：若今日购买了置换密钥，每日任务奖励中的兑换券数量变为指定值
+            const swapRec = getActiveSwapKeyRecord();
+            if (swapRec && typeof swapRec.voucherOverride === 'number') {
+                voucherAmount = swapRec.voucherOverride;
+                console.log(`[SwapKey] 🔀 置换密钥生效：每日任务奖励兑换券 1888 → ${voucherAmount}`);
+            }
+
             // 检查时间密钥加成（仅对兑换券有效）
             const timeKeyBoost = getActiveTimeKeyBoost();
             if (timeKeyBoost > 0) {
                 voucherAmount = Math.ceil(voucherAmount * (1 + timeKeyBoost));
-                console.log(`[TimeKey] ⏰ 时间密钥加成 ${timeKeyBoost * 100}%: 兑换券 1888 → ${voucherAmount}`);
+                console.log(`[TimeKey] ⏰ 时间密钥加成 ${timeKeyBoost * 100}%: 兑换券 → ${voucherAmount}`);
             }
 
             // 更新纪行券

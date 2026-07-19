@@ -2642,6 +2642,10 @@
             <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在结算次日（周期第二天）领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
             <div class="itemshop-grid" id="convertKeyGrid"></div>
 
+            <h3 style="margin:20px 0 12px;">🔀 置换密钥</h3>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">将1个普通任务与1个每日任务置换（仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时兑换券数量变为指定值。仅当天有效，本周期仅可购买1次。</p>
+            <div class="itemshop-grid" id="swapKeyGrid"></div>
+
             <h3 style="margin:20px 0 12px;">⚡ 加急密钥</h3>
             <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">提前本周期结算时间。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效，价格随当前名次动态变化。</p>
             <div class="itemshop-grid" id="urgentKeyGrid"></div>
@@ -2657,6 +2661,23 @@
                 <div style="display:flex;gap:8px;justify-content:flex-end;">
                     <button class="btn" style="background:#94a3b8;" onclick="closeConvertKeyModal()">取消</button>
                     <button class="btn" style="background:linear-gradient(135deg, #667eea, #764ba2);" id="convertKeyConfirmBtn" onclick="confirmConvertKeyPurchase()" disabled>确认购买（600 兑换券）</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 置换密钥购买模态框 -->
+        <div class="modal" id="swapKeyModal">
+            <div class="modal-content" style="max-width:640px;">
+                <h2>🔀 置换密钥 - 选择任务</h2>
+                <p style="color:#64748b;font-size:0.88rem;margin-bottom:8px;">将1个普通任务与1个每日任务置换（仅可置换兑换券奖励在 200~400 间的任务）。仅当天有效。</p>
+                <p id="swapKeyHint" style="color:#64748b;font-size:0.82rem;margin-bottom:12px;"></p>
+                <h4 style="color:#1e293b;margin-bottom:6px;">① 选择要转为每日的普通任务：</h4>
+                <div id="swapKeyNormalList" style="max-height:30vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;"></div>
+                <h4 style="color:#1e293b;margin-bottom:6px;">② 选择要转为普通的每日任务：</h4>
+                <div id="swapKeyDailyList" style="max-height:30vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;"></div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="btn" style="background:#94a3b8;" onclick="closeSwapKeyModal()">取消</button>
+                    <button class="btn" style="background:linear-gradient(135deg, #667eea, #764ba2);" id="swapKeyConfirmBtn" onclick="confirmSwapKeyPurchase()" disabled>确认购买</button>
                 </div>
             </div>
         </div>
@@ -3489,6 +3510,11 @@
                 { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为42%，转换2个任务为46%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.46, boostRatioSingle: 0.42 },
                 { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为55%，转换2个任务为60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 0.6, boostRatioSingle: 0.55 }
             ],
+            swapKeys: [
+                { id: 'swap_key_1', name: '置换密钥 Ⅰ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1488。仅当天有效，本周期仅可购买1次。', price: 58, voucherOverride: 1488 },
+                { id: 'swap_key_2', name: '置换密钥 Ⅱ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1688。仅当天有效，本周期仅可购买1次。', price: 108, voucherOverride: 1688 },
+                { id: 'swap_key_3', name: '置换密钥 Ⅲ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1888。仅当天有效，本周期仅可购买1次。', price: 198, voucherOverride: 1888 }
+            ],
             urgentKeys: [
                 { id: 'urgent_key_1', name: '加急密钥 Ⅰ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 0.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×10%，第二名购买减价被领先差额×10%。加价后价格上限1000。', price: 200, offsetMinutes: 30, firstRate: 0.10, secondRate: 0.10, priceCap: 1000 },
                 { id: 'urgent_key_2', name: '加急密钥 Ⅱ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 1.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×25%，第二名购买减价被领先差额×15%。加价后价格上限1000。', price: 400, offsetMinutes: 90, firstRate: 0.25, secondRate: 0.15, priceCap: 1000 },
@@ -3654,6 +3680,42 @@
                             <div class="item-price">${priceLabel}</div>
                             ${extraInfo}
                             <button class="item-buy-btn" onclick="buyUrgentKey('${item.id}')" ${btnDisabled ? 'disabled' : ''}>
+                                ${btnText}
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // 渲染置换密钥（同档之间互斥，周期内仅可购1次；购买后仅当天有效）
+            const swapKeyGrid = document.getElementById('swapKeyGrid');
+            if (swapKeyGrid) {
+                swapKeyGrid.innerHTML = ITEM_SHOP_DATA.swapKeys.map(item => {
+                    const purchased = isItemPurchasedThisCycle(item.id);
+                    const isActive = isItemActiveToday(item.id);  // 仅当天有效
+                    const sameTypePurchased = isSameTypePurchasedThisCycle('swap_key', item.id);
+                    const canBuy = !purchased && !sameTypePurchased;
+
+                    let btnText = '购买';
+                    let btnDisabled = !canBuy;
+                    if (isActive) {
+                        btnText = '今日生效中';
+                    } else if (purchased) {
+                        // 购买过但不是今天（已过期）
+                        btnText = '本周期已购';
+                    } else if (sameTypePurchased) {
+                        btnText = '本周期已购';
+                    }
+
+                    return `
+                        <div class="itemshop-card ${isActive ? 'purchased' : ''}">
+                            ${isActive ? '<div class="item-badge active">✅ 今日生效</div>' : ''}
+                            ${purchased ? '<div class="item-badge bought">已购买</div>' : ''}
+                            <div class="item-icon">${item.icon}</div>
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-desc">${item.desc}</div>
+                            <div class="item-price">💰 ${item.price} 兑换券</div>
+                            <button class="item-buy-btn" onclick="openSwapKeyModal('${item.id}')" ${btnDisabled ? 'disabled' : ''}>
                                 ${btnText}
                             </button>
                         </div>
@@ -3884,6 +3946,224 @@
 
             closeConvertKeyModal();
             showStatus(`✅ ${item.name} 购买成功！${selectedCount}个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(effectiveRatio * 100)}%）`, 'success');
+            updateUI();
+            renderItemShop();
+        }
+
+        // ===== 置换密钥购买流程 =====
+        let _swapKeyPendingItem = null;
+        let _swapKeyNormalSelected = null;   // 普通任务 ruleId（转为每日）
+        let _swapKeyDailySelected = null;    // 每日任务 ruleId（转为普通）
+
+        // 计算一个 rule 的兑换券奖励总和（用于置换密钥的 200~400 范围判定）
+        function calcRuleVoucherAmount(rule) {
+            let sum = 0;
+            if (rule.rewardType1 === 'voucher') sum += (parseInt(rule.rewardAmount1) || 0);
+            if (rule.rewardType2 === 'voucher') sum += (parseInt(rule.rewardAmount2) || 0);
+            return sum;
+        }
+
+        // 打开置换密钥购买模态框
+        function openSwapKeyModal(itemId) {
+            const item = ITEM_SHOP_DATA.swapKeys.find(i => i.id === itemId);
+            if (!item) {
+                showStatus('❌ 道具不存在', 'error');
+                return;
+            }
+            // 同类型互斥校验
+            if (isSameTypePurchasedThisCycle('swap_key', itemId)) {
+                showStatus('❌ 本周期已购买置换密钥！', 'error');
+                return;
+            }
+            if (isItemPurchasedThisCycle(itemId)) {
+                showStatus('❌ 本周期已购买此道具！', 'error');
+                return;
+            }
+            // 余额检查
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < item.price) {
+                showStatus(`❌ 兑换券不足！需要 ${item.price}，当前 ${currentVoucher}`, 'error');
+                return;
+            }
+
+            // 读取当前用户规则
+            const uid = (window.__cloudUserId ||
+                         localStorage.getItem('xiaoan_user_id') ||
+                         'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+            const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+
+            // 候选普通任务：非 isDaily 非 isSpecial，兑换券奖励在 200~400
+            const normalCandidates = rules.filter(r => {
+                if (r.isDaily || r.isSpecial) return false;
+                const v = calcRuleVoucherAmount(r);
+                return v >= 200 && v <= 400;
+            });
+            // 候选每日任务：isDaily=true 非 isSpecial，兑换券奖励在 200~400
+            const dailyCandidates = rules.filter(r => {
+                if (!r.isDaily || r.isSpecial) return false;
+                const v = calcRuleVoucherAmount(r);
+                return v >= 200 && v <= 400;
+            });
+
+            if (normalCandidates.length === 0) {
+                showStatus('❌ 没有可置换的普通任务（兑换券奖励需在 200~400 间）', 'error');
+                return;
+            }
+            if (dailyCandidates.length === 0) {
+                showStatus('❌ 没有可置换的每日任务（兑换券奖励需在 200~400 间）', 'error');
+                return;
+            }
+
+            _swapKeyPendingItem = item;
+            _swapKeyNormalSelected = null;
+            _swapKeyDailySelected = null;
+
+            // 渲染普通任务列表（单选）
+            const normalListEl = document.getElementById('swapKeyNormalList');
+            normalListEl.innerHTML = normalCandidates.map(r => {
+                const v = calcRuleVoucherAmount(r);
+                const rewardText = (r.rewardType1 ? `${r.rewardAmount1||0} ${currencyLabel(r.rewardType1)}` : '') +
+                                   (r.rewardType2 ? ` + ${r.rewardAmount2||0} ${currencyLabel(r.rewardType2)}` : '');
+                return `
+                    <label class="checkbox-wrapper" style="display:flex;align-items:center;padding:10px;margin:6px 0;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;background:#f8fafc;width:auto;">
+                        <input type="radio" name="swapKeyNormal" value="${r.id}" onchange="selectSwapKeyNormal(${r.id})" style="width:auto;margin-right:10px;">
+                        <div style="flex:1;">
+                            <div style="font-weight:700;color:#1e293b;">${r.title}</div>
+                            <div style="font-size:0.82rem;color:#64748b;">奖励: ${rewardText || '无'}（兑换券 ${v}）</div>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            // 渲染每日任务列表（单选）
+            const dailyListEl = document.getElementById('swapKeyDailyList');
+            dailyListEl.innerHTML = dailyCandidates.map(r => {
+                const v = calcRuleVoucherAmount(r);
+                const rewardText = (r.rewardType1 ? `${r.rewardAmount1||0} ${currencyLabel(r.rewardType1)}` : '') +
+                                   (r.rewardType2 ? ` + ${r.rewardAmount2||0} ${currencyLabel(r.rewardType2)}` : '');
+                return `
+                    <label class="checkbox-wrapper" style="display:flex;align-items:center;padding:10px;margin:6px 0;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;background:#f8fafc;width:auto;">
+                        <input type="radio" name="swapKeyDaily" value="${r.id}" onchange="selectSwapKeyDaily(${r.id})" style="width:auto;margin-right:10px;">
+                        <div style="flex:1;">
+                            <div style="font-weight:700;color:#1e293b;">${r.title}</div>
+                            <div style="font-size:0.82rem;color:#64748b;">奖励: ${rewardText || '无'}（兑换券 ${v}）</div>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            document.getElementById('swapKeyConfirmBtn').textContent = `确认购买（${item.price} 兑换券）`;
+            document.getElementById('swapKeyConfirmBtn').disabled = true;
+            updateSwapKeyHint();
+            document.getElementById('swapKeyModal').style.display = 'flex';
+        }
+
+        function selectSwapKeyNormal(ruleId) {
+            _swapKeyNormalSelected = ruleId;
+            updateSwapKeyHint();
+            updateSwapKeyConfirmBtn();
+        }
+
+        function selectSwapKeyDaily(ruleId) {
+            _swapKeyDailySelected = ruleId;
+            updateSwapKeyHint();
+            updateSwapKeyConfirmBtn();
+        }
+
+        function updateSwapKeyHint() {
+            const hintEl = document.getElementById('swapKeyHint');
+            if (!hintEl || !_swapKeyPendingItem) return;
+            const item = _swapKeyPendingItem;
+            const normalPicked = _swapKeyNormalSelected !== null;
+            const dailyPicked = _swapKeyDailySelected !== null;
+            let txt = `💡 领取每日任务奖励时，兑换券数量将变为 <strong style="color:#667eea;">${item.voucherOverride}</strong>。`;
+            if (normalPicked && dailyPicked) {
+                txt += ` <strong style="color:#10b981;">已选普通→每日 + 每日→普通，可购买</strong>`;
+            } else if (normalPicked) {
+                txt += ` 已选普通→每日，请继续选择每日→普通`;
+            } else if (dailyPicked) {
+                txt += ` 已选每日→普通，请继续选择普通→每日`;
+            } else {
+                txt += ` 请选择两个任务`;
+            }
+            hintEl.innerHTML = txt;
+        }
+
+        function updateSwapKeyConfirmBtn() {
+            const btn = document.getElementById('swapKeyConfirmBtn');
+            if (!btn) return;
+            btn.disabled = !(_swapKeyNormalSelected !== null && _swapKeyDailySelected !== null);
+        }
+
+        function closeSwapKeyModal() {
+            document.getElementById('swapKeyModal').style.display = 'none';
+            _swapKeyPendingItem = null;
+            _swapKeyNormalSelected = null;
+            _swapKeyDailySelected = null;
+        }
+
+        // 确认购买置换密钥
+        function confirmSwapKeyPurchase() {
+            if (!_swapKeyPendingItem) {
+                showStatus('❌ 未选择道具', 'error');
+                return;
+            }
+            if (_swapKeyNormalSelected === null || _swapKeyDailySelected === null) {
+                showStatus('⚠️ 请选择1个普通任务和1个每日任务', 'warning');
+                return;
+            }
+            const item = _swapKeyPendingItem;
+            const normalRuleId = _swapKeyNormalSelected;
+            const dailyRuleId = _swapKeyDailySelected;
+
+            // 余额校验
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < item.price) {
+                showStatus(`❌ 兑换券不足！需要 ${item.price}，当前 ${currentVoucher}`, 'error');
+                return;
+            }
+
+            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n所选普通任务将转为每日，所选每日任务将转为普通。\n领取今日每日任务奖励时，兑换券数量将变为 ${item.voucherOverride}。\n仅今天有效！`)) {
+                return;
+            }
+
+            // 扣费
+            const newVoucher = currentVoucher - item.price;
+            localStorage.setItem('voucher', String(newVoucher));
+
+            // 写入购买记录（itemshop_purchased）—— 用于周期内同档互斥
+            const purchasedItems = JSON.parse(localStorage.getItem('itemshop_purchased') || '{}');
+            purchasedItems[item.id] = new Date().toISOString();
+            localStorage.setItem('itemshop_purchased', JSON.stringify(purchasedItems));
+
+            // 写入置换记录（独立 key，供 rule/index.html 读取）
+            const swapRecord = {
+                itemId: item.id,
+                level: parseInt(item.id.replace('swap_key_', '')),
+                voucherOverride: item.voucherOverride,
+                normalToDailyRuleId: normalRuleId,  // 普通任务 → 每日任务
+                dailyToNormalRuleId: dailyRuleId,   // 每日任务 → 普通任务
+                purchasedAt: new Date().toISOString(),
+                purchaseDateStr: new Date().toDateString(),  // 用于"仅当天有效"判定
+                cycleStart: getCycleStartFromLocal()
+            };
+            localStorage.setItem('swap_key_record', JSON.stringify(swapRecord));
+
+            // 历史记录
+            const history = JSON.parse(localStorage.getItem('history') || '[]');
+            history.push({
+                date: new Date().toISOString(),
+                amount: -item.price,
+                reason: `购买道具：${item.name}（普通#${normalRuleId} ↔ 每日#${dailyRuleId}）`,
+                type: 'exchange',
+                currencyType: 'voucher',
+                currencyName: '兑换券',
+                balanceAfter: newVoucher
+            });
+            localStorage.setItem('history', JSON.stringify(history));
+
+            closeSwapKeyModal();
+            showStatus(`✅ ${item.name} 购买成功！今日领取每日任务奖励时兑换券将变为 ${item.voucherOverride}`, 'success');
             updateUI();
             renderItemShop();
         }
