@@ -679,20 +679,23 @@
             const allItems = [];
 
             normalRecords.forEach((record, index) => {
-                // 排除兑换券和银行券类型
-                if (record.rewardType === 'currency' || record.rewardType === 'bankTicket') return;
+                // 排除货币类（兑换券/银行券/纪行券）：货币在抽奖时已直接发放，不进背包
+                if (record.rewardType === 'currency' || record.rewardType === 'bankTicket' || record.rewardType === 'jixing') return;
 
                 const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
                 const isExchange = prizeName === '下次一定';
 
+                // usable 优先级：管理员配置的 prize.usable/record.usable > 兜底默认值
+                // 管理员在管理页可配置实物奖品"是否可使用"，此处必须读取该字段
+                const adminUsable = (typeof record.usable === 'boolean') ? record.usable : true;
                 allItems.push({
                     ...record,
                     _source: 'normal',
                     _sourceLabel: '普通抽奖',
                     _originalIndex: index,
                     _listKey: 'records',
-                    // "下次一定"可兑换高级抽奖券
-                    usable: !record.used,
+                    // "下次一定"可兑换高级抽奖券；其他实物奖品按管理员配置
+                    usable: isExchange ? !record.used : (adminUsable && !record.used),
                     isExchangeItem: isExchange,
                     _isUsed: !!record.used
                 });
@@ -703,14 +706,16 @@
                 const prizeName = typeof record.prize === 'object' ? record.prize.name : record.prize;
                 const rewardType = record.prize?.rewardType || record.rewardType || 'item';
 
-                // 排除兑换券、银行券
-                if (rewardType === 'currency' || rewardType === 'bankTicket') return;
+                // 排除货币类（兑换券/银行券/纪行券）：货币在抽奖时已直接发放，不进背包
+                if (rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') return;
 
+                // usable 优先级：管理员配置的 prize.usable > 兜底默认值
+                const adminUsable = (typeof record.prize?.usable === 'boolean') ? record.prize.usable : true;
                 allItems.push({
                     prize: prizeName,
                     rewardType: rewardType,
                     keyId: record.prize?.keyId || null,  // 密钥道具：保留 keyId
-                    usable: !record.used,
+                    usable: adminUsable && !record.used,
                     isExchangeItem: (prizeName === '下次一定'),
                     used: !!record.used,
                     usedTime: record.usedTime || null,
@@ -898,6 +903,8 @@
                 const sourceLabel = item._source === 'advanced' ? '高级' : '普通';
                 const dateStr = item.date ? formatDate(item.date) : '';
                 const displayName = typeof item.prize === 'object' ? (item.prize?.name || String(item.prize)) : item.prize;
+                // 管理员配置不可使用的实物奖品：显示"不可使用"标签，不显示使用按钮
+                const isUnusable = !isExchangeItem && !isKeyItem && (item.usable === false);
 
                 // 密钥道具：显示"激活"按钮，并预校验是否可激活
                 let keyBtnHtml = '';
@@ -936,7 +943,10 @@
                                  ${keyBtnHtml}` :
                                 `${item.description ? `<div class="item-desc">${item.description}</div>` : ''}
                                  <div class="item-date">${dateStr}</div>
-                                 <button class="use-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}">&#127873; 使用</button>`
+                                 ${isUnusable ?
+                                    `<div class="unusable-tag" style="display:inline-block;padding:6px 14px;background:#e5e7eb;color:#6b7280;border-radius:18px;font-size:0.78rem;font-weight:bold;text-align:center;">🚫 不可使用</div>` :
+                                    `<button class="use-btn" data-list-key="${item._listKey}" data-original-index="${item._originalIndex}">&#127873; 使用</button>`
+                                 }`
                             )
                         }
                     </div>
