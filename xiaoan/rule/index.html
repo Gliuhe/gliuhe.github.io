@@ -1203,15 +1203,40 @@
             // ===== 聚宝盆销毁判定（必须在清理 keysToRemove 之前，否则昨日 key 已被删）=====
             // 若昨日未领每日任务奖励 且 聚宝盆存在（未销毁），则立即销毁
             // 注意：仅判定昨日，因为"第二天不能领第一天的奖励"，漏领即销毁，不给宽限
+            // 修复：仅当昨日属于本周期内时才检查，否则会误销毁
+            // （结算次日访问时，昨日是结算日，属于上一周期，不应触发销毁）
+
+            // 修复1：恢复因bug误销毁的聚宝盆（在周期第一天因"昨日漏领"被误销毁的）
+            // 周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期
+            recoverFalselyDestroyedPot();
+
             const pot = getTreasurePot();
             if (pot) {
-                const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
-                const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
-                if (!yesterdayClaimed) {
-                    destroyTreasurePot('missed_daily_yesterday');
-                    setTimeout(() => {
-                        showStatus('💥 您的聚宝盆因昨日未领每日任务奖励已销毁！', 'error');
-                    }, 500);
+                // 计算本周期第一天（中国时区）：cycleStart 当天22:30结算，次日才是周期第一天
+                const currentCycleStart = localStorage.getItem('leaderboard_cycle_start');
+                let shouldCheckYesterday = true;
+                if (currentCycleStart) {
+                    const cycleStartChinaStr = getDateStrChina(currentCycleStart);  // 形如 "2026-07-18"
+                    const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
+                    const cycleFirstDay = new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000);
+                    const cycleFirstDayChinaStr = getDateStrChina(cycleFirstDay);  // 形如 "2026-07-19"
+                    const yesterdayChinaStr = getDateStrChina(yesterday);
+                    // 昨日 < 周期第一天 → 昨日属于上一周期（结算日或更早），跳过销毁检查
+                    if (yesterdayChinaStr < cycleFirstDayChinaStr) {
+                        shouldCheckYesterday = false;
+                        console.log(`[TreasurePot] 跳过销毁检查：昨日 ${yesterdayChinaStr} < 周期第一天 ${cycleFirstDayChinaStr}（属于上一周期）`);
+                    }
+                }
+
+                if (shouldCheckYesterday) {
+                    const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
+                    const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
+                    if (!yesterdayClaimed) {
+                        destroyTreasurePot('missed_daily_yesterday');
+                        setTimeout(() => {
+                            showStatus('💥 您的聚宝盆因昨日未领每日任务奖励已销毁！', 'error');
+                        }, 500);
+                    }
                 }
             }
 
@@ -2550,6 +2575,46 @@
             pot.destroyReason = reason || 'missed_daily';
             saveTreasurePot(pot);
             console.log('[TreasurePot] 💥 聚宝盆已销毁:', reason);
+        }
+
+        // 修复：恢复因bug误销毁的聚宝盆
+        // 触发条件：destroyed=true && destroyReason==='missed_daily_yesterday' && destroyedAt 是周期第一天
+        // 原因：周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期，不应触发销毁
+        function recoverFalselyDestroyedPot() {
+            const raw = localStorage.getItem('treasure_pot');
+            if (!raw) return;
+            let pot;
+            try { pot = JSON.parse(raw); } catch(e) { return; }
+            if (!pot || pot.destroyed !== true) return;
+            if (pot.destroyReason !== 'missed_daily_yesterday') return;
+            if (!pot.destroyedAt) return;
+
+            // 必须是本周期内的聚宝盆
+            const currentCycle = localStorage.getItem('leaderboard_cycle_start');
+            if (!currentCycle || !pot.cycleStart || pot.cycleStart !== currentCycle) return;
+
+            // 计算周期第一天（中国时区）：cycleStart 当天22:30结算，次日才是周期第一天
+            const cycleStartChinaStr = getDateStrChina(currentCycle);
+            const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
+            const cycleFirstDay = new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000);
+            const cycleFirstDayChinaStr = getDateStrChina(cycleFirstDay);
+
+            // 销毁发生日期（中国时区）
+            const destroyedAtChinaStr = getDateStrChina(pot.destroyedAt);
+
+            // 如果销毁发生在周期第一天，说明是bug误销毁，恢复
+            if (destroyedAtChinaStr === cycleFirstDayChinaStr) {
+                pot.destroyed = false;
+                pot.destroyedAt = null;
+                pot.destroyReason = null;
+                pot.recoveredFromBug = true;
+                pot.recoveredAt = new Date().toISOString();
+                saveTreasurePot(pot);
+                console.log('[TreasurePot] ✅ 已恢复因bug误销毁的聚宝盆（在周期第一天被误销毁）');
+                setTimeout(() => {
+                    showStatus('✅ 您的聚宝盆已恢复（之前因系统bug被误销毁）', 'success');
+                }, 800);
+            }
         }
 
         // 计算所有每日任务（含转换任务）中兑换券奖励总和（聚宝盆累加基数）
