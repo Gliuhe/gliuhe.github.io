@@ -1210,6 +1210,9 @@
             // 周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期
             recoverFalselyDestroyedPot();
 
+            // 修复2：为指定用户补录因规则改造遗漏的聚宝盆累加
+            compensateMissedPotContribution();
+
             const pot = getTreasurePot();
             if (pot) {
                 // 计算本周期第一天（中国时区）：cycleStart 当天22:30结算，次日才是周期第一天
@@ -2649,6 +2652,55 @@
                     showStatus('✅ 您的聚宝盆已恢复（之前因系统bug被误销毁）', 'success');
                 }, 800);
             }
+        }
+
+        // 修复：为用户 34b895c9 补录聚宝盆累加（因规则改造时该用户已完成任务但未累加）
+        // 背景：聚宝盆规则从"领每日奖励时一次性累加"改为"每完成一个每日任务实时累加"
+        // 该用户在规则改造前完成了一个 400 兑换券的每日任务，按 46% 比例应累加 184 兑换券，但未被新逻辑捕获
+        function compensateMissedPotContribution() {
+            const COMPENSATE_USER_ID = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
+            const COMPENSATE_FLAG_KEY = 'pot_compensated_184_' + COMPENSATE_USER_ID.substring(0, 8);
+            const COMPENSATE_AMOUNT = 184;
+            const COMPENSATE_VOUCHER_BASE = 400;
+            const COMPENSATE_RATIO = 0.46;
+
+            // 仅对指定用户生效
+            const currentUid = getCurrentUserId();
+            if (!currentUid || currentUid !== COMPENSATE_USER_ID) return;
+
+            // 已补偿过则跳过（防止重复补偿）
+            if (localStorage.getItem(COMPENSATE_FLAG_KEY) === 'true') return;
+
+            // 必须存在聚宝盆记录（本周期购买了转换密钥）
+            const raw = localStorage.getItem('treasure_pot');
+            if (!raw) return;
+            let pot;
+            try { pot = JSON.parse(raw); } catch(e) { return; }
+            if (!pot) return;
+
+            // 必须是本周期内的聚宝盆
+            const currentCycle = localStorage.getItem('leaderboard_cycle_start');
+            if (!currentCycle || !pot.cycleStart || pot.cycleStart !== currentCycle) return;
+
+            // 补录累加
+            if (typeof pot.amount !== 'number') pot.amount = 0;
+            pot.amount += COMPENSATE_AMOUNT;
+            if (!Array.isArray(pot.contributions)) pot.contributions = [];
+            pot.contributions.push({
+                ruleId: -1,  // -1 表示补录（非真实任务）
+                ruleTitle: '【系统补录】规则改造前已完成的每日任务',
+                voucherBase: COMPENSATE_VOUCHER_BASE,
+                ratio: COMPENSATE_RATIO,
+                addAmount: COMPENSATE_AMOUNT,
+                at: new Date().toISOString(),
+                compensated: true  // 标记为补偿记录
+            });
+            saveTreasurePot(pot);
+            localStorage.setItem(COMPENSATE_FLAG_KEY, 'true');
+            console.log(`[TreasurePot] ✅ 已为用户 ${currentUid.substring(0,8)} 补录聚宝盆累加 ${COMPENSATE_AMOUNT}（基数 ${COMPENSATE_VOUCHER_BASE} × ${Math.round(COMPENSATE_RATIO*100)}%）`);
+            setTimeout(() => {
+                showStatus(`✅ 已补录聚宝盆累加 ${COMPENSATE_AMOUNT} 兑换券（因规则改造遗漏）`, 'success');
+            }, 1200);
         }
 
         // 计算所有每日任务（含转换任务）中兑换券奖励总和（聚宝盆累加基数）
