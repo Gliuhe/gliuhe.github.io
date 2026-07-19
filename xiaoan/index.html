@@ -3833,7 +3833,7 @@
                 showStatus('❌ 兑换券不足！', 'error');
                 return;
             }
-            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中 ${selectedCount} 个任务将转换为每日任务（贯穿本周期），聚宝盆累加比例为 ${Math.round(effectiveRatio * 100)}%。`)) {
+            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中 ${selectedCount} 个任务将转换为每日任务（贯穿本周期）。\n每完成一个每日任务时，聚宝盆实时累加该任务兑换券奖励的 ${Math.round(effectiveRatio * 100)}%。`)) {
                 return;
             }
 

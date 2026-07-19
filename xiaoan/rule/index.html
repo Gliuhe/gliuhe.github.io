@@ -1408,7 +1408,7 @@
                 let potButton = '';
                 let potStatus = '';
                 const potRatio = (typeof treasurePot.boostRatio === 'number') ? treasurePot.boostRatio : 0.6;
-                let potContent = `本周期通过转换密钥开启。每领一次每日任务奖励，聚宝盆累加 <strong>所有每日任务兑换券奖励总和的 ${Math.round(potRatio * 100)}%</strong>。`;
+                let potContent = `本周期通过转换密钥开启。每完成一个每日任务（含转换任务），聚宝盆实时累加 <strong>该任务兑换券奖励的 ${Math.round(potRatio * 100)}%</strong>。`;
 
                 if (isSettlementDay && todayDailyClaimed && !potAlreadyClaimedToday && treasurePot.amount > 0) {
                     // 可领取
@@ -2040,7 +2040,41 @@
             };
             localStorage.setItem(userKey('activeTasks'), JSON.stringify(activeTasks));
             if(typeof syncActiveTasksToCloud==='function')syncActiveTasksToCloud();
- 
+
+            // ===== 聚宝盆实时累加（每完成一个每日/转换任务时累加） =====
+            // 若本周期购买了转换密钥且聚宝盆存在（未销毁），按密钥等级的累加比例累加该任务的兑换券奖励
+            // 注意：使用原始 rule 奖励值计算（任务密钥加成不参与累加基数，仅用户实际获得的会加成）
+            {
+                const _pot = getTreasurePot();
+                if (_pot) {
+                    // 判断此任务是否属于每日系列（原 isDaily 或被转换密钥选中）
+                    const _isDailyTask = rule.isDaily === true || isConvertedToDaily(rule.id);
+                    if (_isDailyTask) {
+                        // 统计此任务的兑换券奖励（双货币均检查）
+                        let _taskVoucher = 0;
+                        if (rule.rewardType1 === 'voucher') _taskVoucher += (parseInt(rule.rewardAmount1) || 0);
+                        if (rule.rewardType2 === 'voucher') _taskVoucher += (parseInt(rule.rewardAmount2) || 0);
+                        if (_taskVoucher > 0) {
+                            const _ratio = (typeof _pot.boostRatio === 'number') ? _pot.boostRatio : 0.6;
+                            const _addAmount = Math.ceil(_taskVoucher * _ratio);
+                            _pot.amount += _addAmount;
+                            // 记录每次累加明细（便于审计）
+                            if (!Array.isArray(_pot.contributions)) _pot.contributions = [];
+                            _pot.contributions.push({
+                                ruleId: rule.id,
+                                ruleTitle: rule.title,
+                                voucherBase: _taskVoucher,
+                                ratio: _ratio,
+                                addAmount: _addAmount,
+                                at: new Date().toISOString()
+                            });
+                            saveTreasurePot(_pot);
+                            console.log(`[TreasurePot] 💰 任务"${rule.title}"完成 → 累加 ${_addAmount}（基数 ${_taskVoucher} × ${Math.round(_ratio*100)}%），当前总额 ${_pot.amount}`);
+                        }
+                    }
+                }
+            }
+
             // 显示完成动画和奖励详情
             const rewards = [];
  
@@ -2857,20 +2891,8 @@
             // 标记已领取
             localStorage.setItem(dailyRewardKey, 'true');
 
-            // ===== 聚宝盆累加 =====
-            // 若本周期购买了转换密钥且聚宝盆存在（未销毁），按密钥等级的累加比例累加兑换券
-            const pot = getTreasurePot();
-            if (pot) {
-                const voucherSum = calcDailyVoucherSum(rules);
-                // 累加比例：购买时记录在 pot.boostRatio，默认 0.6（兼容旧数据）
-                const ratio = (typeof pot.boostRatio === 'number') ? pot.boostRatio : 0.6;
-                const addAmount = Math.ceil(voucherSum * ratio);
-                if (addAmount > 0) {
-                    pot.amount += addAmount;
-                    saveTreasurePot(pot);
-                    console.log(`[TreasurePot] 💰 聚宝盆累加 ${addAmount}（基数 ${voucherSum} × ${Math.round(ratio*100)}%），当前总额 ${pot.amount}`);
-                }
-            }
+            // ===== 聚宝盆累加逻辑已迁移到 confirmCompleteRule（每完成一个每日任务时实时累加） =====
+            // 此处不再做累加，仅显示每日任务奖励动画
 
             // 显示动画
             document.getElementById('rewardAmount').textContent = `${jixingAmount} 纪行券 和 ${voucherAmount} 兑换券`;
