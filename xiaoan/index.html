@@ -2651,7 +2651,8 @@
         <div class="modal" id="convertKeyModal">
             <div class="modal-content" style="max-width:600px;">
                 <h2>🔄 转换密钥 - 选择任务</h2>
-                <p style="color:#64748b;font-size:0.88rem;margin-bottom:12px;">请选择 <strong style="color:#ef4444;">2 个普通任务</strong> 转换为每日任务（贯穿本周期）。已选 <span id="convertKeySelectedCount" style="color:#ef4444;font-weight:700;">0</span>/2</p>
+                <p style="color:#64748b;font-size:0.88rem;margin-bottom:12px;">请选择 <strong style="color:#ef4444;">1~2 个普通任务</strong> 转换为每日任务（贯穿本周期）。已选 <span id="convertKeySelectedCount" style="color:#ef4444;font-weight:700;">0</span>/2</p>
+                <p id="convertKeyRatioHint" style="color:#64748b;font-size:0.82rem;margin-bottom:12px;"></p>
                 <div id="convertKeyTaskList" style="max-height:50vh;overflow-y:auto;border:1px solid #e2e8f0;border-radius:12px;padding:8px;margin-bottom:12px;"></div>
                 <div style="display:flex;gap:8px;justify-content:flex-end;">
                     <button class="btn" style="background:#94a3b8;" onclick="closeConvertKeyModal()">取消</button>
@@ -3484,9 +3485,9 @@
                 { id: 'time_key_3', name: '时间密钥 Ⅲ', icon: '⌛', desc: '18:30前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 400, deadline: '18:30' }
             ],
             convertKeys: [
-                { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的30%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 712, boostRatio: 0.3 },
-                { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的40%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.4 },
-                { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例为所有每日任务兑换券奖励的56%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 0.56 }
+                { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为30%，转换2个任务为32%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 712, boostRatio: 0.32, boostRatioSingle: 0.3 },
+                { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为42%，转换2个任务为46%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.46, boostRatioSingle: 0.42 },
+                { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为55%，转换2个任务为60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 0.6, boostRatioSingle: 0.55 }
             ],
             urgentKeys: [
                 { id: 'urgent_key_1', name: '加急密钥 Ⅰ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 0.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×10%，第二名购买减价被领先差额×10%。加价后价格上限1000。', price: 200, offsetMinutes: 30, firstRate: 0.10, secondRate: 0.10, priceCap: 1000 },
@@ -3721,8 +3722,8 @@
             // 普通任务：既非 isDaily 也非 isSpecial（不可转换特需任务）
             const normalRules = rules.filter(r => !r.isDaily && !r.isSpecial);
 
-            if (normalRules.length < 2) {
-                showStatus('❌ 可转换的普通任务不足2个（特需任务不可转换），无法购买转换密钥！', 'error');
+            if (normalRules.length < 1) {
+                showStatus('❌ 没有可转换的普通任务（特需任务不可转换），无法购买转换密钥！', 'error');
                 return;
             }
 
@@ -3746,7 +3747,25 @@
             document.getElementById('convertKeySelectedCount').textContent = '0';
             document.getElementById('convertKeyConfirmBtn').textContent = `确认购买（${item.price} 兑换券）`;
             document.getElementById('convertKeyConfirmBtn').disabled = true;
+            updateConvertKeyRatioHint();
             document.getElementById('convertKeyModal').style.display = 'flex';
+        }
+
+        // 更新转换密钥模态框中的累加比例提示文案（根据已选任务数动态变化）
+        function updateConvertKeyRatioHint() {
+            const hintEl = document.getElementById('convertKeyRatioHint');
+            if (!hintEl || !_convertKeyPendingItem) return;
+            const item = _convertKeyPendingItem;
+            const singlePct = Math.round((item.boostRatioSingle || 0) * 100);
+            const doublePct = Math.round((item.boostRatio || 0) * 100);
+            const selectedCount = _convertKeySelected.length;
+            let txt = `💡 累加比例：转换1个任务 ${singlePct}%，转换2个任务 ${doublePct}%。`;
+            if (selectedCount === 1) {
+                txt += ` <strong style="color:#667eea;">当前已选1个 → ${singlePct}%</strong>`;
+            } else if (selectedCount === 2) {
+                txt += ` <strong style="color:#667eea;">当前已选2个 → ${doublePct}%</strong>`;
+            }
+            hintEl.innerHTML = txt;
         }
 
         // 货币类型中文映射（转换密钥模态框用）
@@ -3771,7 +3790,9 @@
                 _convertKeySelected = _convertKeySelected.filter(id => id !== ruleId);
             }
             document.getElementById('convertKeySelectedCount').textContent = _convertKeySelected.length;
-            document.getElementById('convertKeyConfirmBtn').disabled = (_convertKeySelected.length !== 2);
+            // 允许1个或2个任务确认购买
+            document.getElementById('convertKeyConfirmBtn').disabled = (_convertKeySelected.length < 1);
+            updateConvertKeyRatioHint();
         }
 
         // 关闭模态框
@@ -3786,11 +3807,16 @@
                 showStatus('❌ 未选择道具', 'error');
                 return;
             }
-            if (_convertKeySelected.length !== 2) {
-                showStatus('⚠️ 请选择2个任务', 'warning');
+            if (_convertKeySelected.length < 1 || _convertKeySelected.length > 2) {
+                showStatus('⚠️ 请选择1~2个任务', 'warning');
                 return;
             }
             const item = _convertKeyPendingItem;
+            // 根据选择数量决定累加比例：1个任务用 boostRatioSingle，2个任务用 boostRatio
+            const selectedCount = _convertKeySelected.length;
+            const effectiveRatio = (selectedCount === 1)
+                ? (item.boostRatioSingle || item.boostRatio)
+                : item.boostRatio;
             // 再次校验购买时机与余额
             if (!isConvertKeyPurchaseWindow()) {
                 showStatus('❌ 购买时机已过！', 'error');
@@ -3807,7 +3833,7 @@
                 showStatus('❌ 兑换券不足！', 'error');
                 return;
             }
-            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中任务将转换为每日任务（贯穿本周期），聚宝盆累加比例为 ${Math.round(item.boostRatio * 100)}%。`)) {
+            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中 ${selectedCount} 个任务将转换为每日任务（贯穿本周期），聚宝盆累加比例为 ${Math.round(effectiveRatio * 100)}%。`)) {
                 return;
             }
 
@@ -3824,8 +3850,9 @@
             const convertRecord = {
                 itemId: item.id,
                 level: item.id.replace('convert_key_', ''),
-                boostRatio: item.boostRatio,
+                boostRatio: effectiveRatio,  // 实际生效的累加比例（按选择数量）
                 ruleIds: _convertKeySelected.slice(),
+                taskCount: selectedCount,
                 purchasedAt: new Date().toISOString(),
                 cycleStart: getCycleStartFromLocal()
             };
@@ -3838,7 +3865,7 @@
                 cycleStart: getCycleStartFromLocal(),
                 destroyed: false,
                 lastClaimDate: null,
-                boostRatio: item.boostRatio
+                boostRatio: effectiveRatio  // 聚宝盆按实际生效比例累加
             };
             localStorage.setItem('treasure_pot', JSON.stringify(potRecord));
 
@@ -3856,7 +3883,7 @@
             localStorage.setItem('history', JSON.stringify(history));
 
             closeConvertKeyModal();
-            showStatus(`✅ ${item.name} 购买成功！2个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(item.boostRatio * 100)}%）`, 'success');
+            showStatus(`✅ ${item.name} 购买成功！${selectedCount}个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(effectiveRatio * 100)}%）`, 'success');
             updateUI();
             renderItemShop();
         }
