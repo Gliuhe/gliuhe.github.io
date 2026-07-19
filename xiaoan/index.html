@@ -2639,7 +2639,7 @@
             <div class="itemshop-grid" id="timeKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">🔄 转换密钥</h3>
-            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在周期第一天领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在结算次日（周期第二天）领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
             <div class="itemshop-grid" id="convertKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">⚡ 加急密钥</h3>
@@ -3561,7 +3561,7 @@
                     const isActive = purchased;
                     // 同类型（convert_key）互斥：本周期是否已购其它档位
                     const sameTypePurchased = isSameTypePurchasedThisCycle('convert_key', item.id);
-                    // 购买时机检查：仅周期第一天且未领每日奖励时可购买
+                    // 购买时机检查：仅结算次日（周期第二天）且未领每日奖励时可购买
                     const canBuyWindow = isConvertKeyPurchaseWindow();
                     const todayDailyClaimed = isTodayDailyRewardClaimed();
                     const canBuy = !purchased && !sameTypePurchased && canBuyWindow;
@@ -3573,7 +3573,7 @@
                     } else if (sameTypePurchased) {
                         btnText = '本周期已购';
                     } else if (!canBuyWindow) {
-                        btnText = todayDailyClaimed ? '今日已领每日奖励' : '非周期首日';
+                        btnText = todayDailyClaimed ? '今日已领每日奖励' : '非购买日';
                     }
 
                     return `
@@ -3663,12 +3663,16 @@
         function isConvertKeyPurchaseWindow() {
             const cycleStartStr = getCycleStartFromLocal();
             if (!cycleStartStr) return false;
-            const cycleStart = new Date(cycleStartStr);
             const today = new Date();
-            // 周期第一天：今日日期（中国时区）=== 周期起始日期（中国时区）
+            // 周期起始日期（中国时区 YYYY-MM-DD），结算通常发生在此日 22:30
             const cycleStartChinaStr = getCycleStartDateStr(cycleStartStr);
+            // 期望购买日期 = 周期起始日期 + 1 天（结算次日整天 00:00 ~ 23:59）
+            // 例：7月18日22:30结算 → cycleStartChinaStr=2026-07-18 → 购买窗口=2026-07-19
+            const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
+            const purchaseDate = new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000);
+            const purchaseDateChinaStr = getCycleStartDateStr(purchaseDate.toISOString());
             const todayChinaStr = getCycleStartDateStr(today.toISOString());
-            if (cycleStartChinaStr !== todayChinaStr) return false;
+            if (todayChinaStr !== purchaseDateChinaStr) return false;
             // 今日未领每日任务奖励（跨页面读取 rule 页用的同 key 格式）
             if (isTodayDailyRewardClaimed()) return false;
             return true;
@@ -3694,7 +3698,7 @@
             }
             // 再次校验购买时机
             if (!isConvertKeyPurchaseWindow()) {
-                showStatus('❌ 转换密钥仅可在周期第一天、领取每日奖励前购买！', 'error');
+                showStatus('❌ 转换密钥仅可在结算次日（周期第二天）、领取每日奖励前购买！', 'error');
                 return;
             }
             // 同类型互斥校验
