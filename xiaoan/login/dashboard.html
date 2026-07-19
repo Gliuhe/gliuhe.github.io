@@ -1709,7 +1709,7 @@
                         <td>${_rewardTypeLabel(p.rewardType)}</td>
                         <td>${p.rewardType === 'item' ? '—' : (p.rewardType === 'key' ? _keyIdLabel(p.keyId) : (p.currencyAmount || 0))}</td>
                         <td>${p.weight || 0}</td>
-                        <td>${p.usable === false ? '❌ 否' : '✅ 是'}</td>
+                        <td>${_usableLabel(p)}</td>
                         <td style="max-width:200px;color:#64748b;font-size:12px;">${escapeHtml(p.description || '')}</td>
                         <td>
                             <button class="btn btn-warning" onclick="showLotteryPrizeModal('normal', ${p.id})" style="padding:5px 10px;font-size:12px;">编辑</button>
@@ -1756,6 +1756,14 @@
                 case 'key': return '🔑 密钥';
                 default: return '🎁 实物';
             }
+        }
+        // 「可使用」列展示：货币类抽奖时直接发放，不进背包，显示「—」；其他按管理员配置
+        function _usableLabel(p) {
+            if (p.rewardType === 'currency' || p.rewardType === 'bankTicket' || p.rewardType === 'jixing') {
+                return '—';
+            }
+            if (p.rewardType === 'key') return '✅ 是';
+            return p.usable === false ? '❌ 否' : '✅ 是';
         }
         function _keyIdLabel(keyId) {
             const map = {
@@ -1917,6 +1925,11 @@
                     obj.keyId = keyId;
                     obj.usable = true;       // 密钥必然可使用
                     obj.currencyAmount = 0;  // 密钥无数量概念
+                }
+                // 货币类（兑换券/银行券/纪行券）：抽奖时直接发放，不进背包使用
+                // 强制 usable=false，避免隐藏的下拉框值（默认true）被写入
+                if (rewardType === 'currency' || rewardType === 'bankTicket' || rewardType === 'jixing') {
+                    obj.usable = false;
                 }
                 if (isAdvanced) obj.pool = pool;
                 return obj;
