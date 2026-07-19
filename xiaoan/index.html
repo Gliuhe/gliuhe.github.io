@@ -6052,17 +6052,29 @@
                     const { data: curRows } = await sbClient.from('user_currencies')
                         .select('currency_type, amount, updated_at').eq('user_id', userId);
                     if (curRows?.length > 0) {
+                        // 上次云端同步完成时间（毫秒）。若云端 updated_at 比这个时间新，
+                        // 说明云端被外部进程（如排行榜结算）修改过 → 云端优先，避免本地旧值覆盖重置。
+                        const lastSyncMs = parseInt(localStorage.getItem('xiaoan_last_cloud_sync') || '0');
                         curRows.forEach(row => {
                             const key = row.currency_type;
                             if (['voucher', 'lottery', 'premium', 'bankTicket'].includes(key)) {
                                 const cloudVal = parseFloat(row.amount) || 0;
                                 const rawLocal = localStorage.getItem(key);
                                 const localVal = rawLocal !== null ? parseFloat(rawLocal) : null;
-                                // 如果本地有有效值 → 本地优先；如果本地为空 → 云端优先（新设备同步）
-                                const finalVal = (localVal !== null && !isNaN(localVal)) ? localVal : cloudVal;
+                                const cloudUpdatedMs = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+                                const cloudChangedSinceSync = cloudUpdatedMs > lastSyncMs;
+                                // 云端被外部更新（如结算）→ 云端优先；本地有值且云端未变 → 本地优先；本地为空 → 云端优先
+                                let finalVal;
+                                if (cloudChangedSinceSync) {
+                                    finalVal = cloudVal;
+                                } else if (localVal !== null && !isNaN(localVal)) {
+                                    finalVal = localVal;
+                                } else {
+                                    finalVal = cloudVal;
+                                }
                                 localStorage.setItem(key, String(finalVal));
-                                // 本地与云端不一致时回写云端（确保同步）
-                                if (finalVal !== cloudVal) {
+                                // 本地与云端不一致时回写云端（确保同步）；但云端被外部更新过时不回写，避免覆盖
+                                if (finalVal !== cloudVal && !cloudChangedSinceSync) {
                                     sbClient.from('user_currencies').upsert({
                                         user_id: userId,
                                         currency_type: key,
@@ -7453,6 +7465,23 @@
                         amount: 0,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'user_id,currency_type' });
+
+                    // 关键修复：当前用户的本地 localStorage 也必须同步更新，
+                    // 否则下次 _loadAllFromCloud 会用本地旧值覆盖云端重置值
+                    if (userId === uid) {
+                        localStorage.setItem('voucher', String(newVoucherAmount));
+                        localStorage.setItem('task_points', '0');
+                        try {
+                            const curObj = JSON.parse(localStorage.getItem('xiaoan_currencies') || '{}');
+                            curObj.voucher = newVoucherAmount;
+                            curObj.task_points = 0;
+                            localStorage.setItem('xiaoan_currencies', JSON.stringify(curObj));
+                        } catch(_) {}
+                        // 更新本地显示
+                        if (typeof updateUI === 'function') {
+                            try { updateUI(); } catch(_) {}
+                        }
+                    }
 
                     console.log(`[Leaderboard] 用户 ${userId.substring(0,8)} 兑换券${logMsg}`);
                 } catch(e) {
