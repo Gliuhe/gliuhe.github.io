@@ -1232,6 +1232,19 @@
                 }
 
                 if (shouldCheckYesterday) {
+                    // 修复：若昨日早于聚宝盆创建日，则跳过销毁检查
+                    // 原因：用户可能在周期第2/3天才购买转换密钥，购买前的日期谈不上"漏领"
+                    //       否则会立即销毁刚创建的聚宝盆（昨日未领 → 销毁）
+                    if (pot.createdAt) {
+                        const potCreatedChinaStr = getDateStrChina(pot.createdAt);
+                        if (yesterdayChinaStr < potCreatedChinaStr) {
+                            shouldCheckYesterday = false;
+                            console.log(`[TreasurePot] 跳过销毁检查：昨日 ${yesterdayChinaStr} < 聚宝盆创建日 ${potCreatedChinaStr}（购买前谈不上漏领）`);
+                        }
+                    }
+                }
+
+                if (shouldCheckYesterday) {
                     const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
                     const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
                     if (!yesterdayClaimed) {
@@ -2690,8 +2703,11 @@
         }
 
         // 修复：恢复因bug误销毁的聚宝盆
-        // 触发条件：destroyed=true && destroyReason==='missed_daily_yesterday' && destroyedAt 是周期第一天
-        // 原因：周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期，不应触发销毁
+        // 触发条件1：destroyed=true && destroyReason==='missed_daily_yesterday' && destroyedAt 是周期第一天
+        //   原因：周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期，不应触发销毁
+        // 触发条件2：destroyed=true && destroyReason==='missed_daily_yesterday' && 销毁检查的昨日 < 聚宝盆创建日
+        //   原因：用户在周期第2/3天购买转换密钥后，rule 页销毁判定会检查昨日（购买前）是否领每日奖励，
+        //         那时还没聚宝盆，谈不上漏领，不应销毁
         function recoverFalselyDestroyedPot() {
             const raw = localStorage.getItem('treasure_pot');
             if (!raw) return;
@@ -2714,15 +2730,37 @@
             // 销毁发生日期（中国时区）
             const destroyedAtChinaStr = getDateStrChina(pot.destroyedAt);
 
-            // 如果销毁发生在周期第一天，说明是bug误销毁，恢复
+            // 条件1：销毁发生在周期第一天（昨日是结算日，属于上一周期）
+            let shouldRecover = false;
+            let recoverReason = '';
             if (destroyedAtChinaStr === cycleFirstDayChinaStr) {
+                shouldRecover = true;
+                recoverReason = '在周期第一天被误销毁（昨日属于上一周期）';
+            }
+
+            // 条件2：销毁检查的"昨日"早于聚宝盆创建日（用户购买前的日期被误判为漏领）
+            // 销毁判定中的 yesterday = destroyedAt - 1天
+            if (!shouldRecover && pot.createdAt) {
+                const destroyedAtDate = new Date(pot.destroyedAt);
+                const yesterdayOfDestroy = new Date(destroyedAtDate);
+                yesterdayOfDestroy.setDate(yesterdayOfDestroy.getDate() - 1);
+                const yesterdayOfDestroyChinaStr = getDateStrChina(yesterdayOfDestroy);
+                const potCreatedChinaStr = getDateStrChina(pot.createdAt);
+                if (yesterdayOfDestroyChinaStr < potCreatedChinaStr) {
+                    shouldRecover = true;
+                    recoverReason = `销毁检查的昨日 ${yesterdayOfDestroyChinaStr} < 聚宝盆创建日 ${potCreatedChinaStr}（购买前谈不上漏领）`;
+                }
+            }
+
+            if (shouldRecover) {
                 pot.destroyed = false;
                 pot.destroyedAt = null;
                 pot.destroyReason = null;
                 pot.recoveredFromBug = true;
                 pot.recoveredAt = new Date().toISOString();
+                pot.recoverReason = recoverReason;
                 saveTreasurePot(pot);
-                console.log('[TreasurePot] ✅ 已恢复因bug误销毁的聚宝盆（在周期第一天被误销毁）');
+                console.log(`[TreasurePot] ✅ 已恢复因bug误销毁的聚宝盆（${recoverReason}）`);
                 setTimeout(() => {
                     showStatus('✅ 您的聚宝盆已恢复（之前因系统bug被误销毁）', 'success');
                 }, 800);
