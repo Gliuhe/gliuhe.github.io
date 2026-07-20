@@ -1219,6 +1219,7 @@
                 const currentCycleStart = localStorage.getItem('leaderboard_cycle_start');
                 let shouldCheckYesterday = true;
                 const yesterdayChinaStr = getDateStrChina(yesterday);
+                const todayChinaStr = getDateStrChina(new Date());  // 修复：原代码遗漏定义，导致 L1252 引用未定义变量抛 ReferenceError
                 if (currentCycleStart) {
                     const cycleStartChinaStr = getDateStrChina(currentCycleStart);  // 形如 "2026-07-18"
                     const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
@@ -2741,12 +2742,13 @@
             // 条件0（最高优先级）：针对性恢复 - 用户 34b895c9 的聚宝盆因历史 bug 被误销毁，强制恢复
             // 不依赖 destroyReason/destroyedAt/convert_key_record 等任何条件
             // 注意：不使用 localStorage flag 标记，因为之前 flag 被设置后恢复失败会导致永远无法恢复
-            // 改用 pot 自身的状态：如果 pot 还没有被恢复过（recoveredFromBug !== true），则强制恢复
-            // 这样即使多次调用，也只会恢复一次，避免无限循环
+            // 也不依赖 pot.recoveredFromBug，因为恢复后可能又被销毁判定误销毁一次（recover-then-destroy 循环），
+            // 此时 recoveredFromBug=true 但 destroyed=true，仍需再次恢复
+            // 防止无限循环的责任在 checkDailyReset 中的"今日刚恢复则跳过销毁检查"逻辑
             {
                 const _currentUid = getCurrentUserId();
                 const _TARGET_USER = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
-                if (_currentUid === _TARGET_USER && pot.recoveredFromBug !== true) {
+                if (_currentUid === _TARGET_USER) {
                     shouldRecover = true;
                     recoverReason = `针对用户 ${_currentUid.substring(0,8)} 的强制恢复（历史 bug 误销毁，无条件）`;
                 }
