@@ -2639,7 +2639,7 @@
             <div class="itemshop-grid" id="timeKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">🔄 转换密钥</h3>
-            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择2个普通任务转换为每日任务，贯穿本排行榜周期。仅可在结算次日（周期第二天）领取每日任务奖励前购买。购买后任务页新增聚宝盆模块。</p>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">选择1~2个普通任务转换为每日任务，贯穿本排行榜周期。周期内任意一天均可购买（结算日22:30后至当日结束前不可购买，当日已领每日奖励不可购买）。价格随购买日递减：第一天原价，第二天8折，第三天6折。购买后任务页新增聚宝盆模块。</p>
             <div class="itemshop-grid" id="convertKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">🔀 置换密钥</h3>
@@ -3506,9 +3506,9 @@
                 { id: 'time_key_3', name: '时间密钥 Ⅲ', icon: '⌛', desc: '18:30前领取每日任务奖励，兑换券提升30%，仅当天有效', price: 400, deadline: '18:30' }
             ],
             convertKeys: [
-                { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为30%，转换2个任务为32%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 712, boostRatio: 0.32, boostRatioSingle: 0.3 },
-                { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为42%，转换2个任务为46%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 958, boostRatio: 0.46, boostRatioSingle: 0.42 },
-                { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为55%，转换2个任务为60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 0.6, boostRatioSingle: 0.55 }
+                { id: 'convert_key_1', name: '转换密钥 Ⅰ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为30%，转换2个任务为32%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁前后均可强制完成被转换任务，销毁前扣聚宝盆78%，销毁后扣用户兑换券50%）。周期内任意一天均可购买（结算日22:30后不可购买），价格随购买日递减。', price: 712, priceByDay: { 1: 712, 2: 568, 3: 428 }, boostRatio: 0.32, boostRatioSingle: 0.3 },
+                { id: 'convert_key_2', name: '转换密钥 Ⅱ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为42%，转换2个任务为46%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁前后均可强制完成被转换任务，销毁前扣聚宝盆78%，销毁后扣用户兑换券50%）。周期内任意一天均可购买（结算日22:30后不可购买），价格随购买日递减。', price: 958, priceByDay: { 1: 958, 2: 768, 3: 578 }, boostRatio: 0.46, boostRatioSingle: 0.42 },
+                { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为55%，转换2个任务为60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁前后均可强制完成被转换任务，销毁前扣聚宝盆78%，销毁后扣用户兑换券50%）。周期内任意一天均可购买（结算日22:30后不可购买），价格随购买日递减。', price: 1200, priceByDay: { 1: 1200, 2: 968, 3: 728 }, boostRatio: 0.6, boostRatioSingle: 0.55 }
             ],
             swapKeys: [
                 { id: 'swap_key_1', name: '置换密钥 Ⅰ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换两个任务兑换券奖励差值≤100的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1488。仅当天有效，本周期仅可购买1次。', price: 48, voucherOverride: 1488 },
@@ -3582,16 +3582,31 @@
 
             // 渲染转换密钥（独立一类，不与任务/时间密钥互斥；同档之间互斥，周期内仅可购1次）
             if (convertKeyGrid) {
+                const _todayDailyClaimed = isTodayDailyRewardClaimed();
+                const _dayNum = getCycleDayNumber();
                 convertKeyGrid.innerHTML = ITEM_SHOP_DATA.convertKeys.map(item => {
                     const purchased = isItemPurchasedThisCycle(item.id);
                     // 转换密钥贯穿整个周期，购买即生效（直到周期结束）
                     const isActive = purchased;
                     // 同类型（convert_key）互斥：本周期是否已购其它档位
                     const sameTypePurchased = isSameTypePurchasedThisCycle('convert_key', item.id);
-                    // 购买时机检查：仅结算次日（周期第二天）且未领每日奖励时可购买
+                    // 购买时机检查：周期内任意一天（除结算日22:30后）且未领每日奖励时可购买
                     const canBuyWindow = isConvertKeyPurchaseWindow();
-                    const todayDailyClaimed = isTodayDailyRewardClaimed();
                     const canBuy = !purchased && !sameTypePurchased && canBuyWindow;
+
+                    // 动态价格：根据周期天数确定
+                    const todayPrice = getConvertKeyPriceForToday(item);
+                    const isDiscounted = todayPrice !== null && todayPrice !== item.price;
+                    let priceLabel = `💰 ${item.price} 兑换券`;
+                    if (!purchased && !sameTypePurchased && todayPrice !== null) {
+                        if (isDiscounted) {
+                            priceLabel = `<div style="text-decoration:line-through;color:#94a3b8;font-size:0.78rem;">💰 ${item.price}</div><div class="item-price" style="color:#ef4444;">💰 ${todayPrice} 兑换券</div>`;
+                        } else {
+                            priceLabel = `<div class="item-price">💰 ${todayPrice} 兑换券</div>`;
+                        }
+                    } else {
+                        priceLabel = `<div class="item-price">💰 ${item.price} 兑换券</div>`;
+                    }
 
                     let btnText = '购买';
                     let btnDisabled = !canBuy;
@@ -3599,8 +3614,18 @@
                         btnText = '已生效';
                     } else if (sameTypePurchased) {
                         btnText = '本周期已购';
-                    } else if (!canBuyWindow) {
-                        btnText = todayDailyClaimed ? '今日已领每日奖励' : '非购买日';
+                    } else if (_dayNum === 0) {
+                        btnText = '结算日不可购买';
+                    } else if (_dayNum === null || _dayNum < 1 || _dayNum > 3) {
+                        btnText = '非购买日';
+                    } else if (_todayDailyClaimed) {
+                        btnText = '今日已领每日奖励';
+                    }
+
+                    // 周期天数提示
+                    let dayHint = '';
+                    if (!purchased && !sameTypePurchased && _dayNum >= 1 && _dayNum <= 3) {
+                        dayHint = `<div style="font-size:0.72rem;color:#64748b;margin-top:2px;">周期第 ${_dayNum} 天 · ${isDiscounted ? '已优惠' : '原价'}</div>`;
                     }
 
                     return `
@@ -3610,7 +3635,8 @@
                             <div class="item-icon">${item.icon}</div>
                             <div class="item-name">${item.name}</div>
                             <div class="item-desc">${item.desc}</div>
-                            <div class="item-price">💰 ${item.price} 兑换券</div>
+                            ${priceLabel}
+                            ${dayHint}
                             <button class="item-buy-btn" onclick="openConvertKeyModal('${item.id}')" ${btnDisabled ? 'disabled' : ''}>
                                 ${btnText}
                             </button>
@@ -3723,22 +3749,37 @@
                 }).join('');
             }
         }
-        function isConvertKeyPurchaseWindow() {
+        // 计算今天是周期的第几天（cycleStart 当天为结算日，次日为周期第一天）
+        // 返回值：1/2/3 = 周期第一/二/三天（可购买）；0 = 结算日当天（结算后到当日结束前，不可购买）；<0 或 >3 = 异常
+        function getCycleDayNumber() {
             const cycleStartStr = getCycleStartFromLocal();
-            if (!cycleStartStr) return false;
-            const today = new Date();
-            // 周期起始日期（中国时区 YYYY-MM-DD），结算通常发生在此日 22:30
+            if (!cycleStartStr) return null;
             const cycleStartChinaStr = getCycleStartDateStr(cycleStartStr);
-            // 期望购买日期 = 周期起始日期 + 1 天（结算次日整天 00:00 ~ 23:59）
-            // 例：7月18日22:30结算 → cycleStartChinaStr=2026-07-18 → 购买窗口=2026-07-19
             const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
-            const purchaseDate = new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000);
-            const purchaseDateChinaStr = getCycleStartDateStr(purchaseDate.toISOString());
-            const todayChinaStr = getCycleStartDateStr(today.toISOString());
-            if (todayChinaStr !== purchaseDateChinaStr) return false;
-            // 今日未领每日任务奖励（跨页面读取 rule 页用的同 key 格式）
+            const todayChinaStr = getCycleStartDateStr(new Date().toISOString());
+            const todayUtcMs = Date.parse(todayChinaStr + 'T00:00:00.000Z');
+            const dayDiff = Math.round((todayUtcMs - cycleStartUtcMs) / (24 * 60 * 60 * 1000));
+            return dayDiff;
+        }
+
+        function isConvertKeyPurchaseWindow() {
+            const dayNum = getCycleDayNumber();
+            if (dayNum === null) return false;
+            // 周期第一/二/三天可购买；0 = 结算日当天（结算已发生，cycleStart 已更新为今天），不可购买
+            if (dayNum < 1 || dayNum > 3) return false;
+            // 今日未领每日任务奖励（已领则不可购买）
             if (isTodayDailyRewardClaimed()) return false;
             return true;
+        }
+
+        // 根据周期天数返回转换密钥当日价格
+        function getConvertKeyPriceForToday(item) {
+            const dayNum = getCycleDayNumber();
+            if (dayNum === null || dayNum < 1 || dayNum > 3) return null;
+            if (item.priceByDay && typeof item.priceByDay[dayNum] === 'number') {
+                return item.priceByDay[dayNum];
+            }
+            return item.price; // 兜底
         }
 
         // 检查今日是否已领每日任务奖励（与 rule/index.html 的 key 格式一致）
@@ -3761,7 +3802,12 @@
             }
             // 再次校验购买时机
             if (!isConvertKeyPurchaseWindow()) {
-                showStatus('❌ 转换密钥仅可在结算次日（周期第二天）、领取每日奖励前购买！', 'error');
+                const dayNum = getCycleDayNumber();
+                let reason = '非购买时段';
+                if (dayNum === 0) reason = '结算日22:30后不可购买';
+                else if (dayNum === null || dayNum < 1 || dayNum > 3) reason = '非周期内可购买日';
+                else if (isTodayDailyRewardClaimed()) reason = '今日已领每日任务奖励';
+                showStatus(`❌ ${reason}！`, 'error');
                 return;
             }
             // 同类型互斥校验
@@ -3769,10 +3815,16 @@
                 showStatus('❌ 本周期已购买转换密钥！', 'error');
                 return;
             }
-            // 余额检查
+            // 动态价格
+            const todayPrice = getConvertKeyPriceForToday(item);
+            if (todayPrice === null) {
+                showStatus('❌ 当前不可购买转换密钥', 'error');
+                return;
+            }
+            // 余额检查（按当日价格）
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
-            if (currentVoucher < item.price) {
-                showStatus(`❌ 兑换券不足！需要 ${item.price}，当前 ${currentVoucher}`, 'error');
+            if (currentVoucher < todayPrice) {
+                showStatus(`❌ 兑换券不足！需要 ${todayPrice}，当前 ${currentVoucher}`, 'error');
                 return;
             }
 
@@ -3807,7 +3859,7 @@
             }).join('');
 
             document.getElementById('convertKeySelectedCount').textContent = '0';
-            document.getElementById('convertKeyConfirmBtn').textContent = `确认购买（${item.price} 兑换券）`;
+            document.getElementById('convertKeyConfirmBtn').textContent = `确认购买（${todayPrice} 兑换券）`;
             document.getElementById('convertKeyConfirmBtn').disabled = true;
             updateConvertKeyRatioHint();
             document.getElementById('convertKeyModal').style.display = 'flex';
@@ -3890,17 +3942,24 @@
                 closeConvertKeyModal();
                 return;
             }
-            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
-            if (currentVoucher < item.price) {
-                showStatus('❌ 兑换券不足！', 'error');
+            // 动态价格
+            const todayPrice = getConvertKeyPriceForToday(item);
+            if (todayPrice === null) {
+                showStatus('❌ 当前不可购买转换密钥', 'error');
+                closeConvertKeyModal();
                 return;
             }
-            if (!confirm(`确定花费 ${item.price} 兑换券购买 ${item.name} 吗？\n选中 ${selectedCount} 个任务将转换为每日任务（贯穿本周期）。\n每完成一个每日任务时，聚宝盆实时累加该任务兑换券奖励的 ${Math.round(effectiveRatio * 100)}%。`)) {
+            const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
+            if (currentVoucher < todayPrice) {
+                showStatus(`❌ 兑换券不足！需要 ${todayPrice}`, 'error');
+                return;
+            }
+            if (!confirm(`确定花费 ${todayPrice} 兑换券购买 ${item.name} 吗？\n选中 ${selectedCount} 个任务将转换为每日任务（贯穿本周期）。\n每完成一个每日任务时，聚宝盆实时累加该任务兑换券奖励的 ${Math.round(effectiveRatio * 100)}%。\n购买后今日不能直接领取每日任务奖励（需先完成新增的转换任务）。`)) {
                 return;
             }
 
             // 扣费
-            const newVoucher = currentVoucher - item.price;
+            const newVoucher = currentVoucher - todayPrice;
             localStorage.setItem('voucher', String(newVoucher));
 
             // 写入购买记录（itemshop_purchased）
@@ -3916,7 +3975,8 @@
                 ruleIds: _convertKeySelected.slice(),
                 taskCount: selectedCount,
                 purchasedAt: new Date().toISOString(),
-                cycleStart: getCycleStartFromLocal()
+                cycleStart: getCycleStartFromLocal(),
+                purchasedPrice: todayPrice
             };
             localStorage.setItem('convert_key_record', JSON.stringify(convertRecord));
 
@@ -3927,25 +3987,71 @@
                 cycleStart: getCycleStartFromLocal(),
                 destroyed: false,
                 lastClaimDate: null,
-                boostRatio: effectiveRatio  // 聚宝盆按实际生效比例累加
+                boostRatio: effectiveRatio,  // 聚宝盆按实际生效比例累加
+                contributions: []
             };
+
+            // 补发已完成的每日任务的聚宝盆奖励（今日已完成的每日任务，未领每日奖励）
+            const uid = (window.__cloudUserId ||
+                         localStorage.getItem('xiaoan_user_id') ||
+                         'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+            const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+            const activeTasks = JSON.parse(localStorage.getItem(uid + '_activeTasks') || '{}');
+            // 仅原 isDaily 任务（购买前状态；不包含特需任务；转换任务此时还未生效所以不会被误算）
+            const completedDailyRules = rules.filter(r => r.isDaily === true && !r.isSpecial);
+            let retroTotal = 0;
+            completedDailyRules.forEach(rule => {
+                const taskStatus = activeTasks[rule.id] || {};
+                if (taskStatus.status === 'completed') {
+                    let voucher = 0;
+                    if (rule.rewardType1 === 'voucher') voucher += (parseInt(rule.rewardAmount1) || 0);
+                    if (rule.rewardType2 === 'voucher') voucher += (parseInt(rule.rewardAmount2) || 0);
+                    if (voucher > 0) {
+                        const addAmount = Math.ceil(voucher * effectiveRatio);
+                        retroTotal += addAmount;
+                        potRecord.contributions.push({
+                            ruleId: rule.id,
+                            ruleTitle: rule.title,
+                            voucherBase: voucher,
+                            ratio: effectiveRatio,
+                            addAmount: addAmount,
+                            at: new Date().toISOString(),
+                            type: 'retroactive'
+                        });
+                    }
+                }
+            });
+            potRecord.amount = retroTotal;
+            if (retroTotal > 0) {
+                console.log(`[TreasurePot] 📦 补发 ${completedDailyRules.length} 个已完成每日任务的聚宝盆奖励，共 ${retroTotal} 兑换券`);
+            }
+
             localStorage.setItem('treasure_pot', JSON.stringify(potRecord));
 
             // 历史记录
             const history = JSON.parse(localStorage.getItem('history') || '[]');
             history.push({
                 date: new Date().toISOString(),
-                amount: -item.price,
+                amount: -todayPrice,
                 reason: `购买道具：${item.name}（转换任务 #${_convertKeySelected.join(',#')}）`,
                 type: 'exchange',
                 currencyType: 'voucher',
                 currencyName: '兑换券',
                 balanceAfter: newVoucher
             });
+            if (retroTotal > 0) {
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: 0,
+                    reason: `转换密钥补发：${completedDailyRules.filter(r => (activeTasks[r.id]||{}).status==='completed').length} 个已完成每日任务聚宝盆累加 ${retroTotal} 兑换券（不计入钱包，仅聚宝盆）`,
+                    type: 'retroactive',
+                    status: 'completed'
+                });
+            }
             localStorage.setItem('history', JSON.stringify(history));
 
             closeConvertKeyModal();
-            showStatus(`✅ ${item.name} 购买成功！${selectedCount}个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(effectiveRatio * 100)}%）`, 'success');
+            showStatus(`✅ ${item.name} 购买成功！${selectedCount}个任务已转为每日任务，聚宝盆已开启（累加比例 ${Math.round(effectiveRatio * 100)}%）${retroTotal > 0 ? `，补发 ${retroTotal} 兑换券` : ''}`, 'success');
             updateUI();
             renderItemShop();
         }
