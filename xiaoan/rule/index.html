@@ -1245,6 +1245,18 @@
                 }
 
                 if (shouldCheckYesterday) {
+                    // 防止"恢复-再销毁"循环：若聚宝盆刚被恢复（recoveredFromBug=true 且恢复发生在今天），跳过销毁检查
+                    // 原因：recoverFalselyDestroyedPot 刚恢复了被误销毁的聚宝盆，不应立即又被销毁判定处理
+                    if (pot.recoveredFromBug === true && pot.recoveredAt) {
+                        const recoveredAtChinaStr = getDateStrChina(pot.recoveredAt);
+                        if (recoveredAtChinaStr === todayChinaStr) {
+                            shouldCheckYesterday = false;
+                            console.log(`[TreasurePot] 跳过销毁检查：聚宝盆今日刚被恢复（${recoveredAtChinaStr}），不再次销毁`);
+                        }
+                    }
+                }
+
+                if (shouldCheckYesterday) {
                     const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
                     const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
                     if (!yesterdayClaimed) {
@@ -2703,65 +2715,63 @@
         }
 
         // 修复：恢复因bug误销毁的聚宝盆
-        // 触发条件1：destroyed=true && destroyReason==='missed_daily_yesterday' && destroyedAt 是周期第一天
-        //   原因：周期第一天不存在"昨日漏领"——昨日是结算日，属于上一周期，不应触发销毁
-        // 触发条件2：destroyed=true && destroyReason==='missed_daily_yesterday' && 销毁检查的昨日 < 聚宝盆创建日
-        //   原因：用户在周期第2/3天购买转换密钥后，rule 页销毁判定会检查昨日（购买前）是否领每日奖励，
-        //         那时还没聚宝盆，谈不上漏领，不应销毁
-        // 触发条件3：destroyed=true && destroyReason==='missed_daily_yesterday' && 销毁发生在同一天（destroyedAt 与 createdAt 同日）
-        //   原因：用户当天购买转换密钥后，rule 页销毁判定可能检查"昨日"（即购买日前一天）是否领每日奖励，
-        //         那时还没聚宝盆，谈不上漏领。即便今日已领每日奖励，也不应销毁。
-        // 触发条件4：destroyed=true && pot.cycleStart 与 currentCycle 不一致
-        //   原因：聚宝盆属于上一周期（结算未清理它），被新周期销毁判定误处理
         function recoverFalselyDestroyedPot() {
             const raw = localStorage.getItem('treasure_pot');
             if (!raw) return;
             let pot;
             try { pot = JSON.parse(raw); } catch(e) { return; }
             if (!pot || pot.destroyed !== true) return;
-            if (pot.destroyReason !== 'missed_daily_yesterday') return;
-            if (!pot.destroyedAt) return;
 
             const currentCycle = localStorage.getItem('leaderboard_cycle_start');
             const isFromPrevCycle = !currentCycle || !pot.cycleStart || pot.cycleStart !== currentCycle;
 
-            // 计算周期第一天（中国时区）：cycleStart 当天22:30结算，次日才是周期第一天
+            // 计算周期第一天（中国时区）
             const cycleStartChinaStr = currentCycle ? getDateStrChina(currentCycle) : null;
             const cycleStartUtcMs = cycleStartChinaStr ? Date.parse(cycleStartChinaStr + 'T00:00:00.000Z') : null;
             const cycleFirstDay = cycleStartUtcMs !== null ? new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000) : null;
             const cycleFirstDayChinaStr = cycleFirstDay ? getDateStrChina(cycleFirstDay) : null;
 
-            // 销毁发生日期（中国时区）
-            const destroyedAtChinaStr = getDateStrChina(pot.destroyedAt);
-            // 聚宝盆创建日期（中国时区）
+            const destroyedAtChinaStr = pot.destroyedAt ? getDateStrChina(pot.destroyedAt) : null;
             const potCreatedChinaStr = pot.createdAt ? getDateStrChina(pot.createdAt) : null;
-            // 今日日期（中国时区）
             const todayChinaStr = getDateStrChina(new Date());
 
             let shouldRecover = false;
             let recoverReason = '';
 
+            // 条件0（最高优先级）：针对性恢复 - 用户 34b895c9 的聚宝盆因历史 bug 被误销毁，强制恢复
+            // 不依赖 destroyReason/destroyedAt/convert_key_record 等任何条件
+            // 注意：不使用 localStorage flag 标记，因为之前 flag 被设置后恢复失败会导致永远无法恢复
+            // 改用 pot 自身的状态：如果 pot 还没有被恢复过（recoveredFromBug !== true），则强制恢复
+            // 这样即使多次调用，也只会恢复一次，避免无限循环
+            {
+                const _currentUid = getCurrentUserId();
+                const _TARGET_USER = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
+                if (_currentUid === _TARGET_USER && pot.recoveredFromBug !== true) {
+                    shouldRecover = true;
+                    recoverReason = `针对用户 ${_currentUid.substring(0,8)} 的强制恢复（历史 bug 误销毁，无条件）`;
+                }
+            }
+
             // 条件4：聚宝盆属于上一周期（结算未清理它），被新周期销毁判定误处理
-            if (isFromPrevCycle) {
+            if (!shouldRecover && isFromPrevCycle) {
                 shouldRecover = true;
                 recoverReason = `聚宝盆属于上一周期（pot.cycleStart=${pot.cycleStart}, current=${currentCycle}）`;
             }
 
             // 条件1：销毁发生在周期第一天（昨日是结算日，属于上一周期）
-            if (!shouldRecover && cycleFirstDayChinaStr && destroyedAtChinaStr === cycleFirstDayChinaStr) {
+            if (!shouldRecover && cycleFirstDayChinaStr && destroyedAtChinaStr && destroyedAtChinaStr === cycleFirstDayChinaStr) {
                 shouldRecover = true;
                 recoverReason = '在周期第一天被误销毁（昨日属于上一周期）';
             }
 
             // 条件3：销毁发生在聚宝盆创建当天（购买当天就被销毁，显然是误判）
-            if (!shouldRecover && potCreatedChinaStr && destroyedAtChinaStr === potCreatedChinaStr) {
+            if (!shouldRecover && potCreatedChinaStr && destroyedAtChinaStr && destroyedAtChinaStr === potCreatedChinaStr) {
                 shouldRecover = true;
                 recoverReason = `销毁发生在聚宝盆创建当天（${potCreatedChinaStr}），购买当天不应被销毁`;
             }
 
-            // 条件2：销毁检查的"昨日"早于聚宝盆创建日（用户购买前的日期被误判为漏领）
-            if (!shouldRecover && potCreatedChinaStr) {
-                // 销毁判定中的 yesterday = destroyedAt - 1天
+            // 条件2：销毁检查的"昨日"早于聚宝盆创建日
+            if (!shouldRecover && potCreatedChinaStr && destroyedAtChinaStr) {
                 const destroyedAtDate = new Date(pot.destroyedAt);
                 const yesterdayOfDestroy = new Date(destroyedAtDate);
                 yesterdayOfDestroy.setDate(yesterdayOfDestroy.getDate() - 1);
@@ -2772,48 +2782,26 @@
                 }
             }
 
-            // 条件5：销毁发生在今日，且今日就是聚宝盆创建当天（防御性，覆盖时区漂移）
+            // 条件5：今日就是聚宝盆创建当天（防御性，覆盖时区漂移）
             if (!shouldRecover && potCreatedChinaStr && todayChinaStr === potCreatedChinaStr) {
                 shouldRecover = true;
                 recoverReason = `聚宝盆今日刚创建（${potCreatedChinaStr}），不应被销毁`;
             }
 
-            // 条件6：本周期购买了转换密钥（convert_key_record.cycleStart === currentCycle），
-            //        但聚宝盆已销毁，且销毁发生在 createdAt 之后 3 天内（周期内早期被误销毁）
-            // 原因：销毁判定可能因 cycleStart 更新时序、时区漂移等问题误触发
-            //        若用户本周期确实购买了转换密钥，且聚宝盆在创建后短期内被销毁，倾向于恢复
-            // 限制：排除"销毁日就是今日且今日确实未领每日奖励且今日不是创建日"的合法销毁场景
-            if (!shouldRecover && potCreatedChinaStr) {
+            // 条件6：本周期购买了转换密钥，聚宝盆在创建后0~3天内被销毁（疑似误判）
+            if (!shouldRecover && potCreatedChinaStr && destroyedAtChinaStr) {
                 const _convRec = getActiveConvertKeyRecord();
                 if (_convRec && !isFromPrevCycle) {
-                    // 计算销毁日与创建日的天数差
                     const _createdMs = Date.parse(pot.createdAt);
                     const _destroyedMs = Date.parse(pot.destroyedAt);
                     if (!isNaN(_createdMs) && !isNaN(_destroyedMs)) {
                         const _dayDiff = Math.round((_destroyedMs - _createdMs) / (24 * 60 * 60 * 1000));
-                        // 仅恢复创建后 0~3 天内的销毁，且销毁不是今日（今日销毁可能是合法的）
                         const _isDestroyedToday = (destroyedAtChinaStr === todayChinaStr);
                         const _isCreatedToday = (potCreatedChinaStr === todayChinaStr);
                         if (_dayDiff >= 0 && _dayDiff <= 3 && (!_isDestroyedToday || _isCreatedToday)) {
                             shouldRecover = true;
                             recoverReason = `本周期已购转换密钥，聚宝盆在创建后 ${_dayDiff} 天被销毁（疑似误判，恢复）`;
                         }
-                    }
-                }
-            }
-
-            // 条件7：针对性恢复 - 用户 34b895c9 的聚宝盆因历史 bug 被误销毁，强制恢复
-            if (!shouldRecover) {
-                const _currentUid = getCurrentUserId();
-                const _TARGET_USER = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
-                const _RECOVER_FLAG_KEY = 'pot_force_recovered_' + _TARGET_USER.substring(0, 8);
-                if (_currentUid === _TARGET_USER && localStorage.getItem(_RECOVER_FLAG_KEY) !== 'true') {
-                    // 仅当本周期购买了转换密钥时才恢复
-                    const _convRec = getActiveConvertKeyRecord();
-                    if (_convRec) {
-                        shouldRecover = true;
-                        recoverReason = `针对用户 ${_currentUid.substring(0,8)} 的强制恢复（历史 bug 误销毁）`;
-                        localStorage.setItem(_RECOVER_FLAG_KEY, 'true');
                     }
                 }
             }
@@ -2825,7 +2813,6 @@
                 pot.recoveredFromBug = true;
                 pot.recoveredAt = new Date().toISOString();
                 pot.recoverReason = recoverReason;
-                // 条件4：同步 cycleStart 到当前周期，否则 getTreasurePot() 会因 cycleStart 不一致返回 null
                 if (isFromPrevCycle && currentCycle) {
                     pot.cycleStart = currentCycle;
                 }
