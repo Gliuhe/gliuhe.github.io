@@ -1218,12 +1218,12 @@
                 // 计算本周期第一天（中国时区）：cycleStart 当天22:30结算，次日才是周期第一天
                 const currentCycleStart = localStorage.getItem('leaderboard_cycle_start');
                 let shouldCheckYesterday = true;
+                const yesterdayChinaStr = getDateStrChina(yesterday);
                 if (currentCycleStart) {
                     const cycleStartChinaStr = getDateStrChina(currentCycleStart);  // 形如 "2026-07-18"
                     const cycleStartUtcMs = Date.parse(cycleStartChinaStr + 'T00:00:00.000Z');
                     const cycleFirstDay = new Date(cycleStartUtcMs + 24 * 60 * 60 * 1000);
                     const cycleFirstDayChinaStr = getDateStrChina(cycleFirstDay);  // 形如 "2026-07-19"
-                    const yesterdayChinaStr = getDateStrChina(yesterday);
                     // 昨日 < 周期第一天 → 昨日属于上一周期（结算日或更早），跳过销毁检查
                     if (yesterdayChinaStr < cycleFirstDayChinaStr) {
                         shouldCheckYesterday = false;
