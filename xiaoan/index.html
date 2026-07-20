@@ -2643,7 +2643,7 @@
             <div class="itemshop-grid" id="convertKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">🔀 置换密钥</h3>
-            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">将1个普通任务与1个每日任务置换（仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时兑换券数量变为指定值。仅当天有效，本周期仅可购买1次。</p>
+            <p style="color:#64748b;font-size:0.82rem;margin-bottom:12px;">将1个普通任务与1个每日任务置换（仅可置换两个任务兑换券奖励差值≤100的任务）。置换后当天领取每日任务奖励时兑换券数量变为指定值。仅当天有效，本周期仅可购买1次。</p>
             <div class="itemshop-grid" id="swapKeyGrid"></div>
 
             <h3 style="margin:20px 0 12px;">⚡ 加急密钥</h3>
@@ -3511,9 +3511,9 @@
                 { id: 'convert_key_3', name: '转换密钥 Ⅲ', icon: '🔄', desc: '选择1~2个普通任务（不可选特需任务）转换为每日任务，贯穿本排行榜周期。聚宝盆累加比例：转换1个任务为55%，转换2个任务为60%。仅结算日领完每日奖励后可领取聚宝盆。若任一日未领每日奖励，聚宝盆立即销毁（销毁后可强制完成被转换任务，但扣除其兑换券奖励的50%）。', price: 1200, boostRatio: 0.6, boostRatioSingle: 0.55 }
             ],
             swapKeys: [
-                { id: 'swap_key_1', name: '置换密钥 Ⅰ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1488。仅当天有效，本周期仅可购买1次。', price: 58, voucherOverride: 1488 },
-                { id: 'swap_key_2', name: '置换密钥 Ⅱ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1688。仅当天有效，本周期仅可购买1次。', price: 108, voucherOverride: 1688 },
-                { id: 'swap_key_3', name: '置换密钥 Ⅲ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换兑换券奖励在200~400间的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1888。仅当天有效，本周期仅可购买1次。', price: 198, voucherOverride: 1888 }
+                { id: 'swap_key_1', name: '置换密钥 Ⅰ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换两个任务兑换券奖励差值≤100的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1488。仅当天有效，本周期仅可购买1次。', price: 48, voucherOverride: 1488 },
+                { id: 'swap_key_2', name: '置换密钥 Ⅱ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换两个任务兑换券奖励差值≤100的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1688。仅当天有效，本周期仅可购买1次。', price: 68, voucherOverride: 1688 },
+                { id: 'swap_key_3', name: '置换密钥 Ⅲ', icon: '🔀', desc: '将1个普通任务与1个每日任务置换（不可选特需任务；仅可置换两个任务兑换券奖励差值≤100的任务）。置换后当天领取每日任务奖励时，兑换券数量变为 1888。仅当天有效，本周期仅可购买1次。', price: 108, voucherOverride: 1888 }
             ],
             urgentKeys: [
                 { id: 'urgent_key_1', name: '加急密钥 Ⅰ', icon: '⚡', desc: '购买后立即生效，本周期结算时间提前 0.5 小时。仅可在结算剩余时间小于18小时时购买。先到先得，本周期仅首位购买者生效。第一名购买加价领先差额×10%，第二名购买减价被领先差额×10%。加价后价格上限1000。', price: 200, offsetMinutes: 30, firstRate: 0.10, secondRate: 0.10, priceCap: 1000 },
@@ -3955,7 +3955,7 @@
         let _swapKeyNormalSelected = null;   // 普通任务 ruleId（转为每日）
         let _swapKeyDailySelected = null;    // 每日任务 ruleId（转为普通）
 
-        // 计算一个 rule 的兑换券奖励总和（用于置换密钥的 200~400 范围判定）
+        // 计算一个 rule 的兑换券奖励总和（用于置换密钥的差值≤100 判定）
         function calcRuleVoucherAmount(rule) {
             let sum = 0;
             if (rule.rewardType1 === 'voucher') sum += (parseInt(rule.rewardAmount1) || 0);
@@ -3992,25 +3992,23 @@
                          'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
             const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
 
-            // 候选普通任务：非 isDaily 非 isSpecial，兑换券奖励在 200~400
+            // 候选普通任务：非 isDaily 非 isSpecial（兑换券差值≤100 为配对约束，在选中后校验）
             const normalCandidates = rules.filter(r => {
                 if (r.isDaily || r.isSpecial) return false;
-                const v = calcRuleVoucherAmount(r);
-                return v >= 200 && v <= 400;
+                return calcRuleVoucherAmount(r) > 0;
             });
-            // 候选每日任务：isDaily=true 非 isSpecial，兑换券奖励在 200~400
+            // 候选每日任务：isDaily=true 非 isSpecial
             const dailyCandidates = rules.filter(r => {
                 if (!r.isDaily || r.isSpecial) return false;
-                const v = calcRuleVoucherAmount(r);
-                return v >= 200 && v <= 400;
+                return calcRuleVoucherAmount(r) > 0;
             });
 
             if (normalCandidates.length === 0) {
-                showStatus('❌ 没有可置换的普通任务（兑换券奖励需在 200~400 间）', 'error');
+                showStatus('❌ 没有可置换的普通任务（需有兑换券奖励）', 'error');
                 return;
             }
             if (dailyCandidates.length === 0) {
-                showStatus('❌ 没有可置换的每日任务（兑换券奖励需在 200~400 间）', 'error');
+                showStatus('❌ 没有可置换的每日任务（需有兑换券奖励）', 'error');
                 return;
             }
 
@@ -4077,8 +4075,23 @@
             const normalPicked = _swapKeyNormalSelected !== null;
             const dailyPicked = _swapKeyDailySelected !== null;
             let txt = `💡 领取每日任务奖励时，兑换券数量将变为 <strong style="color:#667eea;">${item.voucherOverride}</strong>。`;
+            txt += ` 两个任务兑换券奖励差值需 ≤ 100。`;
             if (normalPicked && dailyPicked) {
-                txt += ` <strong style="color:#10b981;">已选普通→每日 + 每日→普通，可购买</strong>`;
+                // 计算差值
+                const uid = (window.__cloudUserId ||
+                             localStorage.getItem('xiaoan_user_id') ||
+                             'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+                const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+                const nr = rules.find(r => r.id === _swapKeyNormalSelected);
+                const dr = rules.find(r => r.id === _swapKeyDailySelected);
+                const nv = nr ? calcRuleVoucherAmount(nr) : 0;
+                const dv = dr ? calcRuleVoucherAmount(dr) : 0;
+                const diff = Math.abs(nv - dv);
+                if (diff <= 100) {
+                    txt += ` <strong style="color:#10b981;">差值 ${diff} ≤ 100，可购买</strong>`;
+                } else {
+                    txt += ` <strong style="color:#ef4444;">差值 ${diff} > 100，不满足条件</strong>`;
+                }
             } else if (normalPicked) {
                 txt += ` 已选普通→每日，请继续选择每日→普通`;
             } else if (dailyPicked) {
@@ -4092,7 +4105,20 @@
         function updateSwapKeyConfirmBtn() {
             const btn = document.getElementById('swapKeyConfirmBtn');
             if (!btn) return;
-            btn.disabled = !(_swapKeyNormalSelected !== null && _swapKeyDailySelected !== null);
+            let ok = _swapKeyNormalSelected !== null && _swapKeyDailySelected !== null;
+            // 校验差值 ≤ 100
+            if (ok) {
+                const uid = (window.__cloudUserId ||
+                             localStorage.getItem('xiaoan_user_id') ||
+                             'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+                const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+                const nr = rules.find(r => r.id === _swapKeyNormalSelected);
+                const dr = rules.find(r => r.id === _swapKeyDailySelected);
+                const nv = nr ? calcRuleVoucherAmount(nr) : 0;
+                const dv = dr ? calcRuleVoucherAmount(dr) : 0;
+                if (Math.abs(nv - dv) > 100) ok = false;
+            }
+            btn.disabled = !ok;
         }
 
         function closeSwapKeyModal() {
@@ -4120,6 +4146,21 @@
             const currentVoucher = parseInt(localStorage.getItem('voucher') || '0');
             if (currentVoucher < item.price) {
                 showStatus(`❌ 兑换券不足！需要 ${item.price}，当前 ${currentVoucher}`, 'error');
+                return;
+            }
+
+            // 防御性校验：两任务兑换券差值 ≤ 100
+            const uid = (window.__cloudUserId ||
+                         localStorage.getItem('xiaoan_user_id') ||
+                         'd71f9173-bd5d-4d30-a033-0429ae162fd7').substring(0, 8);
+            const rules = JSON.parse(localStorage.getItem(uid + '_rules') || '[]');
+            const nr = rules.find(r => r.id === normalRuleId);
+            const dr = rules.find(r => r.id === dailyRuleId);
+            const nv = nr ? calcRuleVoucherAmount(nr) : 0;
+            const dv = dr ? calcRuleVoucherAmount(dr) : 0;
+            const diff = Math.abs(nv - dv);
+            if (diff > 100) {
+                showStatus(`❌ 两任务兑换券差值 ${diff} > 100，不满足置换条件`, 'error');
                 return;
             }
 
