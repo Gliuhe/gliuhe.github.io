@@ -1477,10 +1477,17 @@
                     // 任务未完成，直接显示完成按钮
                     actionButton = `<button class="btn btn-warning" onclick="openCompleteRuleModal(${rule.id})">✅ 完成任务</button>`;
                     statusDisplay = `<div class="task-status status-pending">等待完成</div>`;
-                    // 聚宝盆销毁后，被转换的任务可强制完成（状态转为完成但不领奖励，并扣兑换券 50%）
-                    if (_isPotDestroyed && isConvertedToDaily(rule.id) && taskStatus.status !== 'force-completed') {
-                        actionButton += `<button class="btn btn-danger" onclick="forceCompleteConvertedTask(${rule.id})">⚡ 强制完成</button>`;
-                        statusDisplay += `<div class="task-status status-in-progress" style="color:#ef4444;">聚宝盆已销毁，可强制完成（不领奖励，扣兑换券50%）</div>`;
+                    // 被转换密钥选中的任务可强制完成（销毁前扣聚宝盆78%；销毁后扣用户钱包50%）
+                    if (isConvertedToDaily(rule.id) && taskStatus.status !== 'force-completed') {
+                        if (_isPotDestroyed) {
+                            // 聚宝盆已销毁：扣用户钱包50%
+                            actionButton += `<button class="btn btn-danger" onclick="forceCompleteConvertedTask(${rule.id})">⚡ 强制完成</button>`;
+                            statusDisplay += `<div class="task-status status-in-progress" style="color:#ef4444;">聚宝盆已销毁，可强制完成（不领奖励，扣兑换券50%）</div>`;
+                        } else {
+                            // 聚宝盆未销毁：扣聚宝盆78%
+                            actionButton += `<button class="btn btn-danger" onclick="forceCompleteConvertedTaskPreDestroy(${rule.id})">⚡ 强制完成</button>`;
+                            statusDisplay += `<div class="task-status status-in-progress" style="color:#f59e0b;">可强制完成（不领奖励，聚宝盆扣78%兑换券）</div>`;
+                        }
                     }
                 }
 
@@ -2907,12 +2914,101 @@
             activeTasks[ruleId] = {
                 status: 'force-completed',
                 completedTime: new Date().toISOString(),
-                forceCompleted: true
+                forceCompleted: true,
+                forceCompleteMode: 'post_destroy'
             };
             localStorage.setItem(userKey('activeTasks'), JSON.stringify(activeTasks));
             if (typeof syncActiveTasksToCloud === 'function') syncActiveTasksToCloud();
 
             showStatus(`⚡ 已强制完成「${rule.title}」${deductAmount > 0 ? `，扣除 ${deductAmount} 兑换券` : ''}`);
+            updateUI();
+        }
+
+        // 强制完成被转换的任务（聚宝盆销毁前可用）
+        // 效果：任务状态转为 force-completed，不领取任何任务奖励
+        //      聚宝盆的兑换券数量扣除该任务兑换券奖励的 78%（向上取整，扣到0为限）
+        function forceCompleteConvertedTaskPreDestroy(ruleId) {
+            const rules = JSON.parse(localStorage.getItem(userKey('rules'))) || [];
+            const rule = rules.find(r => r.id === ruleId);
+            if (!rule) {
+                showStatus('任务不存在', 'error');
+                return;
+            }
+            // 必须是被转换密钥选中的任务
+            if (!isConvertedToDaily(ruleId)) {
+                showStatus('该任务非转换密钥任务，不可强制完成', 'error');
+                return;
+            }
+            // 聚宝盆必须存在且未销毁
+            const pot = getTreasurePot();
+            if (!pot) {
+                showStatus('聚宝盆不存在或已销毁，请使用销毁后强制完成', 'error');
+                return;
+            }
+
+            const activeTasks = JSON.parse(localStorage.getItem(userKey('activeTasks'))) || {};
+            if (activeTasks[ruleId] && activeTasks[ruleId].status === 'force-completed') {
+                showStatus('该任务已强制完成', 'warning');
+                return;
+            }
+            if (activeTasks[ruleId] && activeTasks[ruleId].status === 'completed') {
+                showStatus('该任务已正常完成', 'warning');
+                return;
+            }
+
+            // 计算该任务兑换券奖励的 78%（向上取整）
+            let voucherReward = 0;
+            if (rule.rewardType1 === 'voucher') voucherReward += (rule.rewardAmount1 || 0);
+            if (rule.rewardType2 === 'voucher') voucherReward += (rule.rewardAmount2 || 0);
+            const deductAmount = Math.ceil(voucherReward * 0.78);
+
+            if (!confirm(`确定强制完成「${rule.title}」吗？\n\n• 任务状态将转为已完成（但不领取任何任务奖励）\n• 聚宝盆兑换券数量扣除 ${deductAmount}（该任务兑换券奖励的78%）`)) {
+                return;
+            }
+
+            // 从聚宝盆扣除（不低于0）
+            if (deductAmount > 0) {
+                const beforeAmount = pot.amount || 0;
+                const actualDeduct = Math.min(beforeAmount, deductAmount);
+                pot.amount = Math.max(0, beforeAmount - deductAmount);
+                if (!Array.isArray(pot.contributions)) pot.contributions = [];
+                pot.contributions.push({
+                    ruleId: rule.id,
+                    ruleTitle: rule.title,
+                    voucherBase: voucherReward,
+                    ratio: -0.78,
+                    addAmount: -actualDeduct,
+                    at: new Date().toISOString(),
+                    type: 'force_complete_deduction'
+                });
+                saveTreasurePot(pot);
+                console.log(`[TreasurePot] ⚡ 销毁前强制完成转换任务"${rule.title}" → 聚宝盆扣除 ${actualDeduct}（基数 ${voucherReward} × 78%），当前总额 ${pot.amount}`);
+
+                // 历史记录
+                const history = JSON.parse(localStorage.getItem('history') || '[]');
+                history.push({
+                    date: new Date().toISOString(),
+                    amount: -actualDeduct,
+                    reason: `销毁前强制完成转换任务：${rule.title}（聚宝盆扣78%兑换券）`,
+                    type: 'subtract',
+                    currencyType: 'voucher',
+                    currencyName: '兑换券',
+                    status: 'completed'
+                });
+                localStorage.setItem('history', JSON.stringify(history));
+            }
+
+            // 标记任务状态为 force-completed
+            activeTasks[ruleId] = {
+                status: 'force-completed',
+                completedTime: new Date().toISOString(),
+                forceCompleted: true,
+                forceCompleteMode: 'pre_destroy'
+            };
+            localStorage.setItem(userKey('activeTasks'), JSON.stringify(activeTasks));
+            if (typeof syncActiveTasksToCloud === 'function') syncActiveTasksToCloud();
+
+            showStatus(`⚡ 已强制完成「${rule.title}」${deductAmount > 0 ? `，聚宝盆扣除 ${deductAmount} 兑换券` : ''}`);
             updateUI();
         }
 
