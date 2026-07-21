@@ -2739,7 +2739,7 @@
             let shouldRecover = false;
             let recoverReason = '';
 
-            // 条件0（最高优先级）：针对性恢复 - 用户 34b895c9 的聚宝盆因历史 bug 被误销毁，强制恢复
+            // 条件0（最高优先级）：针对性恢复 - 已知受 bug 影响的用户白名单，强制恢复
             // 不依赖 destroyReason/destroyedAt/convert_key_record 等任何条件
             // 注意：不使用 localStorage flag 标记，因为之前 flag 被设置后恢复失败会导致永远无法恢复
             // 也不依赖 pot.recoveredFromBug，因为恢复后可能又被销毁判定误销毁一次（recover-then-destroy 循环），
@@ -2747,8 +2747,11 @@
             // 防止无限循环的责任在 checkDailyReset 中的"今日刚恢复则跳过销毁检查"逻辑
             {
                 const _currentUid = getCurrentUserId();
-                const _TARGET_USER = '34b895c9-effa-4647-bfca-160cf0d4c7d4';
-                if (_currentUid === _TARGET_USER) {
+                const _TARGET_USERS = [
+                    '34b895c9-effa-4647-bfca-160cf0d4c7d4',
+                    'd71f9173-bd5d-4d30-a033-0429ae162fd7'
+                ];
+                if (_TARGET_USERS.includes(_currentUid)) {
                     shouldRecover = true;
                     recoverReason = `针对用户 ${_currentUid.substring(0,8)} 的强制恢复（历史 bug 误销毁，无条件）`;
                 }
@@ -2791,6 +2794,8 @@
             }
 
             // 条件6：本周期购买了转换密钥，聚宝盆在创建后0~3天内被销毁（疑似误判）
+            // 修复：原逻辑 (!_isDestroyedToday || _isCreatedToday) 会导致"今天销毁、昨天创建"的场景不恢复
+            //       （即用户第2天刷新页面被误销毁时无法恢复），去掉该限制
             if (!shouldRecover && potCreatedChinaStr && destroyedAtChinaStr) {
                 const _convRec = getActiveConvertKeyRecord();
                 if (_convRec && !isFromPrevCycle) {
@@ -2798,9 +2803,7 @@
                     const _destroyedMs = Date.parse(pot.destroyedAt);
                     if (!isNaN(_createdMs) && !isNaN(_destroyedMs)) {
                         const _dayDiff = Math.round((_destroyedMs - _createdMs) / (24 * 60 * 60 * 1000));
-                        const _isDestroyedToday = (destroyedAtChinaStr === todayChinaStr);
-                        const _isCreatedToday = (potCreatedChinaStr === todayChinaStr);
-                        if (_dayDiff >= 0 && _dayDiff <= 3 && (!_isDestroyedToday || _isCreatedToday)) {
+                        if (_dayDiff >= 0 && _dayDiff <= 3) {
                             shouldRecover = true;
                             recoverReason = `本周期已购转换密钥，聚宝盆在创建后 ${_dayDiff} 天被销毁（疑似误判，恢复）`;
                         }
