@@ -1258,6 +1258,21 @@
                 }
 
                 if (shouldCheckYesterday) {
+                    // 临时修复：白名单用户跳过销毁判定
+                    // 根因：dailyReward_ key 只存 localStorage 不同步云端，跨设备/清缓存时丢失，导致误销毁
+                    // 这些用户已多次因 bug 受损，作为补偿，在云端同步修复完成前跳过销毁判定
+                    const _currentUid = getCurrentUserId();
+                    const _WHITELIST_USERS = [
+                        '34b895c9-effa-4647-bfca-160cf0d4c7d4',
+                        'd71f9173-bd5d-4d30-a033-0429ae162fd7'
+                    ];
+                    if (_WHITELIST_USERS.includes(_currentUid)) {
+                        shouldCheckYesterday = false;
+                        console.log(`[TreasurePot] 跳过销毁检查：白名单用户 ${_currentUid.substring(0,8)}（dailyReward_ key 丢失防护）`);
+                    }
+                }
+
+                if (shouldCheckYesterday) {
                     const yesterdayRewardKey = userKey('dailyReward_' + yesterdayStr);
                     const yesterdayClaimed = localStorage.getItem(yesterdayRewardKey) === 'true';
                     if (!yesterdayClaimed) {
@@ -2346,11 +2361,19 @@
                                 const cloudVal = parseFloat(row.amount) || 0;
                                 const localRaw = localStorage.getItem(key);
                                 const localVal = localRaw !== null ? parseFloat(localRaw) : null;
-                                
+
                                 // 本地为空 或 云端值与本地值不同，都更新
                                 if (localVal === null || isNaN(localVal) || cloudVal !== localVal) {
                                     localStorage.setItem(key, String(cloudVal));
                                     console.log(`[rule] 💰 同步货币 ${key}: ${localVal} → ${cloudVal}`);
+                                }
+                            } else if (key.startsWith('daily_reward_') && parseFloat(row.amount) === 1) {
+                                // 恢复每日奖励领取状态（防止跨设备/清缓存时丢失，导致聚宝盆误销毁）
+                                const dateStr = key.substring('daily_reward_'.length);
+                                const localKey = userKey('dailyReward_' + dateStr);
+                                if (localStorage.getItem(localKey) !== 'true') {
+                                    localStorage.setItem(localKey, 'true');
+                                    console.log(`[rule] 📅 从云端恢复每日奖励领取记录: ${dateStr}`);
                                 }
                             }
                         });
@@ -3215,6 +3238,10 @@
 
             // 标记已领取
             localStorage.setItem(dailyRewardKey, 'true');
+
+            // 同步每日奖励领取状态到云端（防止跨设备/清缓存时丢失，导致聚宝盆误销毁）
+            // 用 user_currencies 表存储，currency_type = 'daily_reward_<date>'，amount = 1
+            syncCurrencyToCloud('daily_reward_' + new Date().toDateString(), 1);
 
             // ===== 聚宝盆累加逻辑已迁移到 confirmCompleteRule（每完成一个每日任务时实时累加） =====
             // 此处不再做累加，仅显示每日任务奖励动画
